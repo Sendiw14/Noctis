@@ -1,0 +1,506 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0CB4B988606AB038E0A61E84 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */; };
+		0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */; };
+		7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6D414566DC2646DBC6FE09 /* QASupport.swift */; };
+		8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */; };
+		98B4052A9E1C5519A27C8213 /* NoctisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */; };
+		C4E097F8552FBF47761B4A59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4435E6B1989CC790CE6F0F65 /* Assets.xcassets */; };
+		C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */; };
+		F432F7BBD5A4F6990A6BA96C /* AppRoot in Frameworks */ = {isa = PBXBuildFile; productRef = 17C413CE67E2BAD13B2C2447 /* AppRoot */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C343DE572BD3B73F288EE6A9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7660C031C6EC308C3385B45D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6035C065C12F58C1B2EEEE90;
+			remoteInfo = Noctis;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		04379147675C3293572F976D /* NoctisUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NoctisUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		3B85D922D7533E3338F79684 /* NoctisKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NoctisKit; path = Packages/NoctisKit; sourceTree = SOURCE_ROOT; };
+		4435E6B1989CC790CE6F0F65 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4931DEC833E41A07AE985B2D /* Noctis.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Noctis.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisApp.swift; sourceTree = "<group>"; };
+		811601970E5BB83FD5627B7D /* Noctis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Noctis.entitlements; sourceTree = "<group>"; };
+		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
+		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
+		BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverQATests.swift; sourceTree = "<group>"; };
+		D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		FE6D414566DC2646DBC6FE09 /* QASupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASupport.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		EE026D34B27BCFBAC425F8EE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F432F7BBD5A4F6990A6BA96C /* AppRoot in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		07A8686EBBE9F1075DD906F0 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				3B85D922D7533E3338F79684 /* NoctisKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		24F0EA3FEF246440BAA18D38 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4931DEC833E41A07AE985B2D /* Noctis.app */,
+				04379147675C3293572F976D /* NoctisUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9213F7D570ACC8E3E05A5B13 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A5B58CBE9E9988E40D36EC50 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */,
+				FE6D414566DC2646DBC6FE09 /* QASupport.swift */,
+				BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		D654F53C52B10CF49853EA55 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				4435E6B1989CC790CE6F0F65 /* Assets.xcassets */,
+				2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */,
+				811601970E5BB83FD5627B7D /* Noctis.entitlements */,
+				5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */,
+				9213F7D570ACC8E3E05A5B13 /* Preview Content */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D7593041C52A6486137632CC = {
+			isa = PBXGroup;
+			children = (
+				9714450F1C41512C1CACAF34 /* Noctis.storekit */,
+				D654F53C52B10CF49853EA55 /* App */,
+				07A8686EBBE9F1075DD906F0 /* Packages */,
+				A5B58CBE9E9988E40D36EC50 /* UITests */,
+				24F0EA3FEF246440BAA18D38 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6035C065C12F58C1B2EEEE90 /* Noctis */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 064272BD8550513290EF9DFA /* Build configuration list for PBXNativeTarget "Noctis" */;
+			buildPhases = (
+				EFCEE8675BC474664088DC48 /* Sources */,
+				44F5B5361A8A744BCF59F5E9 /* Resources */,
+				EE026D34B27BCFBAC425F8EE /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Noctis;
+			packageProductDependencies = (
+				17C413CE67E2BAD13B2C2447 /* AppRoot */,
+			);
+			productName = Noctis;
+			productReference = 4931DEC833E41A07AE985B2D /* Noctis.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7437630F018E5F771DD8C047 /* NoctisUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F1259E33041B542D89CD512C /* Build configuration list for PBXNativeTarget "NoctisUITests" */;
+			buildPhases = (
+				70664C4E48CAD8ED0D62664C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E44A55BA201C9D268E077341 /* PBXTargetDependency */,
+			);
+			name = NoctisUITests;
+			packageProductDependencies = (
+			);
+			productName = NoctisUITests;
+			productReference = 04379147675C3293572F976D /* NoctisUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7660C031C6EC308C3385B45D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					7437630F018E5F771DD8C047 = {
+						TestTargetID = 6035C065C12F58C1B2EEEE90;
+					};
+				};
+			};
+			buildConfigurationList = 4634FCE5D121FE9188855518 /* Build configuration list for PBXProject "Noctis" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D7593041C52A6486137632CC;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4AE8B56CBFD2DB212AC17EF8 /* XCLocalSwiftPackageReference "Packages/NoctisKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 24F0EA3FEF246440BAA18D38 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6035C065C12F58C1B2EEEE90 /* Noctis */,
+				7437630F018E5F771DD8C047 /* NoctisUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		44F5B5361A8A744BCF59F5E9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C4E097F8552FBF47761B4A59 /* Assets.xcassets in Resources */,
+				0CB4B988606AB038E0A61E84 /* LaunchScreen.storyboard in Resources */,
+				C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		70664C4E48CAD8ED0D62664C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */,
+				7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */,
+				0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFCEE8675BC474664088DC48 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				98B4052A9E1C5519A27C8213 /* NoctisApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E44A55BA201C9D268E077341 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6035C065C12F58C1B2EEEE90 /* Noctis */;
+			targetProxy = C343DE572BD3B73F288EE6A9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0AA7DEFA274BE36E8A33C111 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.noctis.app.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Noctis;
+			};
+			name = Release;
+		};
+		3A12AAA91C5288A735CDFB19 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.noctis.app.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Noctis;
+			};
+			name = Debug;
+		};
+		8DCEF8BBBA8E801C475CBD1A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		9100A74295084318A89AF9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Noctis.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = NOCTIS;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.noctis.app;
+				PRODUCT_NAME = NOCTIS;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AF42F423E40BE2D8F3016E79 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Noctis.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = NOCTIS;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.noctis.app;
+				PRODUCT_NAME = NOCTIS;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D2CAE5060D9F207BD3269DFF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		064272BD8550513290EF9DFA /* Build configuration list for PBXNativeTarget "Noctis" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9100A74295084318A89AF9CD /* Debug */,
+				AF42F423E40BE2D8F3016E79 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4634FCE5D121FE9188855518 /* Build configuration list for PBXProject "Noctis" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8DCEF8BBBA8E801C475CBD1A /* Debug */,
+				D2CAE5060D9F207BD3269DFF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F1259E33041B542D89CD512C /* Build configuration list for PBXNativeTarget "NoctisUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A12AAA91C5288A735CDFB19 /* Debug */,
+				0AA7DEFA274BE36E8A33C111 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		4AE8B56CBFD2DB212AC17EF8 /* XCLocalSwiftPackageReference "Packages/NoctisKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/NoctisKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		17C413CE67E2BAD13B2C2447 /* AppRoot */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AppRoot;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 7660C031C6EC308C3385B45D /* Project object */;
+}

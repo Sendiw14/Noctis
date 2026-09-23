@@ -1,0 +1,78 @@
+name: Noctis
+options:
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: en
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    SUPPORTS_MACCATALYST: NO
+
+packages:
+  NoctisKit:
+    path: Packages/NoctisKit
+
+# In the navigator for the scheme's StoreKit testing, but never bundled
+# into the app.
+fileGroups:
+  - Noctis.storekit
+
+targets:
+  Noctis:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: App
+    dependencies:
+      - package: NoctisKit
+        product: AppRoot
+    # HealthKit, read-only (see NSHealthShareUsageDescription below).
+    entitlements:
+      path: App/Noctis.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+    scheme:
+      testTargets:
+        - NoctisUITests
+      storeKitConfiguration: Noctis.storekit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app
+        PRODUCT_NAME: NOCTIS
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_CFBundleDisplayName: NOCTIS
+        INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "NOCTIS reads your sleep, heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health."
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleDefault
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        DEVELOPMENT_ASSET_PATHS: "\"App/Preview Content\""
+        ENABLE_PREVIEWS: YES
+        GENERATE_INFOPLIST_FILE: YES
+
+  NoctisUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: UITests
+    dependencies:
+      - target: Noctis
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"

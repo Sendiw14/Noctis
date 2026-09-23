@@ -1,0 +1,15 @@
+import SwiftUI
+import AppRoot
+
+@main
+struct NoctisApp: App {
+    @State private var container = AppContainer()
+
+    var body: some Scene {
+        WindowGroup {
+            RootView(initiallyOnboarded: container.model.isOnboarded)
+                .environment(container.model)
+                .environment(container.storeManager)
+        }
+    }
+}

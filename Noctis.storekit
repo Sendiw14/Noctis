@@ -1,0 +1,140 @@
+{
+  "identifier" : "236941B9-BBB5-40DD-AFD3-156DD2AEB4FE",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "0",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "A9FA6F3F-A632-4D06-84D7-9BBEC7879C99",
+      "localizations" : [
+
+      ],
+      "name" : "NOCTIS Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "39.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "504B70F8-FE6F-4A63-8174-0FDEC85C7496",
+          "introductoryOffer" : {
+            "displayPrice" : "0.00",
+            "internalID" : "A371209C-B835-480A-AD73-6F014FAD7C24",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "A full year of NOCTIS Premium, billed annually.",
+              "displayName" : "NOCTIS Premium (Yearly)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.noctis.app.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium Yearly",
+          "subscriptionGroupID" : "A9FA6F3F-A632-4D06-84D7-9BBEC7879C99",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "6.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "FF3E97D0-301C-4D28-90DC-046190C895A9",
+          "localizations" : [
+            {
+              "description" : "NOCTIS Premium, billed monthly.",
+              "displayName" : "NOCTIS Premium (Monthly)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.noctis.app.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium Monthly",
+          "subscriptionGroupID" : "A9FA6F3F-A632-4D06-84D7-9BBEC7879C99",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
