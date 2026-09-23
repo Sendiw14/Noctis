@@ -82,6 +82,38 @@ struct PlanBuildTests {
         #expect(try await model.fetchRecentNightCount(asOf: now) == 5)
     }
 
+    /// The same data counted at 2:27 AM and 3:15 AM must give the same
+    /// answer. Nights run 11 PM to 7 AM for the 35 evenings before Sep 24,
+    /// except Aug 24's, which runs 8 PM to 3 AM. The 30-day window opens at
+    /// 2:27 AM or 3:15 AM on Aug 25, so that early night overlaps it at
+    /// 2:27 but not at 3:15, and Sep 23's night is still in progress at
+    /// both times. Counting overlap made the old total drift (31 vs 30);
+    /// only complete nights inside the window count: Aug 25 to Sep 22, 29.
+    @Test func recentNightCountIsTheSameAt227AMAnd315AM() async throws {
+        let calendar = Calendar.current
+        let sep24 = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 24)))
+        let at0227 = try #require(calendar.date(bySettingHour: 2, minute: 27, second: 0, of: sep24))
+        let at0315 = try #require(calendar.date(bySettingHour: 3, minute: 15, second: 0, of: sep24))
+        var samples: [RawSleepSample] = []
+        for eveningsBefore in 1...35 {
+            let evening = try #require(calendar.date(byAdding: .day, value: -eveningsBefore, to: sep24))
+            let isEarlyNight = eveningsBefore == 31 // Aug 24
+            let bedtime = try #require(calendar.date(bySettingHour: isEarlyNight ? 20 : 23, minute: 0, second: 0, of: evening))
+            samples.append(RawSleepSample(
+                start: bedtime,
+                end: bedtime.addingTimeInterval(isEarlyNight ? 7 * 3600 : 8 * 3600),
+                stage: .core,
+                sourceName: "Stub",
+                sourceBundleID: "stub"
+            ))
+        }
+        let model = try makeModel(provider: StubSleepProvider(samples: samples))
+        let countAt0227 = try await model.fetchRecentNightCount(asOf: at0227)
+        let countAt0315 = try await model.fetchRecentNightCount(asOf: at0315)
+        #expect(countAt0227 == countAt0315)
+        #expect(countAt0227 == 29)
+    }
+
     @Test func seedTypicalBedtimeBaselineDoesNotThrowWithNoData() async throws {
         let model = try makeModel(provider: MockHealthKitProvider(startAuthorized: false))
         try await model.seedTypicalBedtimeBaseline()

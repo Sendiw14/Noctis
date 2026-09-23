@@ -121,8 +121,8 @@ final class OnboardingQATests: XCTestCase {
         QA.tap(QA.button(app, "Not now"), in: app)
         QA.pause(5)
         QA.capturePages(app, "state-plan-history")
-        // The count depends on the time of day (see the report), so check
-        // the branch, not the number.
+        // Only complete nights count, so the number rises by one when last
+        // night ends; check the branch, not the number.
         let history = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", ".*already have [0-9]+ nights.*")).firstMatch
         XCTAssertTrue(history.exists, "history branch shows the night count")
         QA.write(history.exists ? history.label : "missing", to: "state-plan-history.txt")
