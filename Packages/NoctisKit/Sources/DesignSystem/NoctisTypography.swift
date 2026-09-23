@@ -94,6 +94,16 @@ public enum NoctisTextStyle {
     }
 
     var uppercase: Bool { self == .eyebrow }
+
+    /// R4: the system text style each onboarding style scales with.
+    var paperAnchor: UIFont.TextStyle? {
+        switch self {
+        case .paperTitle: .largeTitle
+        case .paperBody: .body
+        case .paperCaption: .footnote
+        default: nil
+        }
+    }
 }
 
 /// A flat per-category multiplier driven directly off `DynamicTypeSize`,
@@ -121,6 +131,14 @@ func dynamicTypeMultiplier(_ size: DynamicTypeSize) -> CGFloat {
 }
 
 func scaledSize(_ style: NoctisTextStyle, _ dynamicTypeSize: DynamicTypeSize) -> CGFloat {
+    // R4: onboarding ("paper") styles follow a system text style's curve —
+    // the same values `@ScaledMetric` produces — computed from the
+    // environment value so the per-word title reveal stays free of
+    // `@ScaledMetric` (see `dynamicTypeMultiplier`).
+    if let anchor = style.paperAnchor {
+        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize))
+        return UIFontMetrics(forTextStyle: anchor).scaledValue(for: style.baseSize, compatibleWith: traits)
+    }
     let multiplier = dynamicTypeMultiplier(dynamicTypeSize)
     let eased = 1.0 + (multiplier - 1.0) * style.growthFactor
     return style.baseSize * eased

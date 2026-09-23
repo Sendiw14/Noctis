@@ -84,6 +84,14 @@ final class OnboardingQATests: XCTestCase {
         QA.pause(2)
         QA.tap(QA.button(app, "Connect Apple Health"), in: app)
         let dontAllow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Don'")).firstMatch
+        // iOS 27's sheet only shows its Allow / Don't Allow buttons once
+        // the category list has been scrolled to the end.
+        if app.navigationBars["Health Access"].waitForExistence(timeout: 8) && !dontAllow.exists {
+            for _ in 0..<4 where !dontAllow.exists {
+                app.tables.firstMatch.swipeUp()
+                QA.pause(0.5)
+            }
+        }
         if dontAllow.waitForExistence(timeout: 8) {
             QA.shot("state-health-sheet")
             dontAllow.tap()
@@ -95,6 +103,7 @@ final class OnboardingQATests: XCTestCase {
             }
         } else {
             QA.shot("state-health-sheet-MISSING")
+            QA.write(app.debugDescription, to: "state-health-sheet-tree.txt")
             XCTFail("HealthKit permission sheet did not appear")
         }
         XCTAssertTrue(QA.text(app, containing: "gently informed").waitForExistence(timeout: 8), "decline proceeds to Notifications")
@@ -112,7 +121,11 @@ final class OnboardingQATests: XCTestCase {
         QA.tap(QA.button(app, "Not now"), in: app)
         QA.pause(5)
         QA.capturePages(app, "state-plan-history")
-        XCTAssertTrue(QA.text(app, containing: "30 nights").exists, "history branch counts 30 nights")
+        // The count depends on the time of day (see the report), so check
+        // the branch, not the number.
+        let history = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", ".*already have [0-9]+ nights.*")).firstMatch
+        XCTAssertTrue(history.exists, "history branch shows the night count")
+        QA.write(history.exists ? history.label : "missing", to: "state-plan-history.txt")
     }
 
     func testPlanError() {

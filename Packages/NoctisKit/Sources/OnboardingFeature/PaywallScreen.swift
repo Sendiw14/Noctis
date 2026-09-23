@@ -262,10 +262,10 @@ struct PaywallScreen: View {
             // Button itself they sized layout but not the tap target.
             Button(action: restorePurchases) {
                 Text("Restore")
+                    .noctisFont(15, .medium, relativeTo: .subheadline)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
             }
-            .font(.system(size: 15, weight: .medium, design: .rounded))
             .foregroundStyle(NoctisPaper.ink2)
         }
     }
@@ -433,7 +433,7 @@ struct PaywallScreen: View {
     }
 
     private var hero: some View {
-        VStack(spacing: NoctisSpacing.sm) {
+        VStack(spacing: NoctisScrollEdges.blockGap(NoctisSpacing.sm, dynamicTypeSize)) {
             ZStack {
                 // The same segmented ring Sample draws (R2: solid arcs with
                 // real gaps, no blended joints), center number hidden.
@@ -450,13 +450,13 @@ struct PaywallScreen: View {
             NoctisTitle("Sleep", emphasis: "deeper.")
                 .paywallBlock()
             Text("Understand yourself.")
-                .font(.system(size: 17, weight: .medium, design: .rounded))
+                .noctisFont(17, .medium, relativeTo: .body)
                 .foregroundStyle(NoctisPaper.ink2)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .paywallBlock()
             Text(personalizedLine)
-                .font(.system(size: 13, design: .rounded))
+                .noctisFont(13, relativeTo: .footnote)
                 .foregroundStyle(NoctisPaper.ink3)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -487,14 +487,17 @@ struct PaywallScreen: View {
                 ForEach(Array(benefitRows.enumerated()), id: \.element.id) { index, row in
                     HStack(spacing: NoctisSpacing.sm) {
                         NoctisIconTile(systemImage: row.icon, fill: row.fill, size: 28)
+                        // One line at the default size (as designed); above
+                        // it the row wraps instead of shrinking away.
                         Text(row.text)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .noctisFont(13, .medium, relativeTo: .footnote)
                             .foregroundStyle(NoctisPaper.ink)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
+                            .lineLimit(dynamicTypeSize > .large ? nil : 1)
+                            .minimumScaleFactor(dynamicTypeSize > .large ? 1 : 0.85)
+                            .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                     }
-                    .padding(.vertical, 6)
+                    .padding(.vertical, NoctisScrollEdges.blockGap(12, dynamicTypeSize) / 2)
                     .paywallCardRow(index)
                     if index < benefitRows.count - 1 {
                         Rectangle().fill(NoctisPaper.hairline).frame(height: 1)
@@ -519,10 +522,11 @@ struct PaywallScreen: View {
             showCompareSheet = true
         } label: {
             Text("Compare free and Premium")
+                .noctisFont(14, .medium, relativeTo: .subheadline)
+                .multilineTextAlignment(.center)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }
-        .font(.system(size: 14, weight: .medium, design: .rounded))
         .foregroundStyle(NoctisPaper.orangeText)
     }
 
@@ -556,11 +560,12 @@ struct PaywallScreen: View {
     private var unavailableNotice: some View {
         VStack(spacing: NoctisSpacing.xs) {
             Image(systemName: "wifi.slash")
-                .font(.system(size: 22, weight: .semibold))
+                .noctisIcon(22, relativeTo: .subheadline)
                 .foregroundStyle(NoctisPaper.ink3)
                 .accessibilityHidden(true)
             Text("We couldn't load plans.")
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .noctisFont(15, .medium, relativeTo: .subheadline)
+                .multilineTextAlignment(.center)
                 .foregroundStyle(NoctisPaper.ink2)
         }
         // The icon and text, not the padded frame, are what a fade must avoid.
@@ -611,7 +616,7 @@ struct PaywallScreen: View {
     private var reminderToggle: some View {
         Toggle(isOn: $remindBeforeTrialEnds) {
             Text("Remind me 2 days before my trial ends")
-                .font(.system(size: 14, design: .rounded))
+                .noctisFont(14, relativeTo: .subheadline)
                 .foregroundStyle(NoctisPaper.ink)
         }
         .tint(NoctisPaper.cocoa)
@@ -645,13 +650,13 @@ struct PaywallScreen: View {
             VStack(spacing: NoctisSpacing.xs) {
                 if store.purchaseState == .pending {
                     Text("Waiting for approval — this can take a moment.")
-                        .font(.system(size: 13, design: .rounded))
+                        .noctisFont(13, relativeTo: .footnote)
                         .foregroundStyle(NoctisPaper.ink2)
                         .multilineTextAlignment(.center)
                 }
                 if case .failed(let message) = store.purchaseState {
                     Text(message)
-                        .font(.system(size: 13, design: .rounded))
+                        .noctisFont(13, relativeTo: .footnote)
                         .foregroundStyle(NoctisPaper.orangeText)
                         .multilineTextAlignment(.center)
                 }
@@ -660,7 +665,7 @@ struct PaywallScreen: View {
                         .disabled(selectedProduct == nil || store.purchaseState == .purchasing || store.purchaseState == .pending)
                     if let legal = legalLine {
                         Text(legal)
-                            .font(.system(size: 12, design: .rounded))
+                            .noctisFont(12, relativeTo: .caption)
                             .foregroundStyle(NoctisPaper.ink3)
                             .multilineTextAlignment(.center)
                     }
@@ -697,13 +702,20 @@ struct PaywallScreen: View {
             .padding(.horizontal, -8)
     }
 
+    /// One row of links; stacked when large text can't fit them across.
+    @ViewBuilder
+    private var footerLinks: some View {
+        Button(action: restorePurchases) { footerLabel("Restore Purchases") }
+        Link(destination: StoreLegalLinks.terms) { footerLabel("Terms") }
+        Link(destination: StoreLegalLinks.privacy) { footerLabel("Privacy") }
+    }
+
     private var footer: some View {
-        HStack(spacing: NoctisSpacing.lg) {
-            Button(action: restorePurchases) { footerLabel("Restore Purchases") }
-            Link(destination: StoreLegalLinks.terms) { footerLabel("Terms") }
-            Link(destination: StoreLegalLinks.privacy) { footerLabel("Privacy") }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: NoctisSpacing.lg) { footerLinks }
+            VStack(spacing: NoctisSpacing.xs) { footerLinks }
         }
-        .font(.system(size: 12, design: .rounded))
+        .noctisFont(12, relativeTo: .caption)
         .foregroundStyle(NoctisPaper.ink3)
         .padding(.top, NoctisSpacing.xs)
     }
@@ -852,31 +864,39 @@ private struct PlanCardView: View {
     let reduceMotion: Bool
     let onSelect: () -> Void
 
+    /// R4: the radio mark grows with the plan text beside it.
+    @NoctisScaledLength(relativeTo: .callout) private var radioDiameter: CGFloat = 22
+
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: NoctisSpacing.md) {
                 Circle()
                     .strokeBorder(isSelected ? NoctisPaper.cocoa : NoctisPaper.hairline, lineWidth: isSelected ? 6 : 1.5)
-                    .frame(width: 22, height: 22)
+                    .frame(width: radioDiameter, height: radioDiameter)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text(option.isYearly ? "Yearly" : "Monthly")
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .foregroundStyle(NoctisPaper.ink)
-                        if let trialBadge = option.trialBadge {
-                            PlanBadge(text: trialBadge, fill: NoctisPaper.cocoa)
+                    // Name and badges on one line; badges drop below the
+                    // name when large text can't fit them beside it.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 6) {
+                            planName
+                            badges
                         }
-                        if let savings = option.savingsPercent {
-                            PlanBadge(text: "Save \(savings)%", fill: NoctisPaper.orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            planName
+                            HStack(spacing: 6) { badges }
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            planName
+                            badges
                         }
                     }
                     Text(option.isYearly ? "\(option.displayPrice) / year" : "\(option.displayPrice) / month")
-                        .font(.system(size: 13, design: .rounded))
+                        .noctisFont(13, relativeTo: .footnote)
                         .foregroundStyle(NoctisPaper.ink2)
                     if let perMonthText = option.perMonthText {
                         Text(perMonthText)
-                            .font(.system(size: 12, design: .rounded))
+                            .noctisFont(12, relativeTo: .caption)
                             .foregroundStyle(NoctisPaper.ink3)
                     }
                 }
@@ -899,6 +919,23 @@ private struct PlanCardView: View {
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .accessibilityLabel("\(option.isYearly ? "Yearly" : "Monthly") plan, \(option.displayPrice) per \(option.isYearly ? "year" : "month")")
     }
+
+    private var planName: some View {
+        Text(option.isYearly ? "Yearly" : "Monthly")
+            .noctisFont(16, .semibold, relativeTo: .callout)
+            .foregroundStyle(NoctisPaper.ink)
+            .fixedSize()
+    }
+
+    @ViewBuilder
+    private var badges: some View {
+        if let trialBadge = option.trialBadge {
+            PlanBadge(text: trialBadge, fill: NoctisPaper.cocoa)
+        }
+        if let savings = option.savingsPercent {
+            PlanBadge(text: "Save \(savings)%", fill: NoctisPaper.orange)
+        }
+    }
 }
 
 private struct PlanBadge: View {
@@ -907,12 +944,13 @@ private struct PlanBadge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .noctisFont(11, .bold, relativeTo: .caption2)
             .tracking(0.3)
             .foregroundStyle(NoctisPaper.bg)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
             .background(Capsule(style: .continuous).fill(fill))
+            .fixedSize()
     }
 }
 
@@ -954,6 +992,7 @@ private struct CompareRow: Identifiable {
 
 private struct CompareSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var rows: [CompareRow] {
         benefitRows.map { CompareRow(id: $0.id, text: $0.text, free: $0.includedFree) }
@@ -963,8 +1002,12 @@ private struct CompareSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    headerRow
-                    Rectangle().fill(NoctisPaper.hairline).frame(height: 1)
+                    // At accessibility sizes each row carries its own
+                    // "Free"/"Premium" labels, so the column header goes.
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        headerRow
+                        Rectangle().fill(NoctisPaper.hairline).frame(height: 1)
+                    }
                     ForEach(rows) { row in
                         compareRow(row)
                         Rectangle().fill(NoctisPaper.hairline).frame(height: 1)
@@ -987,33 +1030,57 @@ private struct CompareSheet: View {
     private var headerRow: some View {
         HStack {
             Text("").frame(maxWidth: .infinity, alignment: .leading)
-            Text("Free").font(.system(size: 13, weight: .semibold, design: .rounded)).frame(width: 84)
-            Text("Premium").font(.system(size: 13, weight: .semibold, design: .rounded)).frame(width: 84)
+            Text("Free").noctisFont(13, .semibold, relativeTo: .footnote).frame(width: 84)
+            Text("Premium").noctisFont(13, .semibold, relativeTo: .footnote).frame(width: 84)
         }
         .foregroundStyle(NoctisPaper.ink2)
         .padding(.vertical, NoctisSpacing.sm)
     }
 
+    @ViewBuilder
     private func compareRow(_ row: CompareRow) -> some View {
-        HStack(alignment: .top) {
-            Text(row.text)
-                .font(.system(size: 14, design: .rounded))
-                .foregroundStyle(NoctisPaper.ink)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            compareCell(included: row.free).frame(width: 84)
-            compareCell(included: true).frame(width: 84)
+        let text = Text(row.text)
+            .noctisFont(14, relativeTo: .subheadline)
+            .foregroundStyle(NoctisPaper.ink)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        if dynamicTypeSize.isAccessibilitySize {
+            // Stacked: the feature, then one labeled line per tier.
+            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+                text
+                stackedCell("Free", included: row.free)
+                stackedCell("Premium", included: true)
+            }
+            .padding(.vertical, NoctisSpacing.sm)
+        } else {
+            HStack(alignment: .top) {
+                text
+                compareCell(included: row.free).frame(width: 84)
+                compareCell(included: true).frame(width: 84)
+            }
+            .padding(.vertical, NoctisSpacing.sm)
         }
-        .padding(.vertical, NoctisSpacing.sm)
     }
 
     private func compareCell(included: Bool) -> some View {
         VStack(spacing: 2) {
             Image(systemName: included ? "checkmark.circle.fill" : "xmark.circle")
-                .font(.system(size: 15, weight: .semibold))
+                .noctisIcon(15, relativeTo: .caption2)
                 .foregroundStyle(included ? NoctisPaper.sage : NoctisPaper.ink3)
             Text(included ? "Included" : "Not included")
-                .font(.system(size: 10, design: .rounded))
+                .noctisFont(10, relativeTo: .caption2)
                 .foregroundStyle(NoctisPaper.ink3)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func stackedCell(_ tier: String, included: Bool) -> some View {
+        HStack(spacing: NoctisSpacing.xs) {
+            Image(systemName: included ? "checkmark.circle.fill" : "xmark.circle")
+                .noctisIcon(15, relativeTo: .footnote)
+                .foregroundStyle(included ? NoctisPaper.sage : NoctisPaper.ink3)
+            Text("\(tier): \(included ? "Included" : "Not included")")
+                .noctisFont(13, relativeTo: .footnote)
+                .foregroundStyle(NoctisPaper.ink2)
         }
         .accessibilityElement(children: .combine)
     }

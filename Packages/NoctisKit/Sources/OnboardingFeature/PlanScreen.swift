@@ -121,7 +121,7 @@ struct PlanScreen: View {
     }
 
     private var checklist: some View {
-        VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+        VStack(alignment: .leading, spacing: NoctisScrollEdges.blockGap(NoctisSpacing.sm, dynamicTypeSize)) {
             ForEach(PlanBuildLine.allCases) { line in
                 checklistRow(line)
                     .noctisTextBlock()
@@ -135,7 +135,7 @@ struct PlanScreen: View {
         return HStack(spacing: NoctisSpacing.sm) {
             ChecklistMark(isDone: isDone, reduceMotion: reduceMotion)
             Text(text)
-                .font(.system(size: 15, design: .rounded))
+                .noctisFont(15, relativeTo: .subheadline)
                 .foregroundStyle(isDone ? NoctisPaper.ink : NoctisPaper.ink2)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -151,7 +151,7 @@ struct PlanScreen: View {
 
     private var failureNotice: some View {
         Text("We couldn't read your latest sleep data.")
-            .font(.system(size: 14, design: .rounded))
+            .noctisFont(14, relativeTo: .subheadline)
             .foregroundStyle(NoctisPaper.ink2)
             .multilineTextAlignment(.center)
             .padding(.horizontal, NoctisSpacing.xl)
@@ -280,7 +280,7 @@ struct PlanScreen: View {
             emphasis: "plan is ready.",
             onBack: onBack
         ) {
-            VStack(spacing: NoctisSpacing.lg) {
+            VStack(spacing: NoctisScrollEdges.blockGap(NoctisSpacing.lg, dynamicTypeSize)) {
                 planCard
                 timelineSection
             }
@@ -297,43 +297,15 @@ struct PlanScreen: View {
     private var planCard: some View {
         NoctisPaperCard {
             VStack(spacing: NoctisSpacing.lg) {
+                // Three columns side by side; stacked at accessibility sizes,
+                // or whenever large text can't fit three across (the values
+                // never shrink, so all three always share one size).
                 if dynamicTypeSize.isAccessibilitySize {
-                    VStack(spacing: NoctisSpacing.md) {
-                        planColumn(icon: "moon.fill", fill: NoctisPaper.lavender, label: "Bedtime", number: bedtimeParts.number, suffix: bedtimeParts.suffix)
-                        planColumn(icon: "sun.max.fill", fill: NoctisPaper.butter, label: "Wake", number: wakeParts.number, suffix: wakeParts.suffix)
-                        planColumn(icon: "bed.double.fill", fill: NoctisPaper.sage, label: "Sleep need", number: needParts.number, suffix: needParts.suffix)
-                    }
+                    stackedPlanColumns
                 } else {
-                    // A `Grid` rather than three independent `planColumn`
-                    // HStack cells: it row-aligns the icons, labels and
-                    // values across all three columns, so a taller value
-                    // in one column (the old "8h" vs. "11:00 PM" mismatch)
-                    // can never shift that column's icon out of line with
-                    // its neighbors.
-                    Grid(alignment: .top, horizontalSpacing: NoctisSpacing.md, verticalSpacing: NoctisSpacing.xs) {
-                        GridRow {
-                            NoctisIconTile(systemImage: "moon.fill", fill: NoctisPaper.lavender, size: 40).frame(maxWidth: .infinity)
-                            NoctisIconTile(systemImage: "sun.max.fill", fill: NoctisPaper.butter, size: 40).frame(maxWidth: .infinity)
-                            NoctisIconTile(systemImage: "bed.double.fill", fill: NoctisPaper.sage, size: 40).frame(maxWidth: .infinity)
-                        }
-                        GridRow {
-                            planLabel("Bedtime")
-                            planLabel("Wake")
-                            planLabel("Sleep need")
-                        }
-                        GridRow {
-                            planValue(number: bedtimeParts.number, suffix: bedtimeParts.suffix)
-                            planValue(number: wakeParts.number, suffix: wakeParts.suffix)
-                            planValue(number: needParts.number, suffix: needParts.suffix)
-                        }
-                    }
-                    // VoiceOver reads each column as one pair ("Bedtime, 11:00
-                    // PM") instead of the grid's row order (all three labels,
-                    // then the values and suffixes one by one).
-                    .accessibilityChildren {
-                        Text("Bedtime, \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))")
-                        Text("Wake, \(noctisFormattedClock(minutesSinceMidnight: wakeMinutes))")
-                        Text("Sleep need, \(spokenDuration(needMinutes))")
+                    ViewThatFits(in: .horizontal) {
+                        planGrid
+                        stackedPlanColumns
                     }
                 }
 
@@ -346,6 +318,49 @@ struct PlanScreen: View {
         }
         .noctisScrollRow()
         .noctisRise()
+    }
+
+    private var stackedPlanColumns: some View {
+        VStack(spacing: NoctisScrollEdges.blockGap(NoctisSpacing.md, dynamicTypeSize)) {
+            planColumn(icon: "moon.fill", fill: NoctisPaper.lavender, label: "Bedtime", number: bedtimeParts.number, suffix: bedtimeParts.suffix,
+                       spoken: noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))
+            planColumn(icon: "sun.max.fill", fill: NoctisPaper.butter, label: "Wake", number: wakeParts.number, suffix: wakeParts.suffix,
+                       spoken: noctisFormattedClock(minutesSinceMidnight: wakeMinutes))
+            planColumn(icon: "bed.double.fill", fill: NoctisPaper.sage, label: "Sleep need", number: needParts.number, suffix: needParts.suffix,
+                       spoken: spokenDuration(needMinutes))
+        }
+    }
+
+    // A `Grid` rather than three independent `planColumn` HStack cells: it
+    // row-aligns the icons, labels and values across all three columns, so
+    // a taller value in one column (the old "8h" vs. "11:00 PM" mismatch)
+    // can never shift that column's icon out of line with its neighbors.
+    private var planGrid: some View {
+        Grid(alignment: .top, horizontalSpacing: NoctisSpacing.md, verticalSpacing: NoctisSpacing.xs) {
+            GridRow {
+                NoctisIconTile(systemImage: "moon.fill", fill: NoctisPaper.lavender, size: 40).frame(maxWidth: .infinity)
+                NoctisIconTile(systemImage: "sun.max.fill", fill: NoctisPaper.butter, size: 40).frame(maxWidth: .infinity)
+                NoctisIconTile(systemImage: "bed.double.fill", fill: NoctisPaper.sage, size: 40).frame(maxWidth: .infinity)
+            }
+            GridRow {
+                planLabel("Bedtime")
+                planLabel("Wake")
+                planLabel("Sleep need")
+            }
+            GridRow {
+                planValue(number: bedtimeParts.number, suffix: bedtimeParts.suffix)
+                planValue(number: wakeParts.number, suffix: wakeParts.suffix)
+                planValue(number: needParts.number, suffix: needParts.suffix)
+            }
+        }
+        // VoiceOver reads each column as one pair ("Bedtime, 11:00 PM")
+        // instead of the grid's row order (all three labels, then the
+        // values and suffixes one by one).
+        .accessibilityChildren {
+            Text("Bedtime, \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))")
+            Text("Wake, \(noctisFormattedClock(minutesSinceMidnight: wakeMinutes))")
+            Text("Sleep need, \(spokenDuration(needMinutes))")
+        }
     }
 
     /// "11:00" + "PM", "7:00" + "AM", "8" + "h" — one fixed value style
@@ -382,7 +397,7 @@ struct PlanScreen: View {
 
     private func planLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 13, design: .rounded))
+            .noctisFont(13, relativeTo: .footnote)
             .foregroundStyle(NoctisPaper.ink2)
             .frame(maxWidth: .infinity)
             .noctisTextBlock()
@@ -390,13 +405,14 @@ struct PlanScreen: View {
 
     private func planValue(number: String, suffix: String) -> some View {
         HStack(alignment: .lastTextBaseline, spacing: 2) {
+            // Hero-numeral curve (.largeTitle, capped at 1.6x), never shrunk.
             Text(number)
-                .font(.system(size: 26, weight: .heavy, design: .rounded))
+                .noctisFont(26, .heavy, relativeTo: .largeTitle, maxScale: NoctisTypeScale.maxNumeralScale)
                 .foregroundStyle(NoctisPaper.ink)
                 .fixedSize()
             if !suffix.isEmpty {
                 Text(suffix)
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    .noctisFont(13, .heavy, relativeTo: .largeTitle, maxScale: NoctisTypeScale.maxNumeralScale)
                     .foregroundStyle(NoctisPaper.ink)
                     .fixedSize()
             }
@@ -405,35 +421,50 @@ struct PlanScreen: View {
         .noctisTextBlock()
     }
 
-    private func planColumn(icon: String, fill: Color, label: String, number: String, suffix: String) -> some View {
+    /// `spoken` is what VoiceOver reads for the value ("11:00 PM",
+    /// "8 hours") — the combined number and suffix read as "8 , h".
+    private func planColumn(icon: String, fill: Color, label: String, number: String, suffix: String, spoken: String) -> some View {
         VStack(spacing: NoctisSpacing.xs) {
             NoctisIconTile(systemImage: icon, fill: fill, size: 40)
-            planLabel(label)
-            planValue(number: number, suffix: suffix)
+            VStack(spacing: NoctisSpacing.xs) {
+                planLabel(label)
+                planValue(number: number, suffix: suffix)
+            }
+            .noctisTextBlock()
         }
         .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label), \(spoken)")
     }
 
+    /// GoalScreen caps selection at two: side by side, or stacked when
+    /// large text can't fit both on one line.
     private var goalCapsules: some View {
-        // GoalScreen caps selection at two, so a wrapping layout isn't
-        // needed — a plain HStack always fits.
-        HStack(spacing: NoctisSpacing.xs) {
-            ForEach(goals, id: \.self) { goal in
-                HStack(spacing: 6) {
-                    Image(systemName: goal.systemImage)
-                        .font(.system(size: 12, weight: .semibold))
-                        .accessibilityHidden(true)
-                    Text(goal.displayName)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                }
-                .foregroundStyle(goalForeground(goal))
-                .padding(.horizontal, NoctisSpacing.sm)
-                .padding(.vertical, 6)
-                .background(Capsule(style: .continuous).fill(goalFill(goal)))
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: NoctisSpacing.xs) {
+                ForEach(goals, id: \.self) { goalChip($0) }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+                ForEach(goals, id: \.self) { goalChip($0) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func goalChip(_ goal: PrimaryGoal) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: goal.systemImage)
+                .noctisIcon(12, relativeTo: .footnote)
+                .accessibilityHidden(true)
+            Text(goal.displayName)
+                .noctisFont(13, .medium, relativeTo: .footnote)
+        }
+        .foregroundStyle(goalForeground(goal))
+        .padding(.horizontal, NoctisSpacing.sm)
+        .padding(.vertical, 6)
+        .background(Capsule(style: .continuous).fill(goalFill(goal)))
+        .fixedSize()
     }
 
     private func goalFill(_ goal: PrimaryGoal) -> Color {
@@ -451,9 +482,9 @@ struct PlanScreen: View {
     }
 
     private var timelineSection: some View {
-        VStack(alignment: .leading, spacing: NoctisSpacing.md) {
+        VStack(alignment: .leading, spacing: NoctisScrollEdges.blockGap(NoctisSpacing.md, dynamicTypeSize)) {
             Text("Your first two weeks")
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .noctisFont(15, .semibold, relativeTo: .subheadline)
                 .foregroundStyle(NoctisPaper.ink)
                 .noctisTextBlock()
             PlanTimeline(nodes: timelineNodes, reduceMotion: reduceMotion)
@@ -484,6 +515,8 @@ private struct ChecklistMark: View {
 
     @State private var trimProgress: CGFloat = 0
     @State private var markOpacity: Double = 0
+    /// R4: grows with the checklist line beside it.
+    @NoctisScaledLength(relativeTo: .subheadline) private var diameter: CGFloat = 22
 
     var body: some View {
         ZStack {
@@ -494,10 +527,10 @@ private struct ChecklistMark: View {
             PlanCheckmarkShape()
                 .trim(from: 0, to: reduceMotion ? 1 : trimProgress)
                 .stroke(NoctisPaper.ivory, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                .frame(width: 11, height: 11)
+                .frame(width: diameter / 2, height: diameter / 2)
                 .opacity(reduceMotion ? markOpacity : 1)
         }
-        .frame(width: 22, height: 22)
+        .frame(width: diameter, height: diameter)
         .onChange(of: isDone) { _, newValue in
             guard newValue else {
                 trimProgress = 0
@@ -545,26 +578,32 @@ private struct PlanTimeline: View {
 
     @State private var lineProgress: CGFloat = 0
     @State private var lineHeight: CGFloat = 0
+    /// R4: rows scale on the subheadline curve; the dots grow with them
+    /// and stay centered on each first line, with the rail through them.
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .subheadline) private var textSize: CGFloat = 14
+    @NoctisScaledLength(relativeTo: .subheadline) private var dot: CGFloat = 10
+    private var dotTopPadding: CGFloat { max((textSize * 1.19 - dot) / 2, 0) }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             Rectangle()
                 .fill(NoctisPaper.hairline)
                 .frame(width: 2, height: lineHeight)
-                .padding(.leading, 4)
+                .padding(.leading, dot / 2 - 1)
             Rectangle()
                 .fill(NoctisPaper.cocoa)
                 .frame(width: 2, height: lineHeight)
-                .padding(.leading, 4)
+                .padding(.leading, dot / 2 - 1)
                 .scaleEffect(x: 1, y: lineProgress, anchor: .top)
 
-            VStack(alignment: .leading, spacing: NoctisSpacing.lg) {
+            VStack(alignment: .leading, spacing: NoctisScrollEdges.blockGap(NoctisSpacing.lg, dynamicTypeSize)) {
                 ForEach(Array(nodes.enumerated()), id: \.offset) { index, text in
                     HStack(alignment: .top, spacing: NoctisSpacing.md) {
                         Circle()
                             .fill(NoctisPaper.cocoa)
-                            .frame(width: 10, height: 10)
-                            .padding(.top, 3)
+                            .frame(width: dot, height: dot)
+                            .padding(.top, dotTopPadding)
                             .background(
                                 GeometryReader { dotGeometry in
                                     Color.clear.preference(
@@ -576,7 +615,7 @@ private struct PlanTimeline: View {
                                 }
                             )
                         Text(text)
-                            .font(.system(size: 14, design: .rounded))
+                            .font(.system(size: textSize, design: .rounded))
                             .foregroundStyle(NoctisPaper.ink2)
                             .fixedSize(horizontal: false, vertical: true)
                     }

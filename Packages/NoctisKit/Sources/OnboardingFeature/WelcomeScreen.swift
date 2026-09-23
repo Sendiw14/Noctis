@@ -82,7 +82,7 @@ struct WelcomeScreen: View {
             ScrollView {
                 VStack(spacing: 0) {
                     Color.clear.frame(height: topLeftoverShare)
-                    VStack(spacing: NoctisSpacing.lg) {
+                    VStack(spacing: NoctisScrollEdges.blockGap(NoctisSpacing.lg, dynamicTypeSize)) {
                         heroConstellation
                         titleTaglineBlock
                             .noctisTextBlock()
@@ -251,14 +251,14 @@ struct WelcomeScreen: View {
     private var titleTaglineBlock: some View {
         VStack(spacing: NoctisSpacing.xs) {
             Text("NOCTIS")
-                .font(.system(size: 38, weight: .bold, design: .rounded))
+                .noctisFont(38, .bold, relativeTo: .largeTitle)
                 .tracking(-0.6)
                 .foregroundStyle(NoctisPaper.ink)
                 .opacity(textRisen ? 1 : 0)
                 .offset(y: reduceMotion ? 0 : (textRisen ? 0 : 12))
                 .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: textRisen)
             Text("Better nights. A brighter you.")
-                .font(.system(size: 17, design: .rounded))
+                .noctisFont(17, relativeTo: .body)
                 .foregroundStyle(NoctisPaper.ink2)
                 .opacity(textRisen ? 1 : 0)
                 .offset(y: reduceMotion ? 0 : (textRisen ? 0 : 12))
@@ -279,7 +279,7 @@ struct WelcomeScreen: View {
         NoctisPaperCard(padding: 0) {
             Group {
                 if dynamicTypeSize.isAccessibilitySize {
-                    VStack(spacing: NoctisSpacing.sm) {
+                    VStack(spacing: NoctisScrollEdges.accessibleBlockGap / 2) {
                         ForEach(Array(welcomeInfoColumns.enumerated()), id: \.offset) { index, column in
                             infoColumn(column)
                                 .noctisTextBlock()
@@ -326,11 +326,11 @@ struct WelcomeScreen: View {
     private func infoColumn(_ column: WelcomeInfoColumn) -> some View {
         VStack(spacing: 6) {
             Image(systemName: column.icon)
-                .font(.system(size: 20, weight: .semibold))
+                .noctisIcon(20, relativeTo: .footnote)
                 .foregroundStyle(NoctisPaper.ink)
                 .accessibilityHidden(true)
             Text(column.label)
-                .font(.system(size: 13, design: .rounded))
+                .noctisFont(13, relativeTo: .footnote)
                 .foregroundStyle(NoctisPaper.ink2)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.85)

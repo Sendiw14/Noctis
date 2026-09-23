@@ -33,6 +33,7 @@ struct HealthScreen: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var outcome: ConnectOutcome = .idle
     @State private var circlesConverged = false
@@ -50,7 +51,7 @@ struct HealthScreen: View {
             emphasis: "signals.",
             onBack: onBack
         ) {
-            VStack(spacing: compact ? NoctisSpacing.sm : NoctisSpacing.lg) {
+            VStack(spacing: NoctisScrollEdges.blockGap(compact ? NoctisSpacing.sm : NoctisSpacing.lg, dynamicTypeSize)) {
                 hero
                 if !isAvailable {
                     unavailableBanner
@@ -83,7 +84,9 @@ struct HealthScreen: View {
         let diameter: CGFloat = 110
         let spread: CGFloat = compact ? 100 : 150
         let clustered: CGFloat = compact ? 44 : 62
-        let bandHeight = max(diameter + NoctisSpacing.lg, heroHeight * 0.26)
+        // Sized to the circles (what the old 26%-of-content rule always
+        // resolved to at standard sizes); large text no longer inflates it.
+        let bandHeight = diameter + NoctisSpacing.lg
 
         return ZStack {
             circle(NoctisPaper.sage, diameter: diameter)
@@ -137,11 +140,11 @@ struct HealthScreen: View {
     private var unavailableBanner: some View {
         HStack(spacing: NoctisSpacing.sm) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 15, weight: .semibold))
+                .noctisIcon(15, relativeTo: .subheadline)
                 .foregroundStyle(NoctisPaper.orangeText)
                 .accessibilityHidden(true)
             Text("Health data isn't available on this device.")
-                .font(.system(size: 14, design: .rounded))
+                .noctisFont(14, relativeTo: .subheadline)
                 .foregroundStyle(NoctisPaper.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
@@ -168,7 +171,7 @@ struct HealthScreen: View {
                         Rectangle()
                             .fill(NoctisPaper.hairline)
                             .frame(height: 1)
-                            .padding(.vertical, compact ? NoctisSpacing.xs : NoctisSpacing.sm)
+                            .padding(.vertical, NoctisScrollEdges.blockGap(compact ? NoctisSpacing.xs : NoctisSpacing.sm, dynamicTypeSize) / 2)
                     }
                 }
             }
@@ -181,12 +184,12 @@ struct HealthScreen: View {
             NoctisIconTile(systemImage: kind.systemImage, fill: signalFill(kind), size: compact ? 38 : 44)
             VStack(alignment: .leading, spacing: 2) {
                 Text(kind.rowTitle)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .noctisFont(17, .semibold, relativeTo: .body)
                     .foregroundStyle(NoctisPaper.ink)
                 Text(kind.benefit)
-                    .font(.system(size: 15, design: .rounded))
+                    .noctisFont(15, relativeTo: .subheadline)
                     .foregroundStyle(NoctisPaper.ink2)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }
@@ -208,10 +211,10 @@ struct HealthScreen: View {
     private var privacyLine: some View {
         HStack(spacing: 6) {
             Image(systemName: "lock.fill")
-                .font(.system(size: 12, weight: .semibold))
+                .noctisIcon(12, relativeTo: .footnote)
                 .accessibilityHidden(true)
             Text("Read-only. You control access in the Health app at any time.")
-                .font(.system(size: 13, design: .rounded))
+                .noctisFont(13, relativeTo: .footnote)
                 .multilineTextAlignment(.leading)
         }
         .foregroundStyle(NoctisPaper.ink3)
@@ -229,7 +232,8 @@ struct HealthScreen: View {
             case .error:
                 VStack(spacing: NoctisSpacing.sm) {
                     Text("Couldn't reach Health right now.")
-                        .font(.system(size: 14, design: .rounded))
+                        .noctisFont(14, relativeTo: .subheadline)
+                        .multilineTextAlignment(.center)
                         .foregroundStyle(NoctisPaper.ink2)
                     NoctisCTA("Try again", action: connect)
                     NoctisTextButton("Continue without Health data", action: onNext)

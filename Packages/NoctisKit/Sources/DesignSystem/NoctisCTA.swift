@@ -35,14 +35,20 @@ public struct NoctisCTA: View {
                 } else {
                     HStack(spacing: 6) {
                         Text(title)
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .noctisFont(17, .semibold, relativeTo: .body)
+                            .multilineTextAlignment(.center)
                         Image(systemName: icon)
-                            .font(.system(size: 15, weight: .semibold))
+                            .noctisIcon(15)
                     }
                     .foregroundStyle(isEnabled ? NoctisPaper.bg : NoctisPaper.ink3)
+                    // R4: 58pt at the default size; taller when the label
+                    // grows or wraps, never clipped.
+                    .padding(.vertical, NoctisSpacing.sm)
+                    .padding(.horizontal, NoctisSpacing.lg)
                 }
             }
-            .frame(height: 58)
+            .frame(minHeight: 58)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .buttonStyle(NoctisCTAButtonStyle(reduceMotion: reduceMotion))
         .disabled(isLoading)
@@ -93,8 +99,9 @@ public struct NoctisTextButton: View {
     public var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .noctisFont(15, .medium, relativeTo: .subheadline)
                 .foregroundStyle(NoctisPaper.ink2)
+                .multilineTextAlignment(.center)
                 .frame(minWidth: 44, minHeight: 44)
                 // `.plain` hit-tests only drawn pixels without this — the
                 // 44pt frame was layout only, leaving an 18pt-tall target.

@@ -13,6 +13,9 @@ struct SampleNightScreen: View {
     let onBack: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// R4: the legend's stage dots grow with the legend text.
+    @NoctisScaleFactor(relativeTo: .footnote) private var legendScale: CGFloat
 
     /// Read via a background probe rather than a direct `GeometryReader`
     /// wrap — RhythmScreen hit a real bug where wrapping hero content in a
@@ -70,13 +73,13 @@ struct SampleNightScreen: View {
                     }
                 }
                 .noctisTextBlock()
-                .padding(.top, NoctisSpacing.lg)
+                .padding(.top, NoctisScrollEdges.blockGap(NoctisSpacing.lg, dynamicTypeSize))
                 Text("Sample data. Your own night appears after your first sleep.")
-                    .font(.system(size: 12, design: .rounded))
+                    .noctisFont(12, relativeTo: .caption)
                     .foregroundStyle(NoctisPaper.ink3)
                     .multilineTextAlignment(.center)
                     .noctisTextBlock()
-                    .padding(.top, NoctisSpacing.md)
+                    .padding(.top, NoctisScrollEdges.blockGap(NoctisSpacing.md, dynamicTypeSize))
                     .padding(.horizontal, compact ? NoctisSpacing.xs : NoctisSpacing.md)
             }
             .background(
@@ -128,7 +131,7 @@ struct SampleNightScreen: View {
 
     private var sampleBadge: some View {
         Text("Sample")
-            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .noctisFont(12, .semibold, relativeTo: .caption)
             .foregroundStyle(NoctisPaper.cocoa)
             .padding(.horizontal, NoctisSpacing.sm)
             .padding(.vertical, 5)
@@ -192,38 +195,42 @@ struct SampleNightScreen: View {
                 let minutes = SampleNight.minutes(for: selectedStage)
                 VStack(spacing: 4) {
                     Text(noctisFormattedDuration(minutes: minutes))
-                        .font(.system(size: 52, weight: .heavy, design: .rounded))
+                        .noctisNumeral(52)
                         .foregroundStyle(NoctisPaper.ink)
                         .monospacedDigit()
                         .contentTransition(.numericText())
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
                     Text("\(SleepRing.percent(of: minutes))% of the night")
-                        .font(.system(size: 15, design: .rounded))
+                        .noctisFont(15, relativeTo: .subheadline)
                         .foregroundStyle(NoctisPaper.ink2)
+                        .lineLimit(2)
                         .minimumScaleFactor(0.7)
-                        .lineLimit(1)
                 }
                 .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.2), reduceMotion: reduceMotion), value: selectedStage)
             } else {
                 VStack(spacing: 4) {
                     Text(noctisFormattedDuration(minutes: displayedTotalMinutes))
-                        .font(.system(size: 52, weight: .heavy, design: .rounded))
+                        .noctisNumeral(52)
                         .foregroundStyle(NoctisPaper.ink)
                         .monospacedDigit()
                         .contentTransition(.numericText())
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
                     Text("Sleep quality 87%")
-                        .font(.system(size: 15, design: .rounded))
+                        .noctisFont(15, relativeTo: .subheadline)
                         .foregroundStyle(NoctisPaper.ink2)
+                        .lineLimit(2)
                         .minimumScaleFactor(0.7)
-                        .lineLimit(1)
                 }
             }
         }
-        .frame(width: max(ringDiameter - 32, 0))
+        .frame(width: ringCenterWidth)
         .multilineTextAlignment(.center)
+    }
+
+    /// Inside the ring's stroke: 8pt clear of it at standard sizes; at
+    /// accessibility sizes narrower still, since the taller text block
+    /// reaches where the circle's chord is shorter.
+    private var ringCenterWidth: CGFloat {
+        let inner = max(ringDiameter - 2 * Self.ringLineWidth, 0)
+        return dynamicTypeSize.isAccessibilitySize ? inner * 0.78 : max(inner - 8, 0)
     }
 
     private var displayedTotalMinutes: Int {
@@ -233,7 +240,7 @@ struct SampleNightScreen: View {
 
     private var scrubPill: some View {
         Text(scrubPillText)
-            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .noctisFont(13, .semibold, relativeTo: .footnote)
             .monospacedDigit()
             .foregroundStyle(NoctisPaper.bg)
             .padding(.horizontal, NoctisSpacing.sm)
@@ -326,32 +333,57 @@ struct SampleNightScreen: View {
 
     // MARK: - Stage columns
 
+    /// Four columns side by side; at accessibility sizes, one row per
+    /// stage (dot, name, duration) stacked vertically.
+    @ViewBuilder
     private func stageColumns(compact: Bool) -> some View {
-        HStack(spacing: 0) {
-            ForEach(SampleSleepStage.allCases, id: \.self) { stage in
-                stageColumn(stage, compact: compact)
-                    .frame(maxWidth: .infinity)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: NoctisSpacing.xs) {
+                ForEach(SampleSleepStage.allCases, id: \.self) { stage in
+                    stageColumn(stage, compact: compact)
+                }
+            }
+        } else {
+            HStack(spacing: 0) {
+                ForEach(SampleSleepStage.allCases, id: \.self) { stage in
+                    stageColumn(stage, compact: compact)
+                        .frame(maxWidth: .infinity)
+                }
             }
         }
     }
 
     private func stageColumn(_ stage: SampleSleepStage, compact: Bool) -> some View {
         let minutes = SampleNight.minutes(for: stage)
+        let dot = (compact ? 8 : 10) * legendScale
+        let name = Text(stage.label)
+            .noctisFont(13, relativeTo: .footnote)
+            .foregroundStyle(NoctisPaper.ink2)
+        let duration = Text(noctisFormattedDuration(minutes: minutes))
+            .noctisFont(compact ? 14 : 17, .semibold, relativeTo: .body)
+            .foregroundStyle(NoctisPaper.ink)
         return Button {
             toggleSelection(stage)
         } label: {
-            VStack(spacing: compact ? 1 : 4) {
-                Circle()
-                    .fill(stage.color)
-                    .frame(width: compact ? 8 : 10, height: compact ? 8 : 10)
-                Text(stage.label)
-                    .font(.system(size: 13, design: .rounded))
-                    .foregroundStyle(NoctisPaper.ink2)
-                Text(noctisFormattedDuration(minutes: minutes))
-                    .font(.system(size: compact ? 14 : 17, weight: .semibold, design: .rounded))
-                    .foregroundStyle(NoctisPaper.ink)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    HStack(spacing: NoctisSpacing.sm) {
+                        Circle().fill(stage.color).frame(width: dot, height: dot)
+                        name
+                        Spacer(minLength: NoctisSpacing.sm)
+                        duration
+                    }
+                    .frame(minHeight: 44)
+                } else {
+                    VStack(spacing: compact ? 1 : 4) {
+                        Circle().fill(stage.color).frame(width: dot, height: dot)
+                        name
+                        duration
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
-            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
             .opacity(selectedStage == nil || selectedStage == stage ? 1 : 0.25)
         }
         .buttonStyle(.plain)

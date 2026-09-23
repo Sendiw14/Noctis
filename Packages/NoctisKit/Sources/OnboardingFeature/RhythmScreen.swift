@@ -18,6 +18,7 @@ struct RhythmScreen: View {
     let onBack: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// The scaffold's own single `ScrollView` now always bounds the hero to
     /// a measured, finite height (never the unbounded height that used to
     /// blow up a direct `GeometryReader` wrap here and swallow the AX
@@ -89,17 +90,17 @@ struct RhythmScreen: View {
         NoctisPaperCard(padding: NoctisSpacing.lg) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("I usually wake at")
-                    .font(.system(size: compact ? 13 : 14, weight: .medium, design: .rounded))
+                    .noctisFont(compact ? 13 : 14, .medium, relativeTo: .subheadline)
                     .foregroundStyle(NoctisPaper.ink2)
                     .noctisTextBlock()
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Text(wakeTimeNumeric)
-                        .font(.system(size: heroSize, weight: .heavy, design: .rounded))
+                        .noctisNumeral(heroSize)
                         .foregroundStyle(NoctisPaper.ink)
                         .monospacedDigit()
                         .contentTransition(.numericText())
                     Text(wakeTimePeriod)
-                        .font(.system(size: 24, weight: .semibold, design: .rounded))
+                        .noctisNumeral(24, .semibold)
                         .foregroundStyle(NoctisPaper.ink2)
                 }
                 .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.15), reduceMotion: reduceMotion), value: wakeMinutes)
@@ -128,11 +129,11 @@ struct RhythmScreen: View {
         NoctisPaperCard(padding: NoctisSpacing.lg) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("I feel best with")
-                    .font(.system(size: compact ? 13 : 14, weight: .medium, design: .rounded))
+                    .noctisFont(compact ? 13 : 14, .medium, relativeTo: .subheadline)
                     .foregroundStyle(NoctisPaper.ink2)
                     .noctisTextBlock()
                 Text(noctisFormattedDuration(minutes: needMinutes))
-                    .font(.system(size: heroSize, weight: .heavy, design: .rounded))
+                    .noctisNumeral(heroSize)
                     .foregroundStyle(NoctisPaper.ink)
                     .monospacedDigit()
                     .contentTransition(.numericText())
@@ -161,22 +162,23 @@ struct RhythmScreen: View {
     }
 
     private func resultSection(compact: Bool) -> some View {
-        VStack(spacing: compact ? 2 : NoctisSpacing.xs) {
+        VStack(spacing: NoctisScrollEdges.blockGap(compact ? 2 : NoctisSpacing.xs, dynamicTypeSize)) {
             Text("Bedtime around \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))")
-                .font(.system(size: compact ? 17 : 22, weight: .semibold, design: .rounded))
+                .noctisFont(compact ? 17 : 22, .semibold, relativeTo: .title3)
+                .multilineTextAlignment(.center)
                 .foregroundStyle(NoctisPaper.ink)
                 .contentTransition(.numericText())
                 .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.2), reduceMotion: reduceMotion), value: bedtimeMinutes)
                 .noctisTextBlock()
 
-            VStack(spacing: NoctisSpacing.sm) {
+            VStack(spacing: NoctisScrollEdges.blockGap(NoctisSpacing.sm, dynamicTypeSize)) {
                 NightStrip(bedtimeMinutes: bedtimeMinutes, wakeMinutes: wakeMinutes, compact: compact)
                     .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: bedtimeMinutes)
                     .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: wakeMinutes)
                     .noctisTextBlock()
 
                 Text("A starting point. NOCTIS adapts as it learns your nights.")
-                    .font(.system(size: 12, design: .rounded))
+                    .noctisFont(12, relativeTo: .caption)
                     .foregroundStyle(NoctisPaper.ink3)
                     .multilineTextAlignment(.center)
                     .noctisTextBlock()
@@ -245,6 +247,10 @@ private struct RulerDial: View {
     var pxPerMinute: CGFloat? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// R4: hour labels scale on the caption curve; the label row (and so
+    /// the dial) grows with them instead of clipping.
+    @ScaledMetric(relativeTo: .caption) private var labelSize: CGFloat = 12
+    private var labelRowHeight: CGFloat { (labelSize * 14 / 12).rounded(.up) }
     @State private var frameWidth: CGFloat = 0
     /// The at-rest offset for the current `value` — recomputed whenever
     /// `value` settles (drag end, accessibility action, or first layout).
@@ -349,7 +355,7 @@ private struct RulerDial: View {
                 }
             }
         }
-        .frame(height: height)
+        .frame(height: height + labelRowHeight - 14)
         // VoiceOver sees a plain 15-minute-step slider the size of the
         // visible dial. Marking the dial itself as the element gave it the
         // frame of the whole tick strip, far wider than the screen.
@@ -401,14 +407,14 @@ private struct RulerDial: View {
                     // label itself never shrinks in compact mode — only
                     // the tick marks and spacing around it do.
                     Text(hourLabel(minute))
-                        .font(.system(size: 12, design: .rounded))
+                        .font(.system(size: labelSize, design: .rounded))
                         .foregroundStyle(NoctisPaper.ink3)
                         .fixedSize()
                 } else {
                     Color.clear
                 }
             }
-            .frame(height: 14)
+            .frame(height: labelRowHeight)
         }
         .frame(maxHeight: .infinity, alignment: .top)
     }
@@ -542,7 +548,9 @@ private struct NightStrip: View, Animatable {
         ("6P", 18 * 60), ("12A", 24 * 60), ("6A", 30 * 60), ("12P", 36 * 60),
     ]
     private static let edgeOverhang: CGFloat = 12
-    private static let labelHeight: CGFloat = 15
+    /// R4: axis labels scale on the caption curve; the label row grows too.
+    @ScaledMetric(relativeTo: .caption) private var labelSize: CGFloat = 12
+    private var labelHeight: CGFloat { (labelSize * 15 / 12).rounded(.up) }
 
     private var trackHeight: CGFloat { compact ? 11 : 18 }
     private var dotSize: CGFloat { compact ? 11 : 16 }
@@ -551,8 +559,17 @@ private struct NightStrip: View, Animatable {
 
     var body: some View {
         Canvas { context, size in
-            let trackMinX = Self.edgeOverhang
-            let trackWidth = size.width - Self.edgeOverhang * 2
+            let resolvedLabels = Self.labels.map { label in
+                (label, context.resolve(
+                    Text(label.text).font(.system(size: labelSize, design: .rounded)).foregroundStyle(NoctisPaper.ink3)
+                ))
+            }
+            // The track stays flush with the cards above unless the labels
+            // centered on its ends (large text) would run off the canvas;
+            // then it insets just enough to keep them whole.
+            let widestHalf = resolvedLabels.map { $0.1.measure(in: size).width / 2 }.max() ?? 0
+            let trackMinX = max(Self.edgeOverhang, widestHalf + 1)
+            let trackWidth = size.width - trackMinX * 2
             let span = Double(noctisNightStripEndMinutes) - windowStart
             func x(_ minutes: Double) -> CGFloat {
                 trackMinX + trackWidth * CGFloat(min(max((minutes - windowStart) / span, 0), 1))
@@ -576,14 +593,11 @@ private struct NightStrip: View, Animatable {
                 context.draw(glyph, at: CGPoint(x: centerX, y: midY), anchor: .center)
             }
 
-            for label in Self.labels {
-                let text = context.resolve(
-                    Text(label.text).font(.system(size: 12, design: .rounded)).foregroundStyle(NoctisPaper.ink3)
-                )
+            for (label, text) in resolvedLabels {
                 context.draw(text, at: CGPoint(x: x(label.minutes), y: size.height), anchor: .bottom)
             }
         }
-        .frame(height: rowHeight + labelGap + Self.labelHeight)
+        .frame(height: rowHeight + labelGap + labelHeight)
         .padding(.horizontal, -Self.edgeOverhang)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Night strip, bedtime \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes)) through wake \(noctisFormattedClock(minutesSinceMidnight: wakeMinutes))")

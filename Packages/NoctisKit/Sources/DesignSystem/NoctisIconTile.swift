@@ -7,14 +7,20 @@ public struct NoctisIconTile: View {
     private let systemImage: String
     private let fill: Color
     private let foreground: Color
-    private let size: CGFloat
+    private let baseSize: CGFloat
+    /// R4: tiles sit beside text, so they grow with it (capped at
+    /// `NoctisTypeScale.maxIconScale`); `size` is the default-text-size
+    /// diameter.
+    @NoctisScaleFactor private var scale: CGFloat
 
     public init(systemImage: String, fill: Color, foreground: Color = NoctisPaper.bg, size: CGFloat = 44) {
         self.systemImage = systemImage
         self.fill = fill
         self.foreground = foreground
-        self.size = size
+        self.baseSize = size
     }
+
+    private var size: CGFloat { baseSize * scale }
 
     public var body: some View {
         Circle()

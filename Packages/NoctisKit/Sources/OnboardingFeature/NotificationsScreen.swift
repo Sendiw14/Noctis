@@ -62,6 +62,7 @@ struct NotificationsScreen: View {
     let onBack: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var enabledStates: [Bool] = NotificationKind.allCases.map { _ in true }
     @State private var cardsAppeared = false
@@ -122,24 +123,24 @@ struct NotificationsScreen: View {
             HStack(alignment: .top, spacing: NoctisSpacing.sm) {
                 NotificationAppTile(showCheckmark: checkmarkDrawn)
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text("NOCTIS")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(NoctisPaper.ink)
-                        Text("now")
-                            .font(.system(size: 13, design: .rounded))
-                            .foregroundStyle(NoctisPaper.ink3)
-                        Spacer(minLength: 0)
-                        Text("Example")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(NoctisPaper.cocoa)
-                            .padding(.horizontal, NoctisSpacing.xs)
-                            .padding(.vertical, 3)
-                            .background(Capsule(style: .continuous).fill(NoctisPaper.butter))
+                    // One header row; at accessibility sizes the "Example"
+                    // badge drops to its own line.
+                    if dynamicTypeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 4) {
+                            previewSender
+                            exampleBadge
+                        }
+                    } else {
+                        HStack(spacing: 6) {
+                            previewSender
+                            Spacer(minLength: 0)
+                            exampleBadge
+                        }
                     }
                     Text(kind.previewBody)
-                        .font(.system(size: 14, design: .rounded))
+                        .noctisFont(14, relativeTo: .subheadline)
                         .foregroundStyle(NoctisPaper.ink)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .noctisTextBlock()
@@ -152,6 +153,27 @@ struct NotificationsScreen: View {
         .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: cardsSettling)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isStaticText)
+    }
+
+    private var previewSender: some View {
+        HStack(spacing: 6) {
+            Text("NOCTIS")
+                .noctisFont(13, .semibold, relativeTo: .footnote)
+                .foregroundStyle(NoctisPaper.ink)
+            Text("now")
+                .noctisFont(13, relativeTo: .footnote)
+                .foregroundStyle(NoctisPaper.ink3)
+        }
+    }
+
+    private var exampleBadge: some View {
+        Text("Example")
+            .noctisFont(12, .medium, relativeTo: .caption)
+            .foregroundStyle(NoctisPaper.cocoa)
+            .padding(.horizontal, NoctisSpacing.xs)
+            .padding(.vertical, 3)
+            .background(Capsule(style: .continuous).fill(NoctisPaper.butter))
+            .fixedSize()
     }
 
     private func runEntranceIfNeeded() {
@@ -171,7 +193,7 @@ struct NotificationsScreen: View {
                         Rectangle()
                             .fill(NoctisPaper.hairline)
                             .frame(height: 1)
-                            .padding(.vertical, compact ? NoctisSpacing.xs : NoctisSpacing.sm)
+                            .padding(.vertical, NoctisScrollEdges.blockGap(compact ? NoctisSpacing.xs : NoctisSpacing.sm, dynamicTypeSize) / 2)
                     }
                 }
             }
@@ -184,12 +206,14 @@ struct NotificationsScreen: View {
         HStack(alignment: .center, spacing: NoctisSpacing.md) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(kind.toggleTitle)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .noctisFont(17, .semibold, relativeTo: .body)
                     .foregroundStyle(NoctisPaper.ink)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let subtitle = kind.toggleSubtitle {
                     Text(subtitle)
-                        .font(.system(size: 13, design: .rounded))
+                        .noctisFont(13, relativeTo: .footnote)
                         .foregroundStyle(NoctisPaper.ink2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             Spacer(minLength: 0)
@@ -312,7 +336,8 @@ private struct NotificationAppTile: View {
     @State private var checkmarkProgress: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let size: CGFloat = 38
+    /// R4: grows with the preview text beside it.
+    @NoctisScaledLength(relativeTo: .subheadline) private var size: CGFloat = 38
 
     var body: some View {
         RoundedRectangle(cornerRadius: NoctisRadius.sm, style: .continuous)
