@@ -29,9 +29,18 @@ struct HomeWidthTests {
         return model
     }
 
-    private func render(_ model: HomeViewModel, width: CGFloat, sizeClass: UserInterfaceSizeClass, name: String? = nil) -> CGSize? {
+    private func render(
+        _ model: HomeViewModel,
+        width: CGFloat,
+        sizeClass: UserInterfaceSizeClass,
+        name: String? = nil,
+        typeSize: DynamicTypeSize = .large,
+        weight: LegibilityWeight = .regular
+    ) -> CGSize? {
         let renderer = ImageRenderer(content: HomeRenderHarness(viewModel: model)
             .environment(\.horizontalSizeClass, sizeClass)
+            .environment(\.dynamicTypeSize, typeSize)
+            .environment(\.legibilityWeight, weight)
             .frame(width: width))
         renderer.scale = 2
         guard let image = renderer.uiImage else { return nil }
@@ -79,6 +88,26 @@ struct HomeWidthTests {
         let model = await viewModel(.empty)
         let size = try #require(render(model, width: 1000, sizeClass: .regular, name: "home-1000-regular-empty"))
         #expect(size.width == 1000)
+    }
+
+    // MARK: - Dynamic Type and Bold Text
+
+    /// Every Dynamic Type size, regular and bold, at 390pt: Home lays out
+    /// at exactly that width and only grows taller as text grows.
+    @Test func everyTextSizeAndBoldTextLayOut() async throws {
+        let model = await viewModel()
+        var previous: CGFloat = 0
+        for size in DynamicTypeSize.allCases {
+            for weight in [LegibilityWeight.regular, .bold] {
+                let name = "type-\(String(describing: size))-\(weight == .bold ? "bold" : "regular")"
+                let rendered = try #require(render(model, width: 390, sizeClass: .compact, name: name, typeSize: size, weight: weight))
+                #expect(rendered.width == 390, "\(name)")
+                if weight == .regular {
+                    #expect(rendered.height >= previous, "\(name) should be at least as tall as the size before it")
+                    previous = rendered.height
+                }
+            }
+        }
     }
 
     // MARK: - Rings

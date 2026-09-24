@@ -51,6 +51,12 @@ public nonisolated struct TonightTimes: Sendable, Equatable {
         countdown(at: now).map { "Bedtime \($0)." } ?? passedText + "."
     }
 
+    /// The collapsed bar and the tab bar accessory: "Bedtime 11:00 PM ·
+    /// in 2h 14m", or after bedtime "Bedtime was 11:00 PM".
+    public func status(at now: Date) -> String {
+        countdown(at: now).map { "Bedtime \(bedtimeText) · \($0)" } ?? passedText
+    }
+
     public var bedtimeFraction: Double { fraction(of: bedtime) ?? 0 }
     public var wakeFraction: Double { fraction(of: wake) ?? 1 }
 
@@ -228,8 +234,90 @@ public nonisolated struct NightChartContent: Sendable, Equatable {
     /// Without stage data: "Stages aren't available from your current
     /// sources." (the chart shows one sage bar in the Core lane).
     public let caption: String?
+    /// Each lane's total, top to bottom, for tapping a lane label; empty
+    /// without stage data.
+    public let laneTotals: [NightLaneTotal]
+    /// The night's clock, for scrub readings; nil without stage data.
+    let clock: NightClock?
 
     public var hasStages: Bool { caption == nil }
+
+    /// What the scrub pill says with the finger at `position` (0...1
+    /// across the chart): "3:41 AM · REM · 47 min" — the clock time
+    /// there, and the stage segment under it with its length. Between
+    /// segments, the nearest one.
+    public func reading(at position: Double) -> NightReading? {
+        guard let clock, !spans.isEmpty else { return nil }
+        let position = min(max(position, 0), 1)
+        let index = spans.firstIndex { position >= $0.start && position < $0.end }
+            ?? spans.indices.min { distance(position, spans[$0]) < distance(position, spans[$1]) }
+        guard let index else { return nil }
+        return reading(segment: index, at: position, clock: clock)
+    }
+
+    /// Stepping through the night one segment at a time (VoiceOver's
+    /// adjustable action): the segment's start, and the same text the
+    /// pill shows there.
+    public func reading(segment index: Int) -> NightReading? {
+        guard let clock, spans.indices.contains(index) else { return nil }
+        return reading(segment: index, at: spans[index].start, clock: clock)
+    }
+
+    /// Clock time at `position`, for the chart's Audio Graph axis.
+    public func clockText(at position: Double) -> String {
+        clock?.text(at: position) ?? ""
+    }
+
+    /// The night's length in minutes (the Audio Graph's x axis).
+    public var minutes: Double { clock.map { $0.end.timeIntervalSince($0.start) / 60 } ?? 0 }
+
+    private func reading(segment index: Int, at position: Double, clock: NightClock) -> NightReading {
+        let span = spans[index]
+        let length = Int(((span.end - span.start) * minutes).rounded())
+        return NightReading(
+            position: position,
+            segment: index,
+            stage: span.stage,
+            text: "\(clock.text(at: position)) · \(span.stage.name) · \(HomeFormat.compactDuration(length, minutesWord: true))"
+        )
+    }
+
+    private func distance(_ position: Double, _ span: StripSegment) -> Double {
+        position < span.start ? span.start - position : max(position - span.end, 0)
+    }
+}
+
+/// Where the scrub is and what the pill says there.
+public nonisolated struct NightReading: Sendable, Equatable {
+    /// 0...1 across the chart.
+    public let position: Double
+    /// Index into `NightChartContent.spans`.
+    public let segment: Int
+    public let stage: StripStage
+    /// "3:41 AM · REM · 47 min".
+    public let text: String
+
+    public var lane: NightLane { stage.lane }
+}
+
+/// A lane label's total: "REM · 1h 32m".
+public nonisolated struct NightLaneTotal: Sendable, Equatable {
+    public let lane: NightLane
+    public let text: String
+}
+
+/// Turns a position along the night into a clock time, on the clock of
+/// the time zone the night was recorded in.
+nonisolated struct NightClock: Sendable, Equatable {
+    let start: Date
+    let end: Date
+    let timeZone: TimeZone
+    let format: HomeFormat
+
+    func text(at position: Double) -> String {
+        let date = start.addingTimeInterval(end.timeIntervalSince(start) * min(max(position, 0), 1))
+        return format.clock(date, in: timeZone)
+    }
 }
 
 public nonisolated struct LastNightCardContent: Sendable, Equatable {
@@ -279,6 +367,9 @@ public nonisolated struct WeekBar: Sendable, Equatable {
     public let fraction: Double?
     public let isLastNight: Bool
     public let accessibilityLabel: String
+    /// The pill when the bar is selected: "Tue · 7h 12m · Recovery 76"
+    /// (recovery only when that morning had one), or "Tue · No data".
+    public let detail: String
 }
 
 public nonisolated struct WeekCardContent: Sendable, Equatable {
@@ -312,6 +403,29 @@ public nonisolated struct RecoveryDetailContent: Sendable, Equatable {
     public let modelVersion: String
 }
 
+/// "Share today": the 1080×1350 card. HRV and heart rate appear only
+/// when the person turns on "Include details" in the share preview.
+public nonisolated struct ShareCardContent: Sendable, Equatable {
+    /// Nil when there's no score today (the card shows the night only).
+    public let recovery: ShareRecovery?
+    /// "Last night 6h 42m".
+    public let lastNight: String?
+    public let chart: NightChartContent?
+    /// "Thursday, September 24".
+    public let date: String
+    /// "HRV 48 ms · Resting HR 54 bpm"; nil when neither was recorded.
+    public let details: String?
+    /// The share sheet's title: "NOCTIS · Thursday, September 24".
+    public let title: String
+    /// "noctis-2026-09-24".
+    public let fileName: String
+
+    public nonisolated struct ShareRecovery: Sendable, Equatable {
+        public let score: Int
+        public let segments: [RingSegmentContent]
+    }
+}
+
 public nonisolated struct HomeScreen: Sendable, Equatable {
     public let header: HomeHeader
     public let mode: HomeMode
@@ -326,6 +440,8 @@ public nonisolated struct HomeScreen: Sendable, Equatable {
     public let evening: EveningHeroContent
     public let week: WeekCardContent?
     public let detail: RecoveryDetailContent?
+    /// Nil when there's neither a score nor a night to share.
+    public let share: ShareCardContent?
 }
 
 // MARK: - Builder
@@ -362,7 +478,8 @@ public nonisolated enum HomeScreenBuilder {
             tonight: tonightCard(snapshot.tonight, format: format),
             evening: eveningHero(times, plan: snapshot.tonight, format: format),
             week: showsDataCards ? weekCard(snapshot, format: format) : nil,
-            detail: detail
+            detail: detail,
+            share: showsDataCards ? shareCard(snapshot, recovery: recovery, now: now, format: format) : nil
         )
     }
 
@@ -795,7 +912,10 @@ public nonisolated enum HomeScreenBuilder {
         let span = max(end.timeIntervalSince(start), 1)
         let labels = [start, start.addingTimeInterval(span / 2), end].map { format.clock($0, in: session.timeZone) }
         guard session.completeness.hasStageDetail else {
-            return NightChartContent(spans: [], connectors: [], timeLabels: labels, caption: "Stages aren't available from your current sources.")
+            return NightChartContent(
+                spans: [], connectors: [], timeLabels: labels, caption: "Stages aren't available from your current sources.",
+                laneTotals: [], clock: nil
+            )
         }
         var spans: [StripSegment] = []
         for segment in session.timeline {
@@ -812,7 +932,28 @@ public nonisolated enum HomeScreenBuilder {
             guard abs(next.start - previous.end) < 1e-9, previous.stage.lane != next.stage.lane else { return nil }
             return NightConnector(position: next.start, from: previous.stage.lane, to: next.stage.lane)
         }
-        return NightChartContent(spans: spans, connectors: connectors, timeLabels: labels, caption: nil)
+        return NightChartContent(
+            spans: spans,
+            connectors: connectors,
+            timeLabels: labels,
+            caption: nil,
+            laneTotals: laneTotals(session.totals),
+            clock: NightClock(start: start, end: end, timeZone: session.timeZone, format: format)
+        )
+    }
+
+    /// "REM · 1h 32m" for each lane; unspecified sleep counts in Core,
+    /// where it's drawn.
+    static func laneTotals(_ totals: SleepTotals) -> [NightLaneTotal] {
+        NightLane.allCases.map { lane in
+            let seconds: TimeInterval = switch lane {
+            case .awake: totals.awake
+            case .rem: totals.rem
+            case .core: totals.core + totals.unspecified
+            case .deep: totals.deep
+            }
+            return NightLaneTotal(lane: lane, text: "\(lane.name) · \(HomeFormat.compactDuration(Int((seconds / 60).rounded()), minutesWord: true))")
+        }
     }
 
     static func stripStage(_ stage: SleepStageValue) -> StripStage? {
@@ -855,11 +996,13 @@ public nonisolated enum HomeScreenBuilder {
             let wakeDay = night.night.adding(days: 1)
             let dayName = format.weekday(wakeDay, width: .wide)
             let duration = night.asleepMinutes.map { noctisFormattedDuration(minutes: Int($0.rounded())) }
+            let parts = [format.weekday(wakeDay, width: .abbreviated), duration ?? "No data"] + [night.recovery.map { "Recovery \($0)" }].compactMap { $0 }
             return WeekBar(
                 label: format.weekday(wakeDay, width: .narrow),
                 fraction: night.asleepMinutes.map { top > 0 ? $0 / top : 0 },
                 isLastNight: night.night == snapshot.lastNight?.night,
-                accessibilityLabel: "\(dayName), \(duration ?? "no data")"
+                accessibilityLabel: "\(dayName), \(duration ?? "no data")",
+                detail: parts.joined(separator: " · ")
             )
         }
         let needLabel = "\(HomeFormat.compactDuration(snapshot.tonight.needMinutes)) need"
@@ -876,11 +1019,40 @@ public nonisolated enum HomeScreenBuilder {
     }
 }
 
+// MARK: - Share
+
+nonisolated extension HomeScreenBuilder {
+    static func shareCard(_ snapshot: HomeSnapshot, recovery: RecoveryCardContent, now: Date, format: HomeFormat) -> ShareCardContent? {
+        var shareRecovery: ShareCardContent.ShareRecovery?
+        var details: String?
+        if case .scored(let content) = recovery, case .scored(let result)? = snapshot.recovery {
+            shareRecovery = .init(score: content.score, segments: content.segments)
+            let hrv = result.factor(.hrv).map { "HRV \(Int($0.value.rounded())) ms" }
+            let resting = result.factor(.restingHeartRate).map { "Resting HR \(Int($0.value.rounded())) bpm" }
+            let parts = [hrv, resting].compactMap { $0 }
+            details = parts.isEmpty ? nil : parts.joined(separator: " · ")
+        }
+        let session = snapshot.lastNight
+        guard shareRecovery != nil || session != nil else { return nil }
+        let date = format.longDate(now)
+        let day = format.calendar.dateComponents([.year, .month, .day], from: now)
+        return ShareCardContent(
+            recovery: shareRecovery,
+            lastNight: session.map { "Last night \(noctisFormattedDuration(minutes: Int(($0.totals.asleep / 60).rounded())))" },
+            chart: session.map { nightChart($0, format: format) },
+            date: date,
+            details: details,
+            title: "NOCTIS · \(date)",
+            fileName: String(format: "noctis-%04d-%02d-%02d", day.year ?? 0, day.month ?? 0, day.day ?? 0)
+        )
+    }
+}
+
 // MARK: - Formatting
 
 /// Locale-aware formatting with an explicit calendar, time zone and
 /// locale, so every string is reproducible in tests.
-nonisolated struct HomeFormat {
+nonisolated struct HomeFormat: Sendable, Equatable {
     let calendar: Calendar
     let locale: Locale
 
@@ -939,13 +1111,17 @@ nonisolated struct HomeFormat {
         clock(minutesSinceMidnight: Int(minutesAfterNoon.rounded()) + 720)
     }
 
-    enum WeekdayWidth { case narrow, wide }
+    enum WeekdayWidth { case narrow, abbreviated, wide }
 
     func weekday(_ day: SleepNightKey, width: WeekdayWidth) -> String {
         let components = DateComponents(year: day.year, month: day.month, day: day.day, hour: 12)
         guard let date = calendar.date(from: components) else { return "" }
         let style = Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone)
-        return date.formatted(width == .narrow ? style.weekday(.narrow) : style.weekday(.wide))
+        return switch width {
+        case .narrow: date.formatted(style.weekday(.narrow))
+        case .abbreviated: date.formatted(style.weekday(.abbreviated))
+        case .wide: date.formatted(style.weekday(.wide))
+        }
     }
 
     /// "8h", "8h 15m", "45m" — or with `minutesWord`, "45 min".

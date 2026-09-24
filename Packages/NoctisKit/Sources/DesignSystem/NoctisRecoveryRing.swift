@@ -53,30 +53,53 @@ public enum NoctisRecoveryRingLayout {
 /// flat round-capped arcs on a `Canvas`, fixed 3° visible gaps. Each
 /// segment is a track with a filled part. With no segments it's dormant
 /// — a plain track circle — optionally carrying a thin cocoa progress arc
-/// (learning your baseline). `Animatable` over `reveal` for the daily
-/// draw-in.
+/// (learning your baseline). `Animatable` over `reveal` (the daily
+/// draw-in), `dim` (every segment but `highlight` fading to 40%) and each
+/// segment's fill (a live update moves only what changed).
 ///
 /// R21: the ring sizes from the width it's offered, never from a device
 /// constant — `diameter` is its largest size, and the stroke scales with
 /// it (`lineWidth` at `diameter`).
 public struct NoctisRecoveryRing: View, Animatable {
     public var reveal: Double
+    /// 0...1: how far every segment but `highlight` has faded toward 40%.
+    public var dim: Double
+    private var fractions: [Double]
     private let segments: [NoctisRingSegment]
+    private let highlight: Int?
     private let progress: Double?
     private let diameter: CGFloat
     private let lineWidthAtFullSize: CGFloat
 
-    public init(segments: [NoctisRingSegment], reveal: Double = 1, progress: Double? = nil, diameter: CGFloat = 200, lineWidth: CGFloat = 18) {
+    /// Dimmed segments settle at this opacity.
+    public static let dimmedOpacity = 0.4
+
+    public init(
+        segments: [NoctisRingSegment],
+        reveal: Double = 1,
+        highlight: Int? = nil,
+        dim: Double = 0,
+        progress: Double? = nil,
+        diameter: CGFloat = 200,
+        lineWidth: CGFloat = 18
+    ) {
         self.segments = segments
+        self.fractions = segments.map(\.fraction)
         self.reveal = reveal
+        self.highlight = highlight
+        self.dim = dim
         self.progress = progress
         self.diameter = diameter
         self.lineWidthAtFullSize = lineWidth
     }
 
-    public var animatableData: Double {
-        get { reveal }
-        set { reveal = newValue }
+    public var animatableData: AnimatablePair<Double, AnimatablePair<Double, NoctisAnimatableVector>> {
+        get { AnimatablePair(reveal, AnimatablePair(dim, NoctisAnimatableVector(fractions))) }
+        set {
+            reveal = newValue.first
+            dim = newValue.second.first
+            fractions = newValue.second.second.values
+        }
     }
 
     public var body: some View {
@@ -85,6 +108,8 @@ public struct NoctisRecoveryRing: View, Animatable {
         }
         .aspectRatio(1, contentMode: .fit)
         .frame(maxWidth: diameter, maxHeight: diameter)
+        // Redrawn every frame of the draw-in, the morph and live updates.
+        .drawingGroup()
         .accessibilityHidden(true)
     }
 
@@ -113,14 +138,20 @@ public struct NoctisRecoveryRing: View, Animatable {
         let capDegrees = radius > 0 ? Double(lineWidth / 2 / radius) * 180 / .pi : 0
         let weights = segments.map(\.weight)
         let arcs = NoctisRecoveryRingLayout.arcs(weights: weights)
-        let visible = NoctisRecoveryRingLayout.visibleFractions(weights: weights, fractions: segments.map(\.fraction), reveal: reveal)
+        // Mid-animation between different segment counts, fall back to the
+        // target fills.
+        let fills = fractions.count == segments.count ? fractions : segments.map(\.fraction)
+        let visible = NoctisRecoveryRingLayout.visibleFractions(weights: weights, fractions: fills, reveal: reveal)
+        let dimmed = 1 - (1 - Self.dimmedOpacity) * min(max(dim, 0), 1)
 
         for (index, arc) in arcs.enumerated() {
-            stroke(from: arc.start, to: arc.end, color: NoctisAppColor.ringTrack, capDegrees: capDegrees, context: context, center: center, radius: radius, style: style)
+            var segmentContext = context
+            if let highlight, highlight != index { segmentContext.opacity = dimmed }
+            stroke(from: arc.start, to: arc.end, color: NoctisAppColor.ringTrack, capDegrees: capDegrees, context: segmentContext, center: center, radius: radius, style: style)
             let fraction = visible[index]
             guard fraction > 0 else { continue }
             let fillEnd = arc.start + (arc.end - arc.start) * fraction
-            stroke(from: arc.start, to: fillEnd, color: segments[index].color, capDegrees: capDegrees, context: context, center: center, radius: radius, style: style)
+            stroke(from: arc.start, to: fillEnd, color: segments[index].color, capDegrees: capDegrees, context: segmentContext, center: center, radius: radius, style: style)
         }
     }
 

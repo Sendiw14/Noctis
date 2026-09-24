@@ -22,6 +22,7 @@ public struct NoctisAppCard<Content: View>: View {
                             .strokeBorder(NoctisAppColor.hairline, lineWidth: 1)
                     )
             )
+            .noctisContrastBorder()
             .shadow(color: NoctisPaper.cocoa.opacity(0.06), radius: 24, x: 0, y: 8)
     }
 }

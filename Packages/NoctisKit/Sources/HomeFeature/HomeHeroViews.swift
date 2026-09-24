@@ -11,13 +11,13 @@ struct DayHeroView: View {
     let content: RecoveryCardContent
     let viewModel: HomeViewModel
     let zoomNamespace: Namespace.ID
-    let openDetail: (RecoveryFactorKind?) -> Void
+    let actions: HomeActions
 
     var body: some View {
         Group {
             switch content {
             case .scored(let scored):
-                ScoredHeroView(content: scored, viewModel: viewModel, zoomNamespace: zoomNamespace, openDetail: openDetail)
+                ScoredHeroView(content: scored, viewModel: viewModel, zoomNamespace: zoomNamespace, actions: actions)
             case .learning(let nights, let required, let text):
                 DormantHeroView(progress: Double(nights) / Double(required), title: nil, detail: text)
             case .connect(let title, let message, let showsButton):
@@ -38,16 +38,30 @@ struct DayHeroView: View {
 
 /// The scored ring (260pt, 220pt in narrow spaces; 22pt stroke), exactly
 /// one line under it, a confidence caption only below high confidence,
-/// and the factor capsules. The first time each day it draws itself in
-/// (0.9s, `.drawIn`), the score counts up, and a medium haptic lands.
+/// and the factor capsules.
+///
+/// - Morning reveal: the ring fills segment by segment (0.9s, `.drawIn`),
+///   the score counts up and lands with a medium haptic, and the capsules
+///   rise 60ms apart.
+/// - A capsule tap first highlights its segment (the rest fade to 40%,
+///   0.4s), then zooms into detail at that factor.
+/// - A long press offers Open Recovery and Share today over a preview of
+///   the detail.
+/// - A live update re-fills only the segments that changed.
+/// - Scrolling away shrinks the ring (to 0.85) and fades it.
 struct ScoredHeroView: View {
     let content: ScoredRecoveryContent
     let viewModel: HomeViewModel
     let zoomNamespace: Namespace.ID
-    let openDetail: (RecoveryFactorKind?) -> Void
+    let actions: HomeActions
 
-    @State private var reveal: Double
-    @State private var shownScore: Int
+    @Environment(\.homeReveal) private var reveal
+    @Environment(\.homeMorph) private var morph
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var focused: RecoveryFactorKind?
+    /// Between the reveal starting and the score landing: the score holds
+    /// at 0 while dusk lifts (a numeric transition ignores delays).
+    @State private var awaitingCount = false
 
     static let ringDiameter: CGFloat = 260
     static let narrowRingDiameter: CGFloat = 220
@@ -55,47 +69,13 @@ struct ScoredHeroView: View {
     static let narrowBelowWidth: CGFloat = 350
     static let ringLineWidth: CGFloat = 22
     /// `NoctisMotion.drawIn`'s curve, run over 0.9s.
-    static let introAnimation = NoctisMotion.drawIn.speed(1.2 / 0.9)
-
-    init(content: ScoredRecoveryContent, viewModel: HomeViewModel, zoomNamespace: Namespace.ID, openDetail: @escaping (RecoveryFactorKind?) -> Void) {
-        self.content = content
-        self.viewModel = viewModel
-        self.zoomNamespace = zoomNamespace
-        self.openDetail = openDetail
-        let intro = viewModel.introPending
-        _reveal = State(initialValue: intro ? 0 : 1)
-        _shownScore = State(initialValue: intro ? 0 : content.score)
-    }
+    static let introAnimation = NoctisMotion.drawIn.speed(1.2 / HomeReveal.ringDuration)
+    /// How long a capsule's segment stays highlighted before detail opens.
+    static let focusDuration = 0.4
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            Button { openDetail(nil) } label: {
-                NoctisRingLayout(
-                    maxDiameter: Self.ringDiameter,
-                    narrowDiameter: Self.narrowRingDiameter,
-                    narrowBelowWidth: Self.narrowBelowWidth
-                ) {
-                    NoctisRecoveryRing(segments: segments, reveal: reveal, diameter: Self.ringDiameter, lineWidth: Self.ringLineWidth)
-                    VStack(spacing: 0) {
-                        Text("\(shownScore)")
-                            .noctisNumeral(88, .heavy)
-                            .monospacedDigit()
-                            .contentTransition(.numericText(value: Double(shownScore)))
-                            .foregroundStyle(NoctisAppColor.ink)
-                        Text("Recovery")
-                            .noctisFont(15, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink2)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                    }
-                }
-                .matchedTransitionSource(id: HomeView.recoveryZoomID, in: zoomNamespace)
-            }
-            .buttonStyle(NoctisCardButtonStyle())
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(content.accessibilityLabel)
-            .accessibilityHint("Opens recovery details.")
-            .accessibilityAddTraits(.isButton)
+            HomeCollapseEffect(viewModel: viewModel) { ring }
 
             // Exactly one line under the ring.
             HStack(spacing: NoctisSpacing.xs) {
@@ -104,38 +84,156 @@ struct ScoredHeroView: View {
                 }
                 Text(content.comparisonPhrase)
                     .noctisFont(15, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisAppColor.ink2)
+                    .foregroundStyle(.noctisInk2)
             }
             .accessibilityElement(children: .combine)
 
             if let caption = content.confidenceCaption {
                 Text(caption)
                     .noctisFont(13, relativeTo: .footnote)
-                    .foregroundStyle(NoctisAppColor.ink3)
+                    .foregroundStyle(.noctisInk3)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            FactorCapsulesView(factors: content.factors) { openDetail($0) }
+            FactorCapsulesView(factors: content.factors, open: focus)
         }
-        .task { playIntroIfPending() }
-        .onChange(of: content.score) { _, score in
-            withAnimation(NoctisMotion.settle) { shownScore = score }
+        .onChange(of: reveal) { _, phase in
+            guard phase == .playing, !reduceMotion else { return }
+            awaitingCount = true
+            Task {
+                try? await Task.sleep(for: .seconds(HomeRevealPhase.contentDelay))
+                // The score counts up with the ring…
+                withAnimation(Self.introAnimation) { awaitingCount = false }
+                try? await Task.sleep(for: .seconds(HomeReveal.ringDuration))
+                // …and lands.
+                NoctisHaptics.medium()
+            }
         }
+    }
+
+    private var ring: some View {
+        Button { actions.openRecoveryDetail(nil) } label: {
+            NoctisRingLayout(
+                maxDiameter: Self.ringDiameter,
+                narrowDiameter: Self.narrowRingDiameter,
+                narrowBelowWidth: Self.narrowBelowWidth
+            ) {
+                NoctisRecoveryRing(
+                    segments: segments,
+                    reveal: reveal.holdsStart ? 0 : 1,
+                    highlight: focused.flatMap { kind in content.segments.firstIndex { $0.kind == kind } },
+                    dim: focused == nil ? 0 : 1,
+                    diameter: Self.ringDiameter,
+                    lineWidth: Self.ringLineWidth
+                )
+                .animation(reduceMotion ? nil : NoctisMotion.settle, value: content.segments)
+                .animation(.easeInOut(duration: reduceMotion ? 0.2 : Self.focusDuration), value: focused)
+                .animation(reduceMotion ? nil : Self.introAnimation.delay(HomeRevealPhase.contentDelay), value: reveal)
+                VStack(spacing: 0) {
+                    Text("\(shownScore)")
+                        .noctisNumeral(88, .heavy)
+                        .monospacedDigit()
+                        .contentTransition(.numericText(value: Double(shownScore)))
+                        .foregroundStyle(NoctisAppColor.ink)
+                        .animation(reduceMotion ? nil : NoctisMotion.settle, value: content.score)
+                    Text("Recovery")
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisInk2)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                }
+            }
+            .homeMorph(.recoveryRing, in: morph)
+            .matchedTransitionSource(id: HomeView.recoveryZoomID, in: zoomNamespace)
+        }
+        .buttonStyle(NoctisCardButtonStyle())
+        .contextMenu {
+            Button("Open Recovery", systemImage: "heart") { actions.openRecoveryDetail(nil) }
+            Button("Share today", systemImage: "square.and.arrow.up", action: actions.share)
+        } preview: {
+            RecoveryPreviewCard(content: content, rows: viewModel.screen?.detail?.rows ?? [])
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(content.accessibilityLabel)
+        .accessibilityHint("Opens recovery details.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: "Open Recovery") { actions.openRecoveryDetail(nil) }
+        .accessibilityAction(named: "Share today", actions.share)
+        .accessibilityIdentifier(viewModel.revealPlayed ? "home.hero.revealed" : "home.hero")
+    }
+
+    private var shownScore: Int {
+        reveal.holdsStart || awaitingCount ? 0 : content.score
     }
 
     private var segments: [NoctisRingSegment] {
         content.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) }
     }
 
-    private func playIntroIfPending() {
-        guard viewModel.consumeIntro() else { return }
-        withAnimation(Self.introAnimation) {
-            reveal = 1
-            shownScore = content.score
-        } completion: {
-            NoctisHaptics.medium()
+    /// Highlight the capsule's segment, then open detail at it.
+    private func focus(_ kind: RecoveryFactorKind) {
+        focused = kind
+        let hold = reduceMotion ? 0.2 : Self.focusDuration
+        Task {
+            try? await Task.sleep(for: .seconds(hold))
+            actions.openRecoveryDetail(kind)
+            // Back to normal under the zoom, before it returns.
+            try? await Task.sleep(for: .seconds(0.6))
+            var reset = Transaction()
+            reset.disablesAnimations = true
+            withTransaction(reset) { focused = nil }
         }
+    }
+}
+
+/// The ring's long-press preview: Recovery in detail, in brief.
+struct RecoveryPreviewCard: View {
+    let content: ScoredRecoveryContent
+    let rows: [FactorDetailRow]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: NoctisSpacing.md) {
+            HStack(spacing: NoctisSpacing.md) {
+                NoctisRingLayout(maxDiameter: 96) {
+                    NoctisRecoveryRing(
+                        segments: content.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) },
+                        diameter: 96,
+                        lineWidth: 10
+                    )
+                    Text("\(content.score)")
+                        .noctisNumeral(34, .heavy)
+                        .foregroundStyle(NoctisAppColor.ink)
+                }
+                .frame(width: 96)
+                VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
+                    NoctisCaption("RECOVERY", style: .noctisInk3)
+                    HStack(spacing: NoctisSpacing.xs) {
+                        if let chip = content.chip { DeltaChipView(chip: chip) }
+                        Text(content.comparisonPhrase)
+                            .noctisFont(15, relativeTo: .subheadline)
+                            .foregroundStyle(.noctisInk2)
+                    }
+                }
+            }
+            VStack(spacing: NoctisSpacing.xs) {
+                ForEach(rows, id: \.kind) { row in
+                    HStack(spacing: NoctisSpacing.xs) {
+                        Circle().fill(row.kind.tint).frame(width: 8, height: 8)
+                        Text(row.value)
+                            .noctisFont(15, relativeTo: .subheadline)
+                            .foregroundStyle(NoctisAppColor.ink)
+                        Spacer(minLength: NoctisSpacing.xs)
+                        Text("\(row.score)")
+                            .noctisFont(15, .semibold, relativeTo: .subheadline)
+                            .foregroundStyle(NoctisAppColor.ink)
+                    }
+                }
+            }
+        }
+        .padding(NoctisSpacing.lg)
+        .frame(width: 320, alignment: .leading)
+        .background(NoctisAppColor.bg)
     }
 }
 
@@ -161,22 +259,27 @@ struct DeltaChipView: View {
 }
 
 /// Four capsules (dot, name, score) in one row; a 2×2 grid at
-/// accessibility sizes or when the row can't fit. Each opens Recovery
-/// detail at that factor.
+/// accessibility sizes or when the row can't fit, and one column when even
+/// the grid can't (the largest sizes). Each opens Recovery detail at that
+/// factor. In the morning reveal they rise 12pt into place, 60ms apart.
 struct FactorCapsulesView: View {
     let factors: [FactorCell]
     let open: (RecoveryFactorKind) -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.homeReveal) private var reveal
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
-        if dynamicTypeSize.isAccessibilitySize {
-            grid
-        } else {
-            ViewThatFits(in: .horizontal) {
+        ViewThatFits(in: .horizontal) {
+            if !dynamicTypeSize.isAccessibilitySize {
                 HStack(spacing: NoctisSpacing.xs) {
-                    ForEach(factors, id: \.kind) { capsule($0) }
+                    ForEach(Array(factors.enumerated()), id: \.element.kind) { index, factor in capsule(factor, index: index) }
                 }
-                grid
+            }
+            grid
+            VStack(spacing: NoctisSpacing.xs) {
+                ForEach(Array(factors.enumerated()), id: \.element.kind) { index, factor in capsule(factor, index: index) }
             }
         }
     }
@@ -185,19 +288,19 @@ struct FactorCapsulesView: View {
         Grid(horizontalSpacing: NoctisSpacing.xs, verticalSpacing: NoctisSpacing.xs) {
             ForEach(Array(stride(from: 0, to: factors.count, by: 2)), id: \.self) { start in
                 GridRow {
-                    ForEach(factors[start..<min(start + 2, factors.count)], id: \.kind) { capsule($0) }
+                    ForEach(start..<min(start + 2, factors.count), id: \.self) { index in capsule(factors[index], index: index) }
                 }
             }
         }
     }
 
-    private func capsule(_ factor: FactorCell) -> some View {
+    private func capsule(_ factor: FactorCell, index: Int) -> some View {
         Button { open(factor.kind) } label: {
             VStack(spacing: NoctisSpacing.xxs) {
                 Circle().fill(factor.kind.tint).frame(width: 8, height: 8)
                 Text(factor.name)
                     .noctisFont(13, relativeTo: .footnote)
-                    .foregroundStyle(NoctisAppColor.ink2)
+                    .foregroundStyle(.noctisInk2)
                     .fixedSize()
                 Text("\(factor.score)")
                     .noctisFont(17, .semibold, relativeTo: .body)
@@ -207,9 +310,18 @@ struct FactorCapsulesView: View {
             .padding(.horizontal, NoctisSpacing.sm)
             .frame(maxWidth: .infinity)
             .background(NoctisAppColor.surface, in: Capsule(style: .continuous))
-            .overlay(Capsule(style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
+            .overlay(
+                Capsule(style: .continuous)
+                    .strokeBorder(contrast == .increased ? NoctisAppColor.ink : NoctisAppColor.hairline, lineWidth: contrast == .increased ? 1.5 : 1)
+            )
         }
         .buttonStyle(NoctisCardButtonStyle())
+        .opacity(reveal.holdsStart ? 0 : 1)
+        .offset(y: reveal.holdsStart ? HomeReveal.rise : 0)
+        .animation(
+            reduceMotion ? nil : NoctisMotion.settle.delay(HomeRevealPhase.contentDelay + HomeReveal.capsuleStagger * Double(index)),
+            value: reveal
+        )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(factor.name) \(factor.score)")
         .accessibilityHint("Opens recovery details at \(factor.name).")
@@ -277,7 +389,7 @@ struct DormantTextView: View {
             if let detail {
                 Text(detail)
                     .noctisFont(15, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisAppColor.ink2)
+                    .foregroundStyle(.noctisInk2)
             }
         }
         .multilineTextAlignment(alignment)
@@ -335,67 +447,82 @@ struct FailedHeroView: View {
 // MARK: - Evening hero
 
 /// Evening mode's hero, on the paper: tonight's bedtime large, a minute
-/// countdown (or "Bedtime was …"), the night strip and the plan.
+/// countdown (or "Bedtime was …"), the night strip and the plan. Read as
+/// one summary; shrinks and fades as it scrolls away.
 struct EveningHeroView: View {
     let content: EveningHeroContent
+    let viewModel: HomeViewModel
     let now: Date
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-            NoctisCaption("BEDTIME", color: NoctisAppColor.ink3)
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(content.time)
-                    .noctisNumeral(88, .heavy)
-                    .foregroundStyle(NoctisAppColor.ink)
-                if !content.period.isEmpty {
-                    Text(content.period)
-                        .noctisFont(28, .bold, relativeTo: .title)
+        HomeCollapseEffect(viewModel: viewModel, anchor: .topLeading) {
+            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+                NoctisCaption("BEDTIME", style: .noctisInk3)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(content.time)
+                        .noctisNumeral(88, .heavy)
                         .foregroundStyle(NoctisAppColor.ink)
+                    if !content.period.isEmpty {
+                        Text(content.period)
+                            .noctisFont(28, .bold, relativeTo: .title)
+                            .foregroundStyle(NoctisAppColor.ink)
+                    }
                 }
+                if let minutes = content.times.minutesLeft(at: now), let countdown = content.times.countdown(at: now) {
+                    Text(countdown)
+                        .noctisFont(22, .semibold, relativeTo: .title3)
+                        .monospacedDigit()
+                        .foregroundStyle(NoctisAppColor.orangeText)
+                        .contentTransition(.numericText(countsDown: true))
+                        .animation(reduceMotion ? nil : NoctisMotion.settle, value: minutes)
+                } else {
+                    Text(content.times.passedText)
+                        .noctisFont(22, .semibold, relativeTo: .title3)
+                        .foregroundStyle(.noctisInk2)
+                }
+                NightStripView(content: content)
+                    .padding(.vertical, NoctisSpacing.xs)
+                Text(content.detail)
+                    .noctisFont(15, relativeTo: .subheadline)
+                    .foregroundStyle(.noctisInk2)
             }
-            .accessibilityElement(children: .combine)
-            if let minutes = content.times.minutesLeft(at: now), let countdown = content.times.countdown(at: now) {
-                Text(countdown)
-                    .noctisFont(22, .semibold, relativeTo: .title3)
-                    .monospacedDigit()
-                    .foregroundStyle(NoctisAppColor.orangeText)
-                    .contentTransition(.numericText(countsDown: true))
-                    .animation(reduceMotion ? nil : NoctisMotion.settle, value: minutes)
-            } else {
-                Text(content.times.passedText)
-                    .noctisFont(22, .semibold, relativeTo: .title3)
-                    .foregroundStyle(NoctisAppColor.ink2)
-            }
-            NightStripView(content: content, now: now)
-                .padding(.vertical, NoctisSpacing.xs)
-            Text(content.detail)
-                .noctisFont(15, relativeTo: .subheadline)
-                .foregroundStyle(NoctisAppColor.ink2)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(summary)
+        .accessibilityIdentifier("home.eveningHero")
+    }
+
+    /// "Bedtime 11:00 PM, in 2h 14m. Tonight's sleep window, 11:00 PM to
+    /// 7:00 AM. Wake 7:00 AM · 8h need."
+    private var summary: String {
+        let lead = content.times.countdown(at: now).map { "Bedtime \(content.times.bedtimeText), \($0)." } ?? "\(content.times.passedText)."
+        return [lead, content.stripAccessibilityLabel, content.detail].joined(separator: " ")
     }
 }
 
 /// 6 PM to 10 AM: a lavender span from bedtime to wake, and a cocoa "now"
-/// marker that moves with the minute.
+/// marker that moves with the minute (Home's second and last
+/// `TimelineView`).
 struct NightStripView: View {
     let content: EveningHeroContent
-    let now: Date
 
     var body: some View {
         VStack(spacing: 6) {
-            Canvas { context, size in
-                let barHeight: CGFloat = 10
-                let track = CGRect(x: 0, y: (size.height - barHeight) / 2, width: size.width, height: barHeight)
-                context.fill(Path(roundedRect: track, cornerRadius: barHeight / 2), with: .color(NoctisAppColor.ringTrack))
-                let start = content.times.bedtimeFraction * size.width
-                let end = content.times.wakeFraction * size.width
-                let span = CGRect(x: start, y: track.minY, width: max(end - start, barHeight), height: barHeight)
-                context.fill(Path(roundedRect: span, cornerRadius: barHeight / 2), with: .color(NoctisAppColor.lavender))
-                if let fraction = content.times.nowFraction(at: now) {
-                    let marker = CGRect(x: fraction * size.width - 2, y: 0, width: 4, height: size.height)
-                    context.fill(Path(roundedRect: marker, cornerRadius: 2), with: .color(NoctisAppColor.cocoa))
+            TimelineView(.everyMinute) { timeline in
+                Canvas { context, size in
+                    let barHeight: CGFloat = 10
+                    let track = CGRect(x: 0, y: (size.height - barHeight) / 2, width: size.width, height: barHeight)
+                    context.fill(Path(roundedRect: track, cornerRadius: barHeight / 2), with: .color(NoctisAppColor.ringTrack))
+                    let start = content.times.bedtimeFraction * size.width
+                    let end = content.times.wakeFraction * size.width
+                    let span = CGRect(x: start, y: track.minY, width: max(end - start, barHeight), height: barHeight)
+                    context.fill(Path(roundedRect: span, cornerRadius: barHeight / 2), with: .color(NoctisAppColor.lavender))
+                    if let fraction = content.times.nowFraction(at: timeline.date) {
+                        let marker = CGRect(x: fraction * size.width - 2, y: 0, width: 4, height: size.height)
+                        context.fill(Path(roundedRect: marker, cornerRadius: 2), with: .color(NoctisAppColor.cocoa))
+                    }
                 }
             }
             .frame(height: 22)
@@ -403,13 +530,11 @@ struct NightStripView: View {
                 ForEach(content.stripLabels, id: \.position) { label in
                     Text(label.text)
                         .noctisFont(11, .medium, relativeTo: .caption2)
-                        .foregroundStyle(NoctisAppColor.ink3)
+                        .foregroundStyle(.noctisInk3)
                         .noctisFraction(label.position)
                 }
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(content.stripAccessibilityLabel)
     }
 }
 
@@ -423,6 +548,8 @@ struct CompactRecoveryCard: View {
     let viewModel: HomeViewModel
     let zoomNamespace: Namespace.ID
     let openDetail: (RecoveryFactorKind?) -> Void
+    @Environment(\.homeMorph) private var morph
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         switch content {
@@ -436,15 +563,21 @@ struct CompactRecoveryCard: View {
                                 diameter: 72,
                                 lineWidth: 9
                             )
+                            .animation(reduceMotion ? nil : NoctisMotion.settle, value: scored.segments)
                         }
                         .frame(width: 72)
+                        // The day ring shrinks into this one in the mode morph.
+                        .homeMorph(.recoveryRing, in: morph)
                         .matchedTransitionSource(id: HomeView.recoveryZoomID, in: zoomNamespace)
                         VStack(alignment: .leading, spacing: 2) {
-                            NoctisCaption("RECOVERY", color: NoctisAppColor.ink3)
+                            NoctisCaption("RECOVERY", style: .noctisInk3)
                             HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
                                 Text("\(scored.score)")
                                     .noctisFont(34, .heavy, relativeTo: .largeTitle, maxScale: NoctisTypeScale.maxNumeralScale)
+                                    .monospacedDigit()
                                     .foregroundStyle(NoctisAppColor.ink)
+                                    .contentTransition(.numericText(value: Double(scored.score)))
+                                    .animation(reduceMotion ? nil : NoctisMotion.settle, value: scored.score)
                                 if let chip = scored.chip {
                                     DeltaChipView(chip: chip)
                                 }
@@ -453,7 +586,7 @@ struct CompactRecoveryCard: View {
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right")
                             .noctisIcon(15)
-                            .foregroundStyle(NoctisAppColor.ink3)
+                            .foregroundStyle(.noctisInk3)
                             .accessibilityHidden(true)
                     }
                 }
@@ -463,9 +596,6 @@ struct CompactRecoveryCard: View {
             .accessibilityLabel(scored.accessibilityLabel)
             .accessibilityHint("Opens recovery details.")
             .accessibilityAddTraits(.isButton)
-            // The draw-in belongs to the day hero; evening just uses up
-            // the day's turn so it can't play later.
-            .task { _ = viewModel.consumeIntro() }
         case .learning(let nights, let required, let text):
             row(progress: Double(nights) / Double(required), title: nil, detail: text, action: nil)
         case .connect(let title, let message, let showsButton):

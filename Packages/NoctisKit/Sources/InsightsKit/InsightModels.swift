@@ -2,7 +2,7 @@ import Foundation
 import RecoveryKit
 import SleepKit
 
-public enum InsightKind: String, Sendable, CaseIterable {
+public enum InsightKind: String, Sendable, CaseIterable, Codable {
     /// Last night's sleep duration differs from baseline by 30+ minutes.
     case sleepDurationShift
     /// Last night's bedtime differs from baseline by 30+ minutes.

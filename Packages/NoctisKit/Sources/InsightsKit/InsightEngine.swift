@@ -11,34 +11,47 @@ import SleepKit
 /// - `.consistentBedtime`: 5+ nights in a row, ending last night, each
 ///   within 30 minutes of the bedtime baseline.
 ///
-/// Returns the single most relevant insight, or none. A shift outranks a
-/// streak; between two shifts the larger one (in minutes) wins, with
-/// duration winning a tie. Nothing fires without a baseline (5+ nights).
+/// Candidates are ranked: a shift outranks a streak; between two shifts
+/// the larger one (in minutes) wins, with duration winning a tie. Nothing
+/// fires without a baseline (5+ nights).
+///
+/// Home shows the first candidate the person's `InsightHistory` allows
+/// (fatigue): never a hidden kind, never the kind shown on the night
+/// before, and nothing more on a night whose insight was dismissed.
 public enum InsightEngine {
     public static let shiftThresholdMinutes: Double = 30
     public static let streakToleranceMinutes: Double = 30
     public static let minimumStreakNights = 5
 
     /// The top insight for the most recent night in `history` that ended
-    /// within the last 24 hours, or nil.
-    public static func topInsight(history: [NightMetrics], asOf now: Date) -> Insight? {
+    /// within the last 24 hours, after fatigue, or nil.
+    public static func topInsight(history: [NightMetrics], asOf now: Date, fatigue: InsightHistory = InsightHistory()) -> Insight? {
+        fatigue.pick(from: candidates(history: history, asOf: now))
+    }
+
+    /// Every insight about last night, best first.
+    public static func candidates(history: [NightMetrics], asOf now: Date) -> [Insight] {
         let complete = history.filter { $0.wakeTime <= now }
         guard let lastNight = complete.max(by: { $0.wakeTime < $1.wakeTime }),
-              now.timeIntervalSince(lastNight.wakeTime) <= RecoveryModelV1.lastNightWindow else { return nil }
+              now.timeIntervalSince(lastNight.wakeTime) <= RecoveryModelV1.lastNightWindow else { return [] }
         let baselines = BaselineEngine.baselines(for: lastNight.night, history: complete)
-        return topInsight(lastNight: lastNight, baselines: baselines, history: complete)
+        return candidates(lastNight: lastNight, baselines: baselines, history: complete)
     }
 
     public static func topInsight(lastNight: NightMetrics, baselines: Baselines, history: [NightMetrics]) -> Insight? {
+        candidates(lastNight: lastNight, baselines: baselines, history: history).first
+    }
+
+    public static func candidates(lastNight: NightMetrics, baselines: Baselines, history: [NightMetrics]) -> [Insight] {
         let shifts = [durationShift(lastNight, baselines), bedtimeShift(lastNight, baselines)].compactMap { $0 }
-        // Strict `>` keeps the earlier entry on a tie: duration is listed first.
-        if let top = shifts.reduce(nil, { best, next -> Insight? in
-            guard let best else { return next }
-            return abs(next.evidence.delta) > abs(best.evidence.delta) ? next : best
-        }) {
-            return top
-        }
-        return consistentBedtime(lastNight, baselines, history: history)
+        // A stable sort keeps the earlier entry on a tie: duration is listed first.
+        let ranked = shifts.enumerated()
+            .sorted { lhs, rhs in
+                let (a, b) = (abs(lhs.element.evidence.delta), abs(rhs.element.evidence.delta))
+                return a != b ? a > b : lhs.offset < rhs.offset
+            }
+            .map(\.element)
+        return ranked + [consistentBedtime(lastNight, baselines, history: history)].compactMap { $0 }
     }
 
     // MARK: - Rules

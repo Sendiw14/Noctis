@@ -80,6 +80,8 @@ final class HomeQATests: XCTestCase {
 
         let lastNight = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Last night'")).firstMatch
         QA.tap(lastNight, in: app)
-        XCTAssertTrue(app.tabBars.buttons["Sleep"].isSelected)
+        // The tab bar minimizes once Home scrolls, so read the Sleep tab's
+        // placeholder rather than the bar.
+        XCTAssertTrue(QA.text(app, containing: "Coming soon").waitForExistence(timeout: 3))
     }
 }

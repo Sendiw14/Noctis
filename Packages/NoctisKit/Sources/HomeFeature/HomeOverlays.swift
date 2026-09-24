@@ -1,0 +1,216 @@
+import DesignSystem
+import NoctisCore
+import SwiftUI
+
+/// What floats over the top of Home: the compact bar once the hero has
+/// scrolled 70% away, and "New night added" when Health delivers a night.
+struct HomeTopOverlay: View {
+    let viewModel: HomeViewModel
+    let scrollToTop: () -> Void
+    @Environment(\.homeMinute) private var minute
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(spacing: NoctisSpacing.xs) {
+            if viewModel.collapse.showsBar, let screen = viewModel.screen, HomeCollapsedBar.shows(for: screen) {
+                HomeCollapsedBar(screen: screen, now: minute ?? .now, action: scrollToTop)
+                    .transition(.opacity)
+            }
+            if viewModel.showsNewNight {
+                NewNightPill()
+                    .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: viewModel.collapse.showsBar)
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : NoctisMotion.settle, value: viewModel.showsNewNight)
+    }
+}
+
+/// The hero, compact, pinned under the status bar: a 28pt ring, the score
+/// and "Recovery" by day; a moon and "Bedtime 11:00 PM · in 2h 14m" in the
+/// evening. Tapping it springs back to the top.
+struct HomeCollapsedBar: View {
+    let screen: HomeScreen
+    let now: Date
+    let action: () -> Void
+
+    static let ringDiameter: CGFloat = 28
+
+    /// By day the bar needs a score to show.
+    static func shows(for screen: HomeScreen) -> Bool {
+        if screen.mode == .evening { return true }
+        if case .scored = screen.recovery { return true }
+        return false
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                content
+                Spacer(minLength: 0)
+            }
+            .frame(minHeight: 44)
+            .frame(maxWidth: HomeContent.compactMaxWidth)
+            .padding(.horizontal, NoctisSpacing.lg)
+            .padding(.vertical, NoctisSpacing.xxs)
+            .frame(maxWidth: .infinity)
+            .background(NoctisAppColor.bg)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        // The same paper fade as the status bar scrim, under the bar.
+        .background(alignment: .bottom) {
+            LinearGradient(colors: [NoctisAppColor.bg, NoctisAppColor.bg.opacity(0)], startPoint: .top, endPoint: .bottom)
+                .frame(height: NoctisStatusBarScrimMetrics.fadeHeight)
+                .offset(y: NoctisStatusBarScrimMetrics.fadeHeight)
+                .allowsHitTesting(false)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityHint("Scrolls to the top.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.collapsedBar")
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch screen.mode {
+        case .day:
+            if case .scored(let scored) = screen.recovery {
+                NoctisRecoveryRing(
+                    segments: scored.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) },
+                    diameter: Self.ringDiameter,
+                    lineWidth: 4
+                )
+                .frame(width: Self.ringDiameter, height: Self.ringDiameter)
+                Text("\(scored.score)")
+                    .noctisFont(17, .bold, relativeTo: .body)
+                    .monospacedDigit()
+                    .foregroundStyle(NoctisAppColor.ink)
+                Text("Recovery")
+                    .noctisFont(15, relativeTo: .subheadline)
+                    .foregroundStyle(.noctisInk2)
+            }
+        case .evening:
+            BedtimeMoon()
+            Text(screen.evening.times.status(at: now))
+                .noctisFont(15, .semibold, relativeTo: .subheadline)
+                .monospacedDigit()
+                .foregroundStyle(NoctisAppColor.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+    }
+
+    private var label: String {
+        switch screen.mode {
+        case .day:
+            if case .scored(let scored) = screen.recovery { return "Recovery \(scored.score)" }
+            return "Recovery"
+        case .evening:
+            return screen.evening.times.status(at: now)
+        }
+    }
+}
+
+/// Matches `NoctisStatusBarScrim`'s fade.
+enum NoctisStatusBarScrimMetrics {
+    static let fadeHeight: CGFloat = 16
+}
+
+/// Slides down under the top for two seconds when a Health change brings
+/// a new night; VoiceOver hears it too.
+struct NewNightPill: View {
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "moon.stars.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .accessibilityHidden(true)
+            Text("New night added")
+                .noctisFont(13, .semibold, relativeTo: .footnote)
+        }
+        .foregroundStyle(NoctisAppColor.ink)
+        .padding(.horizontal, NoctisSpacing.sm)
+        .padding(.vertical, NoctisSpacing.xs)
+        .background(NoctisAppColor.surface, in: Capsule(style: .continuous))
+        .overlay(Capsule(style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
+        .shadow(color: NoctisPaper.cocoa.opacity(0.06), radius: 24, x: 0, y: 8)
+        .padding(.top, NoctisSpacing.xs)
+        .onAppear {
+            AccessibilityNotification.Announcement("New night added").post()
+        }
+    }
+}
+
+/// The evening moon, drawing itself on as it arrives (none under Reduce
+/// Motion).
+struct BedtimeMoon: View {
+    var size: CGFloat = 15
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown = false
+
+    var body: some View {
+        ZStack {
+            if shown || reduceMotion {
+                Image(systemName: "moon.fill")
+                    .font(.system(size: size, weight: .semibold))
+                    .foregroundStyle(NoctisAppColor.lavenderText)
+                    .transition(.symbolEffect(.drawOn))
+            }
+        }
+        .frame(width: size + 6, height: size + 6)
+        .accessibilityHidden(true)
+        .task {
+            guard !shown, !reduceMotion else { return }
+            try? await Task.sleep(for: .seconds(0.15))
+            withAnimation { shown = true }
+        }
+    }
+}
+
+/// The tab bar accessory in the evening, on every tab: a moon and
+/// "Bedtime 11:00 PM · in 2h 14m". Tapping it goes to Home.
+public struct HomeBedtimeAccessory: View {
+    private let viewModel: HomeViewModel
+    private let now: Date
+    private let openHome: () -> Void
+
+    public init(viewModel: HomeViewModel, now: Date, openHome: @escaping () -> Void) {
+        self.viewModel = viewModel
+        self.now = now
+        self.openHome = openHome
+    }
+
+    public var body: some View {
+        Button(action: openHome) {
+            HStack(spacing: NoctisSpacing.xs) {
+                BedtimeMoon()
+                Text(status)
+                    .noctisFont(15, .semibold, relativeTo: .subheadline)
+                    .monospacedDigit()
+                    .foregroundStyle(NoctisAppColor.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, NoctisSpacing.md)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(status)
+        .accessibilityHint("Opens Home.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.bedtimeAccessory")
+    }
+
+    private var status: String {
+        guard case .bedtime(let times) = viewModel.header.summary else { return "" }
+        return times.status(at: now)
+    }
+
+    /// Whether the accessory shows: evening only.
+    public static func isShown(for viewModel: HomeViewModel) -> Bool {
+        viewModel.header.mode == .evening
+    }
+}

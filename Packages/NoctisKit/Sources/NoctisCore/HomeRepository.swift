@@ -27,7 +27,13 @@ public nonisolated enum HomeSnapshotBuilder {
     /// Data whose newest sample is older than this is stale.
     public static let staleAfter: TimeInterval = 24 * 3600
 
-    public static func build(_ inputs: HomeHealthInputs, profile: UserProfileSnapshot, now: Date, timeZone: TimeZone) -> HomeSnapshot {
+    public static func build(
+        _ inputs: HomeHealthInputs,
+        profile: UserProfileSnapshot,
+        now: Date,
+        timeZone: TimeZone,
+        insightHistory: InsightHistory = InsightHistory()
+    ) -> HomeSnapshot {
         let dates = inputs.sleep.map(\.end) + inputs.hrv.map(\.date) + inputs.restingHeartRate.map(\.date) + inputs.heartRate.map(\.date)
         guard let newest = dates.filter({ $0 <= now }).max() else {
             return placeholder(.empty, profile: profile, now: now, timeZone: timeZone)
@@ -49,7 +55,10 @@ public nonisolated enum HomeSnapshotBuilder {
             dataState = .ready
         }
 
-        let week = recentNights(history, endingAt: lastNight?.night ?? expectedLastNight(now: now, timeZone: timeZone, wakeMinutes: profile.typicalWakeMinutes))
+        let weekEnd = lastNight?.night ?? expectedLastNight(now: now, timeZone: timeZone, wakeMinutes: profile.typicalWakeMinutes)
+        let weekKeys = (0..<recentNightCount).map { weekEnd.adding(days: -$0) }
+        let scores = RecoveryEngine.nightlyScores(history: metrics, nights: weekKeys, needMinutes: Double(profile.needMinutes), asOf: now)
+        let week = recentNights(history, endingAt: weekEnd, recovery: scores)
         return HomeSnapshot(
             dataState: dataState,
             recovery: recovery,
@@ -58,7 +67,7 @@ public nonisolated enum HomeSnapshotBuilder {
             recentNights: week,
             weekAverageMinutes: averageMinutes(week),
             tonight: TonightPlan(profile: profile),
-            topInsight: InsightEngine.topInsight(history: metrics, asOf: now),
+            topInsight: InsightEngine.topInsight(history: metrics, asOf: now, fatigue: insightHistory),
             newestSample: newest,
             lastUpdated: now
         )
@@ -101,10 +110,11 @@ public nonisolated enum HomeSnapshotBuilder {
         return values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
     }
 
-    static func recentNights(_ history: SleepHistory, endingAt last: SleepNightKey) -> [NightDuration] {
+    static func recentNights(_ history: SleepHistory, endingAt last: SleepNightKey, recovery: [SleepNightKey: Int] = [:]) -> [NightDuration] {
         (0..<recentNightCount).reversed().map { offset in
             let key = last.adding(days: -offset)
-            return NightDuration(night: key, asleepMinutes: history.night(key).map { $0.totals.asleep / 60 })
+            let asleep = history.night(key).map { $0.totals.asleep / 60 }
+            return NightDuration(night: key, asleepMinutes: asleep, recovery: asleep == nil ? nil : recovery[key])
         }
     }
 }
@@ -119,19 +129,24 @@ public actor HomeRepository {
     private let provider: any HealthDataProviding
     private let timeZone: TimeZone
     private let clock: @Sendable () -> Date
+    private let insightHistory: InsightHistoryStore
     private var inFlight: Task<HomeSnapshot, Never>?
 
     /// The last snapshot built, if any.
     public private(set) var cachedSnapshot: HomeSnapshot?
 
+    /// `insightHistory` defaults to one kept in memory; the app passes
+    /// the persisted store.
     public init(
         provider: any HealthDataProviding,
         timeZone: TimeZone = .autoupdatingCurrent,
-        clock: @escaping @Sendable () -> Date = { Date() }
+        clock: @escaping @Sendable () -> Date = { Date() },
+        insightHistory: InsightHistoryStore = InsightHistoryStore()
     ) {
         self.provider = provider
         self.timeZone = timeZone
         self.clock = clock
+        self.insightHistory = insightHistory
     }
 
     public func refresh(profile: UserProfileSnapshot) async -> HomeSnapshot {
@@ -140,8 +155,30 @@ public actor HomeRepository {
         inFlight = task
         let snapshot = await task.value
         inFlight = nil
+        if let insight = snapshot.topInsight {
+            insightHistory.update { $0.recordShown(insight) }
+        }
         cachedSnapshot = snapshot
         return snapshot
+    }
+
+    /// "Not useful": no insight for the rest of this night.
+    public func dismiss(_ insight: Insight) -> HomeSnapshot? {
+        insightHistory.update { $0.recordDismissal(insight) }
+        return dropInsight()
+    }
+
+    /// "Hide insights like this": this kind never shows again.
+    public func hide(_ insight: Insight) -> HomeSnapshot? {
+        insightHistory.update { $0.hide(insight.kind) }
+        return dropInsight()
+    }
+
+    /// The cached snapshot without its insight, so the card can collapse
+    /// before the next refresh (which agrees).
+    private func dropInsight() -> HomeSnapshot? {
+        cachedSnapshot = cachedSnapshot?.replacingInsight(nil)
+        return cachedSnapshot
     }
 
     /// Yields when Health data behind Home changes (`HKObserverQuery`).
@@ -165,7 +202,7 @@ public actor HomeRepository {
             async let resting = provider.fetchRestingHeartRate(from: start, to: now)
             async let heartRate = provider.fetchHeartRateSamples(from: now.addingTimeInterval(-2 * 86_400), to: now)
             let inputs = try await HomeHealthInputs(sleep: sleep, hrv: hrv, restingHeartRate: resting, heartRate: heartRate)
-            return HomeSnapshotBuilder.build(inputs, profile: profile, now: now, timeZone: timeZone)
+            return HomeSnapshotBuilder.build(inputs, profile: profile, now: now, timeZone: timeZone, insightHistory: insightHistory.history)
         } catch HealthProviderError.unauthorized {
             return HomeSnapshotBuilder.placeholder(.permissionRequired, profile: profile, now: now, timeZone: timeZone)
         } catch {

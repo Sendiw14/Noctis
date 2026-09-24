@@ -24,14 +24,18 @@ public nonisolated enum HomeDataState: Sendable, Equatable {
 }
 
 /// One of the last seven nights; `asleepMinutes` is nil when no main
-/// sleep was recorded.
+/// sleep was recorded, `recovery` when that morning had no score.
 public nonisolated struct NightDuration: Sendable, Equatable {
     public let night: SleepNightKey
     public let asleepMinutes: Double?
+    /// That morning's recovery, scored as it was then
+    /// (`RecoveryEngine.nightlyScores`).
+    public let recovery: Int?
 
-    public init(night: SleepNightKey, asleepMinutes: Double?) {
+    public init(night: SleepNightKey, asleepMinutes: Double?, recovery: Int? = nil) {
         self.night = night
         self.asleepMinutes = asleepMinutes
+        self.recovery = recovery
     }
 }
 
@@ -94,5 +98,23 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         self.topInsight = topInsight
         self.newestSample = newestSample
         self.lastUpdated = lastUpdated
+    }
+}
+
+nonisolated extension HomeSnapshot {
+    /// The same snapshot with another insight (or none).
+    public func replacingInsight(_ insight: Insight?) -> HomeSnapshot {
+        HomeSnapshot(
+            dataState: dataState,
+            recovery: recovery,
+            lastNight: lastNight,
+            latestSleep: latestSleep,
+            recentNights: recentNights,
+            weekAverageMinutes: weekAverageMinutes,
+            tonight: tonight,
+            topInsight: insight,
+            newestSample: newestSample,
+            lastUpdated: lastUpdated
+        )
     }
 }

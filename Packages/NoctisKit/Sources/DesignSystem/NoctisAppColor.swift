@@ -41,6 +41,9 @@ public nonisolated struct NoctisAppPalette: Sendable {
     public let weekHighlight: String
     /// Lavender for display text (evening greeting), ≥ 3:1 on bg.
     public let lavenderText: String
+    /// The morning reveal's first frame: a flat dusk that crossfades to
+    /// the paper.
+    public let dusk: String
 
     public static let light = NoctisAppPalette(
         bg: "F8F5EE", surface: "FFFFFF", hairline: "E9E3D8", track: "ECE6DA",
@@ -49,7 +52,8 @@ public nonisolated struct NoctisAppPalette: Sendable {
         ctaFill: "4A2F22", ctaLabel: "F8F5EE", onFill: "2B1D14",
         nightPanel: "4A2F22", nightInk: "F8F5EE", nightBorder: "4A2F22",
         blockLavender: "A08CEB", blockButter: "F2CE6B", blockInk: "2B1D14",
-        ringTrack: "ECE6DA", weekHighlight: "4A2F22", lavenderText: "7B63D6"
+        ringTrack: "ECE6DA", weekHighlight: "4A2F22", lavenderText: "7B63D6",
+        dusk: "E6E0EE"
     )
 
     public static let dark = NoctisAppPalette(
@@ -63,14 +67,15 @@ public nonisolated struct NoctisAppPalette: Sendable {
         // blocks deepened a step, a quieter ring track.
         nightPanel: "0E0A08", nightInk: "F4EDE3", nightBorder: "33281F",
         blockLavender: "8E7BDC", blockButter: "E0B955", blockInk: "2B1D14",
-        ringTrack: "2A211B", weekHighlight: "9A87E6", lavenderText: "A897F0"
+        ringTrack: "2A211B", weekHighlight: "9A87E6", lavenderText: "A897F0",
+        dusk: "120E17"
     )
 }
 
 /// The main app's adaptive tokens (R5): each resolves to the light or dark
 /// palette from the current trait collection. Onboarding keeps the fixed
 /// `NoctisPaper` tokens and stays light.
-public enum NoctisAppColor {
+public nonisolated enum NoctisAppColor {
     public static let bg = adaptive(\.bg)
     public static let surface = adaptive(\.surface)
     public static let hairline = adaptive(\.hairline)
@@ -110,6 +115,7 @@ public enum NoctisAppColor {
     public static let ringTrack = adaptive(\.ringTrack)
     public static let weekHighlight = adaptive(\.weekHighlight)
     public static let lavenderText = adaptive(\.lavenderText)
+    public static let dusk = adaptive(\.dusk)
 
     // MARK: Sleep stages
 

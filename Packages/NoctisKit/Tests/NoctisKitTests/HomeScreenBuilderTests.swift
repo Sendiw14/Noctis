@@ -435,39 +435,88 @@ struct HomeViewModelIntroTests {
                              clock: { date }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
     }
 
-    @Test func theRingDrawsInOncePerDay() async {
+    @Test func theRevealPlaysOncePerDay() async {
         let store = defaults()
         let morning = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: store)
+        // Dusk from the first frame: today's reveal is still to come.
+        #expect(morning.reveal == .pending)
         await morning.refresh()
-        #expect(morning.introPending)
-        #expect(morning.consumeIntro())
-        #expect(!morning.consumeIntro())
+        #expect(morning.reveal == .pending)
+        morning.beginReveal()
+        #expect(morning.reveal == .playing)
+        #expect(morning.revealPlayed)
         await morning.refresh()
-        #expect(!morning.introPending)
+        #expect(morning.reveal == .playing)
 
-        let evening = viewModel(at: Fixture.date(2026, 9, 24, 20), defaults: store)
-        await evening.refresh()
-        #expect(!evening.introPending)
+        let later = viewModel(at: Fixture.date(2026, 9, 24, 11), defaults: store)
+        #expect(later.reveal == .none)
+        await later.refresh()
+        #expect(later.reveal == .none)
 
         let tomorrow = viewModel(at: Fixture.date(2026, 9, 25, 10), defaults: store)
         await tomorrow.refresh()
-        #expect(tomorrow.introPending)
+        #expect(tomorrow.reveal == .pending)
     }
 
-    @Test func reduceMotionSkipsTheIntroButStillUsesTheDay() async {
+    @Test func eveningNeverPlaysNorUsesUpTheReveal() async {
+        let store = defaults()
+        let evening = viewModel(at: Fixture.date(2026, 9, 24, 21), defaults: store)
+        #expect(evening.reveal == .none)
+        await evening.refresh()
+        #expect(evening.screen?.mode == .evening)
+        #expect(evening.reveal == .none)
+        #expect(!HomeIntroGate(defaults: store).isClaimed(now: Fixture.date(2026, 9, 24, 21), calendar: Fixture.calendar()))
+    }
+
+    @Test func reduceMotionSkipsTheRevealButStillUsesTheDay() async {
         let store = defaults()
         let calm = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: store, reduceMotion: true)
+        #expect(calm.reveal == .none)
         await calm.refresh()
-        #expect(!calm.introPending)
+        #expect(calm.reveal == .none)
+        calm.beginReveal()
+        #expect(!calm.revealPlayed)
         let later = viewModel(at: Fixture.date(2026, 9, 24, 11), defaults: store)
         await later.refresh()
-        #expect(!later.introPending)
+        #expect(later.reveal == .none)
     }
 
-    @Test func noIntroWithoutAScore() async {
-        let learning = viewModel(scenario: .learning, at: Fixture.date(2026, 9, 24, 10), defaults: defaults())
+    @Test func noRevealWithoutAScore() async {
+        let store = defaults()
+        let learning = viewModel(scenario: .learning, at: Fixture.date(2026, 9, 24, 10), defaults: store)
         await learning.refresh()
-        #expect(!learning.introPending)
+        #expect(learning.reveal == .none)
+        // The first day-mode Home still used the day.
+        #expect(HomeIntroGate(defaults: store).isClaimed(now: Fixture.date(2026, 9, 24, 10), calendar: Fixture.calendar()))
+    }
+
+    @Test func aFlipToDayWhileOpenWaitsForTheNextAppearance() async throws {
+        let store = defaults()
+        let provider = MockHealthKitProvider(scenario: .full, referenceDate: Fixture.date(2026, 9, 24, 10), calendar: Fixture.calendar(), startAuthorized: true)
+        let evening = Fixture.date(2026, 9, 24, 10)
+        let model = HomeViewModel(repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { evening }),
+                                  profile: { UserProfileSnapshot() }, introGate: HomeIntroGate(defaults: store), reduceMotion: { false },
+                                  clock: { evening }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"), modeOverride: .evening)
+        await model.refresh()
+        #expect(model.reveal == .none)
+        // The morph flips Home to day in place: no reveal over it.
+        model.debugFlipMode(after: 0)
+        for _ in 0..<50 where model.screen?.mode != .day {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(model.screen?.mode == .day)
+        #expect(model.reveal == .none)
+        // Coming back to the app is the day's first appearance.
+        model.updateClock()
+        #expect(model.reveal == .pending)
+        model.stopObserving()
+    }
+
+    @Test func theRevealWaitsForContent() {
+        let fresh = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: defaults())
+        fresh.beginReveal()
+        #expect(fresh.reveal == .pending)
+        #expect(!fresh.revealPlayed)
     }
 
     @Test func theHeaderIsReadyBeforeAnyData() {

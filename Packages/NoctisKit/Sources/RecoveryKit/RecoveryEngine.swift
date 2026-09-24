@@ -25,21 +25,41 @@ public enum RecoveryEngine {
         let window = BaselineEngine.window(for: lastNight.night, in: complete)
         let today = score(lastNight: lastNight, baselines: baselines, baselineNights: window.count, needMinutes: needMinutes, model: model)
         // Each night in the window, scored exactly as today was (same
-        // model) — skipping
-        // nights that were still in the learning state themselves.
-        let scorable = window.filter { night in
-            complete.count { $0.night <= night.night } >= RecoveryModelV1.learningNights
-        }
-        let windowScores = scorable.map { night in
-            Double(score(
-                lastNight: night,
-                baselines: BaselineEngine.baselines(for: night.night, history: complete),
-                baselineNights: BaselineEngine.window(for: night.night, in: complete).count,
-                needMinutes: needMinutes,
-                model: model
-            ).score)
+        // model) — skipping nights that were still in the learning state
+        // themselves.
+        let windowScores = window.compactMap { night in
+            scoreAsOfThatMorning(night, complete: complete, needMinutes: needMinutes, model: model).map { Double($0) }
         }
         return .scored(today.with(comparison: comparison(score: today.score, windowScores: windowScores)))
+    }
+
+    /// Each of `nights` scored as its own morning's recovery was: the
+    /// same model against that night's own baselines. A night without
+    /// sleep, not yet over at `now`, or from while the person was still
+    /// learning (under 5 nights) has no score.
+    public static func nightlyScores(history: [NightMetrics], nights: [SleepNightKey], needMinutes: Double, asOf now: Date, model: RecoveryModel = .current) -> [SleepNightKey: Int] {
+        let complete = history.filter { $0.wakeTime <= now }
+        let byNight = Dictionary(complete.map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
+        var scores: [SleepNightKey: Int] = [:]
+        for key in nights {
+            guard let night = byNight[key],
+                  let score = scoreAsOfThatMorning(night, complete: complete, needMinutes: needMinutes, model: model) else { continue }
+            scores[key] = score
+        }
+        return scores
+    }
+
+    /// `night` scored with the history up to it, or nil while it was
+    /// still in the learning state.
+    static func scoreAsOfThatMorning(_ night: NightMetrics, complete: [NightMetrics], needMinutes: Double, model: RecoveryModel) -> Int? {
+        guard complete.count(where: { $0.night <= night.night }) >= RecoveryModelV1.learningNights else { return nil }
+        return score(
+            lastNight: night,
+            baselines: BaselineEngine.baselines(for: night.night, history: complete),
+            baselineNights: BaselineEngine.window(for: night.night, in: complete).count,
+            needMinutes: needMinutes,
+            model: model
+        ).score
     }
 
     /// Today's score against the mean of the window's scores; no
