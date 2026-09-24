@@ -21,8 +21,31 @@ public enum RecoveryEngine {
             return .noSleepLastNight
         }
         let baselines = BaselineEngine.baselines(for: lastNight.night, history: complete)
-        let baselineNights = BaselineEngine.window(for: lastNight.night, in: complete).count
-        return .scored(score(lastNight: lastNight, baselines: baselines, baselineNights: baselineNights, needMinutes: needMinutes))
+        let window = BaselineEngine.window(for: lastNight.night, in: complete)
+        let today = score(lastNight: lastNight, baselines: baselines, baselineNights: window.count, needMinutes: needMinutes)
+        // Each night in the window, scored exactly as today was — skipping
+        // nights that were still in the learning state themselves.
+        let scorable = window.filter { night in
+            complete.count { $0.night <= night.night } >= RecoveryModelV1.learningNights
+        }
+        let windowScores = scorable.map { night in
+            Double(score(
+                lastNight: night,
+                baselines: BaselineEngine.baselines(for: night.night, history: complete),
+                baselineNights: BaselineEngine.window(for: night.night, in: complete).count,
+                needMinutes: needMinutes
+            ).score)
+        }
+        return .scored(today.with(comparison: comparison(score: today.score, windowScores: windowScores)))
+    }
+
+    /// Today's score against the mean of the window's scores; no
+    /// baseline under `BaselineEngine.minimumNights` scored nights.
+    public static func comparison(score: Int, windowScores: [Double]) -> RecoveryComparison {
+        guard let baseline = BaselineEngine.baseline(windowScores) else {
+            return RecoveryComparison(baseline: nil, nights: windowScores.count, delta: nil)
+        }
+        return RecoveryComparison(baseline: baseline.value, nights: baseline.nights, delta: Int((Double(score) - baseline.value).rounded()))
     }
 
     public static func score(lastNight: NightMetrics, baselines: Baselines, baselineNights: Int, needMinutes: Double) -> RecoveryResult {
@@ -53,8 +76,30 @@ public enum RecoveryEngine {
             factors: factors,
             confidence: confidence(factorCount: factors.count, baselineNights: baselineNights),
             baselineNights: baselineNights,
-            modelVersion: RecoveryModelV1.version
+            modelVersion: RecoveryModelV1.version,
+            baselines: baselines,
+            missingFactors: gaps(lastNight, baselines, used: Set(factors.map(\.kind)))
         )
+    }
+
+    /// Why each unused factor is missing.
+    static func gaps(_ night: NightMetrics, _ baselines: Baselines, used: Set<RecoveryFactorKind>) -> [RecoveryFactorKind: RecoveryFactorGap] {
+        var gaps: [RecoveryFactorKind: RecoveryFactorGap] = [:]
+        for kind in RecoveryFactorKind.allCases where !used.contains(kind) {
+            switch kind {
+            case .sleepDuration:
+                gaps[kind] = .unavailable
+            case .sleepConsistency:
+                gaps[kind] = .buildingBaseline
+            case .hrv:
+                gaps[kind] = night.hrv == nil ? (baselines.hrvNights > 0 ? .notRecorded : .unavailable) : .buildingBaseline
+            case .restingHeartRate:
+                gaps[kind] = night.restingHeartRate == nil
+                    ? (baselines.restingHeartRateNights > 0 ? .notRecorded : .unavailable)
+                    : .buildingBaseline
+            }
+        }
+        return gaps
     }
 
     /// High: all four factors and a full 14-night window. Moderate: three

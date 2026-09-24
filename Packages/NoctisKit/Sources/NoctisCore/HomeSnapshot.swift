@@ -58,27 +58,41 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
     public let recovery: RecoveryState?
     /// Last night's main sleep (ended within 24 hours), if any.
     public let lastNight: SleepSession?
+    /// The newest main sleep on record, however old — what a "no sleep
+    /// last night" message can point back to.
+    public let latestSleep: SleepSession?
     /// The seven nights ending last night, oldest first.
     public let recentNights: [NightDuration]
+    /// Mean minutes asleep over `recentNights` that have data; nil when
+    /// none do.
+    public let weekAverageMinutes: Double?
     public let tonight: TonightPlan
     public let topInsight: Insight?
+    /// The newest Health sample of any type; nil with no data at all.
+    public let newestSample: Date?
     public let lastUpdated: Date
 
     public init(
         dataState: HomeDataState,
         recovery: RecoveryState?,
         lastNight: SleepSession?,
+        latestSleep: SleepSession?,
         recentNights: [NightDuration],
+        weekAverageMinutes: Double?,
         tonight: TonightPlan,
         topInsight: Insight?,
+        newestSample: Date?,
         lastUpdated: Date
     ) {
         self.dataState = dataState
         self.recovery = recovery
         self.lastNight = lastNight
+        self.latestSleep = latestSleep
         self.recentNights = recentNights
+        self.weekAverageMinutes = weekAverageMinutes
         self.tonight = tonight
         self.topInsight = topInsight
+        self.newestSample = newestSample
         self.lastUpdated = lastUpdated
     }
 }

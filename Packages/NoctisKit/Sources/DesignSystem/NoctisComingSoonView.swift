@@ -46,7 +46,7 @@ public struct NoctisComingSoonView: View {
                 .overlay(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
                 .accessibilityElement(children: .combine)
             }
-            .padding(.horizontal, NoctisSpacing.xl)
+            .padding(.horizontal, NoctisSpacing.lg)
             .padding(.top, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
         }

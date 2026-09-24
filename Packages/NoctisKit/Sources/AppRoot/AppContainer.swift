@@ -35,9 +35,11 @@ public struct AppContainer {
                 scenario: scenario,
                 // The mock forgets its permission between launches; a
                 // finished onboarding already granted it.
-                startAuthorized: debug.skipOnboarding || (profileStore.load().healthAuthorizationRequested && !debug.resetState),
+                startAuthorized: !debug.unauthorized
+                    && (debug.skipOnboarding || (profileStore.load().healthAuthorizationRequested && !debug.resetState)),
                 isHealthDataAvailable: !debug.healthUnavailable,
-                failsQueries: debug.healthQueryFails
+                failsQueries: debug.healthQueryFails,
+                latency: debug.mockLatency
             )
         } else {
             provider = HealthKitProvider()
@@ -69,7 +71,9 @@ public struct AppContainer {
         let model = self.model
         self.homeViewModel = HomeViewModel(
             repository: HomeRepository(provider: provider),
-            profile: { model.profile }
+            profile: { model.profile },
+            // "Connect Apple Health" reuses onboarding's authorization flow.
+            connectHealth: { await model.requestHealthAuthorization() }
         )
         #if DEBUG
         if debug.logHomeSnapshot {
@@ -89,6 +93,10 @@ struct DebugLaunchOptions {
     let healthQueryFails: Bool
     let initialRoute: AppRoute?
     let logHomeSnapshot: Bool
+    /// `-mockUnauthorized`: Health access not granted (Home's connect card).
+    let unauthorized: Bool
+    /// `-mockLatency <seconds>`: slow mock sleep queries (Home's skeleton).
+    let mockLatency: Duration
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -106,6 +114,8 @@ struct DebugLaunchOptions {
         healthQueryFails = arguments.contains("-noctisHealthQueryFails")
         initialRoute = value(after: "-noctisInitialRoute").flatMap(AppRoute.init(rawValue:))
         logHomeSnapshot = arguments.contains("-noctisLogHomeSnapshot")
+        unauthorized = arguments.contains("-mockUnauthorized")
+        mockLatency = .seconds(value(after: "-mockLatency").flatMap(Double.init) ?? 0)
     }
 }
 #endif

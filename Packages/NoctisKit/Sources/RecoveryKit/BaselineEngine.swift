@@ -21,13 +21,27 @@ public struct Baselines: Sendable, Equatable {
     public let wakeTime: Baseline?
     public let hrv: Baseline?
     public let restingHeartRate: Baseline?
+    /// Nights in the window with an HRV value, even below the minimum.
+    public let hrvNights: Int
+    /// Nights in the window with a resting heart rate, even below the minimum.
+    public let restingHeartRateNights: Int
 
-    public init(sleepDuration: Baseline?, bedtime: Baseline?, wakeTime: Baseline?, hrv: Baseline?, restingHeartRate: Baseline?) {
+    public init(
+        sleepDuration: Baseline?,
+        bedtime: Baseline?,
+        wakeTime: Baseline?,
+        hrv: Baseline?,
+        restingHeartRate: Baseline?,
+        hrvNights: Int? = nil,
+        restingHeartRateNights: Int? = nil
+    ) {
         self.sleepDuration = sleepDuration
         self.bedtime = bedtime
         self.wakeTime = wakeTime
         self.hrv = hrv
         self.restingHeartRate = restingHeartRate
+        self.hrvNights = hrvNights ?? hrv?.nights ?? 0
+        self.restingHeartRateNights = restingHeartRateNights ?? restingHeartRate?.nights ?? 0
     }
 
     public static let none = Baselines(sleepDuration: nil, bedtime: nil, wakeTime: nil, hrv: nil, restingHeartRate: nil)
@@ -50,12 +64,16 @@ public enum BaselineEngine {
 
     public static func baselines(for night: SleepNightKey, history: [NightMetrics]) -> Baselines {
         let nights = window(for: night, in: history)
+        let hrv = nights.compactMap(\.hrv)
+        let resting = nights.compactMap(\.restingHeartRate)
         return Baselines(
             sleepDuration: baseline(nights.map(\.asleepMinutes)),
             bedtime: baseline(nights.map(\.bedtimeMinutes)),
             wakeTime: baseline(nights.map(\.wakeMinutes)),
-            hrv: baseline(nights.compactMap(\.hrv)),
-            restingHeartRate: baseline(nights.compactMap(\.restingHeartRate))
+            hrv: baseline(hrv),
+            restingHeartRate: baseline(resting),
+            hrvNights: hrv.count,
+            restingHeartRateNights: resting.count
         )
     }
 

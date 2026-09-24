@@ -49,13 +49,17 @@ public nonisolated enum HomeSnapshotBuilder {
             dataState = .ready
         }
 
+        let week = recentNights(history, endingAt: lastNight?.night ?? expectedLastNight(now: now, timeZone: timeZone, wakeMinutes: profile.typicalWakeMinutes))
         return HomeSnapshot(
             dataState: dataState,
             recovery: recovery,
             lastNight: lastNight,
-            recentNights: recentNights(history, endingAt: lastNight?.night ?? expectedLastNight(now: now, timeZone: timeZone, wakeMinutes: profile.typicalWakeMinutes)),
+            latestSleep: history.nights.max { $0.wakeTime < $1.wakeTime },
+            recentNights: week,
+            weekAverageMinutes: averageMinutes(week),
             tonight: TonightPlan(profile: profile),
             topInsight: InsightEngine.topInsight(history: metrics, asOf: now),
+            newestSample: newest,
             lastUpdated: now
         )
     }
@@ -67,9 +71,12 @@ public nonisolated enum HomeSnapshotBuilder {
             dataState: state,
             recovery: nil,
             lastNight: nil,
+            latestSleep: nil,
             recentNights: recentNights(.empty, endingAt: expectedLastNight(now: now, timeZone: timeZone, wakeMinutes: profile.typicalWakeMinutes)),
+            weekAverageMinutes: nil,
             tonight: TonightPlan(profile: profile),
             topInsight: nil,
+            newestSample: nil,
             lastUpdated: now
         )
     }
@@ -86,6 +93,12 @@ public nonisolated enum HomeSnapshotBuilder {
         let components = DateComponents(year: morning.year, month: morning.month, day: morning.day, hour: wakeMinutes / 60, minute: wakeMinutes % 60)
         guard let plannedWake = calendar.date(from: components) else { return current.adding(days: -1) }
         return now >= plannedWake ? current : current.adding(days: -1)
+    }
+
+    /// Mean of the nights that have data; nil when none do.
+    static func averageMinutes(_ nights: [NightDuration]) -> Double? {
+        let values = nights.compactMap(\.asleepMinutes)
+        return values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
     }
 
     static func recentNights(_ history: SleepHistory, endingAt last: SleepNightKey) -> [NightDuration] {

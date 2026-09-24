@@ -41,6 +41,8 @@ public final class MockHealthKitProvider: HealthDataProviding {
     /// "no data") in the simulator, where the mock otherwise never fails a
     /// query once authorized.
     private let failsQueries: Bool
+    /// Debug-only delay on sleep queries, to hold Home on its skeleton.
+    private let latency: Duration
 
     public init(
         scenario: MockScenario = .full,
@@ -50,9 +52,11 @@ public final class MockHealthKitProvider: HealthDataProviding {
         calendar: Calendar = .current,
         startAuthorized: Bool = false,
         isHealthDataAvailable: Bool = true,
-        failsQueries: Bool = false
+        failsQueries: Bool = false,
+        latency: Duration = .zero
     ) {
         self.scenario = scenario
+        self.latency = latency
         self.status = startAuthorized ? .authorized : .notDetermined
         self.isHealthDataAvailable = isHealthDataAvailable
         self.failsQueries = failsQueries
@@ -86,6 +90,7 @@ public final class MockHealthKitProvider: HealthDataProviding {
 
     public func fetchSleepSamples(from start: Date, to end: Date) async throws -> [RawSleepSample] {
         try requireAuthorized()
+        if latency > .zero { try await Task.sleep(for: latency) }
         if failsQueries { throw HealthProviderError.queryFailed }
         return sleep.filter { $0.start < end && $0.end > start }
     }

@@ -11,6 +11,7 @@
 		0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */; };
 		7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6D414566DC2646DBC6FE09 /* QASupport.swift */; };
 		8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */; };
+		8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F4213CBB03353749905D7E /* HomeQATests.swift */; };
 		98B4052A9E1C5519A27C8213 /* NoctisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */; };
 		C4E097F8552FBF47761B4A59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4435E6B1989CC790CE6F0F65 /* Assets.xcassets */; };
 		C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */; };
@@ -35,6 +36,7 @@
 		4931DEC833E41A07AE985B2D /* Noctis.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Noctis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisApp.swift; sourceTree = "<group>"; };
 		811601970E5BB83FD5627B7D /* Noctis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Noctis.entitlements; sourceTree = "<group>"; };
+		85F4213CBB03353749905D7E /* HomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQATests.swift; sourceTree = "<group>"; };
 		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
 		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
 		BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverQATests.swift; sourceTree = "<group>"; };
@@ -82,6 +84,7 @@
 		A5B58CBE9E9988E40D36EC50 /* UITests */ = {
 			isa = PBXGroup;
 			children = (
+				85F4213CBB03353749905D7E /* HomeQATests.swift */,
 				A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */,
 				FE6D414566DC2646DBC6FE09 /* QASupport.swift */,
 				BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */,
@@ -208,6 +211,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */,
 				8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */,
 				7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */,
 				0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */,

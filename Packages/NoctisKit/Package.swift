@@ -38,7 +38,11 @@ let package = Package(
             swiftSettings: noctisSwiftSettings
         ),
         .target(name: "OnboardingFeature", dependencies: ["DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
-        .target(name: "HomeFeature", dependencies: ["DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
+        .target(
+            name: "HomeFeature",
+            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit"],
+            swiftSettings: noctisSwiftSettings
+        ),
         .target(
             name: "AppRoot",
             dependencies: ["DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature"],

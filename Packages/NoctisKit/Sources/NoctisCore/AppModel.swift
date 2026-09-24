@@ -9,6 +9,8 @@ public final class AppModel {
     public private(set) var profile: UserProfileSnapshot
     public private(set) var healthAuthorization: HealthAuthorizationStatus = .notDetermined
     public var selectedTab: AppTab = .home
+    /// The Home tab's navigation stack.
+    public var homePath: [HomeRoute] = []
 
     let healthProvider: any HealthDataProviding
     private let profileStore: ProfileStore
@@ -41,9 +43,14 @@ public final class AppModel {
         profileStore.save(profile)
     }
 
-    /// Shows `route`: selects its tab. Profile lands on Home until Profile
-    /// is built (ROADMAP.md).
+    /// Shows `route`: selects its tab. Profile opens on Home's stack, as
+    /// it does from the avatar button.
     public func open(_ route: AppRoute) {
         selectedTab = route.tab
+        switch route {
+        case .profile: homePath = [.profile]
+        case .home: homePath = []
+        case .sleep, .recovery, .insights, .coach: break
+        }
     }
 }

@@ -187,3 +187,86 @@ struct RecoveryEngineTests {
         #expect(first == second)
     }
 }
+
+/// Today's score against the recent baseline, and why factors are missing.
+struct RecoveryComparisonTests {
+    private func history(count: Int, lastAsleep: Double = 450, heartData: Bool = true, lastHRV: Double?? = .none) -> [NightMetrics] {
+        Fixture.metrics(count: count) { index in
+            let isLast = index == count - 1
+            let hrv: Double? = isLast ? (lastHRV ?? (heartData ? 50 : nil)) : (heartData ? 50 : nil)
+            return (asleep: isLast ? lastAsleep : 450, bedtime: 660, wake: 1140, hrv: hrv, resting: heartData ? 55 : nil)
+        }
+    }
+
+    private func scored(_ history: [NightMetrics]) -> RecoveryResult? {
+        if case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: Fixture.morningAfter) { return result }
+        return nil
+    }
+
+    @Test func aSteadyWeekIsInLineWithItsBaseline() throws {
+        // Every window night scores 73: (87.5×35 + 100×20 + 50×25 + 50×20) / 100.
+        let result = try #require(scored(history(count: 20)))
+        #expect(result.comparison.baseline == 73)
+        #expect(result.comparison.nights == 14)
+        #expect(result.comparison.delta == 0)
+        #expect(result.comparison.trend == .inLine)
+        #expect(result.comparison.sentence == "In line with your recent baseline.")
+    }
+
+    @Test func aBetterNightIsAboveAndAWorseOneBelow() throws {
+        let better = try #require(scored(history(count: 20, lastAsleep: 480)))
+        #expect(better.score == 78)
+        #expect(better.comparison.delta == 5)
+        #expect(better.comparison.trend == .above)
+        #expect(better.comparison.sentence == "Above your recent baseline.")
+
+        let worse = try #require(scored(history(count: 20, lastAsleep: 360)))
+        #expect(worse.score == 60)
+        #expect(worse.comparison.delta == -13)
+        #expect(worse.comparison.trend == .below)
+        #expect(worse.comparison.sentence == "Below your recent baseline.")
+    }
+
+    @Test func nightsStillLearningAreLeftOutOfTheRecoveryBaseline() throws {
+        // 15 nights: the window's first four were still learning, so only
+        // Sep 13 (duration only, 88) and nine full nights (73) count.
+        let result = try #require(scored(history(count: 15)))
+        #expect(result.comparison.nights == 10)
+        #expect(result.comparison.baseline == 74.5)
+    }
+
+    @Test func noRecoveryBaselineUnderFiveScoredNights() {
+        let comparison = RecoveryEngine.comparison(score: 80, windowScores: [70, 70, 70, 70])
+        #expect(comparison.baseline == nil)
+        #expect(comparison.delta == nil)
+        #expect(comparison.trend == .unknown)
+        #expect(comparison.sentence == "Not enough nights yet to compare with your baseline.")
+        #expect(RecoveryEngine.comparison(score: 80, windowScores: [70, 70, 70, 70, 70]).delta == 10)
+    }
+
+    @Test(arguments: [(3, RecoveryTrend.above), (2, .inLine), (0, .inLine), (-2, .inLine), (-3, .below)])
+    func trendThresholdsAreThreePoints(delta: Int, expected: RecoveryTrend) {
+        #expect(RecoveryComparison(baseline: 70, nights: 14, delta: delta).trend == expected)
+    }
+
+    @Test func sourcesWithoutHeartDataAreUnavailable() throws {
+        let result = try #require(scored(history(count: 15, heartData: false)))
+        #expect(result.missingFactors == [.hrv: .unavailable, .restingHeartRate: .unavailable])
+    }
+
+    @Test func heartDataMissingOnlyLastNightWasNotRecorded() throws {
+        let result = try #require(scored(history(count: 15, lastHRV: .some(nil))))
+        #expect(result.missingFactors == [.hrv: .notRecorded])
+    }
+
+    @Test func factorsWithoutFiveNightsAreBuildingTheirBaseline() throws {
+        let result = try #require(scored(history(count: 5)))
+        #expect(result.missingFactors == [.sleepConsistency: .buildingBaseline, .hrv: .buildingBaseline, .restingHeartRate: .buildingBaseline])
+    }
+
+    @Test func theResultCarriesTheBaselinesItWasJudgedAgainst() throws {
+        let result = try #require(scored(history(count: 15)))
+        #expect(result.baselines.bedtime == Baseline(value: 660, nights: 14))
+        #expect(result.baselines.hrv == Baseline(value: 50, nights: 14))
+    }
+}

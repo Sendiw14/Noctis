@@ -8,6 +8,7 @@ public struct NoctisCTA: View {
     private let title: String
     private let isLoading: Bool
     private let icon: String
+    private let adaptive: Bool
     private let action: () -> Void
 
     @Environment(\.isEnabled) private var isEnabled
@@ -17,21 +18,35 @@ public struct NoctisCTA: View {
     /// may override it for a CTA whose action isn't "go forward" — e.g.
     /// Paywall's error-state "Try again", which reads as a retry
     /// (`arrow.clockwise`), not forward progress.
-    public init(_ title: String, isLoading: Bool = false, icon: String = "arrow.right", action: @escaping () -> Void) {
+    /// `adaptive`: the main app's CTA, which follows Light/Dark (cocoa with
+    /// an ivory label in Light, ivory with a #2B1D14 label in Dark).
+    /// Onboarding keeps the fixed light CTA.
+    public init(_ title: String, isLoading: Bool = false, icon: String = "arrow.right", adaptive: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.isLoading = isLoading
         self.icon = icon
+        self.adaptive = adaptive
         self.action = action
+    }
+
+    private var fill: Color {
+        if isEnabled { return adaptive ? NoctisAppColor.ctaFill : NoctisPaper.cocoa }
+        return adaptive ? NoctisAppColor.track : NoctisPaper.track
+    }
+
+    private var label: Color {
+        if isEnabled { return adaptive ? NoctisAppColor.ctaLabel : NoctisPaper.bg }
+        return adaptive ? NoctisAppColor.ink3 : NoctisPaper.ink3
     }
 
     public var body: some View {
         Button(action: action) {
             ZStack {
                 Capsule(style: .continuous)
-                    .fill(isEnabled ? NoctisPaper.cocoa : NoctisPaper.track)
+                    .fill(fill)
 
                 if isLoading {
-                    NoctisCTASpinner(tint: NoctisPaper.bg, reduceMotion: reduceMotion)
+                    NoctisCTASpinner(tint: label, reduceMotion: reduceMotion)
                 } else {
                     HStack(spacing: 6) {
                         Text(title)
@@ -40,7 +55,7 @@ public struct NoctisCTA: View {
                         Image(systemName: icon)
                             .noctisIcon(15)
                     }
-                    .foregroundStyle(isEnabled ? NoctisPaper.bg : NoctisPaper.ink3)
+                    .foregroundStyle(label)
                     // R4: 58pt at the default size; taller when the label
                     // grows or wraps, never clipped.
                     .padding(.vertical, NoctisSpacing.sm)

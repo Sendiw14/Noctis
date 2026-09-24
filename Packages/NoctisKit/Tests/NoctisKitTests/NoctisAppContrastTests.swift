@@ -30,6 +30,22 @@ struct NoctisAppContrastTests {
         #expect(value >= 4.5, "\(mode): CTA label on CTA fill contrast \(value) < 4.5:1")
     }
 
+    @Test(arguments: modes)
+    func glyphsOnFillsClearBodyContrast(_ mode: String, _ palette: NoctisAppPalette) {
+        for (name, fill) in [("sage", palette.sage), ("orange", palette.orange), ("butter", palette.butter), ("lavender", palette.lavender)] {
+            let value = ratio(palette.onFill, fill)
+            #expect(value >= 4.5, "\(mode): onFill on \(name) contrast \(value) < 4.5:1")
+        }
+    }
+
+    /// Cocoa marks the Deep stage and last night's bar: a graphic, so 3:1
+    /// against the card surface and the track it sits on.
+    @Test(arguments: modes)
+    func cocoaStandsOutOnCardsAndTracks(_ mode: String, _ palette: NoctisAppPalette) {
+        #expect(ratio(palette.cocoa, palette.surface) >= 3, "\(mode): cocoa on surface")
+        #expect(ratio(palette.cocoa, palette.track) >= 3, "\(mode): cocoa on track")
+    }
+
     @Test func lightPaletteIsExactlyTheNoctisPaperTokens() {
         let light = NoctisAppPalette.light
         let pairs: [(String, Color)] = [

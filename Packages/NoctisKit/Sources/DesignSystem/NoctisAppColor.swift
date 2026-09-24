@@ -23,19 +23,23 @@ public nonisolated struct NoctisAppPalette: Sendable {
     public let cocoa: String
     public let ctaFill: String
     public let ctaLabel: String
+    /// Text and glyphs on sage, orange, butter and lavender fills.
+    public let onFill: String
 
     public static let light = NoctisAppPalette(
         bg: "F8F5EE", surface: "FFFFFF", hairline: "E9E3D8", track: "ECE6DA",
         ink: "2B1D14", ink2: "6B5B4E", ink3: "7A6B5E", orangeText: "C2571A",
         sage: "9DB073", orange: "E07B39", butter: "F2CE6B", lavender: "A08CEB", cocoa: "4A2F22",
-        ctaFill: "4A2F22", ctaLabel: "F8F5EE"
+        ctaFill: "4A2F22", ctaLabel: "F8F5EE", onFill: "2B1D14"
     )
 
     public static let dark = NoctisAppPalette(
         bg: "17110E", surface: "221A15", hairline: "33281F", track: "2E241D",
         ink: "F4EDE3", ink2: "C9BBAA", ink3: "9C8C7B", orangeText: "F08A4B",
-        sage: "8FA366", orange: "E4854A", butter: "E9C25E", lavender: "9A87E6", cocoa: "4A2F22",
-        ctaFill: "F4EDE3", ctaLabel: "2B1D14"
+        // Cocoa lifts to #9A6A50 in Dark: #4A2F22 is 1.5:1 on the dark
+        // surface, too faint for the Deep stage and last night's bar.
+        sage: "8FA366", orange: "E4854A", butter: "E9C25E", lavender: "9A87E6", cocoa: "9A6A50",
+        ctaFill: "F4EDE3", ctaLabel: "2B1D14", onFill: "2B1D14"
     )
 }
 
@@ -64,6 +68,10 @@ public enum NoctisAppColor {
 
     public static let ctaFill = adaptive(\.ctaFill)
     public static let ctaLabel = adaptive(\.ctaLabel)
+
+    /// Glyphs and text on sage, orange, butter and lavender (R5: ink on
+    /// fills), dark in both modes.
+    public static let onFill = adaptive(\.onFill)
 
     // MARK: Sleep stages
 

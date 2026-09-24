@@ -42,6 +42,9 @@ struct AppRouteTests {
         #expect(model.selectedTab == .recovery)
         model.open(.profile)
         #expect(model.selectedTab == .home)
+        #expect(model.homePath == [.profile])
+        model.open(.home)
+        #expect(model.homePath.isEmpty)
     }
 
     @Test func mockScenarioLaunchArgumentsParse() {
@@ -50,6 +53,8 @@ struct AppRouteTests {
         #expect(DebugLaunchOptions(arguments: ["-useMockHealth"]).mockScenario == .full)
         #expect(DebugLaunchOptions(arguments: []).mockScenario == nil)
         #expect(DebugLaunchOptions(arguments: ["-noctisInitialRoute", "insights"]).initialRoute == .insights)
+        #expect(DebugLaunchOptions(arguments: ["-mockUnauthorized"]).unauthorized)
+        #expect(DebugLaunchOptions(arguments: ["-mockLatency", "2.5"]).mockLatency == .milliseconds(2500))
         for scenario in MockScenario.allCases {
             #expect(DebugLaunchOptions(arguments: ["-mockScenario", scenario.rawValue]).mockScenario == scenario)
         }

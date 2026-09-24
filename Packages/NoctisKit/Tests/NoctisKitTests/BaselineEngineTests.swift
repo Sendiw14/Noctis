@@ -33,7 +33,11 @@ struct BaselineEngineTests {
 
     @Test func noBaselineBelowFiveValidNights() {
         let baselines = BaselineEngine.baselines(for: target, history: nights(back: [1, 2, 3, 4]))
-        #expect(baselines == .none)
+        #expect(baselines.sleepDuration == nil && baselines.bedtime == nil && baselines.wakeTime == nil)
+        #expect(baselines.hrv == nil && baselines.restingHeartRate == nil)
+        // The nights that do have values are still counted.
+        #expect(baselines.hrvNights == 4)
+        #expect(baselines.restingHeartRateNights == 4)
     }
 
     @Test func fiveValidNightsMakeABaseline() {
@@ -48,7 +52,8 @@ struct BaselineEngineTests {
     @Test func nightsOutsideTheWindowNeverCount() {
         // Five nights, but two are 15+ nights back: only three count.
         let baselines = BaselineEngine.baselines(for: target, history: nights(back: [1, 2, 3, 15, 16]))
-        #expect(baselines == .none)
+        #expect(baselines.sleepDuration == nil && baselines.hrv == nil)
+        #expect(baselines.hrvNights == 3)
     }
 
     @Test func baselineIsTheMeanOfTheWindow() {
