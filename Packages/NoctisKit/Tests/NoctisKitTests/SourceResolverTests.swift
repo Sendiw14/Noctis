@@ -117,6 +117,26 @@ struct SourceResolverTests {
         #expect(first.first?.sourceName == "AppOne")
     }
 
+    @Test func overlappingSamplesFromTheSameSourceAreTrimmedNotDropped() {
+        let first = sleepSample(start: 0, end: 3600, source: "Watch", bundleID: "com.example.watch")
+        let second = sleepSample(start: 1800, end: 5400, source: "Watch", bundleID: "com.example.watch", stage: .deep)
+        let resolved = DefaultSourceResolver().resolveSleepSamples([first, second])
+        #expect(resolved.count == 2)
+        #expect(resolved[1].start == first.end)
+        #expect(resolved[1].end == second.end)
+        #expect(resolved.reduce(0) { $0 + $1.duration } == 5400)
+    }
+
+    @Test func unrankedTiesGoToTheSourceWithMoreStagedSamples() {
+        let staged = [
+            sleepSample(start: 0, end: 1800, source: "ZWatch", bundleID: "com.example.z", stage: .core),
+            sleepSample(start: 1800, end: 3600, source: "ZWatch", bundleID: "com.example.z", stage: .deep),
+        ]
+        let unstaged = sleepSample(start: 0, end: 3600, source: "AApp", bundleID: "com.example.a", stage: .unspecified)
+        let resolved = DefaultSourceResolver().resolveSleepSamples(staged + [unstaged])
+        #expect(resolved.map(\.sourceName) == ["ZWatch", "ZWatch"])
+    }
+
     @Test func higherPrioritySourceWinsHeartRateTimestampCollision() {
         let watch = SourceIdentity(name: "Watch")
         let priority = SourcePriority(orderedHighestFirst: [watch])

@@ -3,7 +3,7 @@ import Foundation
 /// Identifies where a sample came from. Two samples from the same app but
 /// different device installs are still the "same" source for resolution
 /// purposes — identity is by name/bundle, not by instance.
-public struct SourceIdentity: Sendable, Hashable {
+public nonisolated struct SourceIdentity: Sendable, Hashable {
     public let name: String
     public let bundleID: String?
 
@@ -16,7 +16,7 @@ public struct SourceIdentity: Sendable, Hashable {
 /// A caller-supplied ranking of known sources, highest priority first.
 /// NOCTIS never guesses which source is "better" from sample content —
 /// priority is always an explicit, external decision.
-public struct SourcePriority: Sendable {
+public nonisolated struct SourcePriority: Sendable {
     private let ranks: [SourceIdentity: Int]
 
     public init(orderedHighestFirst: [SourceIdentity]) {
@@ -28,7 +28,7 @@ public struct SourcePriority: Sendable {
     }
 
     /// No known ranking — every source ties, and resolution falls back to
-    /// a stable, deterministic tie-break (source name).
+    /// a stable, deterministic tie-break (see `DefaultSourceResolver`).
     public static let unranked = SourcePriority(orderedHighestFirst: [])
 
     public func rank(of identity: SourceIdentity) -> Int {
@@ -44,7 +44,7 @@ public struct SourcePriority: Sendable {
 /// those engines should never see two sources' overlapping claims about the
 /// same night; they should see one resolved answer with resolution already
 /// applied upstream.
-public protocol SourceResolving: Sendable {
+public nonisolated protocol SourceResolving: Sendable {
     func resolveSleepSamples(_ samples: [RawSleepSample]) -> [RawSleepSample]
     func resolveHeartRateSamples(_ samples: [HeartRateSample]) -> [HeartRateSample]
 }
@@ -54,10 +54,19 @@ public protocol SourceResolving: Sendable {
 /// that overlap and lower-priority samples in the same window are dropped
 /// entirely, never blended or double-counted.
 ///
+/// Sources are ordered by explicit `SourcePriority` first; unranked ties
+/// go to the source with the most staged (core, deep, REM) samples — the
+/// richer tracker — and then to the source name, so the answer never
+/// depends on input order.
+///
+/// A source never overrides itself: two overlapping samples from the
+/// *same* source are both kept, with the later one trimmed to start where
+/// the earlier one ends, so no time is counted twice.
+///
 /// With a single source (most real devices with only an Apple Watch), this is provably a no-op: there is
 /// nothing to deduplicate and nothing to prioritize against. The behavior
 /// only becomes visible once a second source exists.
-public struct DefaultSourceResolver: SourceResolving {
+public nonisolated struct DefaultSourceResolver: SourceResolving {
     private let priority: SourcePriority
 
     public init(priority: SourcePriority = .unranked) {
@@ -101,28 +110,44 @@ public struct DefaultSourceResolver: SourceResolving {
         let bySource = Dictionary(grouping: samples) {
             SourceIdentity(name: $0.sourceName, bundleID: $0.sourceBundleID)
         }
+        let stagedCounts = bySource.mapValues { samples in
+            samples.count { [.core, .deep, .rem].contains($0.stage) }
+        }
         let orderedSources = bySource.keys.sorted { lhs, rhs in
             let lhsRank = priority.rank(of: lhs)
             let rhsRank = priority.rank(of: rhs)
             if lhsRank != rhsRank { return lhsRank > rhsRank }
-            return lhs.name < rhs.name
+            let lhsStaged = stagedCounts[lhs] ?? 0
+            let rhsStaged = stagedCounts[rhs] ?? 0
+            if lhsStaged != rhsStaged { return lhsStaged > rhsStaged }
+            if lhs.name != rhs.name { return lhs.name < rhs.name }
+            return (lhs.bundleID ?? "") < (rhs.bundleID ?? "")
         }
 
-        var acceptedRanges: [(start: Date, end: Date)] = []
+        var higherPriorityRanges: [(start: Date, end: Date)] = []
         var resolved: [RawSleepSample] = []
 
         for source in orderedSources {
-            let sourceSamples = (bySource[source] ?? []).sorted { $0.start < $1.start }
+            let sourceSamples = (bySource[source] ?? []).sorted { ($0.start, $0.end) < ($1.start, $1.end) }
+            var accepted: [RawSleepSample] = []
+            var coveredUntil = Date.distantPast
             for sample in sourceSamples {
                 guard sample.end > sample.start else { continue }
-                let overlapsAccepted = acceptedRanges.contains { strictlyOverlaps($0, (sample.start, sample.end)) }
-                guard !overlapsAccepted else { continue }
-                resolved.append(sample)
-                acceptedRanges.append((sample.start, sample.end))
+                let overlapsHigherPriority = higherPriorityRanges.contains { strictlyOverlaps($0, (sample.start, sample.end)) }
+                guard !overlapsHigherPriority else { continue }
+                let start = max(sample.start, coveredUntil)
+                guard sample.end > start else { continue }
+                accepted.append(start == sample.start ? sample : RawSleepSample(
+                    id: sample.id, start: start, end: sample.end, stage: sample.stage,
+                    sourceName: sample.sourceName, sourceBundleID: sample.sourceBundleID, timeZone: sample.timeZone
+                ))
+                coveredUntil = sample.end
             }
+            resolved += accepted
+            higherPriorityRanges += accepted.map { ($0.start, $0.end) }
         }
 
-        return resolved.sorted { $0.start < $1.start }
+        return resolved.sorted { ($0.start, $0.end) < ($1.start, $1.end) }
     }
 
     /// `DateInterval.intersects` treats touching endpoints as overlapping —

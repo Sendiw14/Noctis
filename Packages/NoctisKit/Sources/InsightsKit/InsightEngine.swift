@@ -1,156 +1,105 @@
 import Foundation
+import RecoveryKit
 import SleepKit
 
-/// Every detector here is a plain comparison over real, already-computed
-/// metrics — no model, nothing invented. The AI Coach later turns these into
-/// conversational language; this engine decides *whether* something is worth
-/// saying and supplies the evidence for it.
+/// Insight v1: three deterministic rules, each carrying its evidence.
+///
+/// - `.sleepDurationShift`: last night's sleep is 30+ minutes off the
+///   duration baseline.
+/// - `.bedtimeShift`: last night's bedtime is 30+ minutes off the bedtime
+///   baseline.
+/// - `.consistentBedtime`: 5+ nights in a row, ending last night, each
+///   within 30 minutes of the bedtime baseline.
+///
+/// Returns the single most relevant insight, or none. A shift outranks a
+/// streak; between two shifts the larger one (in minutes) wins, with
+/// duration winning a tie. Nothing fires without a baseline (5+ nights).
 public enum InsightEngine {
-    /// The richest detector's window (`consistencyTrendInsight`) — the
-    /// honest answer to "how much history until NOCTIS sees everything it
-    /// can." Exposed so the UI can show real progress toward it instead of
-    /// duplicating the number.
-    public static let richestSignalWindow = 28
+    public static let shiftThresholdMinutes: Double = 30
+    public static let streakToleranceMinutes: Double = 30
+    public static let minimumStreakNights = 5
 
-    public static func generate(scoredSessions: [ScoredSession], recoveryHistory: [RecoveryHistoryPoint]) -> [Insight] {
-        var insights: [Insight] = []
-        if let insight = bedtimeQualityInsight(scoredSessions) { insights.append(insight) }
-        if let insight = durationTrendInsight(scoredSessions) { insights.append(insight) }
-        if let insight = consistencyTrendInsight(scoredSessions) { insights.append(insight) }
-        if let insight = recoveryTrendInsight(recoveryHistory) { insights.append(insight) }
-        return insights
+    /// The top insight for the most recent night in `history` that ended
+    /// within the last 24 hours, or nil.
+    public static func topInsight(history: [NightMetrics], asOf now: Date) -> Insight? {
+        let complete = history.filter { $0.wakeTime <= now }
+        guard let lastNight = complete.max(by: { $0.wakeTime < $1.wakeTime }),
+              now.timeIntervalSince(lastNight.wakeTime) <= RecoveryModelV1.lastNightWindow else { return nil }
+        let baselines = BaselineEngine.baselines(for: lastNight.night, history: complete)
+        return topInsight(lastNight: lastNight, baselines: baselines, history: complete)
     }
 
-    private static func bedtimeQualityInsight(_ scored: [ScoredSession]) -> Insight? {
-        let recent = Array(scored.suffix(20))
-        guard recent.count >= 10 else { return nil }
+    public static func topInsight(lastNight: NightMetrics, baselines: Baselines, history: [NightMetrics]) -> Insight? {
+        let shifts = [durationShift(lastNight, baselines), bedtimeShift(lastNight, baselines)].compactMap { $0 }
+        // Strict `>` keeps the earlier entry on a tie: duration is listed first.
+        if let top = shifts.reduce(nil, { best, next -> Insight? in
+            guard let best else { return next }
+            return abs(next.evidence.delta) > abs(best.evidence.delta) ? next : best
+        }) {
+            return top
+        }
+        return consistentBedtime(lastNight, baselines, history: history)
+    }
 
-        let sorted = recent.sorted { eveningMinutes($0.session.bedtime) < eveningMinutes($1.session.bedtime) }
-        let half = sorted.count / 2
-        let earlier = Array(sorted.prefix(half))
-        let later = Array(sorted.suffix(sorted.count - half))
+    // MARK: - Rules
 
-        let earlierQuality = average(earlier.map { Double($0.quality.overall) })
-        let laterQuality = average(later.map { Double($0.quality.overall) })
-        guard abs(earlierQuality - laterQuality) >= 8 else { return nil }
-
-        let earlierBedtime = formatClock(average(earlier.map { eveningMinutes($0.session.bedtime) }))
-        let laterBedtime = formatClock(average(later.map { eveningMinutes($0.session.bedtime) }))
-
+    static func durationShift(_ night: NightMetrics, _ baselines: Baselines) -> Insight? {
+        guard let baseline = baselines.sleepDuration else { return nil }
+        let delta = night.asleepMinutes - baseline.value
+        guard abs(delta).rounded() >= shiftThresholdMinutes else { return nil }
+        let less = delta < 0
         return Insight(
-            kind: "bedtimeQuality",
-            category: .timing,
-            title: "Your best nights follow earlier bedtimes.",
-            evidence: [
-                InsightEvidencePoint(label: earlierBedtime, value: "\(Int(earlierQuality))% average quality"),
-                InsightEvidencePoint(label: laterBedtime, value: "\(Int(laterQuality))% average quality"),
-            ],
-            context: "Based on your last \(recent.count) nights, split by bedtime.",
-            interpretation: "Your recent data suggests earlier nights have coincided with better sleep quality.",
-            whatToNotice: "Nights that started before \(earlierBedtime) scored noticeably higher.",
-            suggestion: "Try protecting a bedtime around \(earlierBedtime) a few nights this week.",
-            confidence: recent.count >= 16 ? .high : .moderate
+            kind: .sleepDurationShift,
+            title: less ? "Shorter night than usual" : "Longer night than usual",
+            message: "Compared with your recent baseline, you slept \(formatMinutes(abs(delta))) \(less ? "less" : "more") last night.",
+            evidence: InsightEvidence(night: night.night, value: night.asleepMinutes, baseline: baseline.value, delta: delta, baselineNights: baseline.nights)
         )
     }
 
-    private static func durationTrendInsight(_ scored: [ScoredSession]) -> Insight? {
-        guard scored.count >= 14 else { return nil }
-        let last7 = Array(scored.suffix(7))
-        let previous7 = Array(scored.suffix(14).prefix(7))
-
-        let recentAvg = average(last7.map { $0.session.totalAsleep / 3600 })
-        let priorAvg = average(previous7.map { $0.session.totalAsleep / 3600 })
-        let deltaMinutes = (recentAvg - priorAvg) * 60
-        guard abs(deltaMinutes) >= 25 else { return nil }
-
-        let direction = deltaMinutes > 0 ? "increased" : "decreased"
+    static func bedtimeShift(_ night: NightMetrics, _ baselines: Baselines) -> Insight? {
+        guard let baseline = baselines.bedtime else { return nil }
+        let delta = night.bedtimeMinutes - baseline.value
+        guard abs(delta).rounded() >= shiftThresholdMinutes else { return nil }
+        let later = delta > 0
         return Insight(
-            kind: "durationTrend",
-            category: .sleep,
-            title: "Your sleep duration has \(direction).",
-            evidence: [
-                InsightEvidencePoint(label: "This week", value: formatHours(recentAvg)),
-                InsightEvidencePoint(label: "Previous week", value: formatHours(priorAvg)),
-            ],
-            context: "Comparing your last 7 nights with the 7 nights before that.",
-            interpretation: "Your recent data suggests a real week-over-week shift in how long you're sleeping.",
-            whatToNotice: "The change is about \(Int(abs(deltaMinutes))) minutes a night.",
-            confidence: .moderate
+            kind: .bedtimeShift,
+            title: later ? "Later bedtime than usual" : "Earlier bedtime than usual",
+            message: "Compared with your recent baseline, you went to bed \(formatMinutes(abs(delta))) \(later ? "later" : "earlier") last night.",
+            evidence: InsightEvidence(night: night.night, value: night.bedtimeMinutes, baseline: baseline.value, delta: delta, baselineNights: baseline.nights)
         )
     }
 
-    private static func consistencyTrendInsight(_ scored: [ScoredSession]) -> Insight? {
-        guard scored.count >= richestSignalWindow else { return nil }
-        let sessions = scored.map(\.session)
-        let recentStddev = SleepMetricsEngine.bedtimeVariabilityMinutes(recentMainSessions: Array(sessions.suffix(14)))
-        let priorStddev = SleepMetricsEngine.bedtimeVariabilityMinutes(recentMainSessions: Array(sessions.suffix(28).prefix(14)))
-        let improvement = priorStddev - recentStddev
-        guard improvement >= 12 else { return nil }
-
+    static func consistentBedtime(_ night: NightMetrics, _ baselines: Baselines, history: [NightMetrics]) -> Insight? {
+        guard let baseline = baselines.bedtime else { return nil }
+        let byNight = Dictionary(history.map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
+        var streak = 0
+        var key = night.night
+        while let metrics = byNight[key], abs(metrics.bedtimeMinutes - baseline.value) <= streakToleranceMinutes {
+            streak += 1
+            key = key.adding(days: -1)
+        }
+        guard streak >= minimumStreakNights else { return nil }
         return Insight(
-            kind: "consistencyTrend",
-            category: .consistency,
-            title: "Your bedtime has become more consistent.",
-            evidence: [
-                InsightEvidencePoint(label: "Last 2 weeks", value: "±\(Int(recentStddev)) min"),
-                InsightEvidencePoint(label: "2 weeks before", value: "±\(Int(priorStddev)) min"),
-            ],
-            context: "Comparing bedtime variability across your last 4 weeks.",
-            interpretation: "Your recent data suggests your sleep schedule has steadied.",
-            whatToNotice: "Less night-to-night variation in when you go to bed.",
-            confidence: .moderate
+            kind: .consistentBedtime,
+            title: "Steady bedtime",
+            message: "Compared with your recent baseline, you went to bed within 30 minutes of your typical time for \(streak) nights in a row.",
+            evidence: InsightEvidence(
+                night: night.night,
+                value: night.bedtimeMinutes,
+                baseline: baseline.value,
+                delta: night.bedtimeMinutes - baseline.value,
+                baselineNights: baseline.nights,
+                streakNights: streak
+            )
         )
     }
 
-    private static func recoveryTrendInsight(_ history: [RecoveryHistoryPoint]) -> Insight? {
-        guard history.count >= 14 else { return nil }
-        let last7 = Array(history.suffix(7))
-        let previous7 = Array(history.suffix(14).prefix(7))
-        let recentAvg = average(last7.map { Double($0.score) })
-        let priorAvg = average(previous7.map { Double($0.score) })
-        let delta = recentAvg - priorAvg
-        guard abs(delta) >= 6 else { return nil }
-
-        let direction = delta > 0 ? "improved" : "declined"
-        return Insight(
-            kind: "recoveryTrend",
-            category: .recovery,
-            title: "Your recovery has \(direction) this week.",
-            evidence: [
-                InsightEvidencePoint(label: "This week", value: "\(Int(recentAvg))"),
-                InsightEvidencePoint(label: "Previous week", value: "\(Int(priorAvg))"),
-            ],
-            context: "Comparing your average recovery score across the last two weeks.",
-            interpretation: "This has coincided with the sleep and heart-rate changes seen over the same period.",
-            whatToNotice: "A \(Int(abs(delta)))-point shift in your weekly average.",
-            confidence: .moderate
-        )
-    }
-
-    // MARK: - Helpers
-
-    private static func average(_ values: [Double]) -> Double {
-        guard !values.isEmpty else { return 0 }
-        return values.reduce(0, +) / Double(values.count)
-    }
-
-    private static func formatHours(_ hours: Double) -> String {
-        let totalMinutes = Int((hours * 60).rounded())
-        return "\(totalMinutes / 60)h \(totalMinutes % 60)m"
-    }
-
-    private static func eveningMinutes(_ date: Date, calendar: Calendar = .current) -> Double {
-        let comps = calendar.dateComponents([.hour, .minute], from: date)
-        let minutes = Double((comps.hour ?? 0) * 60 + (comps.minute ?? 0))
-        return minutes < 12 * 60 ? minutes + 24 * 60 : minutes
-    }
-
-    private static func formatClock(_ minutesOnEveningScale: Double) -> String {
-        let normalized = minutesOnEveningScale.truncatingRemainder(dividingBy: 24 * 60)
-        let hour24 = Int(normalized) / 60
-        let minute = Int(normalized) % 60
-        let hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12
-        let period = hour24 < 12 ? "AM" : "PM"
-        return String(format: "%d:%02d %@", hour12, minute, period)
+    /// "45 min", "1h", "1h 10m".
+    static func formatMinutes(_ minutes: Double) -> String {
+        let rounded = Int(minutes.rounded())
+        guard rounded >= 60 else { return "\(rounded) min" }
+        let hours = rounded / 60
+        let remainder = rounded % 60
+        return remainder == 0 ? "\(hours)h" : "\(hours)h \(remainder)m"
     }
 }

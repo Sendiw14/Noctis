@@ -1,26 +1,67 @@
 import Foundation
-import HealthProviding
+import SleepKit
 
+/// A personal baseline: the mean over the valid nights in the window.
 public struct Baseline: Sendable, Equatable {
-    public let averageValue: Double?
-    public let sampleCount: Int
-    public let confidence: DataConfidence
+    public let value: Double
+    /// Valid nights the mean is built from (5...14).
+    public let nights: Int
 
-    public init(averageValue: Double?, sampleCount: Int, confidence: DataConfidence) {
-        self.averageValue = averageValue
-        self.sampleCount = sampleCount
-        self.confidence = confidence
+    public init(value: Double, nights: Int) {
+        self.value = value
+        self.nights = nights
     }
 }
 
-/// Rolling personal baselines. Never a fixed population norm — every
-/// comparison in NOCTIS is "you, compared with your own recent history."
-public enum BaselineEngine {
-    public static let windowDays = 30
+/// The five baselines for one night. Each is nil until its metric has
+/// `BaselineEngine.minimumNights` valid nights in the window.
+public struct Baselines: Sendable, Equatable {
+    public let sleepDuration: Baseline?
+    public let bedtime: Baseline?
+    public let wakeTime: Baseline?
+    public let hrv: Baseline?
+    public let restingHeartRate: Baseline?
 
-    public static func baseline(from values: [Double], fullAt: Int = windowDays) -> Baseline {
-        guard !values.isEmpty else { return Baseline(averageValue: nil, sampleCount: 0, confidence: .low) }
-        let average = values.reduce(0, +) / Double(values.count)
-        return Baseline(averageValue: average, sampleCount: values.count, confidence: .forSampleCount(values.count, fullAt: fullAt))
+    public init(sleepDuration: Baseline?, bedtime: Baseline?, wakeTime: Baseline?, hrv: Baseline?, restingHeartRate: Baseline?) {
+        self.sleepDuration = sleepDuration
+        self.bedtime = bedtime
+        self.wakeTime = wakeTime
+        self.hrv = hrv
+        self.restingHeartRate = restingHeartRate
+    }
+
+    public static let none = Baselines(sleepDuration: nil, bedtime: nil, wakeTime: nil, hrv: nil, restingHeartRate: nil)
+}
+
+/// Rolling 14-night baselines for sleep duration, bedtime, wake time, HRV
+/// and resting heart rate. The window is the 14 calendar nights before the
+/// night being judged — never the night itself. A baseline exists only
+/// with 5 or more valid nights in that window; otherwise it's nil. It is
+/// never invented, padded or carried over.
+public enum BaselineEngine {
+    public static let windowNights = 14
+    public static let minimumNights = 5
+
+    /// The nights in `history` that fall inside `night`'s window.
+    public static func window(for night: SleepNightKey, in history: [NightMetrics]) -> [NightMetrics] {
+        let first = night.adding(days: -windowNights)
+        return history.filter { $0.night >= first && $0.night < night }
+    }
+
+    public static func baselines(for night: SleepNightKey, history: [NightMetrics]) -> Baselines {
+        let nights = window(for: night, in: history)
+        return Baselines(
+            sleepDuration: baseline(nights.map(\.asleepMinutes)),
+            bedtime: baseline(nights.map(\.bedtimeMinutes)),
+            wakeTime: baseline(nights.map(\.wakeMinutes)),
+            hrv: baseline(nights.compactMap(\.hrv)),
+            restingHeartRate: baseline(nights.compactMap(\.restingHeartRate))
+        )
+    }
+
+    /// The mean of `values`, or nil below `minimumNights` values.
+    public static func baseline(_ values: [Double]) -> Baseline? {
+        guard values.count >= minimumNights else { return nil }
+        return Baseline(value: values.reduce(0, +) / Double(values.count), nights: values.count)
     }
 }

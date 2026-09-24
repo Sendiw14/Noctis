@@ -1,180 +1,148 @@
 import Foundation
-import HealthProviding
 import Testing
 @testable import InsightsKit
+@testable import RecoveryKit
 @testable import SleepKit
 
 struct InsightEngineTests {
-    private let calendar = Calendar.current
-    private let reference = Date(timeIntervalSince1970: 1_700_000_000)
-
-    private func date(hour: Int, minute: Int = 0, dayOffset: Int) -> Date {
-        let day = calendar.date(byAdding: .day, value: dayOffset, to: reference)!
-        return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)!
+    /// 14 steady nights (7h asleep, 11:00 PM bedtime) and then last night.
+    private func history(lastAsleep: Double = 420, lastBedtime: Double = 660, bedtimes: ((Int) -> Double)? = nil) -> [NightMetrics] {
+        Fixture.metrics(count: 15) { index in
+            let isLast = index == 14
+            let bedtime = isLast ? lastBedtime : (bedtimes?(index) ?? 660)
+            return (asleep: isLast ? lastAsleep : 420, bedtime: bedtime, wake: 1140, hrv: nil, resting: nil)
+        }
     }
 
-    private func scoredSession(bedtimeHour: Int, bedtimeMinute: Int = 0, dayOffset: Int, totalAsleepHours: Double, qualityOverall: Int) -> ScoredSession {
-        let bedtime = date(hour: bedtimeHour, minute: bedtimeMinute, dayOffset: dayOffset)
-        let wake = bedtime.addingTimeInterval(totalAsleepHours * 3600)
-        let segment = SleepStageSegment(stage: .core, interval: DateInterval(start: bedtime, end: wake))
-        let session = SleepSession(kind: .main, bedtime: bedtime, wakeTime: wake, segments: [segment], sourceName: "Test")
-        let quality = SleepQualityBreakdown(overall: qualityOverall, duration: qualityOverall, timing: qualityOverall, continuity: qualityOverall, consistency: qualityOverall)
-        return ScoredSession(session: session, quality: quality)
+    private func top(_ history: [NightMetrics]) -> Insight? {
+        InsightEngine.topInsight(history: history, asOf: Fixture.morningAfter)
     }
 
-    // MARK: - No fabrication
+    // MARK: - Duration
 
-    @Test func emptyInputProducesNoInsights() {
-        let insights = InsightEngine.generate(scoredSessions: [], recoveryHistory: [])
-        #expect(insights.isEmpty)
+    @Test func sleepThirtyMinutesShorterThanBaselineFires() throws {
+        let insight = try #require(top(history(lastAsleep: 390)))
+        #expect(insight.kind == .sleepDurationShift)
+        #expect(insight.title == "Shorter night than usual")
+        #expect(insight.message == "Compared with your recent baseline, you slept 30 min less last night.")
+        #expect(insight.evidence.value == 390)
+        #expect(insight.evidence.baseline == 420)
+        #expect(insight.evidence.delta == -30)
+        #expect(insight.evidence.baselineNights == 14)
     }
 
-    @Test func insufficientHistoryProducesNoInsights() {
-        // 5 sessions: below every detector's minimum (10/14/28/14).
-        let sessions = (0..<5).map { scoredSession(bedtimeHour: 23, dayOffset: $0, totalAsleepHours: 8, qualityOverall: 80) }
-        let insights = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: [])
-        #expect(insights.isEmpty)
+    @Test func sleepLongerThanBaselineFires() throws {
+        let insight = try #require(top(history(lastAsleep: 490)))
+        #expect(insight.kind == .sleepDurationShift)
+        #expect(insight.message == "Compared with your recent baseline, you slept 1h 10m more last night.")
     }
 
-    // MARK: - Bedtime / quality correlation
-
-    @Test func bedtimeQualityInsightFiresOnClearSplit() {
-        var sessions: [ScoredSession] = []
-        for day in 0..<10 {
-            sessions.append(scoredSession(bedtimeHour: 22, dayOffset: day, totalAsleepHours: 8, qualityOverall: 90))
-        }
-        for day in 10..<20 {
-            sessions.append(scoredSession(bedtimeHour: 0, bedtimeMinute: 30, dayOffset: day, totalAsleepHours: 8, qualityOverall: 70))
-        }
-
-        let insight = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: []).first { $0.kind == "bedtimeQuality" }
-
-        #expect(insight != nil)
-        #expect(insight?.confidence == .high)
-        #expect(insight?.evidence.count == 2)
+    @Test func underThirtyMinutesDoesNotFire() {
+        // 25 minutes short: no shift, so the steady-bedtime streak shows.
+        #expect(top(history(lastAsleep: 395))?.kind == .consistentBedtime)
+        #expect(top(history(lastBedtime: 685))?.kind == .consistentBedtime)
     }
 
-    @Test func bedtimeQualityInsightDoesNotFireWhenDifferenceIsSmall() {
-        var sessions: [ScoredSession] = []
-        for day in 0..<6 {
-            sessions.append(scoredSession(bedtimeHour: 22, dayOffset: day, totalAsleepHours: 8, qualityOverall: 81))
-        }
-        for day in 6..<12 {
-            sessions.append(scoredSession(bedtimeHour: 0, bedtimeMinute: 30, dayOffset: day, totalAsleepHours: 8, qualityOverall: 79))
-        }
+    // MARK: - Bedtime
 
-        let insight = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: []).first { $0.kind == "bedtimeQuality" }
-        #expect(insight == nil)
+    @Test func laterBedtimeFires() throws {
+        let insight = try #require(top(history(lastBedtime: 715)))
+        #expect(insight.kind == .bedtimeShift)
+        #expect(insight.title == "Later bedtime than usual")
+        #expect(insight.message == "Compared with your recent baseline, you went to bed 55 min later last night.")
+        #expect(insight.evidence.delta == 55)
     }
 
-    // MARK: - Duration trend
-
-    @Test func durationTrendInsightFiresAboveThreshold() {
-        var sessions: [ScoredSession] = []
-        for day in 0..<7 {
-            sessions.append(scoredSession(bedtimeHour: 23, dayOffset: day, totalAsleepHours: 7.0, qualityOverall: 75))
-        }
-        for day in 7..<14 {
-            sessions.append(scoredSession(bedtimeHour: 23, dayOffset: day, totalAsleepHours: 8.0, qualityOverall: 75))
-        }
-
-        let insight = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: []).first { $0.kind == "durationTrend" }
-
-        #expect(insight != nil)
-        #expect(insight?.title.contains("increased") == true)
+    @Test func earlierBedtimeFires() throws {
+        let insight = try #require(top(history(lastBedtime: 600)))
+        #expect(insight.kind == .bedtimeShift)
+        #expect(insight.message == "Compared with your recent baseline, you went to bed 1h earlier last night.")
     }
 
-    @Test func durationTrendInsightDoesNotFireBelowThreshold() {
-        var sessions: [ScoredSession] = []
-        for day in 0..<7 {
-            sessions.append(scoredSession(bedtimeHour: 23, dayOffset: day, totalAsleepHours: 7.9, qualityOverall: 75))
-        }
-        for day in 7..<14 {
-            sessions.append(scoredSession(bedtimeHour: 23, dayOffset: day, totalAsleepHours: 8.0, qualityOverall: 75))
-        }
+    // MARK: - Streak
 
-        let insight = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: []).first { $0.kind == "durationTrend" }
-        #expect(insight == nil)
+    @Test func fiveSteadyNightsInARowFire() throws {
+        // Nights 0–9 alternate 45 minutes either side of 11:00 PM; nights
+        // 10–14 (ending last night) sit on it. Only the last five are
+        // within 30 minutes of the baseline.
+        let history = history(bedtimes: { $0 < 10 ? ($0.isMultiple(of: 2) ? 615 : 705) : 660 })
+        let insight = try #require(top(history))
+        #expect(insight.kind == .consistentBedtime)
+        #expect(insight.evidence.streakNights == 5)
+        #expect(insight.message == "Compared with your recent baseline, you went to bed within 30 minutes of your typical time for 5 nights in a row.")
     }
 
-    // MARK: - Consistency trend
-
-    @Test func consistencyTrendInsightFiresWhenVariabilityImproves() {
-        var sessions: [ScoredSession] = []
-        // Older 14: wildly varying bedtimes (high stddev).
-        for day in 0..<14 {
-            let hour = day.isMultiple(of: 2) ? 21 : 1
-            sessions.append(scoredSession(bedtimeHour: hour, dayOffset: day, totalAsleepHours: 8, qualityOverall: 75))
-        }
-        // Recent 14: identical bedtime (near-zero stddev).
-        for day in 14..<28 {
-            sessions.append(scoredSession(bedtimeHour: 23, dayOffset: day, totalAsleepHours: 8, qualityOverall: 75))
-        }
-
-        let insight = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: []).first { $0.kind == "consistencyTrend" }
-        #expect(insight != nil)
+    @Test func fourSteadyNightsDoNotFire() {
+        let history = history(bedtimes: { $0 < 11 ? ($0.isMultiple(of: 2) ? 705 : 615) : 660 })
+        #expect(top(history) == nil)
     }
 
-    @Test func consistencyTrendInsightDoesNotFireWithFewerThan28Sessions() {
-        var sessions: [ScoredSession] = []
-        for day in 0..<14 {
-            let hour = day.isMultiple(of: 2) ? 21 : 1
-            sessions.append(scoredSession(bedtimeHour: hour, dayOffset: day, totalAsleepHours: 8, qualityOverall: 75))
-        }
-        for day in 14..<27 {
-            sessions.append(scoredSession(bedtimeHour: 23, dayOffset: day, totalAsleepHours: 8, qualityOverall: 75))
-        }
-
-        let insight = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: []).first { $0.kind == "consistencyTrend" }
-        #expect(insight == nil)
+    @Test func aMissingNightBreaksTheStreak() {
+        var history = history()
+        history.remove(at: 11)
+        // Nights 12–14: three in a row.
+        #expect(top(history) == nil)
     }
 
-    // MARK: - Recovery trend
-
-    @Test func recoveryTrendInsightFiresAboveThreshold() {
-        var history: [RecoveryHistoryPoint] = []
-        for day in 0..<7 {
-            history.append(RecoveryHistoryPoint(date: date(hour: 7, dayOffset: day), score: 60))
-        }
-        for day in 7..<14 {
-            history.append(RecoveryHistoryPoint(date: date(hour: 7, dayOffset: day), score: 75))
-        }
-
-        let insight = InsightEngine.generate(scoredSessions: [], recoveryHistory: history).first { $0.kind == "recoveryTrend" }
-
-        #expect(insight != nil)
-        #expect(insight?.title.contains("improved") == true)
+    @Test func aLongSteadyRunCountsEveryNight() throws {
+        let insight = try #require(top(history()))
+        #expect(insight.kind == .consistentBedtime)
+        #expect(insight.evidence.streakNights == 15)
     }
 
-    @Test func recoveryTrendInsightDoesNotFireBelowThreshold() {
-        var history: [RecoveryHistoryPoint] = []
-        for day in 0..<7 {
-            history.append(RecoveryHistoryPoint(date: date(hour: 7, dayOffset: day), score: 70))
-        }
-        for day in 7..<14 {
-            history.append(RecoveryHistoryPoint(date: date(hour: 7, dayOffset: day), score: 74))
-        }
+    // MARK: - Priority
 
-        let insight = InsightEngine.generate(scoredSessions: [], recoveryHistory: history).first { $0.kind == "recoveryTrend" }
-        #expect(insight == nil)
+    @Test func aShiftOutranksTheStreak() throws {
+        #expect(try #require(top(history(lastAsleep: 360))).kind == .sleepDurationShift)
     }
 
-    // MARK: - Determinism
+    @Test func theLargerShiftWins() throws {
+        #expect(try #require(top(history(lastAsleep: 380, lastBedtime: 720))).kind == .bedtimeShift)
+        #expect(try #require(top(history(lastAsleep: 350, lastBedtime: 715))).kind == .sleepDurationShift)
+    }
 
-    @Test func generateIsDeterministicAcrossRepeatedCalls() {
-        var sessions: [ScoredSession] = []
-        for day in 0..<10 {
-            sessions.append(scoredSession(bedtimeHour: 22, dayOffset: day, totalAsleepHours: 8, qualityOverall: 90))
+    @Test func durationWinsATie() throws {
+        #expect(try #require(top(history(lastAsleep: 380, lastBedtime: 700))).kind == .sleepDurationShift)
+    }
+
+    // MARK: - Honesty
+
+    @Test func nothingFiresWithoutABaseline() {
+        let short = Fixture.metrics(count: 5) { index in (asleep: index == 4 ? 300 : 420, bedtime: 660, wake: 1140, hrv: nil, resting: nil) }
+        #expect(top(short) == nil)
+    }
+
+    @Test func nothingFiresWithoutLastNight() {
+        let later = Fixture.date(2026, 9, 25, 13)
+        #expect(InsightEngine.topInsight(history: history(lastAsleep: 300), asOf: later) == nil)
+    }
+
+    @Test func everyInsightComparesWithTheBaselineAndClaimsNoCause() throws {
+        let insights = try [
+            #require(top(history(lastAsleep: 300))),
+            #require(top(history(lastAsleep: 500))),
+            #require(top(history(lastBedtime: 740))),
+            #require(top(history(lastBedtime: 580))),
+            #require(top(history())),
+        ]
+        #expect(Set(insights.map(\.kind)) == Set(InsightKind.allCases))
+        let causal = ["because", "caused", "cause", "due to", "led to", "leads to", "so you", "result", "thanks to", "helped", "made you"]
+        for insight in insights {
+            #expect(insight.message.hasPrefix("Compared with your recent baseline, "))
+            let text = (insight.title + " " + insight.message).lowercased()
+            for word in causal {
+                #expect(!text.contains(word), "\"\(word)\" in \(insight.kind): \(text)")
+            }
         }
-        for day in 10..<20 {
-            sessions.append(scoredSession(bedtimeHour: 0, bedtimeMinute: 30, dayOffset: day, totalAsleepHours: 8, qualityOverall: 70))
-        }
+    }
 
-        let first = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: [])
-        let second = InsightEngine.generate(scoredSessions: sessions, recoveryHistory: [])
+    @Test func theSameHistoryAlwaysGivesTheSameInsight() {
+        #expect(top(history(lastAsleep: 350)) == top(history(lastAsleep: 350)))
+    }
 
-        #expect(first.map(\.kind) == second.map(\.kind))
-        #expect(first.map(\.title) == second.map(\.title))
-        #expect(first.map { $0.evidence.map(\.value) } == second.map { $0.evidence.map(\.value) })
+    @Test func minutesAreWrittenPlainly() {
+        #expect(InsightEngine.formatMinutes(45) == "45 min")
+        #expect(InsightEngine.formatMinutes(60) == "1h")
+        #expect(InsightEngine.formatMinutes(70.4) == "1h 10m")
     }
 }

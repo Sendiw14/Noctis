@@ -1,98 +1,54 @@
 import Foundation
-import HealthProviding
+import RecoveryKit
 import SleepKit
 
-public enum InsightCategory: String, Sendable, CaseIterable {
-    case sleep
-    case recovery
-    case timing
-    case consistency
-    case longTerm
-
-    public var displayName: String {
-        switch self {
-        case .sleep: "Sleep"
-        case .recovery: "Recovery"
-        case .timing: "Timing"
-        case .consistency: "Consistency"
-        case .longTerm: "Long-Term"
-        }
-    }
+public enum InsightKind: String, Sendable, CaseIterable {
+    /// Last night's sleep duration differs from baseline by 30+ minutes.
+    case sleepDurationShift
+    /// Last night's bedtime differs from baseline by 30+ minutes.
+    case bedtimeShift
+    /// 5+ nights in a row, ending last night, within 30 minutes of the
+    /// typical bedtime.
+    case consistentBedtime
 }
 
-public struct InsightEvidencePoint: Sendable, Identifiable, Equatable {
-    public let id = UUID()
-    public let label: String
-    public let value: String
+/// The numbers an insight rests on, all in minutes.
+public struct InsightEvidence: Sendable, Equatable {
+    public let night: SleepNightKey
+    /// Last night's value: minutes asleep, or bedtime as minutes after
+    /// noon (11:00 PM = 660).
+    public let value: Double
+    /// The baseline it's compared with, in the same unit.
+    public let baseline: Double
+    /// `value − baseline`.
+    public let delta: Double
+    /// Valid nights behind the baseline.
+    public let baselineNights: Int
+    /// For `.consistentBedtime`: the nights in a row.
+    public let streakNights: Int?
 
-    public init(label: String, value: String) {
-        self.label = label
+    public init(night: SleepNightKey, value: Double, baseline: Double, delta: Double, baselineNights: Int, streakNights: Int? = nil) {
+        self.night = night
         self.value = value
+        self.baseline = baseline
+        self.delta = delta
+        self.baselineNights = baselineNights
+        self.streakNights = streakNights
     }
 }
 
-public struct Insight: Sendable, Identifiable, Equatable {
-    public let id: UUID
-    /// Stable identifier for "this same detector's finding," independent of
-    /// `id` (which is fresh every generation). Fatigue/novelty tracking
-    /// keys off this, not `id` or `title` (title text can vary by direction,
-    /// e.g. "increased" vs "decreased").
-    public let kind: String
-    public let category: InsightCategory
+/// One observation about last night, stated against the person's own
+/// baseline. Descriptive only: it never claims a cause.
+public struct Insight: Sendable, Equatable {
+    public let kind: InsightKind
     public let title: String
-    public let evidence: [InsightEvidencePoint]
-    public let context: String
-    public let interpretation: String
-    public let whatToNotice: String
-    public let suggestion: String?
-    public let confidence: DataConfidence
-    public let generatedAt: Date
+    public let message: String
+    public let evidence: InsightEvidence
 
-    public init(
-        id: UUID = UUID(),
-        kind: String,
-        category: InsightCategory,
-        title: String,
-        evidence: [InsightEvidencePoint],
-        context: String,
-        interpretation: String,
-        whatToNotice: String,
-        suggestion: String? = nil,
-        confidence: DataConfidence,
-        generatedAt: Date = .now
-    ) {
-        self.id = id
+    public init(kind: InsightKind, title: String, message: String, evidence: InsightEvidence) {
         self.kind = kind
-        self.category = category
         self.title = title
+        self.message = message
         self.evidence = evidence
-        self.context = context
-        self.interpretation = interpretation
-        self.whatToNotice = whatToNotice
-        self.suggestion = suggestion
-        self.confidence = confidence
-        self.generatedAt = generatedAt
-    }
-
-    public static func == (lhs: Insight, rhs: Insight) -> Bool { lhs.id == rhs.id }
-}
-
-public struct ScoredSession: Sendable {
-    public let session: SleepSession
-    public let quality: SleepQualityBreakdown
-
-    public init(session: SleepSession, quality: SleepQualityBreakdown) {
-        self.session = session
-        self.quality = quality
-    }
-}
-
-public struct RecoveryHistoryPoint: Sendable {
-    public let date: Date
-    public let score: Int
-
-    public init(date: Date, score: Int) {
-        self.date = date
-        self.score = score
     }
 }

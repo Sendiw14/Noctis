@@ -46,7 +46,8 @@ public final class HealthKitProvider: HealthDataProviding {
                 end: sample.endDate,
                 stage: stage,
                 sourceName: sample.sourceRevision.source.name,
-                sourceBundleID: sample.sourceRevision.source.bundleIdentifier
+                sourceBundleID: sample.sourceRevision.source.bundleIdentifier,
+                timeZone: (sample.metadata?[HKMetadataKeyTimeZone] as? String).flatMap(TimeZone.init(identifier:))
             )
         }
     }
@@ -76,6 +77,18 @@ public final class HealthKitProvider: HealthDataProviding {
         let samples = try await quantitySamples(.respiratoryRate, from: start, to: end)
         return samples.map {
             RespiratoryRateSample(id: $0.uuid, date: $0.startDate, breathsPerMinute: $0.quantity.doubleValue(for: Self.perMinute))
+        }
+    }
+
+    public func sampleChanges() -> AsyncStream<Void> {
+        AsyncStream { continuation in
+            guard isHealthDataAvailable else {
+                continuation.finish()
+                return
+            }
+            let queries = ObserverQueries(yieldingTo: continuation)
+            queries.run(on: store)
+            continuation.onTermination = { [store] _ in queries.stop(on: store) }
         }
     }
 
@@ -140,5 +153,36 @@ public final class HealthKitProvider: HealthDataProviding {
         case .asleepUnspecified: .unspecified
         default: nil
         }
+    }
+}
+
+/// Holds the observer queries behind one `sampleChanges()` stream so its
+/// termination handler can stop them. HealthKit queries are thread-safe to
+/// execute and stop.
+/// Built nonisolated on purpose: HealthKit calls the update handlers on
+/// its own background queue, so they must not inherit the main actor.
+private nonisolated final class ObserverQueries: @unchecked Sendable {
+    private let queries: [HKObserverQuery]
+
+    init(yieldingTo continuation: AsyncStream<Void>.Continuation) {
+        let observed: [HKSampleType] = [
+            HKCategoryType(.sleepAnalysis),
+            HKQuantityType(.heartRateVariabilitySDNN),
+            HKQuantityType(.restingHeartRate),
+        ]
+        queries = observed.map { type in
+            HKObserverQuery(sampleType: type, predicate: nil) { _, completionHandler, error in
+                if error == nil { continuation.yield() }
+                completionHandler()
+            }
+        }
+    }
+
+    func run(on store: HKHealthStore) {
+        queries.forEach(store.execute)
+    }
+
+    func stop(on store: HKHealthStore) {
+        queries.forEach(store.stop)
     }
 }

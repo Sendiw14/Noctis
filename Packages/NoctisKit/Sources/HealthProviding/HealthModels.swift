@@ -1,6 +1,6 @@
 import Foundation
 
-public enum SleepStageValue: String, Sendable, CaseIterable, Codable {
+public nonisolated enum SleepStageValue: String, Sendable, CaseIterable, Codable {
     case inBed
     case awake
     case rem
@@ -9,27 +9,51 @@ public enum SleepStageValue: String, Sendable, CaseIterable, Codable {
     case unspecified
 }
 
-public struct RawSleepSample: Sendable, Identifiable, Codable {
+nonisolated extension SleepStageValue {
+    /// Core, deep, REM and unspecified: time that counts toward total sleep.
+    public var isAsleep: Bool {
+        switch self {
+        case .core, .deep, .rem, .unspecified: true
+        case .inBed, .awake: false
+        }
+    }
+}
+
+public nonisolated struct RawSleepSample: Sendable, Identifiable, Codable, Equatable {
     public let id: UUID
     public let start: Date
     public let end: Date
     public let stage: SleepStageValue
     public let sourceName: String
     public let sourceBundleID: String
+    /// The time zone the sample was recorded in (HealthKit's
+    /// `HKMetadataKeyTimeZone`), when the source wrote one. Night keys and
+    /// clock times use it, so a night recorded while traveling keeps its
+    /// local bedtime.
+    public let timeZone: TimeZone?
 
-    public init(id: UUID = UUID(), start: Date, end: Date, stage: SleepStageValue, sourceName: String, sourceBundleID: String) {
+    public init(
+        id: UUID = UUID(),
+        start: Date,
+        end: Date,
+        stage: SleepStageValue,
+        sourceName: String,
+        sourceBundleID: String,
+        timeZone: TimeZone? = nil
+    ) {
         self.id = id
         self.start = start
         self.end = end
         self.stage = stage
         self.sourceName = sourceName
         self.sourceBundleID = sourceBundleID
+        self.timeZone = timeZone
     }
 
     public var duration: TimeInterval { end.timeIntervalSince(start) }
 }
 
-public struct HeartRateSample: Sendable, Identifiable, Codable {
+public nonisolated struct HeartRateSample: Sendable, Identifiable, Codable, Equatable {
     public let id: UUID
     public let date: Date
     public let bpm: Double
@@ -43,7 +67,7 @@ public struct HeartRateSample: Sendable, Identifiable, Codable {
     }
 }
 
-public struct HRVSample: Sendable, Identifiable, Codable {
+public nonisolated struct HRVSample: Sendable, Identifiable, Codable, Equatable {
     public let id: UUID
     public let date: Date
     public let sdnnMilliseconds: Double
@@ -55,7 +79,7 @@ public struct HRVSample: Sendable, Identifiable, Codable {
     }
 }
 
-public struct RespiratoryRateSample: Sendable, Identifiable, Codable {
+public nonisolated struct RespiratoryRateSample: Sendable, Identifiable, Codable {
     public let id: UUID
     public let date: Date
     public let breathsPerMinute: Double
@@ -67,7 +91,7 @@ public struct RespiratoryRateSample: Sendable, Identifiable, Codable {
     }
 }
 
-public enum HealthDataKind: String, Sendable, CaseIterable {
+public nonisolated enum HealthDataKind: String, Sendable, CaseIterable {
     case sleepAnalysis
     case heartRate
     case restingHeartRate
@@ -105,7 +129,7 @@ public enum HealthDataKind: String, Sendable, CaseIterable {
     }
 }
 
-public enum HealthAuthorizationStatus: Sendable, Equatable {
+public nonisolated enum HealthAuthorizationStatus: Sendable, Equatable {
     case notDetermined
     case authorized
     case denied

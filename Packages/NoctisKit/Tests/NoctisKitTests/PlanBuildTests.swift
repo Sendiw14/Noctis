@@ -6,14 +6,9 @@ import Testing
 
 struct PlanBuildTests {
     private func makeModel(provider: some HealthDataProviding) throws -> AppModel {
-        let schema = Schema([UserProfileRecord.self, InsightFatigueRecord.self])
+        let schema = Schema([UserProfileRecord.self])
         let container = try ModelContainer(for: schema, configurations: [ModelConfiguration(isStoredInMemoryOnly: true)])
-        let context = ModelContext(container)
-        return AppModel(
-            healthProvider: provider,
-            profileStore: ProfileStore(context: context),
-            insightFatigueStore: InsightFatigueStore(context: context)
-        )
+        return AppModel(healthProvider: provider, profileStore: ProfileStore(context: ModelContext(container)))
     }
 
     // MARK: - The 1.6s floor
@@ -134,4 +129,5 @@ private struct StubSleepProvider: HealthDataProviding {
     func fetchRestingHeartRate(from start: Date, to end: Date) async throws -> [HeartRateSample] { [] }
     func fetchHRVSamples(from start: Date, to end: Date) async throws -> [HRVSample] { [] }
     func fetchRespiratorySamples(from start: Date, to end: Date) async throws -> [RespiratoryRateSample] { [] }
+    func sampleChanges() -> AsyncStream<Void> { AsyncStream { $0.finish() } }
 }

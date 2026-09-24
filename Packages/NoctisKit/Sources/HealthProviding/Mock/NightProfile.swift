@@ -4,7 +4,7 @@ import Foundation
 
 /// One synthetic night: internally consistent so sleep quality, resting HR,
 /// HRV and respiration all move together the way they would for a real body,
-/// and so a 120-night history reads as a believable, slowly-improving trend.
+/// and so a long history reads as a believable, slowly-improving trend.
 struct NightProfile: Sendable {
     let date: Date
     let bedtime: Date
@@ -15,23 +15,79 @@ struct NightProfile: Sendable {
     let hrvSamples: [HRVSample]
     let respiratorySamples: [RespiratoryRateSample]
     let qualityFactor: Double
+
+    var asleepSeconds: TimeInterval {
+        sleepSamples.filter(\.stage.isAsleep).reduce(0) { $0 + $1.duration }
+    }
+}
+
+/// How the last night departs from the ones before it, so the mock's
+/// baselines have something to compare.
+struct LastNightOverride {
+    /// Hours after the evening's midnight (23.9 = 11:54 PM).
+    let bedtimeHour: Double
+    let asleepHours: Double
+    let quality: Double
 }
 
 enum MockNightGenerator {
-    private static let sourceName = "Apple Watch (Simulated)"
-    private static let bundleID = "com.noctis.mock"
+    static let watchSource = "Apple Watch (Simulated)"
+    static let watchBundleID = "com.noctis.mock.watch"
+    static let phoneSource = "iPhone (Simulated)"
+    static let phoneBundleID = "com.noctis.mock.iphone"
 
+    /// Last night vs the 14 nights before it: 55 minutes later to bed and
+    /// 70 minutes less sleep, so a baseline insight fires.
+    static let lastNightBedtimeShiftMinutes: Double = 55
+    static let lastNightDurationShiftMinutes: Double = -70
+
+    /// `count` nights ending with last night. Last night is the night of
+    /// yesterday's evening once it's 9 AM (so it has surely ended), or the
+    /// evening before that earlier in the morning.
     static func generate(seed: UInt64, count: Int, referenceDate: Date, calendar: Calendar) -> [NightProfile] {
-        let anchorDay = calendar.startOfDay(for: calendar.date(byAdding: .day, value: -1, to: referenceDate) ?? referenceDate)
+        guard count > 0 else { return [] }
+        let hour = calendar.component(.hour, from: referenceDate)
+        let today = calendar.startOfDay(for: referenceDate)
+        let lastDay = calendar.date(byAdding: .day, value: hour >= 9 ? -1 : -2, to: today) ?? today
 
-        return (0..<count).map { i in
+        var nights: [NightProfile] = []
+        for i in 0..<count {
             let dayOffset = count - 1 - i
-            let nightDay = calendar.date(byAdding: .day, value: -dayOffset, to: anchorDay) ?? anchorDay
-            return generateNight(index: i, total: count, day: nightDay, seed: seed, calendar: calendar)
+            let day = calendar.date(byAdding: .day, value: -dayOffset, to: lastDay) ?? lastDay
+            var override: LastNightOverride?
+            if i == count - 1, count > 1 {
+                let previous = nights.suffix(14)
+                let meanBedtimeHour = previous.map { $0.bedtime.timeIntervalSince(calendar.startOfDay(for: $0.date)) / 3600 }.reduce(0, +) / Double(previous.count)
+                let meanAsleepHours = previous.map(\.asleepSeconds).reduce(0, +) / Double(previous.count) / 3600
+                override = LastNightOverride(
+                    bedtimeHour: meanBedtimeHour + lastNightBedtimeShiftMinutes / 60,
+                    asleepHours: meanAsleepHours + lastNightDurationShiftMinutes / 60,
+                    quality: 0.3
+                )
+            }
+            nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override))
         }
+        return nights
     }
 
-    private static func generateNight(index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar) -> NightProfile {
+    /// Daytime heart rate every 15 minutes over the 48 hours before
+    /// `referenceDate`, outside every night's sleep.
+    static func daytimeHeartRate(referenceDate: Date, nights: [NightProfile], seed: UInt64) -> [HeartRateSample] {
+        var rng = SeededGenerator(seed: seed &+ 0xDA7)
+        var samples: [HeartRateSample] = []
+        var cursor = referenceDate.addingTimeInterval(-48 * 3600)
+        while cursor <= referenceDate {
+            let asleep = nights.contains { $0.bedtime <= cursor && cursor <= $0.wakeTime }
+            if !asleep {
+                let bpm = Double.random(in: 66...84, using: &rng).rounded()
+                samples.append(HeartRateSample(date: cursor, bpm: bpm, sourceName: watchSource))
+            }
+            cursor = cursor.addingTimeInterval(15 * 60)
+        }
+        return samples
+    }
+
+    private static func generateNight(index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?) -> NightProfile {
         var rng = SeededGenerator(seed: seed &+ UInt64(index) &* 0x9E3779B1)
 
         let weekday = calendar.component(.weekday, from: day)
@@ -40,13 +96,15 @@ enum MockNightGenerator {
         let progress = Double(index) / Double(max(total - 1, 1))
         let trend = 0.42 + 0.28 * progress
         let noise = Double.random(in: -0.16...0.16, using: &rng)
-        let quality = min(max(trend + noise, 0.12), 0.97)
+        let quality = override?.quality ?? min(max(trend + noise, 0.12), 0.97)
 
         let bedtimeHourBase = isWeekend ? 23.6 : 23.0
         let bedtimeJitter = Double.random(in: -35...35, using: &rng)
-        let bedtime = day.addingTimeInterval(bedtimeHourBase * 3600 + bedtimeJitter * 60)
+        let bedtimeHour = override?.bedtimeHour ?? bedtimeHourBase + bedtimeJitter / 60
+        let bedtime = day.addingTimeInterval(bedtimeHour * 3600)
 
-        let totalSleepHours = 6.4 + quality * 2.1 + Double.random(in: -0.25...0.25, using: &rng)
+        let naturalSleepHours = 6.4 + quality * 2.1 + Double.random(in: -0.25...0.25, using: &rng)
+        let totalSleepHours = override?.asleepHours ?? naturalSleepHours
         let totalSleepSeconds = totalSleepHours * 3600
 
         let latencyMinutes = Double.random(in: 3...16, using: &rng) * (1.3 - quality)
@@ -59,47 +117,56 @@ enum MockNightGenerator {
         for cycle in 0..<cycleCount {
             let earlyBias = Double(cycleCount - cycle) / Double(cycleCount)
             let lateBias = Double(cycle + 1) / Double(cycleCount)
-            let cycleDuration = baseCycleLength * Double.random(in: 0.86...1.14, using: &rng)
+            // The last cycle absorbs the jitter so asleep time lands on target.
+            let cycleDuration = cycle == cycleCount - 1
+                ? max(totalSleepSeconds - cycleSegments.filter { $0.0.isAsleep }.reduce(0) { $0 + $1.1 }, 20 * 60)
+                : baseCycleLength * Double.random(in: 0.86...1.14, using: &rng)
 
             let deepShare = max(0, 0.30 * earlyBias - 0.06) * (0.55 + 0.45 * quality)
             let remShare = (0.12 + 0.24 * lateBias) * (0.65 + 0.35 * quality)
             let coreShare = max(0.34, 1 - deepShare - remShare)
+            let shareTotal = coreShare + deepShare + remShare
 
-            let coreFirst = cycleDuration * coreShare * 0.55
-            let deepDuration = cycleDuration * deepShare
-            let coreSecond = cycleDuration * coreShare * 0.45
-            let remDuration = cycleDuration * remShare
+            let coreFirst = cycleDuration * coreShare / shareTotal * 0.55
+            let deepDuration = cycleDuration * deepShare / shareTotal
+            let coreSecond = cycleDuration * coreShare / shareTotal * 0.45
+            let remDuration = cycleDuration * remShare / shareTotal
 
             cycleSegments.append((.core, coreFirst))
-            if deepDuration > 60 { cycleSegments.append((.deep, deepDuration)) }
+            if deepDuration > 60 { cycleSegments.append((.deep, deepDuration)) } else { cycleSegments.append((.core, deepDuration)) }
             cycleSegments.append((.core, coreSecond))
-            if remDuration > 60 { cycleSegments.append((.rem, remDuration)) }
+            if remDuration > 60 { cycleSegments.append((.rem, remDuration)) } else { cycleSegments.append((.core, remDuration)) }
 
             let awakeChance = (1 - quality) * 0.45
-            if Double.random(in: 0...1, using: &rng) < awakeChance {
+            if cycle < cycleCount - 1, Double.random(in: 0...1, using: &rng) < awakeChance {
                 cycleSegments.append((.awake, Double.random(in: 60...240, using: &rng)))
             }
         }
 
         var cursor = sleepOnset
         var sleepSamples: [RawSleepSample] = [
-            RawSleepSample(start: bedtime, end: sleepOnset, stage: .awake, sourceName: sourceName, sourceBundleID: bundleID),
+            RawSleepSample(start: bedtime, end: sleepOnset, stage: .awake, sourceName: watchSource, sourceBundleID: watchBundleID),
         ]
         for (stage, duration) in cycleSegments {
             let end = cursor.addingTimeInterval(duration)
-            sleepSamples.append(RawSleepSample(start: cursor, end: end, stage: stage, sourceName: sourceName, sourceBundleID: bundleID))
+            sleepSamples.append(RawSleepSample(start: cursor, end: end, stage: stage, sourceName: watchSource, sourceBundleID: watchBundleID))
             cursor = end
         }
         let wakeTime = cursor
 
+        // The iPhone's own in-bed estimate: a second, overlapping source.
+        let inBedStart = bedtime.addingTimeInterval(-Double.random(in: 5...15, using: &rng) * 60)
+        let inBedEnd = wakeTime.addingTimeInterval(Double.random(in: 3...12, using: &rng) * 60)
+        sleepSamples.append(RawSleepSample(start: inBedStart, end: inBedEnd, stage: .inBed, sourceName: phoneSource, sourceBundleID: phoneBundleID))
+
         let restingBaseline = 61.0 - 7.0 * progress
         let restingHR = restingBaseline - quality * 3.0 + Double.random(in: -1.5...1.5, using: &rng)
-        let restingSample = HeartRateSample(date: wakeTime, bpm: restingHR.rounded(), sourceName: sourceName)
+        let restingSample = HeartRateSample(date: wakeTime.addingTimeInterval(25 * 60), bpm: restingHR.rounded(), sourceName: watchSource)
 
         var heartRateSamples: [HeartRateSample] = []
         var hrCursor = bedtime
         while hrCursor < wakeTime {
-            let stageAtCursor = sleepSamples.first { $0.start <= hrCursor && hrCursor < $0.end }?.stage ?? .core
+            let stageAtCursor = sleepSamples.first { $0.stage != .inBed && $0.start <= hrCursor && hrCursor < $0.end }?.stage ?? .core
             let stageOffset: Double = switch stageAtCursor {
             case .deep: -6
             case .rem: 3
@@ -107,13 +174,19 @@ enum MockNightGenerator {
             default: 0
             }
             let bpm = restingHR + stageOffset + Double.random(in: -2.5...2.5, using: &rng)
-            heartRateSamples.append(HeartRateSample(date: hrCursor, bpm: max(bpm, 40).rounded(), sourceName: sourceName))
+            heartRateSamples.append(HeartRateSample(date: hrCursor, bpm: max(bpm, 40).rounded(), sourceName: watchSource))
             hrCursor = hrCursor.addingTimeInterval(Double.random(in: 480...720, using: &rng))
         }
 
         let hrvBaseline = 44.0 + 22.0 * progress
         let hrv = hrvBaseline + quality * 9.0 + Double.random(in: -5...5, using: &rng)
-        let hrvSamples = [HRVSample(date: wakeTime, sdnnMilliseconds: max(hrv, 15).rounded())]
+        let span = wakeTime.timeIntervalSince(sleepOnset)
+        let hrvSamples = [0.2, 0.45, 0.7, 0.95].map { fraction in
+            HRVSample(
+                date: sleepOnset.addingTimeInterval(span * fraction),
+                sdnnMilliseconds: max(hrv + Double.random(in: -6...6, using: &rng), 15).rounded()
+            )
+        }
 
         let respiratory = 14.2 + (1 - quality) * 1.1 + Double.random(in: -0.4...0.4, using: &rng)
         let respiratorySamples = [RespiratoryRateSample(date: wakeTime.addingTimeInterval(-1800), breathsPerMinute: (respiratory * 10).rounded() / 10)]
