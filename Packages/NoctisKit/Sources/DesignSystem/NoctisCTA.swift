@@ -102,12 +102,15 @@ private struct NoctisCTASpinner: View {
 }
 
 /// R10's secondary action: a 44pt plain text button in `ink2`.
+/// `adaptive`: the main app's, which follows Light/Dark.
 public struct NoctisTextButton: View {
     private let title: String
+    private let adaptive: Bool
     private let action: () -> Void
 
-    public init(_ title: String, action: @escaping () -> Void) {
+    public init(_ title: String, adaptive: Bool = false, action: @escaping () -> Void) {
         self.title = title
+        self.adaptive = adaptive
         self.action = action
     }
 
@@ -115,7 +118,7 @@ public struct NoctisTextButton: View {
         Button(action: action) {
             Text(title)
                 .noctisFont(15, .medium, relativeTo: .subheadline)
-                .foregroundStyle(NoctisPaper.ink2)
+                .foregroundStyle(adaptive ? NoctisAppColor.ink2 : NoctisPaper.ink2)
                 .multilineTextAlignment(.center)
                 .frame(minWidth: 44, minHeight: 44)
                 // `.plain` hit-tests only drawn pixels without this — the

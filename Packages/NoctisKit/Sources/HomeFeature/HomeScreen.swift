@@ -59,11 +59,18 @@ public nonisolated struct ScoredRecoveryContent: Sendable, Equatable {
 }
 
 public nonisolated enum RecoveryCardContent: Sendable, Equatable {
-    /// No data or no access: "Your first night starts here."
+    /// Health access never requested (or no Health on this device):
+    /// "Your first night starts here."
     case connect(title: String, message: String, showsButton: Bool)
+    /// Access already requested, but no sleep data: "No sleep data yet",
+    /// with "Open Health".
+    case noSleepData(title: String, message: String)
     case learning(nights: Int, required: Int, text: String)
     case scored(ScoredRecoveryContent)
+    /// Data is current, but no sleep was recorded last night.
     case noSleep(title: String, detail: String?)
+    /// Apple Health hasn't synced for over a day.
+    case stale(title: String, detail: String)
     case failed(message: String)
 }
 
@@ -183,8 +190,8 @@ public nonisolated enum HomeScreenBuilder {
         let format = HomeFormat(calendar: calendar, locale: locale)
         let recovery = recoveryCard(snapshot, format: format)
         let showsDataCards: Bool = switch recovery {
-        case .connect, .failed: false
-        case .learning, .scored, .noSleep: true
+        case .connect, .noSleepData, .failed: false
+        case .learning, .scored, .noSleep, .stale: true
         }
         var detail: RecoveryDetailContent?
         if case .scored(let content) = recovery, case .scored(let result)? = snapshot.recovery {
@@ -237,19 +244,30 @@ public nonisolated enum HomeScreenBuilder {
         switch snapshot.dataState {
         case .healthDataUnavailable:
             return .connect(title: title, message: "Apple Health isn't available on this device.", showsButton: false)
-        case .permissionRequired, .empty:
+        case .permissionRequired:
+            // HealthKit's request status is `.shouldRequest`: never asked.
             return .connect(title: title, message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true)
+        case .empty, .learning(nightsSoFar: 0):
+            // Already asked (`.unnecessary`), yet no sleep: HealthKit never
+            // says whether reading was allowed, so point to the source.
+            return noSleepData
         case .failed:
             return .failed(message: "We couldn't read your latest sleep data.")
-        case .stale, .learning, .noSleepLastNight, .ready:
+        case .stale(let newest):
+            // Sync is behind; it doesn't mean the person didn't sleep.
+            return .stale(
+                title: "Apple Health hasn't updated since \(format.dayAndTime(newest)).",
+                detail: "Open Health or pull to refresh."
+            )
+        case .learning, .noSleepLastNight, .ready:
             break
         }
         switch snapshot.recovery {
         case .learning(let nights)?:
-            let required = RecoveryModelV1.learningNights
+            let required = RecoveryModelV2.learningNights
             return .learning(nights: nights, required: required, text: "Learning your baseline · \(nights) of \(required) nights")
         case .noSleepLastNight?:
-            let detail = snapshot.latestSleep.map { "Last sleep recorded \(format.longDate($0.wakeTime, in: $0.timeZone))." }
+            let detail = snapshot.latestSleep.map { "Last recorded night ended \(format.shortDate($0.wakeTime, in: $0.timeZone))." }
             return .noSleep(title: "No sleep recorded last night.", detail: detail)
         case .scored(let result)?:
             return .scored(scoredContent(result))
@@ -273,6 +291,11 @@ public nonisolated enum HomeScreenBuilder {
             accessibilityLabel: accessibilitySummary(result, factors: factors)
         )
     }
+
+    static let noSleepData = RecoveryCardContent.noSleepData(
+        title: "No sleep data yet",
+        message: "NOCTIS reads sleep from Apple Health. Track sleep with Apple Watch or set up Sleep in the Health app."
+    )
 
     static func tone(_ trend: RecoveryTrend) -> DeltaTone {
         switch trend {
@@ -395,23 +418,27 @@ public nonisolated enum HomeScreenBuilder {
             )
         case .hrv:
             let baseline = factor.baseline ?? factor.value
+            let value = Int(factor.value.rounded())
             let percent = baseline > 0 ? Int(((factor.value / baseline - 1) * 100).rounded()) : 0
+            let v1Sentence = percent == 0 ? "In line with your baseline." : "\(abs(percent))% \(percent > 0 ? "above" : "below") your baseline."
             return FactorDetailRow(
                 kind: factor.kind, name: name,
-                value: "HRV \(Int(factor.value.rounded())) ms",
+                value: "HRV \(value) ms",
                 baseline: "baseline \(Int(baseline.rounded())) ms",
                 score: factor.score,
-                sentence: percent == 0 ? "In line with your baseline." : "\(abs(percent))% \(percent > 0 ? "above" : "below") your baseline."
+                sentence: factor.range.map { rangeSentence($0, value: "\(value) ms", baseline: "\(Int(baseline.rounded())) ms") } ?? v1Sentence
             )
         case .restingHeartRate:
             let baseline = factor.baseline ?? factor.value
-            let difference = Int(factor.value.rounded()) - Int(baseline.rounded())
+            let value = Int(factor.value.rounded())
+            let difference = value - Int(baseline.rounded())
+            let v1Sentence = difference == 0 ? "Same as your baseline." : "\(abs(difference)) bpm \(difference > 0 ? "above" : "below") your baseline."
             return FactorDetailRow(
                 kind: factor.kind, name: name,
-                value: "Resting HR \(Int(factor.value.rounded())) bpm",
+                value: "Resting HR \(value) bpm",
                 baseline: "baseline \(Int(baseline.rounded())) bpm",
                 score: factor.score,
-                sentence: difference == 0 ? "Same as your baseline." : "\(abs(difference)) bpm \(difference > 0 ? "above" : "below") your baseline."
+                sentence: factor.range.map { rangeSentence($0, value: "\(value) bpm", baseline: "\(Int(baseline.rounded())) bpm") } ?? v1Sentence
             )
         case .sleepConsistency:
             let minutes = Int(factor.value.rounded())
@@ -431,15 +458,31 @@ public nonisolated enum HomeScreenBuilder {
         }
     }
 
+    /// "Within your normal range: 48 ms vs your 50 ms baseline."
+    static func rangeSentence(_ range: RecoveryRange, value: String, baseline: String) -> String {
+        let place = switch range {
+        case .within: "Within your normal range"
+        case .above: "Above your normal range"
+        case .below: "Below your normal range"
+        }
+        return "\(place): \(value) vs your \(baseline) baseline."
+    }
+
     static func calculation(_ result: RecoveryResult, needMinutes: Int) -> [String] {
+        let model = RecoveryModel(rawValue: result.modelVersion) ?? .current
         func weight(_ kind: RecoveryFactorKind) -> String {
-            "\(Int((RecoveryModelV1.weights[kind] ?? 0).rounded()))%"
+            "\(Int((model.weights[kind] ?? 0).rounded()))%"
         }
         var paragraphs = [
             "Recovery compares last night with your own last \(BaselineEngine.windowNights) nights. "
                 + "Four signals count: sleep against your \(HomeFormat.compactDuration(needMinutes)) need (\(weight(.sleepDuration))), "
                 + "HRV (\(weight(.hrv))), resting heart rate (\(weight(.restingHeartRate))) "
-                + "and how close your bedtime and wake time were to usual (\(weight(.sleepConsistency))).",
+                + "and how close your bedtime and wake time were to usual (\(weight(.sleepConsistency)))."
+                + (model == .v2
+                    ? " HRV and resting heart rate are scored against how much they normally vary for you: a typical night scores about "
+                        + "\(Int(RecoveryModelV2.variationCenter)), and each standard deviation better or worse moves the score "
+                        + "\(Int(RecoveryModelV2.pointsPerStandardDeviation)) points."
+                    : ""),
         ]
         if result.factors.count < RecoveryFactorKind.allCases.count {
             let today = factorOrder.compactMap { result.factor($0) }
@@ -451,7 +494,8 @@ public nonisolated enum HomeScreenBuilder {
         }
         paragraphs.append(
             "Confidence is high with all four signals and \(RecoveryModelV1.highConfidenceNights) nights of history, "
-                + "moderate with \(RecoveryModelV1.moderateConfidenceFactors) signals or \(RecoveryModelV1.moderateConfidenceNights) nights, and low otherwise."
+                + "moderate with at least \(RecoveryModelV1.moderateConfidenceFactors) signals \(model == .v1 ? "or" : "and") "
+                + "\(RecoveryModelV1.moderateConfidenceNights) nights, and low otherwise."
         )
         return paragraphs
     }
@@ -570,6 +614,17 @@ nonisolated struct HomeFormat {
     /// "Thursday, September 24".
     func longDate(_ date: Date, in timeZone: TimeZone? = nil) -> String {
         date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: timeZone ?? calendar.timeZone).weekday(.wide).month(.wide).day())
+    }
+
+    /// "Wed, Sep 23".
+    func shortDate(_ date: Date, in timeZone: TimeZone? = nil) -> String {
+        date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: timeZone ?? calendar.timeZone).weekday(.abbreviated).month(.abbreviated).day())
+    }
+
+    /// "Wed 7:02 AM", kept on one line (no-break spaces).
+    func dayAndTime(_ date: Date) -> String {
+        date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).weekday(.abbreviated).hour().minute())
+            .replacingOccurrences(of: " ", with: "\u{00A0}")
     }
 
     /// "11:02 PM" on the clock of `timeZone`.

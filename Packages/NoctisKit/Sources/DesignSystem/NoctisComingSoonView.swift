@@ -51,6 +51,7 @@ public struct NoctisComingSoonView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .noctisStatusBarGuard()
         .background { PaperBackground(adaptive: true).ignoresSafeArea() }
     }
 }

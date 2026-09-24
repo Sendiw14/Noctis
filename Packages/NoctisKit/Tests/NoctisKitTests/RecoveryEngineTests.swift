@@ -3,6 +3,7 @@ import Testing
 @testable import RecoveryKit
 @testable import SleepKit
 
+/// RecoveryModelV1, pinned with `model: .v1` (V2 is the app default).
 struct RecoveryEngineTests {
     private let lastNightKey = SleepNightKey(year: 2026, month: 9, day: 23)
 
@@ -36,7 +37,7 @@ struct RecoveryEngineTests {
     // MARK: - Factor scores
 
     @Test func eachFactorScoresAgainstItsBaseline() throws {
-        let result = RecoveryEngine.score(lastNight: lastNight(), baselines: fullBaselines, baselineNights: 14, needMinutes: 480)
+        let result = RecoveryEngine.score(lastNight: lastNight(), baselines: fullBaselines, baselineNights: 14, needMinutes: 480, model: .v1)
 
         let duration = try #require(result.factor(.sleepDuration))
         #expect(duration.score == 75) // 420 of 480 = 87.5% → 100 − 12.5% × 200
@@ -62,16 +63,16 @@ struct RecoveryEngineTests {
     }
 
     @Test func sleepAtOrAboveNeedScoresFull() {
-        let result = RecoveryEngine.score(lastNight: lastNight(asleep: 500), baselines: .none, baselineNights: 0, needMinutes: 480)
+        let result = RecoveryEngine.score(lastNight: lastNight(asleep: 500), baselines: .none, baselineNights: 0, needMinutes: 480, model: .v1)
         #expect(result.factor(.sleepDuration)?.score == 100)
         #expect(result.factor(.sleepDuration)?.delta == nil)
     }
 
     @Test func factorScoresStayWithin0And100() {
-        let high = RecoveryEngine.score(lastNight: lastNight(hrv: 200, resting: 30), baselines: fullBaselines, baselineNights: 14, needMinutes: 480)
+        let high = RecoveryEngine.score(lastNight: lastNight(hrv: 200, resting: 30), baselines: fullBaselines, baselineNights: 14, needMinutes: 480, model: .v1)
         #expect(high.factor(.hrv)?.score == 100)
         #expect(high.factor(.restingHeartRate)?.score == 100)
-        let low = RecoveryEngine.score(lastNight: lastNight(asleep: 60, bedtime: 900, hrv: 5, resting: 90), baselines: fullBaselines, baselineNights: 14, needMinutes: 480)
+        let low = RecoveryEngine.score(lastNight: lastNight(asleep: 60, bedtime: 900, hrv: 5, resting: 90), baselines: fullBaselines, baselineNights: 14, needMinutes: 480, model: .v1)
         #expect(low.factors.allSatisfy { $0.score == 0 })
         #expect(low.score == 0)
     }
@@ -79,7 +80,7 @@ struct RecoveryEngineTests {
     // MARK: - Renormalization
 
     @Test func missingFactorsAreDroppedAndWeightsRenormalized() throws {
-        let result = RecoveryEngine.score(lastNight: lastNight(hrv: nil, resting: nil), baselines: fullBaselines, baselineNights: 14, needMinutes: 480)
+        let result = RecoveryEngine.score(lastNight: lastNight(hrv: nil, resting: nil), baselines: fullBaselines, baselineNights: 14, needMinutes: 480, model: .v1)
         #expect(result.factorsUsed == [.sleepDuration, .sleepConsistency])
         #expect(try #require(result.factor(.sleepDuration)).weight == 35.0 / 55.0)
         #expect(try #require(result.factor(.sleepConsistency)).weight == 20.0 / 55.0)
@@ -90,21 +91,21 @@ struct RecoveryEngineTests {
     @Test func aFactorWithoutABaselineIsDropped() {
         let noHRVBaseline = Baselines(sleepDuration: fullBaselines.sleepDuration, bedtime: fullBaselines.bedtime,
                                       wakeTime: fullBaselines.wakeTime, hrv: nil, restingHeartRate: fullBaselines.restingHeartRate)
-        let result = RecoveryEngine.score(lastNight: lastNight(), baselines: noHRVBaseline, baselineNights: 14, needMinutes: 480)
+        let result = RecoveryEngine.score(lastNight: lastNight(), baselines: noHRVBaseline, baselineNights: 14, needMinutes: 480, model: .v1)
         #expect(result.factorsUsed == [.sleepDuration, .sleepConsistency, .restingHeartRate])
         // (75×35 + 87.5×20 + 30×20) / 75 = 66.3…
         #expect(result.score == 66)
     }
 
     @Test func durationAloneCarriesTheWholeWeight() {
-        let result = RecoveryEngine.score(lastNight: lastNight(hrv: nil, resting: nil), baselines: .none, baselineNights: 0, needMinutes: 480)
+        let result = RecoveryEngine.score(lastNight: lastNight(hrv: nil, resting: nil), baselines: .none, baselineNights: 0, needMinutes: 480, model: .v1)
         #expect(result.factorsUsed == [.sleepDuration])
         #expect(result.factor(.sleepDuration)?.weight == 1.0)
         #expect(result.score == 75)
     }
 
     @Test func weightsAlwaysSumToOne() {
-        let result = RecoveryEngine.score(lastNight: lastNight(resting: nil), baselines: fullBaselines, baselineNights: 14, needMinutes: 480)
+        let result = RecoveryEngine.score(lastNight: lastNight(resting: nil), baselines: fullBaselines, baselineNights: 14, needMinutes: 480, model: .v1)
         #expect(abs(result.factors.map(\.weight).reduce(0, +) - 1) < 1e-12)
     }
 
@@ -120,11 +121,11 @@ struct RecoveryEngineTests {
         (1, 0, .low),
     ])
     func confidenceTiers(factors: Int, nights: Int, expected: RecoveryConfidence) {
-        #expect(RecoveryEngine.confidence(factorCount: factors, baselineNights: nights) == expected)
+        #expect(RecoveryEngine.confidence(factorCount: factors, baselineNights: nights, model: .v1) == expected)
     }
 
     @Test func highConfidenceNeedsAllFourFactorsAndFourteenNights() throws {
-        let state = RecoveryEngine.evaluate(history: history(count: 15), needMinutes: 480, asOf: Fixture.morningAfter)
+        let state = RecoveryEngine.evaluate(history: history(count: 15), needMinutes: 480, asOf: Fixture.morningAfter, model: .v1)
         guard case .scored(let result) = state else { Issue.record("expected a score, got \(state)"); return }
         #expect(result.factorsUsed.count == 4)
         #expect(result.baselineNights == 14)
@@ -132,14 +133,14 @@ struct RecoveryEngineTests {
     }
 
     @Test func sleepOnlyWithAFullWindowIsModerate() throws {
-        let state = RecoveryEngine.evaluate(history: history(count: 15, heartData: false), needMinutes: 480, asOf: Fixture.morningAfter)
+        let state = RecoveryEngine.evaluate(history: history(count: 15, heartData: false), needMinutes: 480, asOf: Fixture.morningAfter, model: .v1)
         guard case .scored(let result) = state else { Issue.record("expected a score, got \(state)"); return }
         #expect(result.factorsUsed == [.sleepDuration, .sleepConsistency])
         #expect(result.confidence == .moderate)
     }
 
     @Test func fourFactorsWithAShortWindowIsModerate() throws {
-        let state = RecoveryEngine.evaluate(history: history(count: 6), needMinutes: 480, asOf: Fixture.morningAfter)
+        let state = RecoveryEngine.evaluate(history: history(count: 6), needMinutes: 480, asOf: Fixture.morningAfter, model: .v1)
         guard case .scored(let result) = state else { Issue.record("expected a score, got \(state)"); return }
         #expect(result.baselineNights == 5)
         #expect(result.factorsUsed.count == 4)
@@ -147,7 +148,7 @@ struct RecoveryEngineTests {
     }
 
     @Test func fewFactorsAndAShortWindowIsLow() throws {
-        let state = RecoveryEngine.evaluate(history: history(count: 6, heartData: false), needMinutes: 480, asOf: Fixture.morningAfter)
+        let state = RecoveryEngine.evaluate(history: history(count: 6, heartData: false), needMinutes: 480, asOf: Fixture.morningAfter, model: .v1)
         guard case .scored(let result) = state else { Issue.record("expected a score, got \(state)"); return }
         #expect(result.factorsUsed.count == 2)
         #expect(result.baselineNights == 5)
@@ -157,12 +158,12 @@ struct RecoveryEngineTests {
     // MARK: - States
 
     @Test func underFiveNightsIsLearning() {
-        #expect(RecoveryEngine.evaluate(history: [], needMinutes: 480, asOf: Fixture.morningAfter) == .learning(nightsSoFar: 0))
-        #expect(RecoveryEngine.evaluate(history: history(count: 4), needMinutes: 480, asOf: Fixture.morningAfter) == .learning(nightsSoFar: 4))
+        #expect(RecoveryEngine.evaluate(history: [], needMinutes: 480, asOf: Fixture.morningAfter, model: .v1) == .learning(nightsSoFar: 0))
+        #expect(RecoveryEngine.evaluate(history: history(count: 4), needMinutes: 480, asOf: Fixture.morningAfter, model: .v1) == .learning(nightsSoFar: 4))
     }
 
     @Test func fiveNightsEndLearning() {
-        let state = RecoveryEngine.evaluate(history: history(count: 5), needMinutes: 480, asOf: Fixture.morningAfter)
+        let state = RecoveryEngine.evaluate(history: history(count: 5), needMinutes: 480, asOf: Fixture.morningAfter, model: .v1)
         guard case .scored(let result) = state else { Issue.record("expected a score, got \(state)"); return }
         // Four nights before last night: no baselines yet, duration only.
         #expect(result.factorsUsed == [.sleepDuration])
@@ -172,23 +173,24 @@ struct RecoveryEngineTests {
     @Test func noScoreWithoutLastNightsSleep() {
         // The newest night woke at 7:00 AM on Sep 24; 30 hours later.
         let later = Fixture.date(2026, 9, 25, 13)
-        #expect(RecoveryEngine.evaluate(history: history(count: 15), needMinutes: 480, asOf: later) == .noSleepLastNight)
+        #expect(RecoveryEngine.evaluate(history: history(count: 15), needMinutes: 480, asOf: later, model: .v1) == .noSleepLastNight)
     }
 
     @Test func nightsThatHaventEndedDoNotCount() {
         // At 6:00 AM on Sep 24, last night (waking at 7:00) isn't over.
         let early = Fixture.date(2026, 9, 24, 6)
-        #expect(RecoveryEngine.evaluate(history: history(count: 5), needMinutes: 480, asOf: early) == .learning(nightsSoFar: 4))
+        #expect(RecoveryEngine.evaluate(history: history(count: 5), needMinutes: 480, asOf: early, model: .v1) == .learning(nightsSoFar: 4))
     }
 
     @Test func theSameInputsAlwaysGiveTheSameResult() {
-        let first = RecoveryEngine.evaluate(history: history(count: 15), needMinutes: 480, asOf: Fixture.morningAfter)
-        let second = RecoveryEngine.evaluate(history: history(count: 15), needMinutes: 480, asOf: Fixture.morningAfter)
+        let first = RecoveryEngine.evaluate(history: history(count: 15), needMinutes: 480, asOf: Fixture.morningAfter, model: .v1)
+        let second = RecoveryEngine.evaluate(history: history(count: 15), needMinutes: 480, asOf: Fixture.morningAfter, model: .v1)
         #expect(first == second)
     }
 }
 
-/// Today's score against the recent baseline, and why factors are missing.
+/// Today's score against the recent baseline, and why factors are missing
+/// (V1 numbers).
 struct RecoveryComparisonTests {
     private func history(count: Int, lastAsleep: Double = 450, heartData: Bool = true, lastHRV: Double?? = .none) -> [NightMetrics] {
         Fixture.metrics(count: count) { index in
@@ -199,7 +201,7 @@ struct RecoveryComparisonTests {
     }
 
     private func scored(_ history: [NightMetrics]) -> RecoveryResult? {
-        if case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: Fixture.morningAfter) { return result }
+        if case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: Fixture.morningAfter, model: .v1) { return result }
         return nil
     }
 

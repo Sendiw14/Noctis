@@ -58,8 +58,11 @@ struct BaselineEngineTests {
 
     @Test func baselineIsTheMeanOfTheWindow() {
         let history = nights(back: Array(1...14), asleep: { Double(400 + $0 * 2) })
-        // 402, 404, …, 428: mean 415.
-        #expect(BaselineEngine.baselines(for: target, history: history).sleepDuration == Baseline(value: 415, nights: 14))
+        // 402, 404, …, 428: mean 415, sample SD √70.
+        let baseline = BaselineEngine.baselines(for: target, history: history).sleepDuration
+        #expect(baseline?.value == 415)
+        #expect(baseline?.nights == 14)
+        #expect(abs((baseline?.standardDeviation ?? 0) - 70.0.squareRoot()) < 1e-9)
     }
 
     @Test func hrvAndRestingCountOnlyNightsThatHaveThem() {

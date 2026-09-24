@@ -1,15 +1,19 @@
 import Foundation
 import SleepKit
 
-/// A personal baseline: the mean over the valid nights in the window.
+/// A personal baseline: the mean over the valid nights in the window,
+/// and how much those nights vary.
 public struct Baseline: Sendable, Equatable {
     public let value: Double
     /// Valid nights the mean is built from (5...14).
     public let nights: Int
+    /// Sample standard deviation (n − 1) of those nights.
+    public let standardDeviation: Double
 
-    public init(value: Double, nights: Int) {
+    public init(value: Double, nights: Int, standardDeviation: Double = 0) {
         self.value = value
         self.nights = nights
+        self.standardDeviation = standardDeviation
     }
 }
 
@@ -77,9 +81,12 @@ public enum BaselineEngine {
         )
     }
 
-    /// The mean of `values`, or nil below `minimumNights` values.
+    /// The mean and standard deviation of `values`, or nil below
+    /// `minimumNights` values.
     public static func baseline(_ values: [Double]) -> Baseline? {
         guard values.count >= minimumNights else { return nil }
-        return Baseline(value: values.reduce(0, +) / Double(values.count), nights: values.count)
+        let mean = values.reduce(0, +) / Double(values.count)
+        let variance = values.reduce(0) { $0 + ($1 - mean) * ($1 - mean) } / Double(values.count - 1)
+        return Baseline(value: mean, nights: values.count, standardDeviation: variance.squareRoot())
     }
 }

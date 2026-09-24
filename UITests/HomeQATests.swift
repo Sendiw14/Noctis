@@ -9,8 +9,8 @@ final class HomeQATests: XCTestCase {
         continueAfterFailure = false
     }
 
-    private func launchHome(_ scenario: String = "full") -> XCUIApplication {
-        QA.launch(extra: ["-useMockHealth", "-mockScenario", scenario, "-noctisSkipOnboarding"])
+    private func launchHome(_ scenario: String = "full", extra: [String] = []) -> XCUIApplication {
+        QA.launch(extra: ["-useMockHealth", "-mockScenario", scenario, "-noctisSkipOnboarding"] + extra)
     }
 
     private func recoveryCard(_ app: XCUIApplication) -> XCUIElement {
@@ -23,6 +23,14 @@ final class HomeQATests: XCTestCase {
         QA.pause(2)
         QA.capturePages(app, "home-full")
         QA.inspect(app, "home-full")
+    }
+
+    /// The iOS 18 status bar scrim, forced on a newer simulator.
+    func testFullStatePagesWithStatusBarScrim() {
+        let app = launchHome(extra: ["-noctisStatusBarScrim"])
+        XCTAssertTrue(recoveryCard(app).waitForExistence(timeout: 10))
+        QA.pause(2)
+        QA.capturePages(app, "home-full-scrim", maxPages: 3)
     }
 
     func testRecoveryDetailZoom() {

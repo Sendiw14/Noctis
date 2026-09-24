@@ -49,6 +49,47 @@ public enum RecoveryModelV1 {
     public static let trendThreshold = 3
 }
 
+/// Version 2: HRV and resting heart rate are scored against the person's
+/// own night-to-night variation instead of raw differences. Everything
+/// else (weights, the sleep duration and consistency curves, learning and
+/// last-night rules) is V1's. Confidence is stricter: moderate needs 3+
+/// factors AND 7+ nights.
+public enum RecoveryModelV2 {
+    public static let version = "recovery-v2"
+    public static let weights = RecoveryModelV1.weights
+    public static let learningNights = RecoveryModelV1.learningNights
+
+    /// A factor exactly on its baseline scores this.
+    public static let variationCenter: Double = 75
+    /// Points per standard deviation away from baseline, in the good
+    /// direction (higher HRV, lower resting heart rate).
+    public static let pointsPerStandardDeviation: Double = 15
+    /// Standard deviation floors, so a very steady window can't turn a
+    /// tiny change into a large swing.
+    public static let hrvStandardDeviationFloor: Double = 3
+    public static let restingStandardDeviationFloor: Double = 1
+    /// Within this many standard deviations of baseline is "your normal
+    /// range" (a normal day scores roughly 68–82).
+    public static let normalRange: Double = 0.5
+}
+
+/// The recovery models the engine can run. `current` is what the app shows.
+public enum RecoveryModel: String, Sendable, CaseIterable {
+    case v1 = "recovery-v1"
+    case v2 = "recovery-v2"
+
+    public static let current: RecoveryModel = .v2
+
+    public var version: String { rawValue }
+
+    public var weights: [RecoveryFactorKind: Double] {
+        switch self {
+        case .v1: RecoveryModelV1.weights
+        case .v2: RecoveryModelV2.weights
+        }
+    }
+}
+
 public enum RecoveryConfidence: String, Sendable, Comparable, CaseIterable {
     case low
     case moderate
@@ -83,15 +124,35 @@ public struct RecoveryFactor: Sendable, Equatable {
     /// `value − baseline` in the factor's unit. For consistency, the
     /// signed bedtime shift in minutes (later is positive).
     public let delta: Double?
+    /// V2, HRV and resting heart rate only: standard deviations from
+    /// baseline in the good direction (positive = higher HRV or lower
+    /// resting heart rate).
+    public let standardScore: Double?
 
-    public init(kind: RecoveryFactorKind, score: Int, weight: Double, value: Double, baseline: Double?, delta: Double?) {
+    public init(kind: RecoveryFactorKind, score: Int, weight: Double, value: Double, baseline: Double?, delta: Double?, standardScore: Double? = nil) {
         self.kind = kind
         self.score = score
         self.weight = weight
         self.value = value
         self.baseline = baseline
         self.delta = delta
+        self.standardScore = standardScore
     }
+
+    /// Where the value sits against the person's normal range (V2 only).
+    public var range: RecoveryRange? {
+        guard let standardScore, let delta else { return nil }
+        if abs(standardScore) <= RecoveryModelV2.normalRange { return .within }
+        return delta > 0 ? .above : .below
+    }
+}
+
+/// A value's place against the person's own variation: within ±0.5 SD of
+/// baseline, or above or below it (by value, not by goodness).
+public enum RecoveryRange: String, Sendable, Equatable {
+    case within
+    case above
+    case below
 }
 
 /// Why a factor isn't in today's score.

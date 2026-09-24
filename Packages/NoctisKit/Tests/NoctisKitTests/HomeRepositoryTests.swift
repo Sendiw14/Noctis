@@ -97,7 +97,7 @@ struct HomeRepositoryTests {
         #expect(snapshot.dataState == .ready)
         let result = try #require(scored(snapshot))
         #expect(result.factorsUsed == [.sleepDuration, .sleepConsistency])
-        #expect(result.confidence == .moderate)
+        #expect(result.confidence == .low)
     }
 
     @Test func learningScenarioCountsItsThreeNights() async {

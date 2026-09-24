@@ -64,6 +64,8 @@ struct HomeView: View {
         }
         // R14: cards keep their shadows at the scroll view's edges.
         .scrollClipDisabled()
+        // Nothing may show behind the status bar.
+        .noctisStatusBarGuard()
         .background { PaperBackground(adaptive: true).ignoresSafeArea() }
         .refreshable { await viewModel.refresh() }
         .task { await viewModel.onAppear() }
@@ -167,7 +169,7 @@ struct RecoveryCardView: View {
         case .learning(let nights, let required, let text):
             NoctisAppCard {
                 VStack(spacing: NoctisSpacing.md) {
-                    NoctisRecoveryRing(segments: [], progress: Double(nights) / Double(required))
+                    DormantRingView(progress: Double(nights) / Double(required))
                     Text(text)
                         .noctisFont(15, .medium, relativeTo: .subheadline)
                         .foregroundStyle(NoctisAppColor.ink2)
@@ -180,26 +182,12 @@ struct RecoveryCardView: View {
             .accessibilityLabel(text.replacingOccurrences(of: " · ", with: ", "))
         case .connect(let title, let message, let showsButton):
             ConnectCardView(title: title, message: message, showsButton: showsButton, viewModel: viewModel)
+        case .noSleepData(let title, let message):
+            DormantNoticeView(title: title, detail: message, titleSize: 22, opensHealth: true)
         case .noSleep(let title, let detail):
-            NoctisAppCard {
-                VStack(spacing: NoctisSpacing.md) {
-                    NoctisRecoveryRing(segments: [])
-                    VStack(spacing: NoctisSpacing.xxs) {
-                        Text(title)
-                            .noctisFont(17, .semibold, relativeTo: .body)
-                            .foregroundStyle(NoctisAppColor.ink)
-                        if let detail {
-                            Text(detail)
-                                .noctisFont(15, relativeTo: .subheadline)
-                                .foregroundStyle(NoctisAppColor.ink2)
-                        }
-                    }
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .accessibilityElement(children: .combine)
+            DormantNoticeView(title: title, detail: detail)
+        case .stale(let title, let detail):
+            DormantNoticeView(title: title, detail: detail)
         case .failed(let message):
             NoctisAppCard {
                 VStack(alignment: .leading, spacing: NoctisSpacing.md) {
@@ -378,6 +366,58 @@ struct FactorRowView: View {
     }
 }
 
+/// The ring before there's a score: 160pt, track only (a thin cocoa arc
+/// while learning), with a moon so it reads as waiting, not broken.
+struct DormantRingView: View {
+    var progress: Double?
+
+    var body: some View {
+        ZStack {
+            NoctisRecoveryRing(segments: [], progress: progress, diameter: 160)
+            Image(systemName: "moon.zzz")
+                .font(.system(size: 28, weight: .medium))
+                .foregroundStyle(NoctisAppColor.ink3)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// The recovery card when there's nothing to score: the dormant ring and
+/// what's going on — optionally with "Open Health".
+struct DormantNoticeView: View {
+    let title: String
+    let detail: String?
+    var titleSize: CGFloat = 17
+    var opensHealth = false
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        NoctisAppCard {
+            VStack(spacing: NoctisSpacing.md) {
+                DormantRingView()
+                VStack(spacing: NoctisSpacing.xxs) {
+                    Text(title)
+                        .noctisFont(titleSize, .semibold, relativeTo: titleSize > 17 ? .title3 : .body)
+                        .foregroundStyle(NoctisAppColor.ink)
+                    if let detail {
+                        Text(detail)
+                            .noctisFont(15, relativeTo: .subheadline)
+                            .foregroundStyle(NoctisAppColor.ink2)
+                    }
+                }
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityElement(children: .combine)
+                if opensHealth, let health = URL(string: "x-apple-health://") {
+                    NoctisTextButton("Open Health", adaptive: true) { openURL(health) }
+                        .accessibilityHint("Opens the Health app.")
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
 struct ConnectCardView: View {
     let title: String
     let message: String
@@ -388,7 +428,7 @@ struct ConnectCardView: View {
     var body: some View {
         NoctisAppCard {
             VStack(spacing: NoctisSpacing.md) {
-                NoctisRecoveryRing(segments: [])
+                DormantRingView()
                 VStack(spacing: NoctisSpacing.xxs) {
                     Text(title)
                         .noctisFont(22, .semibold, relativeTo: .title3)
@@ -510,7 +550,8 @@ struct StageStripView: View {
     @ViewBuilder
     private func legendView(_ legend: [StripStage]) -> some View {
         let items = ForEach(legend, id: \.self) { stage in
-            HStack(spacing: NoctisSpacing.xxs) {
+            // 6pt between dot and word at every size.
+            HStack(spacing: 6) {
                 Circle().fill(stage.tint).frame(width: 8, height: 8)
                 Text(stage.name)
                     .noctisFont(13, relativeTo: .footnote)

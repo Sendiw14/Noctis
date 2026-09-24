@@ -16,9 +16,10 @@ struct HomeScreenBuilderTests {
     private let now = Fixture.date(2026, 9, 24, 10)
     private let lastNightKey = SleepNightKey(year: 2026, month: 9, day: 23)
 
-    /// Formatted clock times use a narrow no-break space before AM/PM.
+    /// Formatted clock times use a narrow no-break space before AM/PM;
+    /// day-and-time strings join with no-break spaces.
     private func plain(_ text: String) -> String {
-        text.replacingOccurrences(of: "\u{202F}", with: " ")
+        text.replacingOccurrences(of: "\u{202F}", with: " ").replacingOccurrences(of: "\u{00A0}", with: " ")
     }
 
     private func screen(_ scenario: MockScenario, authorized: Bool = true, available: Bool = true, fails: Bool = false) async -> HomeScreen {
@@ -91,8 +92,7 @@ struct HomeScreenBuilderTests {
         let screen = await screen(.sleepOnly)
         guard case .scored(let scored) = screen.recovery else { Issue.record("expected a score"); return }
         #expect(scored.segments.map(\.kind) == [.sleepDuration, .sleepConsistency])
-        // The mock's 14-night window makes this moderate (RecoveryModelV1).
-        #expect(scored.confidence == "Moderate confidence · sleep only. HRV and heart rate aren't available from your sources.")
+        #expect(scored.confidence == "Low confidence · sleep only. HRV and heart rate aren't available from your sources.")
     }
 
     @Test func learningStateCountsNightsTowardFive() async {
@@ -108,24 +108,52 @@ struct HomeScreenBuilderTests {
         let screen = await screen(.gap)
         guard case .noSleep(let title, let detail) = screen.recovery else { Issue.record("expected no sleep"); return }
         #expect(title == "No sleep recorded last night.")
-        #expect(detail == "Last sleep recorded Wednesday, September 23.")
+        #expect(detail == "Last recorded night ended Wed, Sep 23.")
         #expect(screen.lastNight == nil)
         #expect(screen.week?.bars.last?.fraction == nil)
     }
 
-    @Test func staleStateShowsHowOldTheDataIs() async {
+    @Test func staleStateSaysSyncIsBehindNotThatYouDidntSleep() async {
         let screen = await screen(.stale)
         #expect(screen.header.updated == "Updated 30h ago")
-        guard case .noSleep = screen.recovery else { Issue.record("expected no sleep"); return }
+        guard case .stale(let title, let detail) = screen.recovery else { Issue.record("expected stale"); return }
+        #expect(plain(title).hasPrefix("Apple Health hasn't updated since Wed "))
+        #expect(plain(title).hasSuffix(" AM."))
+        #expect(detail == "Open Health or pull to refresh.")
+        #expect(!title.lowercased().contains("no sleep"))
+        #expect(screen.week != nil)
     }
 
-    @Test func emptyAndNoPermissionOfferToConnect() async {
-        for screen in [await screen(.empty), await screen(.full, authorized: false)] {
-            #expect(screen.recovery == .connect(title: "Your first night starts here.",
-                                                message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
-            #expect(screen.lastNight == nil && screen.insight == nil && screen.week == nil)
-            #expect(plain(screen.tonight.bedtime) == "Bedtime around 11:00 PM")
-        }
+    @Test func staleNamesTheDayAndTimeOfTheNewestData() {
+        let newest = Fixture.date(2026, 9, 23, 7, 2)
+        let snapshot = HomeSnapshotBuilder.build(
+            HomeHealthInputs(sleep: [], hrv: [], restingHeartRate: [], heartRate: [HeartRateSample(date: newest, bpm: 60, sourceName: "Watch")]),
+            profile: UserProfileSnapshot(), now: Fixture.date(2026, 9, 24, 13), timeZone: Fixture.newYork)
+        let screen = HomeScreenBuilder.build(snapshot, now: Fixture.date(2026, 9, 24, 13), calendar: calendar, locale: locale)
+        guard case .stale(let title, _) = screen.recovery else { Issue.record("expected stale"); return }
+        #expect(plain(title) == "Apple Health hasn't updated since Wed 7:02 AM.")
+    }
+
+    @Test func neverAskedOffersToConnect() async {
+        let screen = await screen(.full, authorized: false)
+        #expect(screen.recovery == .connect(title: "Your first night starts here.",
+                                            message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
+        #expect(screen.lastNight == nil && screen.insight == nil && screen.week == nil)
+        #expect(plain(screen.tonight.bedtime) == "Bedtime around 11:00 PM")
+    }
+
+    @Test func askedButNoSleepPointsToTheSource() async {
+        let expected = RecoveryCardContent.noSleepData(
+            title: "No sleep data yet",
+            message: "NOCTIS reads sleep from Apple Health. Track sleep with Apple Watch or set up Sleep in the Health app."
+        )
+        #expect(await screen(.empty).recovery == expected)
+        // Heart data but not a single night of sleep reads the same way.
+        let heartOnly = HomeSnapshotBuilder.build(
+            HomeHealthInputs(sleep: [], hrv: [], restingHeartRate: [], heartRate: [HeartRateSample(date: now.addingTimeInterval(-600), bpm: 70, sourceName: "Watch")]),
+            profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
+        #expect(HomeScreenBuilder.build(heartOnly, now: now, calendar: calendar, locale: locale).recovery == expected)
+        #expect(HomeScreenBuilder.build(heartOnly, now: now, calendar: calendar, locale: locale).week == nil)
     }
 
     @Test func withoutHealthThereIsNoConnectButton() async {
@@ -267,6 +295,26 @@ struct HomeScreenBuilderTests {
         #expect(rows[3].sentence == "Bedtime and wake time were 31 min from your usual, on average.")
     }
 
+    @Test func v2RowsPlaceTheValueInYourNormalRange() {
+        let format = HomeFormat(calendar: calendar, locale: locale)
+        func row(_ kind: RecoveryFactorKind, value: Double, baseline: Double, z: Double) -> FactorDetailRow {
+            let factor = RecoveryFactor(kind: kind, score: 75, weight: 0.25, value: value, baseline: baseline, delta: value - baseline, standardScore: z)
+            let result = RecoveryResult(night: lastNightKey, score: 75, factors: [factor], confidence: .high, baselineNights: 14, modelVersion: "recovery-v2")
+            return HomeScreenBuilder.detailRow(factor, result: result, needMinutes: 480, format: format)
+        }
+        #expect(row(.hrv, value: 48, baseline: 50, z: -0.4).sentence == "Within your normal range: 48 ms vs your 50 ms baseline.")
+        #expect(row(.hrv, value: 60, baseline: 50, z: 2).sentence == "Above your normal range: 60 ms vs your 50 ms baseline.")
+        #expect(row(.restingHeartRate, value: 58, baseline: 55, z: -1.5).sentence == "Above your normal range: 58 bpm vs your 55 bpm baseline.")
+        #expect(row(.restingHeartRate, value: 52, baseline: 55, z: 1.5).sentence == "Below your normal range: 52 bpm vs your 55 bpm baseline.")
+    }
+
+    @Test func shortDatesAndDayTimesAreLocaleFormatted() {
+        let format = HomeFormat(calendar: calendar, locale: locale)
+        #expect(format.shortDate(Fixture.date(2026, 9, 23, 7, 2)) == "Wed, Sep 23")
+        #expect(plain(format.dayAndTime(Fixture.date(2026, 9, 23, 7, 2))) == "Wed 7:02 AM")
+        #expect(!format.dayAndTime(Fixture.date(2026, 9, 23, 7, 2)).contains(" "))
+    }
+
     @Test func consistencyRowShowsTheUsualTimes() {
         let baselines = Baselines(sleepDuration: nil, bedtime: Baseline(value: 665, nights: 14), wakeTime: Baseline(value: 1142, nights: 14), hrv: nil, restingHeartRate: nil)
         let factor = RecoveryFactor(kind: .sleepConsistency, score: 100, weight: 1, value: 0.2, baseline: nil, delta: 0)
@@ -279,8 +327,10 @@ struct HomeScreenBuilderTests {
 
     @Test func calculationNamesTheWeightsAndTheModel() async throws {
         let detail = try #require(await screen(.full).detail)
-        #expect(detail.modelVersion == "Model recovery-v1")
+        #expect(detail.modelVersion == "Model recovery-v2")
         #expect(detail.calculation[0].contains("(35%)") && detail.calculation[0].contains("(25%)") && detail.calculation[0].contains("(20%)"))
+        #expect(detail.calculation[0].contains("a typical night scores about 75"))
+        #expect(detail.calculation[2].contains("at least 3 signals and 7 nights"))
         #expect(detail.calculation[1] == "Today all four signals count.")
 
         let sleepOnly = try #require(await screen(.sleepOnly).detail)

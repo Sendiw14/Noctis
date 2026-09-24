@@ -1,9 +1,10 @@
 import Foundation
 import SleepKit
 
-/// Recovery v1 (`RecoveryModelV1`): a 0–100 score from four factors, each
-/// judged against the person's own 14-night baseline. Deterministic: time
-/// comes in as `now`, never read from the clock.
+/// Recovery: a 0–100 score from four factors, each judged against the
+/// person's own 14-night baseline. The app runs `RecoveryModel.current`
+/// (V2, `RecoveryModelV2`); V1 (`RecoveryModelV1`) stays for its tests.
+/// Deterministic: time comes in as `now`, never read from the clock.
 ///
 /// - Under 5 nights of history: `.learning(nightsSoFar:)`.
 /// - No main sleep that ended in the last 24 hours: `.noSleepLastNight`.
@@ -11,7 +12,7 @@ import SleepKit
 /// - Otherwise `.scored`: factors without data (or without a baseline)
 ///   are dropped and the remaining weights renormalized.
 public enum RecoveryEngine {
-    public static func evaluate(history: [NightMetrics], needMinutes: Double, asOf now: Date) -> RecoveryState {
+    public static func evaluate(history: [NightMetrics], needMinutes: Double, asOf now: Date, model: RecoveryModel = .current) -> RecoveryState {
         let complete = history.filter { $0.wakeTime <= now }
         guard complete.count >= RecoveryModelV1.learningNights else {
             return .learning(nightsSoFar: complete.count)
@@ -22,8 +23,9 @@ public enum RecoveryEngine {
         }
         let baselines = BaselineEngine.baselines(for: lastNight.night, history: complete)
         let window = BaselineEngine.window(for: lastNight.night, in: complete)
-        let today = score(lastNight: lastNight, baselines: baselines, baselineNights: window.count, needMinutes: needMinutes)
-        // Each night in the window, scored exactly as today was — skipping
+        let today = score(lastNight: lastNight, baselines: baselines, baselineNights: window.count, needMinutes: needMinutes, model: model)
+        // Each night in the window, scored exactly as today was (same
+        // model) — skipping
         // nights that were still in the learning state themselves.
         let scorable = window.filter { night in
             complete.count { $0.night <= night.night } >= RecoveryModelV1.learningNights
@@ -33,7 +35,8 @@ public enum RecoveryEngine {
                 lastNight: night,
                 baselines: BaselineEngine.baselines(for: night.night, history: complete),
                 baselineNights: BaselineEngine.window(for: night.night, in: complete).count,
-                needMinutes: needMinutes
+                needMinutes: needMinutes,
+                model: model
             ).score)
         }
         return .scored(today.with(comparison: comparison(score: today.score, windowScores: windowScores)))
@@ -48,35 +51,43 @@ public enum RecoveryEngine {
         return RecoveryComparison(baseline: baseline.value, nights: baseline.nights, delta: Int((Double(score) - baseline.value).rounded()))
     }
 
-    public static func score(lastNight: NightMetrics, baselines: Baselines, baselineNights: Int, needMinutes: Double) -> RecoveryResult {
+    public static func score(
+        lastNight: NightMetrics,
+        baselines: Baselines,
+        baselineNights: Int,
+        needMinutes: Double,
+        model: RecoveryModel = .current
+    ) -> RecoveryResult {
         let raw = [
             durationFactor(lastNight, baselines, needMinutes: needMinutes),
             consistencyFactor(lastNight, baselines),
-            hrvFactor(lastNight, baselines),
-            restingFactor(lastNight, baselines),
+            model == .v1 ? hrvFactorV1(lastNight, baselines) : hrvFactorV2(lastNight, baselines),
+            model == .v1 ? restingFactorV1(lastNight, baselines) : restingFactorV2(lastNight, baselines),
         ].compactMap { $0 }
 
-        let totalWeight = raw.reduce(0) { $0 + (RecoveryModelV1.weights[$1.kind] ?? 0) }
+        let weights = model.weights
+        let totalWeight = raw.reduce(0) { $0 + (weights[$1.kind] ?? 0) }
         let factors = raw.map { factor in
             RecoveryFactor(
                 kind: factor.kind,
                 score: Int(factor.score.rounded()),
-                weight: totalWeight > 0 ? (RecoveryModelV1.weights[factor.kind] ?? 0) / totalWeight : 0,
+                weight: totalWeight > 0 ? (weights[factor.kind] ?? 0) / totalWeight : 0,
                 value: factor.value,
                 baseline: factor.baseline,
-                delta: factor.delta
+                delta: factor.delta,
+                standardScore: factor.standardScore
             )
         }
-        let weighted = raw.reduce(0) { $0 + $1.score * (RecoveryModelV1.weights[$1.kind] ?? 0) }
+        let weighted = raw.reduce(0) { $0 + $1.score * (weights[$1.kind] ?? 0) }
         let overall = totalWeight > 0 ? weighted / totalWeight : 0
 
         return RecoveryResult(
             night: lastNight.night,
             score: Int(overall.rounded()),
             factors: factors,
-            confidence: confidence(factorCount: factors.count, baselineNights: baselineNights),
+            confidence: confidence(factorCount: factors.count, baselineNights: baselineNights, model: model),
             baselineNights: baselineNights,
-            modelVersion: RecoveryModelV1.version,
+            modelVersion: model.version,
             baselines: baselines,
             missingFactors: gaps(lastNight, baselines, used: Set(factors.map(\.kind)))
         )
@@ -102,16 +113,19 @@ public enum RecoveryEngine {
         return gaps
     }
 
-    /// High: all four factors and a full 14-night window. Moderate: three
-    /// or more factors, or seven or more nights. Low: anything less.
-    public static func confidence(factorCount: Int, baselineNights: Int) -> RecoveryConfidence {
+    /// High: all four factors and a full 14-night window. Moderate: V2
+    /// needs three or more factors AND seven or more nights (V1: either).
+    /// Low: anything less.
+    public static func confidence(factorCount: Int, baselineNights: Int, model: RecoveryModel = .current) -> RecoveryConfidence {
         if factorCount == RecoveryFactorKind.allCases.count && baselineNights >= RecoveryModelV1.highConfidenceNights {
             return .high
         }
-        if factorCount >= RecoveryModelV1.moderateConfidenceFactors || baselineNights >= RecoveryModelV1.moderateConfidenceNights {
-            return .moderate
+        let enoughFactors = factorCount >= RecoveryModelV1.moderateConfidenceFactors
+        let enoughNights = baselineNights >= RecoveryModelV1.moderateConfidenceNights
+        switch model {
+        case .v1: return enoughFactors || enoughNights ? .moderate : .low
+        case .v2: return enoughFactors && enoughNights ? .moderate : .low
         }
-        return .low
     }
 
     // MARK: - Factors
@@ -122,6 +136,7 @@ public enum RecoveryEngine {
         let value: Double
         let baseline: Double?
         let delta: Double?
+        var standardScore: Double?
     }
 
     private static func durationFactor(_ night: NightMetrics, _ baselines: Baselines, needMinutes: Double) -> RawFactor? {
@@ -139,16 +154,39 @@ public enum RecoveryEngine {
         return RawFactor(kind: .sleepConsistency, score: clamp(score), value: deviation, baseline: nil, delta: night.bedtimeMinutes - bedtime)
     }
 
-    private static func hrvFactor(_ night: NightMetrics, _ baselines: Baselines) -> RawFactor? {
+    // V1: raw differences.
+
+    private static func hrvFactorV1(_ night: NightMetrics, _ baselines: Baselines) -> RawFactor? {
         guard let hrv = night.hrv, let baseline = baselines.hrv?.value, baseline > 0 else { return nil }
         let score = 50 + (hrv / baseline - 1) * RecoveryModelV1.hrvPointsPerRatio
         return RawFactor(kind: .hrv, score: clamp(score), value: hrv, baseline: baseline, delta: hrv - baseline)
     }
 
-    private static func restingFactor(_ night: NightMetrics, _ baselines: Baselines) -> RawFactor? {
+    private static func restingFactorV1(_ night: NightMetrics, _ baselines: Baselines) -> RawFactor? {
         guard let resting = night.restingHeartRate, let baseline = baselines.restingHeartRate?.value else { return nil }
         let score = 50 - (resting - baseline) * RecoveryModelV1.restingPointsPerBPM
         return RawFactor(kind: .restingHeartRate, score: clamp(score), value: resting, baseline: baseline, delta: resting - baseline)
+    }
+
+    // V2: standard deviations of the person's own 14-night variation.
+    // score = clamp(75 + 15·z), z in the good direction.
+
+    private static func hrvFactorV2(_ night: NightMetrics, _ baselines: Baselines) -> RawFactor? {
+        guard let hrv = night.hrv, let baseline = baselines.hrv else { return nil }
+        let spread = max(baseline.standardDeviation, RecoveryModelV2.hrvStandardDeviationFloor)
+        let z = (hrv - baseline.value) / spread
+        return RawFactor(kind: .hrv, score: variationScore(z), value: hrv, baseline: baseline.value, delta: hrv - baseline.value, standardScore: z)
+    }
+
+    private static func restingFactorV2(_ night: NightMetrics, _ baselines: Baselines) -> RawFactor? {
+        guard let resting = night.restingHeartRate, let baseline = baselines.restingHeartRate else { return nil }
+        let spread = max(baseline.standardDeviation, RecoveryModelV2.restingStandardDeviationFloor)
+        let z = (baseline.value - resting) / spread
+        return RawFactor(kind: .restingHeartRate, score: variationScore(z), value: resting, baseline: baseline.value, delta: resting - baseline.value, standardScore: z)
+    }
+
+    static func variationScore(_ z: Double) -> Double {
+        clamp(RecoveryModelV2.variationCenter + RecoveryModelV2.pointsPerStandardDeviation * z)
     }
 
     private static func clamp(_ score: Double) -> Double {
