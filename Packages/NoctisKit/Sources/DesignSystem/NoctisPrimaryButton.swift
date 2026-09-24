@@ -120,12 +120,7 @@ public struct NoctisGlassCircleButton: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
-    @ViewBuilder
     private var background: some View {
-        if #available(iOS 26, *) {
-            Color.clear.glassEffect(.regular.interactive(), in: .circle)
-        } else {
-            Circle().fill(.ultraThinMaterial)
-        }
+        Color.clear.glassEffect(.regular.interactive(), in: .circle)
     }
 }

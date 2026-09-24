@@ -75,7 +75,6 @@ struct SourceResolverTests {
 
     @Test func higherPrioritySourceWinsOverlappingSleepRange() {
         let watch = SourceIdentity(name: "Watch", bundleID: "com.apple.health")
-        let thirdParty = SourceIdentity(name: "ThirdPartyApp", bundleID: "com.example.sleep")
         let priority = SourcePriority(orderedHighestFirst: [watch])
         let resolver = DefaultSourceResolver(priority: priority)
 

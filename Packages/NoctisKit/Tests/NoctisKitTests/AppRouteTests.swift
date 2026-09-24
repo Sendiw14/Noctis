@@ -2,6 +2,7 @@ import Foundation
 import SwiftData
 import Testing
 @testable import AppRoot
+@testable import HomeFeature
 @testable import HealthProviding
 @testable import NoctisCore
 
@@ -54,6 +55,9 @@ struct AppRouteTests {
         #expect(DebugLaunchOptions(arguments: []).mockScenario == nil)
         #expect(DebugLaunchOptions(arguments: ["-noctisInitialRoute", "insights"]).initialRoute == .insights)
         #expect(DebugLaunchOptions(arguments: ["-mockUnauthorized"]).unauthorized)
+        #expect(DebugLaunchOptions(arguments: ["-homeMode", "evening"]).homeMode == .evening)
+        #expect(DebugLaunchOptions(arguments: ["-homeMode", "day"]).homeMode == .day)
+        #expect(DebugLaunchOptions(arguments: []).homeMode == nil)
         #expect(DebugLaunchOptions(arguments: ["-mockLatency", "2.5"]).mockLatency == .milliseconds(2500))
         for scenario in MockScenario.allCases {
             #expect(DebugLaunchOptions(arguments: ["-mockScenario", scenario.rawValue]).mockScenario == scenario)

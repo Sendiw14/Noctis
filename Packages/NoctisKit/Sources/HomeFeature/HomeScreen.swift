@@ -9,13 +9,87 @@ import SleepKit
 // decided here, from `HomeSnapshot`, so the views only lay it out
 // (APP_RULES.md R18, R20). Built by `HomeScreenBuilder`.
 
+/// Home's two modes, decided by `HomeScreenBuilder.mode` and never in a view.
+public nonisolated enum HomeMode: String, Sendable, Equatable, CaseIterable {
+    /// From 4 AM (including wake-up) until 3h before bedtime: the hero is
+    /// Recovery.
+    case day
+    /// From 3h before bedtime until 4 AM: the hero is Tonight.
+    case evening
+}
+
+/// Tonight's plan as real dates, for the evening countdown, the header
+/// summary and the night strip's "now" marker. The view passes the
+/// current minute in (a TimelineView); the date math stays here.
+public nonisolated struct TonightTimes: Sendable, Equatable {
+    public let bedtime: Date
+    public let wake: Date
+    /// "11:00 PM".
+    public let bedtimeText: String
+    /// The night strip runs 6 PM to 10 AM.
+    public let windowStart: Date
+    public let windowEnd: Date
+
+    /// "in 2h 14m", rounded up to the minute; nil once bedtime has passed.
+    public func countdown(at now: Date) -> String? {
+        let seconds = bedtime.timeIntervalSince(now)
+        guard seconds > 0 else { return nil }
+        return "in " + HomeFormat.compactDuration(Int((seconds / 60).rounded(.up)))
+    }
+
+    /// Minutes left, for `numericText` (nil after bedtime).
+    public func minutesLeft(at now: Date) -> Int? {
+        let seconds = bedtime.timeIntervalSince(now)
+        return seconds > 0 ? Int((seconds / 60).rounded(.up)) : nil
+    }
+
+    /// "Bedtime was 11:00 PM" — the hero's line once bedtime has passed.
+    public var passedText: String { "Bedtime was \(bedtimeText)" }
+
+    /// "Bedtime in 2h 14m." or, after bedtime, "Bedtime was 11:00 PM."
+    public func summary(at now: Date) -> String {
+        countdown(at: now).map { "Bedtime \($0)." } ?? passedText + "."
+    }
+
+    public var bedtimeFraction: Double { fraction(of: bedtime) ?? 0 }
+    public var wakeFraction: Double { fraction(of: wake) ?? 1 }
+
+    /// Where `now` falls on the strip, or nil outside 6 PM–10 AM.
+    public func nowFraction(at now: Date) -> Double? { fraction(of: now) }
+
+    private func fraction(of date: Date) -> Double? {
+        let span = windowEnd.timeIntervalSince(windowStart)
+        let value = date.timeIntervalSince(windowStart) / span
+        return (0...1).contains(value) ? value : nil
+    }
+}
+
+public nonisolated enum HeaderSummary: Sendable, Equatable {
+    case text(String)
+    /// Evening: counts down to bedtime, minute by minute.
+    case bedtime(TonightTimes)
+
+    public func text(at now: Date) -> String {
+        switch self {
+        case .text(let text): text
+        case .bedtime(let times): times.summary(at: now)
+        }
+    }
+}
+
 public nonisolated struct HomeHeader: Sendable, Equatable {
     /// "Good morning." split so one word can be emphasized.
     public let greetingLead: String
     public let greetingEmphasis: String
     public let greetingTrail: String
+    /// Orange in day mode, lavender in evening mode.
+    public let mode: HomeMode
     /// "Thursday, September 24".
     public let date: String
+    /// "THURSDAY, SEPTEMBER 24".
+    public let dateCaption: String
+    /// One sentence: "You slept 6h 42m. Recovery is 70."
+    public let summary: HeaderSummary
     /// "Updated 2h ago" once the newest data is over an hour old.
     public let updated: String?
 
@@ -37,7 +111,7 @@ public nonisolated enum DeltaTone: Sendable, Equatable {
 }
 
 public nonisolated struct DeltaChip: Sendable, Equatable {
-    /// "+6 vs your baseline" — the sign is always shown.
+    /// "+6", "−18", "±0" — the sign is always shown.
     public let text: String
     public let tone: DeltaTone
 }
@@ -52,8 +126,16 @@ public nonisolated struct ScoredRecoveryContent: Sendable, Equatable {
     public let score: Int
     public let segments: [RingSegmentContent]
     public let chip: DeltaChip?
+    /// Beside the chip: "vs your usual" (or, with no chip, why not).
+    public let comparisonPhrase: String
+    /// The engine's sentence, for detail: "Below your recent baseline."
     public let sentence: String
+    /// The full confidence line, for detail.
     public let confidence: String
+    /// Home shows the confidence line only when it isn't high.
+    public let confidenceCaption: String?
+    /// V3's heart cap, in plain words, when it applied.
+    public let heartCapNote: String?
     public let factors: [FactorCell]
     public let accessibilityLabel: String
 }
@@ -100,9 +182,54 @@ public nonisolated struct StripSegment: Sendable, Equatable {
     public let end: Double
 }
 
-public nonisolated enum StageStripContent: Sendable, Equatable {
-    case stages([StripSegment], legend: [StripStage])
-    case noStages(caption: String)
+/// The night panel's four lanes, top to bottom.
+public nonisolated enum NightLane: Int, Sendable, Equatable, CaseIterable {
+    case awake
+    case rem
+    case core
+    case deep
+
+    public var name: String {
+        switch self {
+        case .awake: "Awake"
+        case .rem: "REM"
+        case .core: "Core"
+        case .deep: "Deep"
+        }
+    }
+}
+
+nonisolated extension StripStage {
+    /// Unspecified sleep sits in the Core lane.
+    public var lane: NightLane {
+        switch self {
+        case .awake: .awake
+        case .rem: .rem
+        case .core, .asleep: .core
+        case .deep: .deep
+        }
+    }
+}
+
+/// A 1pt line where the night moves from one lane to another.
+public nonisolated struct NightConnector: Sendable, Equatable {
+    public let position: Double
+    public let from: NightLane
+    public let to: NightLane
+}
+
+/// The night panel's chart, drawn from SleepSessionEngine's timeline.
+public nonisolated struct NightChartContent: Sendable, Equatable {
+    /// Stage spans, 0...1 along the night; empty without stage data.
+    public let spans: [StripSegment]
+    public let connectors: [NightConnector]
+    /// Start, midpoint and end clock times.
+    public let timeLabels: [String]
+    /// Without stage data: "Stages aren't available from your current
+    /// sources." (the chart shows one sage bar in the Core lane).
+    public let caption: String?
+
+    public var hasStages: Bool { caption == nil }
 }
 
 public nonisolated struct LastNightCardContent: Sendable, Equatable {
@@ -110,7 +237,7 @@ public nonisolated struct LastNightCardContent: Sendable, Equatable {
     public let duration: String
     /// "11:02 PM – 7:27 AM".
     public let timeRange: String
-    public let strip: StageStripContent
+    public let chart: NightChartContent
     public let accessibilityLabel: String
 }
 
@@ -124,6 +251,25 @@ public nonisolated struct TonightCardContent: Sendable, Equatable {
     public let bedtime: String
     /// "Wake 7:00 AM · 8h need".
     public let detail: String
+}
+
+/// Evening mode's hero: tonight's bedtime, a countdown and the night strip.
+public nonisolated struct EveningHeroContent: Sendable, Equatable {
+    /// "11:00" and "PM" (the period is empty on 24-hour clocks).
+    public let time: String
+    public let period: String
+    public let times: TonightTimes
+    /// "Wake 7:00 AM · 8h need".
+    public let detail: String
+    /// Strip labels and where they sit: 6 PM, 12 AM, 6 AM, 10 AM.
+    public let stripLabels: [StripLabel]
+    /// "Tonight's sleep window, 11:00 PM to 7:00 AM."
+    public let stripAccessibilityLabel: String
+
+    public nonisolated struct StripLabel: Sendable, Equatable {
+        public let text: String
+        public let position: Double
+    }
 }
 
 public nonisolated struct WeekBar: Sendable, Equatable {
@@ -168,10 +314,16 @@ public nonisolated struct RecoveryDetailContent: Sendable, Equatable {
 
 public nonisolated struct HomeScreen: Sendable, Equatable {
     public let header: HomeHeader
+    public let mode: HomeMode
+    /// When the mode flips next (3h before bedtime, or 4 AM).
+    public let nextModeChange: Date
     public let recovery: RecoveryCardContent
     public let lastNight: LastNightCardContent?
     public let insight: InsightCardContent?
+    /// Day mode's Tonight block.
     public let tonight: TonightCardContent
+    /// Evening mode's Tonight hero.
+    public let evening: EveningHeroContent
     public let week: WeekCardContent?
     public let detail: RecoveryDetailContent?
 }
@@ -186,9 +338,12 @@ public nonisolated enum HomeScreenBuilder {
     /// Headroom above the tallest bar or the need line in This week.
     public static let weekHeadroom = 1.12
 
-    public static func build(_ snapshot: HomeSnapshot, now: Date, calendar: Calendar, locale: Locale) -> HomeScreen {
+    public static func build(_ snapshot: HomeSnapshot, now: Date, calendar: Calendar, locale: Locale, modeOverride: HomeMode? = nil) -> HomeScreen {
         let format = HomeFormat(calendar: calendar, locale: locale)
         let recovery = recoveryCard(snapshot, format: format)
+        let mode = modeOverride ?? Self.mode(now: now, plan: snapshot.tonight, calendar: calendar)
+        let times = tonightTimes(now: now, plan: snapshot.tonight, format: format)
+        let summary: HeaderSummary = mode == .evening ? .bedtime(times) : .text(daySummary(snapshot, recovery: recovery))
         let showsDataCards: Bool = switch recovery {
         case .connect, .noSleepData, .failed: false
         case .learning, .scored, .noSleep, .stale: true
@@ -198,36 +353,136 @@ public nonisolated enum HomeScreenBuilder {
             detail = recoveryDetail(result, content: content, needMinutes: snapshot.tonight.needMinutes, format: format)
         }
         return HomeScreen(
-            header: header(now: now, newestSample: snapshot.newestSample, format: format),
+            header: header(now: now, newestSample: snapshot.newestSample, mode: mode, summary: summary, format: format),
+            mode: mode,
+            nextModeChange: nextModeChange(after: now, plan: snapshot.tonight, calendar: calendar),
             recovery: recovery,
             lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, format: format) } : nil,
             insight: showsDataCards ? snapshot.topInsight.map { InsightCardContent(title: $0.title, message: $0.message) } : nil,
             tonight: tonightCard(snapshot.tonight, format: format),
+            evening: eveningHero(times, plan: snapshot.tonight, format: format),
             week: showsDataCards ? weekCard(snapshot, format: format) : nil,
             detail: detail
         )
     }
 
-    // MARK: Header
+    // MARK: Modes
 
-    public static func header(now: Date, newestSample: Date?, calendar: Calendar, locale: Locale) -> HomeHeader {
-        header(now: now, newestSample: newestSample, format: HomeFormat(calendar: calendar, locale: locale))
+    /// Evening starts this long before bedtime…
+    public static let eveningLeadMinutes = 180
+    /// …and ends at 4 AM.
+    public static let eveningEndMinutes = 4 * 60
+
+    /// Evening from 3h before bedtime until 4 AM; day otherwise (so the
+    /// early hours from 4 AM to waking up read as day too).
+    public static func mode(now: Date, plan: TonightPlan, calendar: Calendar) -> HomeMode {
+        let clock = calendar.dateComponents([.hour, .minute], from: now)
+        let minute = (clock.hour ?? 0) * 60 + (clock.minute ?? 0)
+        let start = eveningStartMinutes(plan)
+        let end = eveningEndMinutes
+        let inEvening = start <= end ? (minute >= start && minute < end) : (minute >= start || minute < end)
+        return inEvening ? .evening : .day
     }
 
-    static func header(now: Date, newestSample: Date?, format: HomeFormat) -> HomeHeader {
+    static func eveningStartMinutes(_ plan: TonightPlan) -> Int {
+        ((plan.bedtimeMinutes - eveningLeadMinutes) % 1440 + 1440) % 1440
+    }
+
+    /// The next moment the mode flips: 3h before bedtime or 4 AM,
+    /// whichever comes first after `now`.
+    public static func nextModeChange(after now: Date, plan: TonightPlan, calendar: Calendar) -> Date {
+        let today = calendar.startOfDay(for: now)
+        let candidates = [eveningStartMinutes(plan), eveningEndMinutes].flatMap { boundary in
+            (0...1).compactMap { offset -> Date? in
+                guard let day = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
+                return calendar.date(bySettingHour: boundary / 60, minute: boundary % 60, second: 0, of: day)
+            }
+        }
+        return candidates.filter { $0 > now }.min() ?? now.addingTimeInterval(24 * 3600)
+    }
+
+    /// Tonight's bedtime and wake as dates. "Tonight" belongs to the day
+    /// that started at 4 AM, so after midnight it's still the same night;
+    /// a bedtime before noon is the next calendar day.
+    static func tonightTimes(now: Date, plan: TonightPlan, format: HomeFormat) -> TonightTimes {
+        let calendar = format.calendar
+        let day = calendar.startOfDay(for: now.addingTimeInterval(-Double(eveningEndMinutes) * 60))
+        let nextDay = calendar.date(byAdding: .day, value: 1, to: day) ?? day.addingTimeInterval(86_400)
+        let bedDay = plan.bedtimeMinutes >= 12 * 60 ? day : nextDay
+        let bedtime = calendar.date(bySettingHour: plan.bedtimeMinutes / 60, minute: plan.bedtimeMinutes % 60, second: 0, of: bedDay) ?? now
+        return TonightTimes(
+            bedtime: bedtime,
+            wake: bedtime.addingTimeInterval(Double(plan.needMinutes) * 60),
+            bedtimeText: format.clock(minutesSinceMidnight: plan.bedtimeMinutes),
+            windowStart: calendar.date(bySettingHour: 18, minute: 0, second: 0, of: day) ?? day,
+            windowEnd: calendar.date(bySettingHour: 10, minute: 0, second: 0, of: nextDay) ?? nextDay
+        )
+    }
+
+    static func eveningHero(_ times: TonightTimes, plan: TonightPlan, format: HomeFormat) -> EveningHeroContent {
+        let (time, period) = format.splitClock(times.bedtimeText)
+        let labels: [(Int, Double)] = [(18 * 60, 0), (0, 6.0 / 16), (6 * 60, 12.0 / 16), (10 * 60, 1)]
+        return EveningHeroContent(
+            time: time,
+            period: period,
+            times: times,
+            detail: tonightCard(plan, format: format).detail,
+            stripLabels: labels.map { EveningHeroContent.StripLabel(text: format.hour(minutesSinceMidnight: $0.0), position: $0.1) },
+            stripAccessibilityLabel: "Tonight's sleep window, \(times.bedtimeText) to \(format.clock(minutesSinceMidnight: plan.wakeMinutes))."
+        )
+    }
+
+    // MARK: Header
+
+    /// The header before any data (loading): greeting and mode from the
+    /// profile's plan.
+    public static func loadingHeader(now: Date, plan: TonightPlan, calendar: Calendar, locale: Locale, modeOverride: HomeMode? = nil) -> HomeHeader {
+        let format = HomeFormat(calendar: calendar, locale: locale)
+        let mode = modeOverride ?? Self.mode(now: now, plan: plan, calendar: calendar)
+        let summary: HeaderSummary = mode == .evening
+            ? .bedtime(tonightTimes(now: now, plan: plan, format: format))
+            : .text("Reading your sleep data.")
+        return header(now: now, newestSample: nil, mode: mode, summary: summary, format: format)
+    }
+
+    public static func header(now: Date, newestSample: Date?, calendar: Calendar, locale: Locale) -> HomeHeader {
+        header(now: now, newestSample: newestSample, mode: .day, summary: .text(""), format: HomeFormat(calendar: calendar, locale: locale))
+    }
+
+    static func header(now: Date, newestSample: Date?, mode: HomeMode, summary: HeaderSummary, format: HomeFormat) -> HomeHeader {
         let hour = format.calendar.component(.hour, from: now)
         let partOfDay = switch hour {
         case 4..<12: "morning"
         case 12..<18: "afternoon"
         default: "evening"
         }
+        let date = format.longDate(now)
         return HomeHeader(
             greetingLead: "Good ",
             greetingEmphasis: partOfDay,
             greetingTrail: ".",
-            date: format.longDate(now),
+            mode: mode,
+            date: date,
+            dateCaption: date.uppercased(with: format.locale),
+            summary: summary,
             updated: newestSample.flatMap { updatedCaption(age: now.timeIntervalSince($0)) }
         )
+    }
+
+    /// Day mode's one sentence: what happened, or which state we're in.
+    static func daySummary(_ snapshot: HomeSnapshot, recovery: RecoveryCardContent) -> String {
+        switch recovery {
+        case .scored(let content):
+            guard let lastNight = snapshot.lastNight else { return "Recovery is \(content.score)." }
+            return "You slept \(noctisFormattedDuration(minutes: Int((lastNight.totals.asleep / 60).rounded()))). Recovery is \(content.score)."
+        case .learning: return "We're still learning your pattern."
+        case .noSleep: return "No sleep was recorded last night."
+        case .stale: return "Apple Health hasn't synced recently."
+        case .connect(_, _, let showsButton):
+            return showsButton ? "Connect Apple Health to see your nights." : "Apple Health isn't available on this device."
+        case .noSleepData: return "No sleep data yet."
+        case .failed: return "We couldn't read your sleep data."
+        }
     }
 
     /// "Updated 2h ago" past an hour, "Updated 3 days ago" from two days.
@@ -279,14 +534,18 @@ public nonisolated enum HomeScreenBuilder {
     static func scoredContent(_ result: RecoveryResult) -> ScoredRecoveryContent {
         let factors = factorOrder.compactMap { result.factor($0) }
         let chip = result.comparison.delta.map { delta in
-            DeltaChip(text: "\(signed(delta)) vs your baseline", tone: tone(result.comparison.trend))
+            DeltaChip(text: signed(delta), tone: tone(result.comparison.trend))
         }
+        let line = confidenceLine(result)
         return ScoredRecoveryContent(
             score: result.score,
             segments: factors.map { RingSegmentContent(kind: $0.kind, weight: $0.weight, fraction: Double($0.score) / 100) },
             chip: chip,
+            comparisonPhrase: chip == nil ? "Not enough nights yet to compare." : "vs your usual",
             sentence: result.comparison.sentence,
-            confidence: confidenceLine(result),
+            confidence: line,
+            confidenceCaption: result.confidence == .high ? nil : line,
+            heartCapNote: result.heartCapApplied ? "Your heart rate and HRV are both well outside your normal range." : nil,
             factors: factors.map { FactorCell(kind: $0.kind, name: shortName($0.kind), score: $0.score) },
             accessibilityLabel: accessibilitySummary(result, factors: factors)
         )
@@ -352,7 +611,7 @@ public nonisolated enum HomeScreenBuilder {
     static func accessibilitySummary(_ result: RecoveryResult, factors: [RecoveryFactor]) -> String {
         var lead = ["Recovery \(result.score)"]
         if let delta = result.comparison.delta {
-            lead.append(delta == 0 ? "same as your baseline" : "\(abs(delta)) \(delta > 0 ? "above" : "below") your baseline")
+            lead.append(delta == 0 ? "same as your usual" : "\(abs(delta)) \(delta > 0 ? "above" : "below") your usual")
         }
         lead.append("\(result.confidence.rawValue) confidence")
         let parts = factors.enumerated().map { index, factor in
@@ -478,7 +737,7 @@ public nonisolated enum HomeScreenBuilder {
                 + "Four signals count: sleep against your \(HomeFormat.compactDuration(needMinutes)) need (\(weight(.sleepDuration))), "
                 + "HRV (\(weight(.hrv))), resting heart rate (\(weight(.restingHeartRate))) "
                 + "and how close your bedtime and wake time were to usual (\(weight(.sleepConsistency)))."
-                + (model == .v2
+                + (model != .v1
                     ? " HRV and resting heart rate are scored against how much they normally vary for you: a typical night scores about "
                         + "\(Int(RecoveryModelV2.variationCenter)), and each standard deviation better or worse moves the score "
                         + "\(Int(RecoveryModelV2.pointsPerStandardDeviation)) points."
@@ -497,6 +756,13 @@ public nonisolated enum HomeScreenBuilder {
                 + "moderate with at least \(RecoveryModelV1.moderateConfidenceFactors) signals \(model == .v1 ? "or" : "and") "
                 + "\(RecoveryModelV1.moderateConfidenceNights) nights, and low otherwise."
         )
+        if model == .v3 {
+            paragraphs.append(
+                "If HRV is \(RecoveryModelV3.heartCapStandardDeviations.formatted()) standard deviations or more below normal and resting heart rate "
+                    + "\(RecoveryModelV3.heartCapStandardDeviations.formatted()) or more above it on the same morning, recovery is capped at "
+                    + "\(RecoveryModelV3.heartCapScore), however well you slept."
+            )
+        }
         return paragraphs
     }
 
@@ -506,40 +772,47 @@ public nonisolated enum HomeScreenBuilder {
         let duration = noctisFormattedDuration(minutes: Int((session.totals.asleep / 60).rounded()))
         let bedtime = format.clock(session.bedtime, in: session.timeZone)
         let wake = format.clock(session.wakeTime, in: session.timeZone)
-        let strip = stageStrip(session)
+        let chart = nightChart(session, format: format)
         var spoken = "Last night, slept \(duration), \(bedtime) to \(wake)."
-        switch strip {
-        case .stages(_, let legend):
-            let parts = legend.map { stage in
+        if let caption = chart.caption {
+            spoken += " " + caption
+        } else {
+            let present = Set(chart.spans.map(\.stage))
+            let parts = StripStage.allCases.filter(present.contains).map { stage in
                 "\(stage.name) \(HomeFormat.compactDuration(Int((stageTotal(stage, session.totals) / 60).rounded())))"
             }
             spoken += " " + parts.joined(separator: ", ") + "."
-        case .noStages(let caption):
-            spoken += " " + caption
         }
-        return LastNightCardContent(duration: duration, timeRange: "\(bedtime) – \(wake)", strip: strip, accessibilityLabel: spoken)
+        return LastNightCardContent(duration: duration, timeRange: "\(bedtime) – \(wake)", chart: chart, accessibilityLabel: spoken)
     }
 
-    static func stageStrip(_ session: SleepSession) -> StageStripContent {
-        guard session.completeness.hasStageDetail,
-              let start = session.timeline.first?.interval.start,
-              let end = session.timeline.map(\.interval.end).max(), end > start else {
-            return .noStages(caption: "Stages aren't available from your current sources.")
+    /// The four-lane chart: stage spans along the night (0...1), a
+    /// connector wherever the night moves to another lane, and start,
+    /// midpoint and end times.
+    static func nightChart(_ session: SleepSession, format: HomeFormat) -> NightChartContent {
+        let start = session.timeline.first?.interval.start ?? session.bedtime
+        let end = session.timeline.map(\.interval.end).max() ?? session.wakeTime
+        let span = max(end.timeIntervalSince(start), 1)
+        let labels = [start, start.addingTimeInterval(span / 2), end].map { format.clock($0, in: session.timeZone) }
+        guard session.completeness.hasStageDetail else {
+            return NightChartContent(spans: [], connectors: [], timeLabels: labels, caption: "Stages aren't available from your current sources.")
         }
-        let span = end.timeIntervalSince(start)
-        var segments: [StripSegment] = []
+        var spans: [StripSegment] = []
         for segment in session.timeline {
             guard let stage = stripStage(segment.stage) else { continue }
             let from = segment.interval.start.timeIntervalSince(start) / span
             let to = segment.interval.end.timeIntervalSince(start) / span
-            if let last = segments.last, last.stage == stage, abs(last.end - from) < 1e-9 {
-                segments[segments.count - 1] = StripSegment(stage: stage, start: last.start, end: to)
+            if let last = spans.last, last.stage == stage, abs(last.end - from) < 1e-9 {
+                spans[spans.count - 1] = StripSegment(stage: stage, start: last.start, end: to)
             } else {
-                segments.append(StripSegment(stage: stage, start: from, end: to))
+                spans.append(StripSegment(stage: stage, start: from, end: to))
             }
         }
-        let present = Set(segments.map(\.stage))
-        return .stages(segments, legend: StripStage.allCases.filter(present.contains))
+        let connectors = zip(spans, spans.dropFirst()).compactMap { previous, next -> NightConnector? in
+            guard abs(next.start - previous.end) < 1e-9, previous.stage.lane != next.stage.lane else { return nil }
+            return NightConnector(position: next.start, from: previous.stage.lane, to: next.stage.lane)
+        }
+        return NightChartContent(spans: spans, connectors: connectors, timeLabels: labels, caption: nil)
     }
 
     static func stripStage(_ stage: SleepStageValue) -> StripStage? {
@@ -638,6 +911,27 @@ nonisolated struct HomeFormat {
         let components = DateComponents(year: 2026, month: 1, day: 1, hour: normalized / 60, minute: normalized % 60)
         guard let date = calendar.date(from: components) else { return "" }
         return clock(date, in: calendar.timeZone)
+    }
+
+    /// "6 PM": the hour alone.
+    func hour(minutesSinceMidnight minutes: Int) -> String {
+        let normalized = ((minutes % 1440) + 1440) % 1440
+        let components = DateComponents(year: 2026, month: 1, day: 1, hour: normalized / 60, minute: normalized % 60)
+        guard let date = calendar.date(from: components) else { return "" }
+        return date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).hour())
+    }
+
+    /// "11:00 PM" → ("11:00", "PM"); 24-hour clocks have no period.
+    func splitClock(_ text: String) -> (time: String, period: String) {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        for symbol in [formatter.amSymbol, formatter.pmSymbol] where !(symbol ?? "").isEmpty {
+            guard let symbol, let range = text.range(of: symbol) else { continue }
+            var time = text
+            time.removeSubrange(range)
+            return (time.trimmingCharacters(in: .whitespaces), symbol)
+        }
+        return (text, "")
     }
 
     /// A clock time given as minutes after noon (baselines' unit).

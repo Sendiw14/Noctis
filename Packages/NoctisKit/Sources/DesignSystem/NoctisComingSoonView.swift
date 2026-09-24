@@ -46,9 +46,11 @@ public struct NoctisComingSoonView: View {
                 .overlay(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
                 .accessibilityElement(children: .combine)
             }
+            // R21: one centered column, never wider than 680pt.
+            .frame(maxWidth: 680, alignment: .leading)
             .padding(.horizontal, NoctisSpacing.lg)
             .padding(.top, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity)
         }
         .scrollBounceBehavior(.basedOnSize)
         .noctisStatusBarGuard()

@@ -21,6 +21,8 @@ public final class HomeViewModel {
     /// The ring should draw itself in when it next appears: the first
     /// scored Home of the day, unless Reduce Motion is on.
     public private(set) var introPending = false
+    /// When the scheduled task will flip Home between day and evening.
+    public private(set) var scheduledModeChange: Date?
 
     private let repository: HomeRepository
     private let profile: () -> UserProfileSnapshot
@@ -30,7 +32,9 @@ public final class HomeViewModel {
     private let clock: () -> Date
     private let calendar: Calendar
     private let locale: Locale
+    private let modeOverride: HomeMode?
     private var observation: Task<Void, Never>?
+    private var modeFlip: Task<Void, Never>?
 
     #if DEBUG
     /// DEBUG: print every new snapshot (`-noctisLogHomeSnapshot`).
@@ -45,7 +49,8 @@ public final class HomeViewModel {
         reduceMotion: @escaping () -> Bool = { HomeViewModel.systemReduceMotion() },
         clock: @escaping () -> Date = { Date() },
         calendar: Calendar = .autoupdatingCurrent,
-        locale: Locale = .autoupdatingCurrent
+        locale: Locale = .autoupdatingCurrent,
+        modeOverride: HomeMode? = nil
     ) {
         self.repository = repository
         self.profile = profile
@@ -55,7 +60,10 @@ public final class HomeViewModel {
         self.clock = clock
         self.calendar = calendar
         self.locale = locale
-        self.header = HomeScreenBuilder.header(now: clock(), newestSample: nil, calendar: calendar, locale: locale)
+        self.modeOverride = modeOverride
+        self.header = HomeScreenBuilder.loadingHeader(
+            now: clock(), plan: TonightPlan(profile: profile()), calendar: calendar, locale: locale, modeOverride: modeOverride
+        )
     }
 
     /// Shows the cached snapshot at once, starts watching Health for
@@ -87,13 +95,15 @@ public final class HomeViewModel {
         await refresh()
     }
 
-    /// Re-reads the clock (greeting, "Updated … ago") — on returning to
-    /// the foreground.
+    /// Re-reads the clock (mode, greeting, "Updated … ago") — on appear,
+    /// on returning to the foreground, and at each mode boundary.
     public func updateClock() {
         if let snapshot {
             apply(snapshot)
         } else {
-            header = HomeScreenBuilder.header(now: clock(), newestSample: nil, calendar: calendar, locale: locale)
+            header = HomeScreenBuilder.loadingHeader(
+                now: clock(), plan: TonightPlan(profile: profile()), calendar: calendar, locale: locale, modeOverride: modeOverride
+            )
         }
     }
 
@@ -112,15 +122,17 @@ public final class HomeViewModel {
         #endif
     }
 
-    /// Stops watching Health (tests and teardown).
+    /// Stops watching Health and the mode clock (tests and teardown).
     public func stopObserving() {
         observation?.cancel()
         observation = nil
+        modeFlip?.cancel()
+        modeFlip = nil
     }
 
     private func apply(_ snapshot: HomeSnapshot) {
         self.snapshot = snapshot
-        let screen = HomeScreenBuilder.build(snapshot, now: clock(), calendar: calendar, locale: locale)
+        let screen = HomeScreenBuilder.build(snapshot, now: clock(), calendar: calendar, locale: locale, modeOverride: modeOverride)
         // The first scored Home each day claims the intro, whether or not
         // Reduce Motion lets it play.
         if case .scored = screen.recovery, introGate.claim(now: clock(), calendar: calendar) {
@@ -128,6 +140,22 @@ public final class HomeViewModel {
         }
         self.screen = screen
         header = screen.header
+        scheduleModeFlip(at: screen.nextModeChange)
+    }
+
+    /// One task, replaced on every rebuild, that wakes at the next mode
+    /// boundary and rebuilds while the app is open.
+    private func scheduleModeFlip(at date: Date) {
+        guard modeOverride == nil, scheduledModeChange != date else { return }
+        modeFlip?.cancel()
+        scheduledModeChange = date
+        let delay = max(date.timeIntervalSince(clock()), 0)
+        modeFlip = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay + 0.5))
+            guard !Task.isCancelled, let self else { return }
+            self.scheduledModeChange = nil
+            self.updateClock()
+        }
     }
 
     private func startObserving() {

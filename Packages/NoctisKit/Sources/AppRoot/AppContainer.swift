@@ -69,11 +69,17 @@ public struct AppContainer {
         #endif
 
         let model = self.model
+        #if DEBUG
+        let modeOverride = debug.homeMode
+        #else
+        let modeOverride: HomeMode? = nil
+        #endif
         self.homeViewModel = HomeViewModel(
             repository: HomeRepository(provider: provider),
             profile: { model.profile },
             // "Connect Apple Health" reuses onboarding's authorization flow.
-            connectHealth: { await model.requestHealthAuthorization() }
+            connectHealth: { await model.requestHealthAuthorization() },
+            modeOverride: modeOverride
         )
         #if DEBUG
         if debug.logHomeSnapshot {
@@ -97,6 +103,8 @@ struct DebugLaunchOptions {
     let unauthorized: Bool
     /// `-mockLatency <seconds>`: slow mock sleep queries (Home's skeleton).
     let mockLatency: Duration
+    /// `-homeMode day|evening`: pin Home's mode instead of the clock's.
+    let homeMode: HomeMode?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -116,6 +124,7 @@ struct DebugLaunchOptions {
         logHomeSnapshot = arguments.contains("-noctisLogHomeSnapshot")
         unauthorized = arguments.contains("-mockUnauthorized")
         mockLatency = .seconds(value(after: "-mockLatency").flatMap(Double.init) ?? 0)
+        homeMode = value(after: "-homeMode").flatMap(HomeMode.init(rawValue:))
     }
 }
 #endif

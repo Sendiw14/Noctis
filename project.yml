@@ -2,7 +2,7 @@ name: Noctis
 options:
   createIntermediateGroups: true
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "26.0"
   developmentLanguage: en
 
 configs:
@@ -31,7 +31,7 @@ targets:
   Noctis:
     type: application
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "26.0"
     sources:
       - path: App
     dependencies:
@@ -66,7 +66,7 @@ targets:
   NoctisUITests:
     type: bundle.ui-testing
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "26.0"
     sources:
       - path: UITests
     dependencies:

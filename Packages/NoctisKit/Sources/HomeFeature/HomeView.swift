@@ -20,8 +20,8 @@ public struct HomeTabView: View {
             HomeView(viewModel: viewModel, zoomNamespace: zoom)
                 .navigationDestination(for: HomeRoute.self) { route in
                     switch route {
-                    case .recoveryDetail:
-                        RecoveryDetailView(viewModel: viewModel)
+                    case .recoveryDetail(let focus):
+                        RecoveryDetailView(viewModel: viewModel, focus: focus)
                             .navigationTransition(.zoom(sourceID: HomeView.recoveryZoomID, in: zoom))
                     case .profile:
                         // R19: Profile isn't built yet (ROADMAP.md).
@@ -32,8 +32,15 @@ public struct HomeTabView: View {
     }
 }
 
-/// "How am I today?" — one top-aligned scroll: header, then Recovery,
-/// Last night, Insight, Tonight and This week. Reads only
+/// Where Home's sections send the person.
+struct HomeActions {
+    var openProfile: () -> Void = {}
+    /// Recovery detail, optionally scrolled to one factor.
+    var openRecoveryDetail: (RecoveryFactorKind?) -> Void = { _ in }
+    var openSleep: () -> Void = {}
+}
+
+/// "How am I today?" — one top-aligned scroll on the paper. Reads only
 /// `HomeViewModel.header` and `.screen` (APP_RULES.md R20).
 struct HomeView: View {
     static let recoveryZoomID = "recovery"
@@ -46,26 +53,21 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                HomeHeaderView(header: viewModel.header) {
-                    model.homePath.append(.profile)
-                }
-                // R6: content starts 24pt below the title.
-                Color.clear.frame(height: NoctisSpacing.xl)
-                if let screen = viewModel.screen {
-                    cards(screen)
-                } else {
-                    HomeSkeletonView()
-                }
-            }
-            .padding(.horizontal, NoctisSpacing.lg)
-            .padding(.top, NoctisSpacing.xs)
-            .padding(.bottom, NoctisSpacing.xl)
+            HomeContent(
+                viewModel: viewModel,
+                zoomNamespace: zoomNamespace,
+                actions: HomeActions(
+                    openProfile: { model.homePath.append(.profile) },
+                    openRecoveryDetail: { model.homePath.append(.recoveryDetail(focus: $0)) },
+                    openSleep: { model.open(.sleep) }
+                )
+            )
         }
         // R14: cards keep their shadows at the scroll view's edges.
         .scrollClipDisabled()
         // Nothing may show behind the status bar.
         .noctisStatusBarGuard()
+        // Paper plus the 3% grain, in both modes.
         .background { PaperBackground(adaptive: true).ignoresSafeArea() }
         .refreshable { await viewModel.refresh() }
         .task { await viewModel.onAppear() }
@@ -75,39 +77,137 @@ struct HomeView: View {
         .navigationTitle("Home")
         .toolbar(.hidden, for: .navigationBar)
     }
+}
 
-    private func cards(_ screen: HomeScreen) -> some View {
-        VStack(spacing: NoctisSpacing.md) {
-            RecoveryCardView(
-                content: screen.recovery,
-                viewModel: viewModel,
-                zoomNamespace: zoomNamespace,
-                openDetail: { model.homePath.append(.recoveryDetail) }
-            )
-            if let lastNight = screen.lastNight {
-                LastNightCardView(content: lastNight) { model.open(.sleep) }
+/// Home's scrolling content. Day: Recovery hero, night panel, Insight,
+/// Tonight block, This week. Evening: Tonight hero, compact Recovery,
+/// night panel, Insight, This week. 28pt below the hero, 16pt between
+/// sections. R21: two columns at regular width (hero and night panel
+/// left, blocks right), otherwise one column at most 680pt wide.
+struct HomeContent: View {
+    /// R21: the single column never grows past this.
+    static let compactMaxWidth: CGFloat = 680
+    /// Two columns stop growing here, so cards don't stretch across a
+    /// very wide window.
+    static let regularMaxWidth: CGFloat = 1100
+    /// Space below the hero.
+    static let heroSpacing: CGFloat = 28
+
+    let viewModel: HomeViewModel
+    let zoomNamespace: Namespace.ID
+    let actions: HomeActions
+
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var isRegular: Bool { sizeClass == .regular }
+
+    var body: some View {
+        // R12: one TimelineView, and only in evening mode, where the
+        // countdown, the summary and the strip's "now" marker move.
+        if viewModel.header.mode == .evening {
+            TimelineView(.everyMinute) { context in
+                page(now: context.date)
             }
-            if let insight = screen.insight {
-                InsightCardView(content: insight)
+        } else {
+            page(now: nil)
+        }
+    }
+
+    private func page(now: Date?) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HomeHeaderView(header: viewModel.header, now: now, openProfile: actions.openProfile)
+            // R6: content starts 24pt below the title.
+            Color.clear.frame(height: NoctisSpacing.xl)
+            if let screen = viewModel.screen {
+                sections(screen, now: now)
+            } else {
+                HomeSkeletonView(columns: isRegular ? 2 : 1)
             }
-            TonightCardView(content: screen.tonight)
-            if let week = screen.week {
-                WeekCardView(content: week) { model.open(.sleep) }
+        }
+        .frame(maxWidth: isRegular ? Self.regularMaxWidth : Self.compactMaxWidth)
+        .padding(.horizontal, NoctisSpacing.lg)
+        .padding(.top, NoctisSpacing.xs)
+        .padding(.bottom, NoctisSpacing.xl)
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func sections(_ screen: HomeScreen, now: Date?) -> some View {
+        if isRegular {
+            HStack(alignment: .top, spacing: NoctisSpacing.md) {
+                VStack(spacing: 0) {
+                    hero(screen, now: now)
+                    Color.clear.frame(height: Self.heroSpacing)
+                    VStack(spacing: NoctisSpacing.md) { leadSections(screen) }
+                }
+                .frame(maxWidth: .infinity)
+                VStack(spacing: NoctisSpacing.md) { blocks(screen) }
+                    .frame(maxWidth: .infinity)
             }
+        } else {
+            VStack(spacing: 0) {
+                hero(screen, now: now)
+                Color.clear.frame(height: Self.heroSpacing)
+                VStack(spacing: NoctisSpacing.md) {
+                    leadSections(screen)
+                    blocks(screen)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func hero(_ screen: HomeScreen, now: Date?) -> some View {
+        switch screen.mode {
+        case .day:
+            DayHeroView(content: screen.recovery, viewModel: viewModel, zoomNamespace: zoomNamespace, openDetail: actions.openRecoveryDetail)
+        case .evening:
+            EveningHeroView(content: screen.evening, now: now ?? screen.evening.times.windowStart)
+        }
+    }
+
+    /// Evening's compact Recovery card, then the night panel.
+    @ViewBuilder
+    private func leadSections(_ screen: HomeScreen) -> some View {
+        if screen.mode == .evening {
+            CompactRecoveryCard(content: screen.recovery, viewModel: viewModel, zoomNamespace: zoomNamespace, openDetail: actions.openRecoveryDetail)
+        }
+        if let lastNight = screen.lastNight {
+            NightPanelView(content: lastNight, open: actions.openSleep)
+        }
+    }
+
+    @ViewBuilder
+    private func blocks(_ screen: HomeScreen) -> some View {
+        if let insight = screen.insight {
+            InsightBlockView(content: insight)
+        }
+        if screen.mode == .day {
+            TonightBlockView(content: screen.tonight)
+        }
+        if let week = screen.week {
+            WeekCardView(content: week, open: actions.openSleep)
         }
     }
 }
 
 // MARK: - Header
 
+/// Date caption, greeting, one-sentence summary and the avatar.
 struct HomeHeaderView: View {
     let header: HomeHeader
+    let now: Date?
     let openProfile: () -> Void
+
+    private var emphasis: Color {
+        header.mode == .evening ? NoctisAppColor.lavenderText : NoctisAppColor.orangeText
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: NoctisSpacing.sm) {
-            VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-                Text("\(Text(header.greetingLead))\(Text(header.greetingEmphasis).foregroundStyle(NoctisAppColor.orangeText))\(Text(header.greetingTrail))")
+            VStack(alignment: .leading, spacing: 6) {
+                NoctisCaption(header.dateCaption, color: NoctisAppColor.ink3)
+                Text("\(Text(header.greetingLead))\(Text(header.greetingEmphasis).foregroundStyle(emphasis))\(Text(header.greetingTrail))")
                     .noctisFont(34, .bold, relativeTo: .largeTitle)
                     .tracking(-0.6)
                     .foregroundStyle(NoctisAppColor.ink)
@@ -115,9 +215,10 @@ struct HomeHeaderView: View {
                     .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                Text(header.date)
-                    .noctisFont(15, relativeTo: .subheadline)
+                Text(header.summary.text(at: now ?? .now))
+                    .noctisFont(17, relativeTo: .body)
                     .foregroundStyle(NoctisAppColor.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let updated = header.updated {
                     Text(updated)
                         .noctisFont(13, relativeTo: .footnote)
@@ -145,582 +246,58 @@ struct HomeHeaderView: View {
     }
 }
 
-// MARK: - Recovery
+/// 13pt uppercase caption with 0.08em tracking ("LAST NIGHT").
+struct NoctisCaption: View {
+    let text: String
+    let color: Color
 
-struct RecoveryCardView: View {
-    let content: RecoveryCardContent
-    let viewModel: HomeViewModel
-    let zoomNamespace: Namespace.ID
-    let openDetail: () -> Void
-
-    var body: some View {
-        switch content {
-        case .scored(let scored):
-            Button(action: openDetail) {
-                NoctisAppCard {
-                    ScoredRecoveryView(content: scored, viewModel: viewModel, zoomNamespace: zoomNamespace)
-                }
-            }
-            .buttonStyle(NoctisCardButtonStyle())
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(scored.accessibilityLabel)
-            .accessibilityHint("Opens recovery details.")
-            .accessibilityAddTraits(.isButton)
-        case .learning(let nights, let required, let text):
-            NoctisAppCard {
-                VStack(spacing: NoctisSpacing.md) {
-                    DormantRingView(progress: Double(nights) / Double(required))
-                    Text(text)
-                        .noctisFont(15, .medium, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink2)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(text.replacingOccurrences(of: " · ", with: ", "))
-        case .connect(let title, let message, let showsButton):
-            ConnectCardView(title: title, message: message, showsButton: showsButton, viewModel: viewModel)
-        case .noSleepData(let title, let message):
-            DormantNoticeView(title: title, detail: message, titleSize: 22, opensHealth: true)
-        case .noSleep(let title, let detail):
-            DormantNoticeView(title: title, detail: detail)
-        case .stale(let title, let detail):
-            DormantNoticeView(title: title, detail: detail)
-        case .failed(let message):
-            NoctisAppCard {
-                VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-                    HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
-                        Image(systemName: "exclamationmark.circle")
-                            .noctisIcon(17)
-                            .foregroundStyle(NoctisAppColor.orangeText)
-                            .accessibilityHidden(true)
-                        Text(message)
-                            .noctisFont(17, .semibold, relativeTo: .body)
-                            .foregroundStyle(NoctisAppColor.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    NoctisCTA("Try again", icon: "arrow.clockwise", adaptive: true) {
-                        Task { await viewModel.refresh() }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/// The scored ring with its score, chip, sentence, confidence and factor
-/// row. The first time each day it draws itself in (0.9s, `.drawIn`),
-/// the score counts up, and a medium haptic lands with it.
-struct ScoredRecoveryView: View {
-    let content: ScoredRecoveryContent
-    let viewModel: HomeViewModel
-    let zoomNamespace: Namespace.ID
-
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @State private var reveal: Double
-    @State private var shownScore: Int
-
-    static let ringDiameter: CGFloat = 200
-    static let ringLineWidth: CGFloat = 18
-    /// The space inside the ring the score and its label must fit.
-    static let centerSize = CGSize(width: 140, height: 104)
-    /// `NoctisMotion.drawIn`'s curve, run over 0.9s.
-    static let introAnimation = NoctisMotion.drawIn.speed(1.2 / 0.9)
-
-    init(content: ScoredRecoveryContent, viewModel: HomeViewModel, zoomNamespace: Namespace.ID) {
-        self.content = content
-        self.viewModel = viewModel
-        self.zoomNamespace = zoomNamespace
-        let intro = viewModel.introPending
-        _reveal = State(initialValue: intro ? 0 : 1)
-        _shownScore = State(initialValue: intro ? 0 : content.score)
+    init(_ text: String, color: Color) {
+        self.text = text
+        self.color = color
     }
 
     var body: some View {
-        VStack(spacing: NoctisSpacing.md) {
-            ZStack {
-                NoctisRecoveryRing(segments: segments, reveal: reveal, diameter: Self.ringDiameter, lineWidth: Self.ringLineWidth)
-                VStack(spacing: 0) {
-                    Text("\(shownScore)")
-                        .noctisNumeral(64, .heavy)
-                        .monospacedDigit()
-                        .contentTransition(.numericText(value: Double(shownScore)))
-                        .foregroundStyle(NoctisAppColor.ink)
-                    Text("Recovery")
-                        .noctisFont(15, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink2)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                }
-                // R4: the ring is a fixed hero graphic, so its center text
-                // shrinks to fit inside it at large sizes.
-                .frame(width: Self.centerSize.width, height: Self.centerSize.height)
-            }
-            .matchedTransitionSource(id: HomeView.recoveryZoomID, in: zoomNamespace)
-
-            if let chip = content.chip {
-                DeltaChipView(chip: chip)
-            }
-            VStack(spacing: NoctisSpacing.xxs) {
-                Text(content.sentence)
-                    .noctisFont(17, .semibold, relativeTo: .body)
-                    .foregroundStyle(NoctisAppColor.ink)
-                Text(content.confidence)
-                    .noctisFont(13, relativeTo: .footnote)
-                    .foregroundStyle(NoctisAppColor.ink3)
-            }
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: true)
-
-            FactorRowView(factors: content.factors)
-        }
-        .frame(maxWidth: .infinity)
-        .task { playIntroIfPending() }
-        .onChange(of: content.score) { _, score in
-            withAnimation(NoctisMotion.settle) { shownScore = score }
-        }
-    }
-
-    private var segments: [NoctisRingSegment] {
-        content.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) }
-    }
-
-    private func playIntroIfPending() {
-        guard viewModel.consumeIntro() else { return }
-        withAnimation(Self.introAnimation) {
-            reveal = 1
-            shownScore = content.score
-        } completion: {
-            NoctisHaptics.medium()
-        }
-    }
-}
-
-struct DeltaChipView: View {
-    let chip: DeltaChip
-
-    var body: some View {
-        Text(chip.text)
+        Text(text)
             .noctisFont(13, .semibold, relativeTo: .footnote)
-            .foregroundStyle(NoctisAppColor.ink)
-            .padding(.horizontal, NoctisSpacing.sm)
-            .padding(.vertical, 6)
-            .background(fill, in: Capsule(style: .continuous))
-    }
-
-    private var fill: Color {
-        switch chip.tone {
-        case .above: NoctisAppColor.sage.opacity(0.3)
-        case .inLine: NoctisAppColor.track
-        case .below: NoctisAppColor.orange.opacity(0.28)
-        }
-    }
-}
-
-/// Dot, name and score per factor: four columns, stacked at
-/// accessibility sizes (R4).
-struct FactorRowView: View {
-    let factors: [FactorCell]
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    var body: some View {
-        if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                ForEach(factors, id: \.kind) { factor in
-                    HStack(spacing: NoctisSpacing.xs) {
-                        dot(factor.kind)
-                        Text(factor.name)
-                            .noctisFont(15, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink2)
-                        Spacer(minLength: NoctisSpacing.xs)
-                        Text("\(factor.score)")
-                            .noctisFont(17, .semibold, relativeTo: .body)
-                            .foregroundStyle(NoctisAppColor.ink)
-                    }
-                }
-            }
-        } else {
-            HStack(alignment: .top, spacing: NoctisSpacing.xxs) {
-                ForEach(factors, id: \.kind) { factor in
-                    VStack(spacing: NoctisSpacing.xxs) {
-                        dot(factor.kind)
-                        Text(factor.name)
-                            .noctisFont(13, relativeTo: .footnote)
-                            .foregroundStyle(NoctisAppColor.ink2)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                        Text("\(factor.score)")
-                            .noctisFont(17, .semibold, relativeTo: .body)
-                            .foregroundStyle(NoctisAppColor.ink)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-        }
-    }
-
-    private func dot(_ kind: RecoveryFactorKind) -> some View {
-        Circle().fill(kind.tint).frame(width: 8, height: 8)
-    }
-}
-
-/// The ring before there's a score: 160pt, track only (a thin cocoa arc
-/// while learning), with a moon so it reads as waiting, not broken.
-struct DormantRingView: View {
-    var progress: Double?
-
-    var body: some View {
-        ZStack {
-            NoctisRecoveryRing(segments: [], progress: progress, diameter: 160)
-            Image(systemName: "moon.zzz")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(NoctisAppColor.ink3)
-        }
-        .accessibilityHidden(true)
-    }
-}
-
-/// The recovery card when there's nothing to score: the dormant ring and
-/// what's going on — optionally with "Open Health".
-struct DormantNoticeView: View {
-    let title: String
-    let detail: String?
-    var titleSize: CGFloat = 17
-    var opensHealth = false
-    @Environment(\.openURL) private var openURL
-
-    var body: some View {
-        NoctisAppCard {
-            VStack(spacing: NoctisSpacing.md) {
-                DormantRingView()
-                VStack(spacing: NoctisSpacing.xxs) {
-                    Text(title)
-                        .noctisFont(titleSize, .semibold, relativeTo: titleSize > 17 ? .title3 : .body)
-                        .foregroundStyle(NoctisAppColor.ink)
-                    if let detail {
-                        Text(detail)
-                            .noctisFont(15, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink2)
-                    }
-                }
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityElement(children: .combine)
-                if opensHealth, let health = URL(string: "x-apple-health://") {
-                    NoctisTextButton("Open Health", adaptive: true) { openURL(health) }
-                        .accessibilityHint("Opens the Health app.")
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
-struct ConnectCardView: View {
-    let title: String
-    let message: String
-    let showsButton: Bool
-    let viewModel: HomeViewModel
-    @State private var connecting = false
-
-    var body: some View {
-        NoctisAppCard {
-            VStack(spacing: NoctisSpacing.md) {
-                DormantRingView()
-                VStack(spacing: NoctisSpacing.xxs) {
-                    Text(title)
-                        .noctisFont(22, .semibold, relativeTo: .title3)
-                        .foregroundStyle(NoctisAppColor.ink)
-                    Text(message)
-                        .noctisFont(15, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink2)
-                }
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                if showsButton {
-                    NoctisCTA("Connect Apple Health", isLoading: connecting, adaptive: true) {
-                        connecting = true
-                        Task {
-                            await viewModel.connectAppleHealth()
-                            connecting = false
-                        }
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
-// MARK: - Last night
-
-struct LastNightCardView: View {
-    let content: LastNightCardContent
-    let open: () -> Void
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    var body: some View {
-        Button(action: open) {
-            NoctisAppCard {
-                VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
-                    Text("Last night")
-                        .noctisFont(15, .medium, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink2)
-                    VStack(alignment: .leading, spacing: 2) {
-                        durationLine
-                        Text(content.timeRange)
-                            .noctisFont(15, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink2)
-                    }
-                    StageStripView(strip: content.strip)
-                }
-            }
-        }
-        .buttonStyle(NoctisCardButtonStyle())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(content.accessibilityLabel)
-        .accessibilityHint("Opens the Sleep tab.")
-        .accessibilityAddTraits(.isButton)
-    }
-
-    @ViewBuilder
-    private var durationLine: some View {
-        let duration = Text(content.duration)
-            .noctisFont(40, .heavy, relativeTo: .largeTitle, maxScale: NoctisTypeScale.maxNumeralScale)
-            .foregroundStyle(NoctisAppColor.ink)
-        let slept = Text("slept")
-            .noctisFont(15, relativeTo: .subheadline)
-            .foregroundStyle(NoctisAppColor.ink2)
-        if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: 0) { duration; slept }
-        } else {
-            HStack(alignment: .firstTextBaseline, spacing: 6) { duration; slept }
-        }
-    }
-}
-
-/// The night as a 14pt capsule: stages in place, hairline gaps between
-/// them, the track showing through wherever the data has a gap.
-struct StageStripView: View {
-    let strip: StageStripContent
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    var body: some View {
-        switch strip {
-        case .stages(let segments, let legend):
-            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                Canvas { context, size in
-                    draw(segments, in: context, size: size)
-                }
-                .frame(height: 14)
-                .accessibilityHidden(true)
-                legendView(legend)
-            }
-        case .noStages(let caption):
-            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                Capsule(style: .continuous)
-                    .fill(NoctisAppColor.sage)
-                    .frame(height: 14)
-                Text(caption)
-                    .noctisFont(13, relativeTo: .footnote)
-                    .foregroundStyle(NoctisAppColor.ink3)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
-    private func draw(_ segments: [StripSegment], in context: GraphicsContext, size: CGSize) {
-        let capsule = Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.height / 2)
-        var context = context
-        context.clip(to: capsule)
-        context.fill(capsule, with: .color(NoctisAppColor.track))
-        for segment in segments {
-            let rect = CGRect(x: segment.start * size.width, y: 0, width: (segment.end - segment.start) * size.width, height: size.height)
-            context.fill(Path(rect), with: .color(segment.stage.tint))
-        }
-        // Hairline gaps where one stage hands over to the next.
-        for (previous, next) in zip(segments, segments.dropFirst()) where abs(next.start - previous.end) < 1e-6 {
-            let x = next.start * size.width
-            context.fill(Path(CGRect(x: x - 0.5, y: 0, width: 1, height: size.height)), with: .color(NoctisAppColor.surface))
-        }
-    }
-
-    @ViewBuilder
-    private func legendView(_ legend: [StripStage]) -> some View {
-        let items = ForEach(legend, id: \.self) { stage in
-            // 6pt between dot and word at every size.
-            HStack(spacing: 6) {
-                Circle().fill(stage.tint).frame(width: 8, height: 8)
-                Text(stage.name)
-                    .noctisFont(13, relativeTo: .footnote)
-                    .foregroundStyle(NoctisAppColor.ink3)
-            }
-        }
-        if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: NoctisSpacing.xxs) { items }
-        } else {
-            HStack(spacing: NoctisSpacing.sm) { items }
-        }
-    }
-}
-
-// MARK: - Insight and Tonight
-
-struct InsightCardView: View {
-    let content: InsightCardContent
-
-    var body: some View {
-        NoctisAppCard {
-            HStack(alignment: .top, spacing: 14) {
-                NoctisIconTile(systemImage: "lightbulb.fill", fill: NoctisAppColor.butter, foreground: NoctisAppColor.onFill, size: 40)
-                VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-                    Text(content.title)
-                        .noctisFont(17, .semibold, relativeTo: .body)
-                        .foregroundStyle(NoctisAppColor.ink)
-                    Text(content.message)
-                        .noctisFont(15, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink2)
-                }
-                .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
-struct TonightCardView: View {
-    let content: TonightCardContent
-
-    var body: some View {
-        NoctisAppCard {
-            HStack(alignment: .top, spacing: 14) {
-                NoctisIconTile(systemImage: "moon.fill", fill: NoctisAppColor.lavender, foreground: NoctisAppColor.onFill, size: 40)
-                VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-                    Text("Tonight")
-                        .noctisFont(15, .medium, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink2)
-                    Text(content.bedtime)
-                        .noctisFont(22, .semibold, relativeTo: .title3)
-                        .foregroundStyle(NoctisAppColor.ink)
-                    Text(content.detail)
-                        .noctisFont(15, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink2)
-                }
-                .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
-// MARK: - This week
-
-struct WeekCardView: View {
-    let content: WeekCardContent
-    let open: () -> Void
-
-    static let chartHeight: CGFloat = 110
-    static let barWidth: CGFloat = 16
-
-    var body: some View {
-        Button(action: open) {
-            NoctisAppCard {
-                VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("This week")
-                            .noctisFont(15, .medium, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink2)
-                        Spacer(minLength: NoctisSpacing.xs)
-                        HStack(spacing: 6) {
-                            DashedLine()
-                                .stroke(NoctisAppColor.ink3, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
-                                .frame(width: 16, height: 1.5)
-                            Text(content.needLabel)
-                                .noctisFont(13, relativeTo: .footnote)
-                                .foregroundStyle(NoctisAppColor.ink3)
-                        }
-                    }
-                    chart
-                    if let average = content.average {
-                        Text(average)
-                            .noctisFont(15, .semibold, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink)
-                    }
-                }
-            }
-        }
-        .buttonStyle(NoctisCardButtonStyle())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(content.accessibilityLabel)
-        .accessibilityHint("Opens the Sleep tab.")
-        .accessibilityAddTraits(.isButton)
-    }
-
-    private var chart: some View {
-        VStack(spacing: NoctisSpacing.xs) {
-            ZStack(alignment: .bottom) {
-                HStack(alignment: .bottom, spacing: 0) {
-                    ForEach(Array(content.bars.enumerated()), id: \.offset) { _, bar in
-                        barView(bar).frame(maxWidth: .infinity)
-                    }
-                }
-                DashedLine()
-                    .stroke(NoctisAppColor.ink3, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
-                    .frame(height: 1.5)
-                    .padding(.bottom, Self.chartHeight * content.needFraction)
-            }
-            .frame(height: Self.chartHeight)
-            HStack(spacing: 0) {
-                ForEach(Array(content.bars.enumerated()), id: \.offset) { _, bar in
-                    Text(bar.label)
-                        .noctisFont(13, bar.isLastNight ? .semibold : .medium, relativeTo: .footnote)
-                        .foregroundStyle(bar.isLastNight ? NoctisAppColor.ink : NoctisAppColor.ink3)
-                        .frame(maxWidth: .infinity)
-                }
-            }
-        }
-    }
-
-    /// A track the full chart height; nights with data fill from the
-    /// bottom (never a zero-height bar), nights without stay empty.
-    private func barView(_ bar: WeekBar) -> some View {
-        ZStack(alignment: .bottom) {
-            Capsule(style: .continuous)
-                .fill(NoctisAppColor.track)
-            if let fraction = bar.fraction {
-                Capsule(style: .continuous)
-                    .fill(bar.isLastNight ? NoctisAppColor.cocoa : NoctisAppColor.sage)
-                    .frame(height: max(Self.chartHeight * fraction, Self.barWidth))
-            }
-        }
-        .frame(width: Self.barWidth, height: Self.chartHeight)
-    }
-}
-
-nonisolated struct DashedLine: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
-        return path
+            .tracking(13 * 0.08)
+            .foregroundStyle(color)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
 // MARK: - Loading
 
-/// Skeleton blocks in the track color while the first snapshot loads; a
-/// slow pulse, none under Reduce Motion.
+/// Skeleton blocks in the track color while the first snapshot loads: a
+/// ring where the hero goes, then sections; a slow pulse, none under
+/// Reduce Motion.
 struct HomeSkeletonView: View {
+    var columns = 1
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dimmed = false
 
     var body: some View {
-        VStack(spacing: NoctisSpacing.md) {
-            block(height: 380)
-            block(height: 170)
-            block(height: 120)
+        Group {
+            if columns > 1 {
+                HStack(alignment: .top, spacing: NoctisSpacing.md) {
+                    VStack(spacing: HomeContent.heroSpacing) {
+                        heroBlock
+                        block(height: 240)
+                    }
+                    VStack(spacing: NoctisSpacing.md) {
+                        block(height: 110)
+                        block(height: 120)
+                        block(height: 200)
+                    }
+                }
+            } else {
+                VStack(spacing: HomeContent.heroSpacing) {
+                    heroBlock
+                    VStack(spacing: NoctisSpacing.md) {
+                        block(height: 240)
+                        block(height: 110)
+                    }
+                }
+            }
         }
         .opacity(dimmed ? 0.55 : 1)
         .onAppear {
@@ -729,6 +306,17 @@ struct HomeSkeletonView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Loading your sleep data")
+    }
+
+    private var heroBlock: some View {
+        VStack(spacing: NoctisSpacing.md) {
+            NoctisRingLayout(maxDiameter: 220) {
+                Circle().strokeBorder(NoctisAppColor.track, lineWidth: 22)
+            }
+            Capsule().fill(NoctisAppColor.track).frame(width: 160, height: 14)
+            Capsule().fill(NoctisAppColor.track).frame(height: 64)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func block(height: CGFloat) -> some View {
@@ -752,15 +340,15 @@ extension RecoveryFactorKind {
     }
 }
 
-extension StripStage {
-    /// Deep cocoa, core orange, REM sage, awake butter — the Sample ring's.
+extension NightLane {
+    /// On the night panel: Awake butter, REM sage, Core orange, Deep
+    /// lavender (cocoa would vanish on the cocoa panel).
     var tint: Color {
         switch self {
-        case .deep: NoctisAppColor.stageDeep
-        case .core: NoctisAppColor.stageCore
-        case .rem: NoctisAppColor.stageREM
-        case .awake: NoctisAppColor.stageAwake
-        case .asleep: NoctisAppColor.sage
+        case .awake: NoctisAppColor.butter
+        case .rem: NoctisAppColor.sage
+        case .core: NoctisAppColor.orange
+        case .deep: NoctisAppColor.lavender
         }
     }
 }

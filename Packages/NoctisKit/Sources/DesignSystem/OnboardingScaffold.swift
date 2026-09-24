@@ -301,18 +301,10 @@ public struct OnboardingScaffold<Hero: View, Bottom: View>: View {
     }
 }
 
-/// R2/R8: iOS 26 glass on the back button only, falling back to a plain
-/// white circle with a hairline stroke below it.
+/// R2/R8: Liquid Glass on the back button only.
 private extension View {
-    @ViewBuilder
     func noctisPaperGlass() -> some View {
-        if #available(iOS 26, *) {
-            self.glassEffect(.regular.tint(NoctisPaper.surface.opacity(0.6)).interactive(), in: .circle)
-        } else {
-            self
-                .background(Circle().fill(NoctisPaper.surface))
-                .overlay(Circle().stroke(NoctisPaper.hairline, lineWidth: 1))
-        }
+        glassEffect(.regular.tint(NoctisPaper.surface.opacity(0.6)).interactive(), in: .circle)
     }
 }
 

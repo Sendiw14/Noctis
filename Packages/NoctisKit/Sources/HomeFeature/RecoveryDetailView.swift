@@ -1,25 +1,37 @@
 import DesignSystem
 import NoctisCore
+import RecoveryKit
 import SwiftUI
 
 /// Recovery in detail, zooming out of Home's ring: the ring at 240pt,
 /// one row per factor (today, baseline, score, one plain sentence), and
 /// how the score is calculated. Reads `HomeViewModel.screen?.detail` only.
+/// Opened from a factor capsule, it scrolls to that factor's row.
 struct RecoveryDetailView: View {
     let viewModel: HomeViewModel
+    var focus: RecoveryFactorKind?
 
     var body: some View {
-        ScrollView {
-            if let detail = viewModel.screen?.detail {
-                content(detail)
-                    .padding(.horizontal, NoctisSpacing.lg)
-                    .padding(.top, NoctisSpacing.xs)
-                    .padding(.bottom, NoctisSpacing.xl)
-            } else {
-                Text("Recovery isn't available right now.")
-                    .noctisFont(17, relativeTo: .body)
-                    .foregroundStyle(NoctisAppColor.ink2)
-                    .padding(NoctisSpacing.xl)
+        ScrollViewReader { proxy in
+            ScrollView {
+                if let detail = viewModel.screen?.detail {
+                    content(detail)
+                        // R21: one centered column, never wider than 680pt.
+                        .frame(maxWidth: HomeContent.compactMaxWidth)
+                        .padding(.horizontal, NoctisSpacing.lg)
+                        .padding(.top, NoctisSpacing.xs)
+                        .padding(.bottom, NoctisSpacing.xl)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Text("Recovery isn't available right now.")
+                        .noctisFont(17, relativeTo: .body)
+                        .foregroundStyle(NoctisAppColor.ink2)
+                        .padding(NoctisSpacing.xl)
+                }
+            }
+            .task {
+                guard let focus else { return }
+                proxy.scrollTo(focus, anchor: .top)
             }
         }
         .scrollClipDisabled()
@@ -33,6 +45,7 @@ struct RecoveryDetailView: View {
             summary(detail.recovery)
             ForEach(detail.rows, id: \.kind) { row in
                 FactorDetailRowView(row: row)
+                    .id(row.kind)
             }
             CalculationCardView(paragraphs: detail.calculation, modelVersion: detail.modelVersion)
         }
@@ -40,7 +53,7 @@ struct RecoveryDetailView: View {
 
     private func summary(_ recovery: ScoredRecoveryContent) -> some View {
         VStack(spacing: NoctisSpacing.md) {
-            ZStack {
+            NoctisRingLayout(maxDiameter: 240, centerWidth: 0.67, centerHeight: 0.52) {
                 NoctisRecoveryRing(
                     segments: recovery.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) },
                     diameter: 240,
@@ -56,8 +69,7 @@ struct RecoveryDetailView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                 }
-                // The ring is fixed; its center text shrinks to fit (R4).
-                .frame(width: 160, height: 124)
+                // The center box scales with the ring; text shrinks to fit (R4).
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(recovery.accessibilityLabel)
@@ -71,6 +83,12 @@ struct RecoveryDetailView: View {
                 Text(recovery.confidence)
                     .noctisFont(13, relativeTo: .footnote)
                     .foregroundStyle(NoctisAppColor.ink3)
+                if let note = recovery.heartCapNote {
+                    Text(note)
+                        .noctisFont(15, .semibold, relativeTo: .subheadline)
+                        .foregroundStyle(NoctisAppColor.orangeText)
+                        .padding(.top, NoctisSpacing.xs)
+                }
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)

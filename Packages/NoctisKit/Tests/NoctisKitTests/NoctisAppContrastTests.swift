@@ -46,6 +46,78 @@ struct NoctisAppContrastTests {
         #expect(ratio(palette.cocoa, palette.track) >= 3, "\(mode): cocoa on track")
     }
 
+    // MARK: - Home v2
+
+    @Test(arguments: modes)
+    func blockInkReadsOnLavenderAndButter(_ mode: String, _ palette: NoctisAppPalette) {
+        let onLavender = ratio(palette.blockInk, palette.blockLavender)
+        let onButter = ratio(palette.blockInk, palette.blockButter)
+        #expect(onLavender >= 4.5, "\(mode): block ink on lavender \(onLavender)")
+        #expect(onButter >= 4.5, "\(mode): block ink on butter \(onButter)")
+    }
+
+    @Test func cocoaIsTooLightForTextOnTheLavenderBlock() {
+        // Why block ink is #2B1D14 rather than cocoa #4A2F22.
+        #expect(ratio(NoctisAppPalette.light.cocoa, NoctisAppPalette.light.blockLavender) < 4.5)
+        #expect(ratio("4A2F22", NoctisAppPalette.dark.blockLavender) < 4.5)
+    }
+
+    @Test(arguments: modes)
+    func ivoryReadsOnTheNightPanel(_ mode: String, _ palette: NoctisAppPalette) {
+        #expect(ratio(palette.nightInk, palette.nightPanel) >= 4.5, "\(mode): night ink")
+        // Captions use the ink at 70%.
+        let caption = blend(palette.nightInk, over: palette.nightPanel, alpha: 0.7)
+        #expect(ratio(caption, palette.nightPanel) >= 4.5, "\(mode): night ink at 70%")
+    }
+
+    @Test(arguments: modes)
+    func lavenderTextClearsDisplayContrast(_ mode: String, _ palette: NoctisAppPalette) {
+        #expect(ratio(palette.lavenderText, palette.bg) >= 3, "\(mode): lavender text on bg")
+    }
+
+    @Test(arguments: modes)
+    func theNightPanelIsTheDarkestSurface(_ mode: String, _ palette: NoctisAppPalette) {
+        let panel = luminance(palette.nightPanel)
+        for other in [palette.bg, palette.surface, palette.track, palette.blockLavender, palette.blockButter] {
+            #expect(panel < luminance(other), "\(mode): night panel vs \(other)")
+        }
+    }
+
+    /// Dark mode: no two neighboring surfaces within 1.2:1 of each other,
+    /// as a plain relative-luminance ratio (L1 / L2).
+    @Test func darkNeighboringSurfacesStayApart() {
+        let dark = NoctisAppPalette.dark
+        let neighbors: [(String, String, String)] = [
+            ("paper / card", dark.bg, dark.surface),
+            ("paper / night panel", dark.bg, dark.nightPanel),
+            ("paper / panel edge", dark.bg, dark.nightBorder),
+            ("panel edge / night panel", dark.nightBorder, dark.nightPanel),
+            ("paper / card edge", dark.bg, dark.hairline),
+            ("card / card edge", dark.surface, dark.hairline),
+            ("paper / ring track", dark.bg, dark.ringTrack),
+            ("card / bar track", dark.surface, dark.track),
+            ("paper / lavender block", dark.bg, dark.blockLavender),
+            ("paper / butter block", dark.bg, dark.blockButter),
+        ]
+        for (name, a, b) in neighbors {
+            let la = luminance(a), lb = luminance(b)
+            let value = max(la, lb) / min(la, lb)
+            #expect(value >= 1.2, "\(name): \(value)")
+        }
+    }
+
+    private func luminance(_ hex: String) -> Double {
+        let (r, g, b) = noctisHexComponents(hex)
+        func linear(_ c: Double) -> Double { c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }
+        return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b)
+    }
+
+    private func blend(_ foreground: String, over background: String, alpha: Double) -> String {
+        let f = noctisHexComponents(foreground), b = noctisHexComponents(background)
+        func mix(_ x: Double, _ y: Double) -> Int { Int(((alpha * x + (1 - alpha) * y) * 255).rounded()) }
+        return String(format: "%02X%02X%02X", mix(f.0, b.0), mix(f.1, b.1), mix(f.2, b.2))
+    }
+
     @Test func lightPaletteIsExactlyTheNoctisPaperTokens() {
         let light = NoctisAppPalette.light
         let pairs: [(String, Color)] = [

@@ -81,6 +81,8 @@ struct HomeScreenBuilderTests {
         #expect(abs(scored.segments.map(\.weight).reduce(0, +) - 1) < 1e-9)
         #expect(scored.factors.map(\.name) == ["Sleep", "HRV", "Resting HR", "Consistency"])
         #expect(scored.confidence == "High confidence · sleep, HRV, heart rate, consistency")
+        #expect(scored.confidenceCaption == nil)
+        #expect(scored.comparisonPhrase == "vs your usual")
         #expect(screen.lastNight != nil)
         #expect(screen.insight?.title == "Shorter night than usual")
         #expect(screen.week?.bars.count == 7)
@@ -93,6 +95,7 @@ struct HomeScreenBuilderTests {
         guard case .scored(let scored) = screen.recovery else { Issue.record("expected a score"); return }
         #expect(scored.segments.map(\.kind) == [.sleepDuration, .sleepConsistency])
         #expect(scored.confidence == "Low confidence · sleep only. HRV and heart rate aren't available from your sources.")
+        #expect(scored.confidenceCaption == scored.confidence)
     }
 
     @Test func learningStateCountsNightsTowardFive() async {
@@ -186,19 +189,22 @@ struct HomeScreenBuilderTests {
 
     @Test func ringSummaryReadsLikeASentence() {
         let content = HomeScreenBuilder.scoredContent(result(delta: 6))
-        #expect(content.accessibilityLabel == "Recovery 82, 6 above your baseline, moderate confidence. Sleep 91, HRV 78, resting heart rate 85, consistency 74.")
-        #expect(HomeScreenBuilder.scoredContent(result(delta: -4)).accessibilityLabel.hasPrefix("Recovery 82, 4 below your baseline,"))
+        #expect(content.accessibilityLabel == "Recovery 82, 6 above your usual, moderate confidence. Sleep 91, HRV 78, resting heart rate 85, consistency 74.")
+        #expect(HomeScreenBuilder.scoredContent(result(delta: -4)).accessibilityLabel.hasPrefix("Recovery 82, 4 below your usual,"))
         #expect(HomeScreenBuilder.scoredContent(result(delta: nil)).accessibilityLabel.hasPrefix("Recovery 82, moderate confidence."))
     }
 
     @Test func deltaChipAlwaysShowsItsSignAndTone() {
-        #expect(HomeScreenBuilder.scoredContent(result(delta: 6)).chip == DeltaChip(text: "+6 vs your baseline", tone: .above))
+        #expect(HomeScreenBuilder.scoredContent(result(delta: 6)).chip == DeltaChip(text: "+6", tone: .above))
         #expect(HomeScreenBuilder.scoredContent(result(delta: 3)).chip?.tone == .above)
-        #expect(HomeScreenBuilder.scoredContent(result(delta: 2)).chip == DeltaChip(text: "+2 vs your baseline", tone: .inLine))
-        #expect(HomeScreenBuilder.scoredContent(result(delta: 0)).chip == DeltaChip(text: "±0 vs your baseline", tone: .inLine))
+        #expect(HomeScreenBuilder.scoredContent(result(delta: 2)).chip == DeltaChip(text: "+2", tone: .inLine))
+        #expect(HomeScreenBuilder.scoredContent(result(delta: 0)).chip == DeltaChip(text: "±0", tone: .inLine))
         #expect(HomeScreenBuilder.scoredContent(result(delta: -2)).chip?.tone == .inLine)
-        #expect(HomeScreenBuilder.scoredContent(result(delta: -3)).chip == DeltaChip(text: "\u{2212}3 vs your baseline", tone: .below))
+        #expect(HomeScreenBuilder.scoredContent(result(delta: -3)).chip == DeltaChip(text: "\u{2212}3", tone: .below))
         #expect(HomeScreenBuilder.scoredContent(result(delta: nil)).chip == nil)
+        #expect(HomeScreenBuilder.scoredContent(result(delta: nil)).comparisonPhrase == "Not enough nights yet to compare.")
+        #expect(HomeScreenBuilder.scoredContent(result(delta: 6)).comparisonPhrase == "vs your usual")
+        #expect(HomeScreenBuilder.scoredContent(result(delta: 6)).confidenceCaption != nil)
     }
 
     @Test func confidenceLineExplainsMissingHeartData() {
@@ -220,17 +226,28 @@ struct HomeScreenBuilderTests {
 
     // MARK: - Last night
 
-    @Test func lastNightShowsDurationTimesAndStages() throws {
+    @Test func lastNightShowsDurationTimesAndTheFourLaneChart() throws {
         let card = try #require(HomeScreenBuilder.build(snapshot(sleep: stagedNight), now: now, calendar: calendar, locale: locale).lastNight)
         #expect(card.duration == "8h 22m")
         #expect(plain(card.timeRange) == "11:02 PM – 7:27 AM")
-        guard case .stages(let segments, let legend) = card.strip else { Issue.record("expected stages"); return }
-        #expect(segments.map(\.stage) == [.awake, .core, .deep, .rem, .core])
-        #expect(segments.first?.start == 0)
-        #expect(segments.last?.end == 1)
-        #expect(abs(segments[1].start - 3.0 / 505.0) < 1e-9)
-        #expect(legend == [.deep, .core, .rem, .awake])
+        let chart = card.chart
+        #expect(chart.hasStages)
+        #expect(chart.spans.map(\.stage) == [.awake, .core, .deep, .rem, .core])
+        #expect(chart.spans.map(\.stage.lane) == [.awake, .core, .deep, .rem, .core])
+        #expect(chart.spans.first?.start == 0)
+        #expect(chart.spans.last?.end == 1)
+        #expect(abs(chart.spans[1].start - 3.0 / 505.0) < 1e-9)
+        // A connector wherever the night changes lane.
+        #expect(chart.connectors.map(\.from) == [.awake, .core, .deep, .rem])
+        #expect(chart.connectors.map(\.to) == [.core, .deep, .rem, .core])
+        #expect(abs(chart.connectors[0].position - 3.0 / 505.0) < 1e-9)
+        #expect(chart.timeLabels.map(plain) == ["11:02 PM", "3:14 AM", "7:27 AM"])
         #expect(plain(card.accessibilityLabel) == "Last night, slept 8h 22m, 11:02 PM to 7:27 AM. Deep 1h, Core 6h 22m, REM 1h, Awake 3m.")
+    }
+
+    @Test func lanesRunAwakeREMCoreDeepTopToBottom() {
+        #expect(NightLane.allCases == [.awake, .rem, .core, .deep])
+        #expect(StripStage.asleep.lane == .core)
     }
 
     @Test func adjacentSegmentsOfOneStageMerge() throws {
@@ -240,14 +257,17 @@ struct HomeScreenBuilderTests {
             Fixture.sample(Fixture.date(2026, 9, 24, 3), Fixture.date(2026, 9, 24, 7), .deep),
         ]
         let card = try #require(HomeScreenBuilder.build(snapshot(sleep: samples), now: now, calendar: calendar, locale: locale).lastNight)
-        guard case .stages(let segments, _) = card.strip else { Issue.record("expected stages"); return }
-        #expect(segments == [StripSegment(stage: .core, start: 0, end: 0.5), StripSegment(stage: .deep, start: 0.5, end: 1)])
+        #expect(card.chart.spans == [StripSegment(stage: .core, start: 0, end: 0.5), StripSegment(stage: .deep, start: 0.5, end: 1)])
+        #expect(card.chart.connectors == [NightConnector(position: 0.5, from: .core, to: .deep)])
     }
 
-    @Test func withoutStagesTheStripSaysSo() throws {
+    @Test func withoutStagesTheChartSaysSo() throws {
         let samples = [Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 7), .unspecified)]
         let card = try #require(HomeScreenBuilder.build(snapshot(sleep: samples), now: now, calendar: calendar, locale: locale).lastNight)
-        #expect(card.strip == .noStages(caption: "Stages aren't available from your current sources."))
+        #expect(!card.chart.hasStages)
+        #expect(card.chart.spans.isEmpty)
+        #expect(card.chart.caption == "Stages aren't available from your current sources.")
+        #expect(card.chart.timeLabels.map(plain) == ["11:00 PM", "3:00 AM", "7:00 AM"])
     }
 
     // MARK: - Tonight and This week
@@ -327,11 +347,12 @@ struct HomeScreenBuilderTests {
 
     @Test func calculationNamesTheWeightsAndTheModel() async throws {
         let detail = try #require(await screen(.full).detail)
-        #expect(detail.modelVersion == "Model recovery-v2")
+        #expect(detail.modelVersion == "Model recovery-v3")
         #expect(detail.calculation[0].contains("(35%)") && detail.calculation[0].contains("(25%)") && detail.calculation[0].contains("(20%)"))
         #expect(detail.calculation[0].contains("a typical night scores about 75"))
         #expect(detail.calculation[2].contains("at least 3 signals and 7 nights"))
         #expect(detail.calculation[1] == "Today all four signals count.")
+        #expect(detail.calculation[3].contains("capped at 50"))
 
         let sleepOnly = try #require(await screen(.sleepOnly).detail)
         #expect(sleepOnly.calculation[1].hasSuffix("Today: sleep 64%, consistency 36%."))

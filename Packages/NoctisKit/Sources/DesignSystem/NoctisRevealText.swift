@@ -73,7 +73,9 @@ public struct NoctisRevealText: View {
                 .tracking(style.tracking)
                 .foregroundStyle(color)
                 .customAttribute(NoctisWordIndexAttribute(index: wordOffset + index))
-            result = index == 0 ? styled : result + Text(" ") + styled
+            // Interpolation, not `+` (deprecated in iOS 26); each word keeps
+            // its styling and reveal-index attribute.
+            result = index == 0 ? styled : Text("\(result) \(styled)")
         }
         return result
     }

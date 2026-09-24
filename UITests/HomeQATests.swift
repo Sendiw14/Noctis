@@ -9,8 +9,9 @@ final class HomeQATests: XCTestCase {
         continueAfterFailure = false
     }
 
-    private func launchHome(_ scenario: String = "full", extra: [String] = []) -> XCUIApplication {
-        QA.launch(extra: ["-useMockHealth", "-mockScenario", scenario, "-noctisSkipOnboarding"] + extra)
+    /// Home in a pinned mode, so results don't depend on the time of day.
+    private func launchHome(_ scenario: String = "full", mode: String = "day", extra: [String] = []) -> XCUIApplication {
+        QA.launch(extra: ["-useMockHealth", "-mockScenario", scenario, "-noctisSkipOnboarding", "-homeMode", mode] + extra)
     }
 
     private func recoveryCard(_ app: XCUIApplication) -> XCUIElement {
@@ -25,12 +26,24 @@ final class HomeQATests: XCTestCase {
         QA.inspect(app, "home-full")
     }
 
-    /// The iOS 18 status bar scrim, forced on a newer simulator.
-    func testFullStatePagesWithStatusBarScrim() {
-        let app = launchHome(extra: ["-noctisStatusBarScrim"])
+    func testEveningFullStatePages() {
+        let app = launchHome(mode: "evening")
         XCTAssertTrue(recoveryCard(app).waitForExistence(timeout: 10))
         QA.pause(2)
-        QA.capturePages(app, "home-full-scrim", maxPages: 3)
+        QA.capturePages(app, "home-evening-full")
+        QA.inspect(app, "home-evening-full")
+    }
+
+    func testFactorCapsuleOpensDetailAtThatFactor() {
+        let app = launchHome()
+        let capsule = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Consistency '")).firstMatch
+        XCTAssertTrue(capsule.waitForExistence(timeout: 10))
+        QA.pause(1)
+        capsule.tap()
+        XCTAssertTrue(app.navigationBars["Recovery"].waitForExistence(timeout: 5))
+        QA.pause(1)
+        QA.shot("recovery-detail-focus-consistency")
+        XCTAssertTrue(QA.text(app, containing: "Consistency").isHittable)
     }
 
     func testRecoveryDetailZoom() {

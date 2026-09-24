@@ -73,12 +73,24 @@ public enum RecoveryModelV2 {
     public static let normalRange: Double = 0.5
 }
 
+/// Version 3: V2 plus one rule. When HRV is 1.5 SD or more below its
+/// baseline AND resting heart rate is 1.5 SD or more above its baseline on
+/// the same morning, recovery is capped at 50, however well you slept.
+public enum RecoveryModelV3 {
+    public static let version = "recovery-v3"
+    public static let weights = RecoveryModelV2.weights
+    /// Both heart signals this many SDs on the wrong side trigger the cap.
+    public static let heartCapStandardDeviations: Double = 1.5
+    public static let heartCapScore = 50
+}
+
 /// The recovery models the engine can run. `current` is what the app shows.
 public enum RecoveryModel: String, Sendable, CaseIterable {
     case v1 = "recovery-v1"
     case v2 = "recovery-v2"
+    case v3 = "recovery-v3"
 
-    public static let current: RecoveryModel = .v2
+    public static let current: RecoveryModel = .v3
 
     public var version: String { rawValue }
 
@@ -86,8 +98,12 @@ public enum RecoveryModel: String, Sendable, CaseIterable {
         switch self {
         case .v1: RecoveryModelV1.weights
         case .v2: RecoveryModelV2.weights
+        case .v3: RecoveryModelV3.weights
         }
     }
+
+    /// V2 and V3 score HRV and resting heart rate against variation.
+    var scoresVariation: Bool { self != .v1 }
 }
 
 public enum RecoveryConfidence: String, Sendable, Comparable, CaseIterable {
@@ -225,6 +241,8 @@ public struct RecoveryResult: Sendable, Equatable {
     /// Every factor left out of the score, and why.
     public let missingFactors: [RecoveryFactorKind: RecoveryFactorGap]
     public let comparison: RecoveryComparison
+    /// V3: both heart signals were far enough off to cap the score at 50.
+    public let heartCapApplied: Bool
 
     public init(
         night: SleepNightKey,
@@ -235,7 +253,8 @@ public struct RecoveryResult: Sendable, Equatable {
         modelVersion: String,
         baselines: Baselines = .none,
         missingFactors: [RecoveryFactorKind: RecoveryFactorGap] = [:],
-        comparison: RecoveryComparison = .unavailable
+        comparison: RecoveryComparison = .unavailable,
+        heartCapApplied: Bool = false
     ) {
         self.night = night
         self.score = score
@@ -246,6 +265,7 @@ public struct RecoveryResult: Sendable, Equatable {
         self.baselines = baselines
         self.missingFactors = missingFactors
         self.comparison = comparison
+        self.heartCapApplied = heartCapApplied
     }
 
     public var factorsUsed: [RecoveryFactorKind] { factors.map(\.kind) }
@@ -253,7 +273,8 @@ public struct RecoveryResult: Sendable, Equatable {
     func with(comparison: RecoveryComparison) -> RecoveryResult {
         RecoveryResult(
             night: night, score: score, factors: factors, confidence: confidence, baselineNights: baselineNights,
-            modelVersion: modelVersion, baselines: baselines, missingFactors: missingFactors, comparison: comparison
+            modelVersion: modelVersion, baselines: baselines, missingFactors: missingFactors, comparison: comparison,
+            heartCapApplied: heartCapApplied
         )
     }
 

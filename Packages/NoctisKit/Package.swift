@@ -14,7 +14,7 @@ let engineSwiftSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "NoctisKit",
-    platforms: [.iOS(.v18)],
+    platforms: [.iOS(.v26)],
     products: [
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
         .library(name: "HealthProviding", targets: ["HealthProviding"]),

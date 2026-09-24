@@ -55,19 +55,23 @@ public enum NoctisRecoveryRingLayout {
 /// — a plain track circle — optionally carrying a thin cocoa progress arc
 /// (learning your baseline). `Animatable` over `reveal` for the daily
 /// draw-in.
+///
+/// R21: the ring sizes from the width it's offered, never from a device
+/// constant — `diameter` is its largest size, and the stroke scales with
+/// it (`lineWidth` at `diameter`).
 public struct NoctisRecoveryRing: View, Animatable {
     public var reveal: Double
     private let segments: [NoctisRingSegment]
     private let progress: Double?
     private let diameter: CGFloat
-    private let lineWidth: CGFloat
+    private let lineWidthAtFullSize: CGFloat
 
     public init(segments: [NoctisRingSegment], reveal: Double = 1, progress: Double? = nil, diameter: CGFloat = 200, lineWidth: CGFloat = 18) {
         self.segments = segments
         self.reveal = reveal
         self.progress = progress
         self.diameter = diameter
-        self.lineWidth = lineWidth
+        self.lineWidthAtFullSize = lineWidth
     }
 
     public var animatableData: Double {
@@ -79,19 +83,22 @@ public struct NoctisRecoveryRing: View, Animatable {
         Canvas { context, size in
             draw(context: context, size: size)
         }
-        .frame(width: diameter, height: diameter)
+        .aspectRatio(1, contentMode: .fit)
+        .frame(maxWidth: diameter, maxHeight: diameter)
         .accessibilityHidden(true)
     }
 
     private func draw(context: GraphicsContext, size: CGSize) {
+        let side = min(size.width, size.height)
+        let lineWidth = lineWidthAtFullSize * side / diameter
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
-        let radius = size.width / 2 - lineWidth / 2
+        let radius = side / 2 - lineWidth / 2
         let style = StrokeStyle(lineWidth: lineWidth, lineCap: .round)
 
         guard !segments.isEmpty else {
             var track = Path()
             track.addArc(center: center, radius: radius, startAngle: .degrees(0), endAngle: .degrees(360), clockwise: false)
-            context.stroke(track, with: .color(NoctisAppColor.track), style: StrokeStyle(lineWidth: lineWidth))
+            context.stroke(track, with: .color(NoctisAppColor.ringTrack), style: StrokeStyle(lineWidth: lineWidth))
             if let progress, progress > 0 {
                 let thin = lineWidth / 3
                 let end = min(progress, 1) * 360
@@ -109,7 +116,7 @@ public struct NoctisRecoveryRing: View, Animatable {
         let visible = NoctisRecoveryRingLayout.visibleFractions(weights: weights, fractions: segments.map(\.fraction), reveal: reveal)
 
         for (index, arc) in arcs.enumerated() {
-            stroke(from: arc.start, to: arc.end, color: NoctisAppColor.track, capDegrees: capDegrees, context: context, center: center, radius: radius, style: style)
+            stroke(from: arc.start, to: arc.end, color: NoctisAppColor.ringTrack, capDegrees: capDegrees, context: context, center: center, radius: radius, style: style)
             let fraction = visible[index]
             guard fraction > 0 else { continue }
             let fillEnd = arc.start + (arc.end - arc.start) * fraction
@@ -120,6 +127,7 @@ public struct NoctisRecoveryRing: View, Animatable {
     /// A capped arc whose visible ends sit at `start` and `end`; spans too
     /// short to hold both caps draw as a single dot at `start`.
     private func stroke(from start: Double, to end: Double, color: Color, capDegrees: Double, context: GraphicsContext, center: CGPoint, radius: CGFloat, style: StrokeStyle) {
+        let lineWidth = style.lineWidth
         let insetStart = start + capDegrees
         let insetEnd = end - capDegrees
         if insetEnd - insetStart >= 0.5 {
@@ -140,6 +148,59 @@ public struct NoctisRecoveryRing: View, Animatable {
             if i == 0 { path.move(to: point) } else { path.addLine(to: point) }
         }
         return path
+    }
+}
+
+/// A ring with something in its middle (a score, a glyph), sized from the
+/// width offered up to `maxDiameter` (R21). The first subview is the
+/// ring, drawn square; every other subview is offered the box inside the
+/// ring (`centerWidth` × `centerHeight` of the diameter), so text in it
+/// shrinks with the ring.
+public struct NoctisRingLayout: Layout {
+    public var maxDiameter: CGFloat
+    public var centerWidth: CGFloat
+    public var centerHeight: CGFloat
+    /// A smaller size for narrow spaces: offered less than
+    /// `narrowBelowWidth`, the ring is at most `narrowDiameter`.
+    public var narrowDiameter: CGFloat?
+    public var narrowBelowWidth: CGFloat
+
+    public init(
+        maxDiameter: CGFloat,
+        centerWidth: CGFloat = 0.7,
+        centerHeight: CGFloat = 0.52,
+        narrowDiameter: CGFloat? = nil,
+        narrowBelowWidth: CGFloat = 0
+    ) {
+        self.maxDiameter = maxDiameter
+        self.centerWidth = centerWidth
+        self.centerHeight = centerHeight
+        self.narrowDiameter = narrowDiameter
+        self.narrowBelowWidth = narrowBelowWidth
+    }
+
+    /// The ring's diameter for an offered width: the width, capped at
+    /// `maxDiameter` (nil or infinite offers get the full size).
+    public static func diameter(forWidth width: CGFloat?, maxDiameter: CGFloat, narrowDiameter: CGFloat? = nil, narrowBelowWidth: CGFloat = 0) -> CGFloat {
+        guard let width, width.isFinite else { return maxDiameter }
+        let cap = width < narrowBelowWidth ? (narrowDiameter ?? maxDiameter) : maxDiameter
+        return max(min(width, cap), 0)
+    }
+
+    public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let side = Self.diameter(forWidth: proposal.width, maxDiameter: maxDiameter, narrowDiameter: narrowDiameter, narrowBelowWidth: narrowBelowWidth)
+        return CGSize(width: side, height: side)
+    }
+
+    public func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let side = min(bounds.width, bounds.height)
+        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        for (index, subview) in subviews.enumerated() {
+            let size = index == 0
+                ? CGSize(width: side, height: side)
+                : CGSize(width: side * centerWidth, height: side * centerHeight)
+            subview.place(at: center, anchor: .center, proposal: ProposedViewSize(size))
+        }
     }
 }
 

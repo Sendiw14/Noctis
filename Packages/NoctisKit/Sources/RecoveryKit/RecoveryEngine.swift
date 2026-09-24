@@ -3,7 +3,7 @@ import SleepKit
 
 /// Recovery: a 0–100 score from four factors, each judged against the
 /// person's own 14-night baseline. The app runs `RecoveryModel.current`
-/// (V2, `RecoveryModelV2`); V1 (`RecoveryModelV1`) stays for its tests.
+/// (V3, `RecoveryModelV3`); V1 and V2 stay for their tests.
 /// Deterministic: time comes in as `now`, never read from the clock.
 ///
 /// - Under 5 nights of history: `.learning(nightsSoFar:)`.
@@ -61,8 +61,8 @@ public enum RecoveryEngine {
         let raw = [
             durationFactor(lastNight, baselines, needMinutes: needMinutes),
             consistencyFactor(lastNight, baselines),
-            model == .v1 ? hrvFactorV1(lastNight, baselines) : hrvFactorV2(lastNight, baselines),
-            model == .v1 ? restingFactorV1(lastNight, baselines) : restingFactorV2(lastNight, baselines),
+            model.scoresVariation ? hrvFactorV2(lastNight, baselines) : hrvFactorV1(lastNight, baselines),
+            model.scoresVariation ? restingFactorV2(lastNight, baselines) : restingFactorV1(lastNight, baselines),
         ].compactMap { $0 }
 
         let weights = model.weights
@@ -79,7 +79,11 @@ public enum RecoveryEngine {
             )
         }
         let weighted = raw.reduce(0) { $0 + $1.score * (weights[$1.kind] ?? 0) }
-        let overall = totalWeight > 0 ? weighted / totalWeight : 0
+        var overall = totalWeight > 0 ? weighted / totalWeight : 0
+        let heartCapApplied = model == .v3 && heartSignalsBothFarOff(raw)
+        if heartCapApplied {
+            overall = min(overall, Double(RecoveryModelV3.heartCapScore))
+        }
 
         return RecoveryResult(
             night: lastNight.night,
@@ -89,8 +93,18 @@ public enum RecoveryEngine {
             baselineNights: baselineNights,
             modelVersion: model.version,
             baselines: baselines,
-            missingFactors: gaps(lastNight, baselines, used: Set(factors.map(\.kind)))
+            missingFactors: gaps(lastNight, baselines, used: Set(factors.map(\.kind))),
+            heartCapApplied: heartCapApplied
         )
+    }
+
+    /// V3's cap: HRV at least 1.5 SD below baseline and resting heart rate
+    /// at least 1.5 SD above it (both directional scores ≤ −1.5).
+    static func heartSignalsBothFarOff(_ factors: [RawFactor]) -> Bool {
+        let limit = -RecoveryModelV3.heartCapStandardDeviations
+        guard let hrv = factors.first(where: { $0.kind == .hrv })?.standardScore,
+              let resting = factors.first(where: { $0.kind == .restingHeartRate })?.standardScore else { return false }
+        return hrv <= limit && resting <= limit
     }
 
     /// Why each unused factor is missing.
@@ -124,13 +138,13 @@ public enum RecoveryEngine {
         let enoughNights = baselineNights >= RecoveryModelV1.moderateConfidenceNights
         switch model {
         case .v1: return enoughFactors || enoughNights ? .moderate : .low
-        case .v2: return enoughFactors && enoughNights ? .moderate : .low
+        case .v2, .v3: return enoughFactors && enoughNights ? .moderate : .low
         }
     }
 
     // MARK: - Factors
 
-    private struct RawFactor {
+    struct RawFactor {
         let kind: RecoveryFactorKind
         let score: Double
         let value: Double

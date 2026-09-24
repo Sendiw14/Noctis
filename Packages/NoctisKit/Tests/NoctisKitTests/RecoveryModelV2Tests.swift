@@ -3,7 +3,8 @@ import Testing
 @testable import RecoveryKit
 @testable import SleepKit
 
-/// Recovery v2: HRV and resting heart rate against the person's own
+/// Recovery v2 (pinned with `model: .v2`; the app runs V3): HRV and
+/// resting heart rate against the person's own
 /// variation, score = clamp(75 + 15·z), and moderate confidence needing
 /// 3+ factors AND 7+ nights.
 struct RecoveryModelV2Tests {
@@ -26,13 +27,12 @@ struct RecoveryModelV2Tests {
     }
 
     private func score(_ night: NightMetrics, _ baselines: Baselines) -> RecoveryResult {
-        RecoveryEngine.score(lastNight: night, baselines: baselines, baselineNights: 14, needMinutes: 480)
+        RecoveryEngine.score(lastNight: night, baselines: baselines, baselineNights: 14, needMinutes: 480, model: .v2)
     }
 
     // MARK: - Model
 
-    @Test func theAppRunsV2AndKeepsV1sWeights() {
-        #expect(RecoveryModel.current == .v2)
+    @Test func v2KeepsV1sWeights() {
         #expect(RecoveryModelV2.version == "recovery-v2")
         #expect(RecoveryModelV2.weights == RecoveryModelV1.weights)
         #expect(score(night(), baselines()).modelVersion == "recovery-v2")
@@ -68,7 +68,7 @@ struct RecoveryModelV2Tests {
             let up = index.isMultiple(of: 2)
             return (asleep: up ? 440 : 460, bedtime: up ? 650 : 670, wake: up ? 1130 : 1150, hrv: up ? 45 : 55, resting: up ? 54 : 56)
         }
-        guard case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: Fixture.morningAfter) else {
+        guard case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: Fixture.morningAfter, model: .v2) else {
             Issue.record("expected a score")
             return
         }
@@ -142,12 +142,12 @@ struct RecoveryModelV2Tests {
         (1, 0, .low),
     ])
     func moderateNeedsThreeFactorsAndSevenNights(factors: Int, nights: Int, expected: RecoveryConfidence) {
-        #expect(RecoveryEngine.confidence(factorCount: factors, baselineNights: nights) == expected)
+        #expect(RecoveryEngine.confidence(factorCount: factors, baselineNights: nights, model: .v2) == expected)
     }
 
     @Test func sleepOnlyIsLowConfidence() {
         let history = Fixture.metrics(count: 15) { _ in (asleep: 450, bedtime: 660, wake: 1140, hrv: nil, resting: nil) }
-        guard case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: Fixture.morningAfter) else {
+        guard case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: Fixture.morningAfter, model: .v2) else {
             Issue.record("expected a score")
             return
         }

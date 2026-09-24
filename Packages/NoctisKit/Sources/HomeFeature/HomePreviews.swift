@@ -12,7 +12,8 @@ enum HomePreview {
         _ scenario: MockScenario,
         authorized: Bool = true,
         fails: Bool = false,
-        latency: Duration = .zero
+        latency: Duration = .zero,
+        mode: HomeMode? = .day
     ) -> some View {
         let provider = MockHealthKitProvider(scenario: scenario, startAuthorized: authorized, failsQueries: fails, latency: latency)
         let model = makeModel(provider)
@@ -22,7 +23,8 @@ enum HomePreview {
             repository: HomeRepository(provider: provider),
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() },
-            introGate: HomeIntroGate(defaults: defaults)
+            introGate: HomeIntroGate(defaults: defaults),
+            modeOverride: mode
         )
         return HomeTabView(viewModel: viewModel).environment(model)
     }
@@ -40,6 +42,8 @@ enum HomePreview {
 
 #Preview("Full") { HomePreview.tab(.full) }
 #Preview("Full · Dark") { HomePreview.tab(.full).preferredColorScheme(.dark) }
+#Preview("Evening") { HomePreview.tab(.full, mode: .evening) }
+#Preview("Evening · Dark") { HomePreview.tab(.full, mode: .evening).preferredColorScheme(.dark) }
 #Preview("Sleep only") { HomePreview.tab(.sleepOnly) }
 #Preview("Learning") { HomePreview.tab(.learning) }
 #Preview("Gap") { HomePreview.tab(.gap) }
