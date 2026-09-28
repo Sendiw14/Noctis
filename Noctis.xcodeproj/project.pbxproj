@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0CB4B988606AB038E0A61E84 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */; };
 		0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */; };
+		182F75BB96926890C7F1111B /* HomeV4QATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9541D19A4C980942925904 /* HomeV4QATests.swift */; };
 		3E0928328CBB9C6CED1BB7F5 /* HomeMotionQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4176437B1713187435A9E79D /* HomeMotionQATests.swift */; };
 		77C1193892B2A92697DBB77A /* HomeV3QATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */; };
 		7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6D414566DC2646DBC6FE09 /* QASupport.swift */; };
@@ -44,6 +45,7 @@
 		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
 		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
 		BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverQATests.swift; sourceTree = "<group>"; };
+		CE9541D19A4C980942925904 /* HomeV4QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV4QATests.swift; sourceTree = "<group>"; };
 		D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		FE6D414566DC2646DBC6FE09 /* QASupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASupport.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -91,6 +93,7 @@
 				4176437B1713187435A9E79D /* HomeMotionQATests.swift */,
 				85F4213CBB03353749905D7E /* HomeQATests.swift */,
 				49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */,
+				CE9541D19A4C980942925904 /* HomeV4QATests.swift */,
 				A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */,
 				FE6D414566DC2646DBC6FE09 /* QASupport.swift */,
 				BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */,
@@ -220,6 +223,7 @@
 				3E0928328CBB9C6CED1BB7F5 /* HomeMotionQATests.swift in Sources */,
 				8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */,
 				77C1193892B2A92697DBB77A /* HomeV3QATests.swift in Sources */,
+				182F75BB96926890C7F1111B /* HomeV4QATests.swift in Sources */,
 				8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */,
 				7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */,
 				0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */,

@@ -114,6 +114,8 @@ public nonisolated struct RingSegmentContent: Sendable, Equatable {
     public let weight: Double
     /// Factor score / 100.
     public let fraction: Double
+    /// Your usual score for this factor / 100; nil without a baseline.
+    public let usual: Double?
 }
 
 public nonisolated enum DeltaTone: Sendable, Equatable {
@@ -132,6 +134,13 @@ public nonisolated struct FactorCell: Sendable, Equatable {
     public let kind: RecoveryFactorKind
     public let name: String
     public let score: Int
+    /// Your usual score for this factor; nil without a baseline.
+    public let usual: Int?
+
+    /// "Sleep 67, usual 74", or "Sleep 67" without a baseline.
+    public var spoken: String {
+        usual.map { "\(name) \(score), usual \($0)" } ?? "\(name) \(score)"
+    }
 }
 
 public nonisolated struct ScoredRecoveryContent: Sendable, Equatable {
@@ -153,6 +162,10 @@ public nonisolated struct ScoredRecoveryContent: Sendable, Equatable {
     /// V3's heart cap, in plain words, when it applied.
     public let heartCapNote: String?
     public let factors: [FactorCell]
+    /// The ring draws a tick at each factor's usual, with this caption
+    /// under the capsules ("Tick = your usual"); nil when no factor has a
+    /// baseline yet.
+    public let usualCaption: String?
     public let accessibilityLabel: String
 }
 
@@ -190,8 +203,9 @@ public nonisolated enum InsightChartContent: Sendable, Equatable {
     /// A short time axis with two ticks, usual and last night.
     case timeline(usual: InsightTick, lastNight: InsightTick)
     /// One dot per recent night: filled within 30 minutes of the usual
-    /// bedtime, open outside it, faint with no sleep recorded.
-    case nights([InsightNightDot])
+    /// bedtime, open outside it, faint with no sleep recorded, with a
+    /// caption under them ("Last 7 nights").
+    case nights([InsightNightDot], caption: String)
 }
 
 public nonisolated struct InsightBar: Sendable, Equatable {
@@ -483,11 +497,12 @@ public nonisolated enum HomeScreenBuilder {
         header(now: now, newestSample: newestSample, mode: .day, summary: .text(""), format: HomeFormat(calendar: calendar, locale: locale))
     }
 
-    /// Evening mode always says "Good evening." (in lavender), whatever
-    /// the hour; day mode follows the clock.
+    /// Evening mode says "Good evening." (in lavender) until midnight and
+    /// "Good night." from midnight to 4 AM; day mode follows the clock.
     static func header(now: Date, newestSample: Date?, mode: HomeMode, summary: HeaderSummary, format: HomeFormat) -> HomeHeader {
         let hour = format.calendar.component(.hour, from: now)
         let partOfDay = switch (mode, hour) {
+        case (.evening, 0..<eveningEndMinutes / 60): "night"
         case (.evening, _): "evening"
         case (.day, 4..<12): "morning"
         case (.day, 12..<18): "afternoon"
@@ -582,7 +597,7 @@ public nonisolated enum HomeScreenBuilder {
         }
         return ScoredRecoveryContent(
             score: result.score,
-            segments: factors.map { RingSegmentContent(kind: $0.kind, weight: $0.weight, fraction: Double($0.score) / 100) },
+            segments: factors.map { RingSegmentContent(kind: $0.kind, weight: $0.weight, fraction: Double($0.score) / 100, usual: $0.usual.map { $0 / 100 }) },
             chip: chip,
             comparisonPhrase: phrase,
             why: why,
@@ -590,7 +605,8 @@ public nonisolated enum HomeScreenBuilder {
             confidence: line,
             confidenceCaption: result.confidence == .high ? nil : line,
             heartCapNote: result.heartCapApplied ? "Your heart rate and HRV are both well outside your normal range." : nil,
-            factors: factors.map { FactorCell(kind: $0.kind, name: shortName($0.kind), score: $0.score) },
+            factors: factors.map { FactorCell(kind: $0.kind, name: shortName($0.kind), score: $0.score, usual: $0.usual.map { Int($0.rounded()) }) },
+            usualCaption: factors.contains { $0.usual != nil } ? "Tick = your usual" : nil,
             accessibilityLabel: accessibilitySummary(result, factors: factors)
         )
     }
@@ -678,7 +694,8 @@ public nonisolated enum HomeScreenBuilder {
         lead.append("\(result.confidence.rawValue) confidence")
         let parts = factors.enumerated().map { index, factor in
             let name = spokenName(factor.kind)
-            return "\(index == 0 ? name.prefix(1).uppercased() + name.dropFirst() : name) \(factor.score)"
+            let usual = factor.usual.map { ", usual \(Int($0.rounded()))" } ?? ""
+            return "\(index == 0 ? name.prefix(1).uppercased() + name.dropFirst() : name) \(factor.score)\(usual)"
         }
         let why = whyLine(result.topContributor, spoken: true).map { " \($0)." } ?? ""
         return lead.joined(separator: ", ") + "." + why + (parts.isEmpty ? "" : " " + parts.joined(separator: ", ") + ".")

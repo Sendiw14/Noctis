@@ -28,6 +28,8 @@ struct LastNightOverride {
     let bedtimeHour: Double
     let asleepHours: Double
     let quality: Double
+    /// Use `MockNightGenerator.messySegments` for the night's stages.
+    var messy = false
 }
 
 /// How the mock's last night relates to the nights before it, which
@@ -39,6 +41,9 @@ enum MockLastNight {
     case later
     /// A steady sleeper whose last night is on the usual: a bedtime streak.
     case steady
+    /// A restless night, for the sleep landscape: 11 awakenings (six of
+    /// them under 3 minutes), uneven runs and a single 40-minute REM.
+    case messy
 }
 
 enum MockNightGenerator {
@@ -81,11 +86,28 @@ enum MockNightGenerator {
                     LastNightOverride(bedtimeHour: meanBedtimeHour + lastNightBedtimeShiftMinutes / 60, asleepHours: meanAsleepHours, quality: 0.55)
                 case .steady:
                     LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours, quality: 0.7)
+                case .messy:
+                    LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours, quality: 0.45, messy: true)
                 }
             }
             nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady))
         }
         return nights
+    }
+
+    /// The messy night, in minutes: 11 awakenings (1, 2, 1.5, 2, 1 and
+    /// 2.5 minutes are under 3), runs of every length, and one 40-minute
+    /// REM. About 6h 55m asleep.
+    static let messyMinutes: [(SleepStageValue, Double)] = [
+        (.core, 22), (.deep, 30), (.core, 12), (.awake, 1), (.core, 18), (.rem, 9), (.core, 25), (.awake, 2),
+        (.deep, 14), (.core, 10), (.rem, 40), (.awake, 5), (.core, 31), (.awake, 1.5), (.deep, 8), (.core, 20),
+        (.awake, 3.5), (.rem, 16), (.core, 14), (.awake, 2), (.core, 27), (.deep, 6), (.awake, 7), (.core, 19),
+        (.rem, 22), (.awake, 1), (.core, 24), (.awake, 4), (.rem, 12), (.core, 15), (.awake, 2.5), (.core, 21),
+        (.awake, 9), (.core, 8),
+    ]
+
+    static var messySegments: [(SleepStageValue, TimeInterval)] {
+        messyMinutes.map { ($0.0, $0.1 * 60) }
     }
 
     /// Daytime heart rate every 15 minutes over the 48 hours before
@@ -126,7 +148,9 @@ enum MockNightGenerator {
         let totalSleepHours = override?.asleepHours ?? naturalSleepHours
         let totalSleepSeconds = totalSleepHours * 3600
 
-        let latencyMinutes = Double.random(in: 3...16, using: &rng) * (1.3 - quality)
+        // The restless night falls asleep at once: its 11 awakenings are the
+        // ones it lists, not one more at the start.
+        let latencyMinutes = override?.messy == true ? 0 : Double.random(in: 3...16, using: &rng) * (1.3 - quality)
         let sleepOnset = bedtime.addingTimeInterval(latencyMinutes * 60)
 
         var cycleSegments: [(SleepStageValue, TimeInterval)] = []
@@ -162,10 +186,13 @@ enum MockNightGenerator {
             }
         }
 
+        // The restless night: its own stages, whatever the cycles said.
+        if override?.messy == true { cycleSegments = Self.messySegments }
+
         var cursor = sleepOnset
-        var sleepSamples: [RawSleepSample] = [
-            RawSleepSample(start: bedtime, end: sleepOnset, stage: .awake, sourceName: watchSource, sourceBundleID: watchBundleID),
-        ]
+        var sleepSamples: [RawSleepSample] = sleepOnset > bedtime
+            ? [RawSleepSample(start: bedtime, end: sleepOnset, stage: .awake, sourceName: watchSource, sourceBundleID: watchBundleID)]
+            : []
         for (stage, duration) in cycleSegments {
             let end = cursor.addingTimeInterval(duration)
             sleepSamples.append(RawSleepSample(start: cursor, end: end, stage: stage, sourceName: watchSource, sourceBundleID: watchBundleID))

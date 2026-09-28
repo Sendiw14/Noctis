@@ -7,11 +7,15 @@ public struct NoctisRingSegment: Equatable, Sendable {
     public let weight: Double
     /// Filled share of the segment, 0...1 (a factor score / 100).
     public let fraction: Double
+    /// Where your usual sits on the segment, 0...1 (your usual score /
+    /// 100); nil without a baseline. Drawn as a tick when the ring asks.
+    public let usual: Double?
 
-    public init(color: Color, weight: Double, fraction: Double) {
+    public init(color: Color, weight: Double, fraction: Double, usual: Double? = nil) {
         self.color = color
         self.weight = weight
         self.fraction = fraction
+        self.usual = usual
     }
 }
 
@@ -31,6 +35,17 @@ public enum NoctisRecoveryRingLayout {
             defer { cursor += span + gapDegrees }
             return (cursor, cursor + span)
         }
+    }
+
+    /// The angle (degrees, 0 = top, clockwise) of the "usual" tick on the
+    /// segment at `index`: `usual` (0...1) of the way along that segment's
+    /// arc. Segments are laid out by weight, so a missing factor's
+    /// renormalized weights move every tick with its segment.
+    public static func tickAngle(weights: [Double], index: Int, usual: Double) -> Double? {
+        let arcs = arcs(weights: weights)
+        guard arcs.indices.contains(index) else { return nil }
+        let arc = arcs[index]
+        return arc.start + (arc.end - arc.start) * min(max(usual, 0), 1)
     }
 
     /// How much of each segment's fill is showing at `reveal` (0...1):
@@ -65,22 +80,27 @@ public struct NoctisRecoveryRing: View, Animatable {
     public var dim: Double
     private var fractions: [Double]
     private let segments: [NoctisRingSegment]
+    private let showsUsual: Bool
     private let highlight: Int?
     private let diameter: CGFloat
     private let lineWidthAtFullSize: CGFloat
 
     /// Dimmed segments settle at this opacity.
     public static let dimmedOpacity = 0.4
+    /// The "usual" tick's width.
+    public static let tickWidth: CGFloat = 3
 
     public init(
         segments: [NoctisRingSegment],
         reveal: Double = 1,
         highlight: Int? = nil,
         dim: Double = 0,
+        showsUsual: Bool = false,
         diameter: CGFloat = 200,
         lineWidth: CGFloat = 18
     ) {
         self.segments = segments
+        self.showsUsual = showsUsual
         self.fractions = segments.map(\.fraction)
         self.reveal = reveal
         self.highlight = highlight
@@ -142,6 +162,22 @@ public struct NoctisRecoveryRing: View, Animatable {
             guard fraction > 0 else { continue }
             let fillEnd = arc.start + (arc.end - arc.start) * fraction
             stroke(from: arc.start, to: fillEnd, color: segments[index].color, capDegrees: capDegrees, context: segmentContext, center: center, radius: radius, style: style)
+        }
+
+        // Your usual: a 3pt tick across each segment's track, on top of
+        // its fill, once the ring has drawn in.
+        guard showsUsual else { return }
+        for (index, segment) in segments.enumerated() {
+            guard let usual = segment.usual, let angle = NoctisRecoveryRingLayout.tickAngle(weights: weights, index: index, usual: usual) else { continue }
+            var tickContext = context
+            if let highlight, highlight != index { tickContext.opacity = dimmed }
+            tickContext.opacity *= min(max((reveal - 0.9) / 0.1, 0), 1)
+            let inner = NoctisStageRingLayout.point(at: angle, center: center, radius: radius - lineWidth / 2)
+            let outer = NoctisStageRingLayout.point(at: angle, center: center, radius: radius + lineWidth / 2)
+            var tick = Path()
+            tick.move(to: inner)
+            tick.addLine(to: outer)
+            tickContext.stroke(tick, with: .color(NoctisAppColor.ink.opacity(0.7)), style: StrokeStyle(lineWidth: Self.tickWidth, lineCap: .butt))
         }
     }
 

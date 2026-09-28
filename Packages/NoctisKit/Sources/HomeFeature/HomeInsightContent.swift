@@ -59,7 +59,7 @@ nonisolated extension HomeScreenBuilder {
             return InsightCardContent(
                 title: "Steady bedtime",
                 message: message,
-                chart: .nights(dots),
+                chart: .nights(dots, caption: "Last \(count) nights"),
                 accessibilityLabel: "Steady bedtime. \(streak) nights in a row within \(tolerance) minutes of your usual bedtime; "
                     + "\(withinCount) of the last \(count) nights."
             )

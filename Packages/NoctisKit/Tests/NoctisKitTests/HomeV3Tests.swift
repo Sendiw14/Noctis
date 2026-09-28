@@ -240,15 +240,45 @@ struct NightChartV3Tests {
         #expect(chart.connectors.count == 1)
     }
 
-    @Test func aBriefAwakeningIsATick() throws {
+    @Test func aRunUnderThreeMinutesIsANotchOfAnyStage() throws {
         let chart = try chart([
             Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 2), .core),
             Fixture.sample(Fixture.date(2026, 9, 24, 2), Fixture.date(2026, 9, 24, 2, 2), .awake),
             Fixture.sample(Fixture.date(2026, 9, 24, 2, 2), Fixture.date(2026, 9, 24, 4), .rem),
             Fixture.sample(Fixture.date(2026, 9, 24, 4), Fixture.date(2026, 9, 24, 4, 10), .awake),
-            Fixture.sample(Fixture.date(2026, 9, 24, 4, 10), Fixture.date(2026, 9, 24, 7), .core),
+            Fixture.sample(Fixture.date(2026, 9, 24, 4, 10), Fixture.date(2026, 9, 24, 4, 12), .deep),
+            Fixture.sample(Fixture.date(2026, 9, 24, 4, 12), Fixture.date(2026, 9, 24, 7), .core),
         ])
-        #expect(chart.spans.map(\.isTick) == [false, true, false, false, false])
+        #expect(chart.spans.map(\.isNotch) == [false, true, false, false, true, false])
+        // Exactly 3 minutes is a run.
+        let three = try self.chart([
+            Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 2), .core),
+            Fixture.sample(Fixture.date(2026, 9, 24, 2), Fixture.date(2026, 9, 24, 2, 3), .awake),
+            Fixture.sample(Fixture.date(2026, 9, 24, 2, 3), Fixture.date(2026, 9, 24, 7), .core),
+        ])
+        #expect(three.spans.map(\.isNotch) == [false, false, false])
+    }
+
+    @Test func aNotchDoesNotBreakTheRibbonNorDrawAStep() throws {
+        // Core, a 2-minute awakening, core again: one flat stretch of ribbon
+        // and no step (the awakening is a notch in its own lane).
+        let chart = try chart([
+            Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 2), .core),
+            Fixture.sample(Fixture.date(2026, 9, 24, 2), Fixture.date(2026, 9, 24, 2, 2), .awake),
+            Fixture.sample(Fixture.date(2026, 9, 24, 2, 2), Fixture.date(2026, 9, 24, 7), .core),
+        ])
+        #expect(chart.connectors.isEmpty)
+        // Core, a notch, then deep: one step, at the middle of the notch.
+        let stepped = try self.chart([
+            Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 2), .core),
+            Fixture.sample(Fixture.date(2026, 9, 24, 2), Fixture.date(2026, 9, 24, 2, 2), .awake),
+            Fixture.sample(Fixture.date(2026, 9, 24, 2, 2), Fixture.date(2026, 9, 24, 7), .deep),
+        ])
+        let notch = try #require(stepped.spans.first { $0.isNotch })
+        let step = try #require(stepped.connectors.first)
+        #expect(stepped.connectors.count == 1)
+        #expect(abs(step.position - (notch.start + notch.end) / 2) < 1e-9)
+        #expect(step.from == .core && step.to == .deep && step.entered == .deep)
     }
 
     @Test func stepsJoinOnlyBarsThatTouch() throws {
@@ -263,7 +293,7 @@ struct NightChartV3Tests {
             Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 1), .core),
             Fixture.sample(Fixture.date(2026, 9, 24, 1, 1), Fixture.date(2026, 9, 24, 7), .deep),
         ])
-        #expect(joined.connectors == [NightConnector(position: joined.spans[1].start, from: .core, to: .deep)])
+        #expect(joined.connectors == [NightConnector(position: joined.spans[1].start, from: .core, to: .deep, entered: .deep)])
         #expect(joined.spans[0].end == joined.spans[1].start)
     }
 
@@ -448,10 +478,11 @@ struct InsightCardWordingTests {
         let card = try card(history(bedtimes: { $0 < 10 ? ($0.isMultiple(of: 2) ? 615 : 705) : 660 }))
         #expect(card.title == "Steady bedtime")
         #expect(card.message == "5 nights in a row within 30 min of your usual bedtime.")
-        guard case .nights(let dots) = card.chart else {
+        guard case .nights(let dots, let caption) = card.chart else {
             Issue.record("expected dots")
             return
         }
+        #expect(caption == "Last 7 nights")
         #expect(dots.map(\.within) == [false, false, true, true, true, true, true])
         // Mornings Fri Sep 18 … Thu Sep 24.
         #expect(dots.map(\.label) == ["F", "S", "S", "M", "T", "W", "T"])
@@ -478,11 +509,16 @@ struct InsightCardWordingTests {
 struct HomeV3ScreenTests {
     private let locale = Locale(identifier: "en_US")
 
-    @Test func eveningModeAlwaysSaysGoodEvening() {
+    @Test func eveningModeSaysGoodEveningUntilMidnightThenGoodNight() {
         let format = HomeFormat(calendar: Fixture.calendar(), locale: locale)
-        for hour in [10, 15, 19, 1] {
+        for hour in [4, 10, 15, 19, 23] {
             let header = HomeScreenBuilder.header(now: Fixture.date(2026, 9, 24, hour), newestSample: nil, mode: .evening, summary: .text(""), format: format)
             #expect(header.greeting == "Good evening.", "at \(hour):00")
+        }
+        for (hour, minute) in [(0, 0), (0, 30), (1, 0), (3, 59)] {
+            let header = HomeScreenBuilder.header(now: Fixture.date(2026, 9, 24, hour, minute), newestSample: nil, mode: .evening, summary: .text(""), format: format)
+            #expect(header.greeting == "Good night.", "at \(hour):\(minute)")
+            #expect(header.greetingEmphasis == "night")
         }
         let day = HomeScreenBuilder.header(now: Fixture.date(2026, 9, 24, 15), newestSample: nil, mode: .day, summary: .text(""), format: format)
         #expect(day.greeting == "Good afternoon.")

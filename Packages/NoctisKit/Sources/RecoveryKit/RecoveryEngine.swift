@@ -24,14 +24,30 @@ public enum RecoveryEngine {
         let baselines = BaselineEngine.baselines(for: lastNight.night, history: complete)
         let window = BaselineEngine.window(for: lastNight.night, in: complete)
         let scored = score(lastNight: lastNight, baselines: baselines, baselineNights: window.count, needMinutes: needMinutes, model: model)
-        let today = scored.with(histories: histories(lastNight, window: window, baselines: baselines, factors: scored.factors))
         // Each night in the window, scored exactly as today was (same
         // model) — skipping nights that were still in the learning state
-        // themselves.
-        let windowScores = window.compactMap { night in
-            scoreAsOfThatMorning(night, complete: complete, needMinutes: needMinutes, model: model).map { Double($0) }
+        // themselves. They give the comparison's baseline and, factor by
+        // factor, your usual.
+        let windowResults = window.compactMap { night in
+            scoreResultAsOfThatMorning(night, complete: complete, needMinutes: needMinutes, model: model)
         }
+        let today = scored
+            .with(histories: histories(lastNight, window: window, baselines: baselines, factors: scored.factors))
+            .with(usuals: usuals(windowResults))
+        let windowScores = windowResults.map { Double($0.score) }
         return .scored(today.with(comparison: comparison(score: today.score, windowScores: windowScores)))
+    }
+
+    /// Each factor's mean score over the window's scored nights; a factor
+    /// with fewer than `BaselineEngine.minimumNights` of them has none.
+    static func usuals(_ windowResults: [RecoveryResult]) -> [RecoveryFactorKind: Double] {
+        var usuals: [RecoveryFactorKind: Double] = [:]
+        for kind in RecoveryFactorKind.allCases {
+            let scores = windowResults.compactMap { $0.factor(kind)?.score }
+            guard scores.count >= BaselineEngine.minimumNights else { continue }
+            usuals[kind] = Double(scores.reduce(0, +)) / Double(scores.count)
+        }
+        return usuals
     }
 
     /// Each of `nights` scored as its own morning's recovery was: the
@@ -53,6 +69,10 @@ public enum RecoveryEngine {
     /// `night` scored with the history up to it, or nil while it was
     /// still in the learning state.
     static func scoreAsOfThatMorning(_ night: NightMetrics, complete: [NightMetrics], needMinutes: Double, model: RecoveryModel) -> Int? {
+        scoreResultAsOfThatMorning(night, complete: complete, needMinutes: needMinutes, model: model)?.score
+    }
+
+    static func scoreResultAsOfThatMorning(_ night: NightMetrics, complete: [NightMetrics], needMinutes: Double, model: RecoveryModel) -> RecoveryResult? {
         guard complete.count(where: { $0.night <= night.night }) >= RecoveryModelV1.learningNights else { return nil }
         return score(
             lastNight: night,
@@ -60,7 +80,7 @@ public enum RecoveryEngine {
             baselineNights: BaselineEngine.window(for: night.night, in: complete).count,
             needMinutes: needMinutes,
             model: model
-        ).score
+        )
     }
 
     /// Today's score against the mean of the window's scores; no

@@ -107,6 +107,12 @@ struct ScoredHeroView: View {
             }
 
             FactorCapsulesView(factors: content.factors, open: focus)
+
+            if let caption = content.usualCaption {
+                Text(caption)
+                    .noctisFont(12, relativeTo: .caption)
+                    .foregroundStyle(.noctisInk3)
+            }
         }
         // Cancelled with the view, so a skipped reveal never lands a haptic.
         .task(id: reveal) {
@@ -135,6 +141,7 @@ struct ScoredHeroView: View {
                     reveal: reveal.holdsStart ? 0 : 1,
                     highlight: focused.flatMap { kind in content.segments.firstIndex { $0.kind == kind } },
                     dim: focused == nil ? 0 : 1,
+                    showsUsual: content.usualCaption != nil,
                     diameter: Self.ringDiameter,
                     lineWidth: Self.ringLineWidth
                 )
@@ -179,7 +186,7 @@ struct ScoredHeroView: View {
     }
 
     private var segments: [NoctisRingSegment] {
-        content.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) }
+        content.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction, usual: $0.usual) }
     }
 
     /// Highlight the capsule's segment, then open detail at it.
@@ -340,7 +347,7 @@ struct FactorCapsulesView: View {
             value: reveal
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(factor.name) \(factor.score)")
+        .accessibilityLabel(factor.spoken)
         .accessibilityHint("Opens recovery details at \(factor.name).")
         .accessibilityAddTraits(.isButton)
     }

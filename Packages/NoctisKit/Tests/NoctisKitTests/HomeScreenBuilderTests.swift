@@ -261,7 +261,7 @@ struct HomeScreenBuilderTests {
         ]
         let card = try #require(HomeScreenBuilder.build(snapshot(sleep: samples), now: now, calendar: calendar, locale: locale).lastNight)
         #expect(card.chart.spans == [StripSegment(stage: .core, start: 0, end: 0.5), StripSegment(stage: .deep, start: 0.5, end: 1)])
-        #expect(card.chart.connectors == [NightConnector(position: 0.5, from: .core, to: .deep)])
+        #expect(card.chart.connectors == [NightConnector(position: 0.5, from: .core, to: .deep, entered: .deep)])
     }
 
     @Test func withoutStagesTheChartSaysSo() throws {

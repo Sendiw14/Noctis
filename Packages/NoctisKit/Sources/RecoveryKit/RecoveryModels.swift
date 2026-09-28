@@ -162,8 +162,12 @@ public struct RecoveryFactor: Sendable, Equatable {
     /// baseline in the good direction (positive = higher HRV or lower
     /// resting heart rate).
     public let standardScore: Double?
+    /// Your usual score for this factor: its mean over the same 14-night
+    /// baseline window, each night scored as its own morning was. Nil
+    /// under 5 scored nights (`BaselineEngine.minimumNights`).
+    public let usual: Double?
 
-    public init(kind: RecoveryFactorKind, score: Int, weight: Double, value: Double, baseline: Double?, delta: Double?, standardScore: Double? = nil) {
+    public init(kind: RecoveryFactorKind, score: Int, weight: Double, value: Double, baseline: Double?, delta: Double?, standardScore: Double? = nil, usual: Double? = nil) {
         self.kind = kind
         self.score = score
         self.weight = weight
@@ -171,6 +175,11 @@ public struct RecoveryFactor: Sendable, Equatable {
         self.baseline = baseline
         self.delta = delta
         self.standardScore = standardScore
+        self.usual = usual
+    }
+
+    func with(usual: Double?) -> RecoveryFactor {
+        RecoveryFactor(kind: kind, score: score, weight: weight, value: value, baseline: baseline, delta: delta, standardScore: standardScore, usual: usual)
     }
 
     /// Where the value sits against the person's normal range (V2 only).
@@ -372,6 +381,15 @@ public struct RecoveryResult: Sendable, Equatable {
             night: night, score: score, factors: factors, confidence: confidence, baselineNights: baselineNights,
             modelVersion: modelVersion, baselines: baselines, missingFactors: missingFactors, comparison: comparison,
             heartCapApplied: heartCapApplied, topContributor: topContributor, histories: histories
+        )
+    }
+
+    /// The same result with each factor's usual score filled in.
+    func with(usuals: [RecoveryFactorKind: Double]) -> RecoveryResult {
+        RecoveryResult(
+            night: night, score: score, factors: factors.map { $0.with(usual: usuals[$0.kind]) }, confidence: confidence,
+            baselineNights: baselineNights, modelVersion: modelVersion, baselines: baselines, missingFactors: missingFactors,
+            comparison: comparison, heartCapApplied: heartCapApplied, topContributor: topContributor, histories: histories
         )
     }
 

@@ -105,8 +105,11 @@ struct HomePill: View {
         Text(text)
             .noctisFont(13, .semibold, relativeTo: .footnote)
             .monospacedDigit()
-            .lineLimit(1)
-            .fixedSize()
+            // One line at normal sizes; wraps inside its chart at
+            // accessibility sizes (the layout offers it the chart's width).
+            .multilineTextAlignment(.center)
+            .lineLimit(3)
+            .fixedSize(horizontal: false, vertical: true)
             .foregroundStyle(onNightPanel ? NoctisAppColor.nightPanel : NoctisAppColor.bg)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)

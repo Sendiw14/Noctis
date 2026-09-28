@@ -20,6 +20,9 @@ public enum MockScenario: String, Sendable, CaseIterable {
     case lateBedtime
     /// Like `full`, but a steady sleeper on their usual (a streak insight).
     case steady
+    /// Like `full`, but last night was restless: 11 awakenings, uneven
+    /// runs and one 40-minute REM (the sleep landscape's stress test).
+    case messyNight
 }
 
 /// Development-only stand-in for a real HealthKit-backed provider. Clearly
@@ -68,11 +71,12 @@ public final class MockHealthKitProvider: HealthDataProviding {
         let lastNight: MockLastNight = switch scenario {
         case .lateBedtime: .later
         case .steady: .steady
+        case .messyNight: .messy
         default: .laterAndShorter
         }
         let generated = MockNightGenerator.generate(seed: seed, count: historyDays, referenceDate: referenceDate, calendar: calendar, lastNight: lastNight)
         let nights: [NightProfile] = switch scenario {
-        case .full, .sleepOnly, .stale, .lateBedtime, .steady: generated
+        case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight: generated
         case .learning: Array(generated.suffix(3))
         case .empty: []
         case .gap: Array(generated.dropLast())

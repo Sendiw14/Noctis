@@ -105,6 +105,7 @@ struct NightPanelView: View {
         return NightChartView(
             chart: chart,
             drawn: reveal.holdsStart ? 0 : 1,
+            details: reveal.holdsStart ? 0 : 1,
             focusLane: focusLane,
             focusActive: scrubbing || laneFocus != nil,
             line: scrub,
@@ -221,310 +222,6 @@ struct NightChartDescriptor: AXChartDescriptorRepresentable {
             additionalAxes: [],
             series: [AXDataSeriesDescriptor(name: "Stages", isContinuous: false, dataPoints: points)]
         )
-    }
-}
-
-/// Four lanes (Awake, REM, Core, Deep) with one rounded bar per run of a
-/// stage, a step connector where the night moves straight into another
-/// lane, the heart-rate strip, start, midpoint and end times, and each
-/// stage's total. Without stages: one sage bar in the Core lane. Draws
-/// left to right as `drawn` goes 0 → 1; the scrub and lane focus dim
-/// every other lane to 40%. The share card uses it too.
-struct NightChartView: View {
-    let chart: NightChartContent
-    var drawn: Double = 1
-    var focusLane: NightLane?
-    var focusActive = false
-    var line: NightReading?
-    var showsLine = false
-    var pillText: String?
-    var pillPosition: Double = 0
-    var onScrub: ((Double?) -> Void)?
-    var onLaneTap: ((NightLane) -> Void)?
-    /// A fixed lane height (the share card); otherwise it scales with the
-    /// lane labels (R4).
-    var laneHeightOverride: CGFloat?
-
-    @NoctisScaledLength(relativeTo: .caption2) private var scaledLaneHeight: CGFloat = 28
-    @Environment(\.colorSchemeContrast) private var contrast
-    @State private var width: CGFloat = 0
-
-    static let heartHeight: CGFloat = 28
-    static let heartGap: CGFloat = 8
-    /// The label column's tap area reaches this far into the panel's
-    /// padding, without moving anything.
-    private static let labelReach: CGFloat = 12
-    /// Every lane label's tap area is at least this tall (R10 targets).
-    static let minimumTarget: CGFloat = 44
-
-    private var laneHeight: CGFloat { laneHeightOverride ?? scaledLaneHeight }
-    private var targetOutset: CGFloat { max(Self.minimumTarget - laneHeight, 0) / 2 }
-    private var lanesHeight: CGFloat { laneHeight * CGFloat(NightLane.allCases.count) }
-    private var heartBlock: CGFloat { chart.heart == nil ? 0 : Self.heartGap + Self.heartHeight }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
-            HStack(alignment: .top, spacing: 0) {
-                laneLabels
-                VStack(spacing: NoctisSpacing.xxs) {
-                    NightChartCanvas(
-                        chart: chart,
-                        drawn: drawn,
-                        emphasis: focusActive ? 1 : 0,
-                        lane: focusLane,
-                        connectorOpacity: contrast == .increased ? 1 : 0.5,
-                        lanesHeight: lanesHeight
-                    )
-                    .frame(height: lanesHeight + heartBlock)
-                    .overlay { scrubLine }
-                    .overlay(alignment: .top) { pill }
-                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-                    .gesture(HorizontalScrubGesture(isEnabled: onScrub != nil) { x in
-                        onScrub?(x.map { width > 0 ? Double($0 / width) : 0 })
-                    })
-                    HStack {
-                        ForEach(Array(chart.timeLabels.enumerated()), id: \.offset) { index, label in
-                            if index > 0 { Spacer(minLength: NoctisSpacing.xxs) }
-                            Text(label)
-                                .noctisFont(11, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
-                                .foregroundStyle(.noctisNightInk2)
-                        }
-                    }
-                }
-            }
-            if !chart.laneTotals.isEmpty {
-                NightStageTotalsView(totals: chart.laneTotals)
-            }
-        }
-        .accessibilityHidden(true)
-    }
-
-    private var laneLabels: some View {
-        VStack(alignment: .trailing, spacing: 0) {
-            ForEach(NightLane.allCases, id: \.self) { lane in
-                Text(lane.name)
-                    .noctisFont(11, focusActive && focusLane == lane ? .bold : .medium, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
-                    .foregroundStyle(.noctisNightInk2)
-                    .frame(height: laneHeight)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    // A 44pt-tall target on a 28pt lane: padded out, made
-                    // tappable, then the padding given back, so nothing
-                    // moves (it overlaps its neighbors' by the difference).
-                    .padding(.vertical, targetOutset)
-                    .contentShape(Rectangle())
-                    .onTapGesture { onLaneTap?(lane) }
-                    .allowsHitTesting(onLaneTap != nil)
-                    .padding(.vertical, -targetOutset)
-            }
-            if chart.heart != nil {
-                Image(systemName: "heart.fill")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.noctisNightInk2)
-                    .frame(height: Self.heartHeight)
-                    .padding(.top, Self.heartGap)
-            }
-        }
-        .fixedSize(horizontal: true, vertical: false)
-        // The gap to the chart and a strip of the panel's padding belong to
-        // the labels' tap area.
-        .padding(.trailing, NoctisSpacing.xs)
-        .padding(.leading, Self.labelReach)
-        .padding(.leading, -Self.labelReach)
-    }
-
-    /// The scrub's 1pt ivory line and the dot on its lane.
-    private var scrubLine: some View {
-        Canvas { context, size in
-            guard let line else { return }
-            let x = line.position * size.width
-            context.fill(Path(CGRect(x: x - 0.5, y: 0, width: 1, height: size.height)), with: .color(NoctisAppColor.nightInk))
-            let y = laneHeight * (CGFloat(line.lane.rawValue) + 0.5)
-            context.fill(Path(ellipseIn: CGRect(x: x - 4, y: y - 4, width: 8, height: 8)), with: .color(NoctisAppColor.nightInk))
-        }
-        .opacity(showsLine ? 1 : 0)
-        .allowsHitTesting(false)
-    }
-
-    /// The pill floats just above the chart, kept inside it.
-    private var pill: some View {
-        NoctisFractionLayout {
-            HomePill(text: pillText ?? "", onNightPanel: true)
-                .noctisFraction(pillPosition)
-        }
-        .alignmentGuide(.top) { $0[.bottom] + 6 }
-        .opacity(focusActive && pillText != nil ? 1 : 0)
-        .allowsHitTesting(false)
-    }
-}
-
-/// The chart's lanes and heart-rate strip, animatable over how much has
-/// drawn and how far the other lanes have dimmed.
-struct NightChartCanvas: View, Animatable {
-    let chart: NightChartContent
-    var drawn: Double
-    var emphasis: Double
-    let lane: NightLane?
-    let connectorOpacity: Double
-    /// The lanes' part of the canvas; the heart strip sits below it.
-    let lanesHeight: CGFloat
-
-    static let dimmedOpacity = 0.4
-    /// Bars fill this share of their lane's height.
-    static let barShare: CGFloat = 0.7
-    static let minimumBarWidth: CGFloat = 4
-    static let tickWidth: CGFloat = 3
-    static let connectorWidth: CGFloat = 2
-
-    var animatableData: AnimatablePair<Double, Double> {
-        get { AnimatablePair(drawn, emphasis) }
-        set {
-            drawn = newValue.first
-            emphasis = newValue.second
-        }
-    }
-
-    var body: some View {
-        Canvas { context, size in
-            draw(in: context, size: size)
-        }
-        // Redrawn every frame of the draw-in and the scrub.
-        .drawingGroup()
-    }
-
-    private func draw(in context: GraphicsContext, size: CGSize) {
-        let laneHeight = lanesHeight / CGFloat(NightLane.allCases.count)
-        let barHeight = laneHeight * Self.barShare
-        let ink = NoctisAppColor.nightInk
-        let dimmed = 1 - (1 - Self.dimmedOpacity) * min(max(emphasis, 0), 1)
-        func centerY(_ nightLane: NightLane) -> CGFloat { laneHeight * (CGFloat(nightLane.rawValue) + 0.5) }
-
-        // Faint lane guides, under everything and never clipped.
-        for guide in NightLane.allCases {
-            context.fill(Path(CGRect(x: 0, y: centerY(guide) - 0.5, width: size.width, height: 1)), with: .color(ink.opacity(0.08)))
-        }
-
-        var context = context
-        context.clip(to: Path(CGRect(x: 0, y: 0, width: size.width * min(max(drawn, 0), 1), height: size.height)))
-
-        if chart.hasStages {
-            // Steps go under the bars: each leaves the bar being left,
-            // turns, runs to the next lane and turns into the bar entered,
-            // so it always joins two bars. Its horizontal stubs run only
-            // as far as the bars are wide, so a thin bar or a tick never
-            // has one poking out of its far side.
-            for connector in chart.connectors {
-                let x = connector.position * size.width
-                let from = centerY(connector.from)
-                let to = centerY(connector.to)
-                // The stub leaving a bar can only lie over the run itself
-                // (a thin bar is drawn wider than its run); the one entering
-                // a bar lies over the bar as drawn.
-                let leaving = run(endingAt: connector.position, in: connector.from).map { ($0.end - $0.start) * size.width }
-                let entering = run(startingAt: connector.position, in: connector.to).map { drawnWidth(of: $0, in: size.width) }
-                let stubIn = min(barHeight / 2, leaving ?? Self.minimumBarWidth)
-                let stubOut = min(barHeight / 2, entering ?? Self.minimumBarWidth)
-                let turn = min(6, stubIn, stubOut, abs(to - from) / 2)
-                let direction: CGFloat = to > from ? 1 : -1
-                var step = Path()
-                step.move(to: CGPoint(x: x - stubIn, y: from))
-                step.addLine(to: CGPoint(x: x - turn, y: from))
-                step.addQuadCurve(to: CGPoint(x: x, y: from + direction * turn), control: CGPoint(x: x, y: from))
-                step.addLine(to: CGPoint(x: x, y: to - direction * turn))
-                step.addQuadCurve(to: CGPoint(x: x + turn, y: to), control: CGPoint(x: x, y: to))
-                step.addLine(to: CGPoint(x: x + stubOut, y: to))
-                var connectorContext = context
-                connectorContext.opacity = (lane == nil || lane == connector.to ? 1 : dimmed)
-                connectorContext.stroke(
-                    step,
-                    with: .color(connector.to.tint.opacity(connectorOpacity)),
-                    style: StrokeStyle(lineWidth: Self.connectorWidth, lineCap: .round, lineJoin: .round)
-                )
-            }
-            for span in chart.spans {
-                var spanContext = context
-                if let lane, lane != span.stage.lane { spanContext.opacity = dimmed }
-                let color = span.stage == .asleep ? NoctisAppColor.sage : span.stage.lane.tint
-                let x = span.start * size.width
-                if span.isTick {
-                    let tick = CGRect(x: x, y: centerY(.awake) - barHeight * 0.4, width: Self.tickWidth, height: barHeight * 0.8)
-                    spanContext.fill(Path(roundedRect: tick, cornerRadius: Self.tickWidth / 2), with: .color(color))
-                    continue
-                }
-                let width = max((span.end - span.start) * size.width, Self.minimumBarWidth)
-                let rect = CGRect(x: x, y: centerY(span.stage.lane) - barHeight / 2, width: width, height: barHeight)
-                spanContext.fill(Path(roundedRect: rect, cornerRadius: min(barHeight, width) / 2), with: .color(color))
-            }
-        } else {
-            let rect = CGRect(x: 0, y: centerY(.core) - barHeight / 2, width: size.width, height: barHeight)
-            context.fill(Path(roundedRect: rect, cornerRadius: barHeight / 2), with: .color(NoctisAppColor.sage))
-        }
-
-        if let heart = chart.heart {
-            drawHeart(heart, in: context, top: lanesHeight + NightChartView.heartGap, width: size.width)
-        }
-    }
-
-    /// The run in `lane` that ends at `position`.
-    private func run(endingAt position: Double, in lane: NightLane) -> StripSegment? {
-        chart.spans.first { $0.stage.lane == lane && abs($0.end - position) < 1e-9 }
-    }
-
-    /// The run in `lane` that starts at `position`.
-    private func run(startingAt position: Double, in lane: NightLane) -> StripSegment? {
-        chart.spans.first { $0.stage.lane == lane && abs($0.start - position) < 1e-9 }
-    }
-
-    /// How wide `span`'s bar (or tick) is drawn.
-    private func drawnWidth(of span: StripSegment, in width: CGFloat) -> CGFloat {
-        span.isTick ? Self.tickWidth : max((span.end - span.start) * width, Self.minimumBarWidth)
-    }
-
-    /// A smoothed line through the night's heart rate, with its lowest
-    /// point marked and labeled.
-    private func drawHeart(_ heart: NightHeartContent, in context: GraphicsContext, top: CGFloat, width: CGFloat) {
-        let height = NightChartView.heartHeight
-        let range = max(heart.high - heart.low, 1)
-        func point(_ sample: NightHeartSeries.Point) -> CGPoint {
-            CGPoint(x: sample.position * width, y: top + height - CGFloat((sample.bpm - heart.low) / range) * height)
-        }
-        let points = heart.points.map(point)
-        guard let first = points.first else { return }
-        var path = Path()
-        path.move(to: first)
-        // Catmull-Rom through the points: smooth, and it passes through
-        // every real value.
-        for index in 1..<points.count {
-            let p0 = points[max(index - 2, 0)]
-            let p1 = points[index - 1]
-            let p2 = points[index]
-            let p3 = points[min(index + 1, points.count - 1)]
-            let c1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6)
-            let c2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6)
-            path.addCurve(to: p2, control1: c1, control2: c2)
-        }
-        let ink = NoctisAppColor.nightInk
-        context.stroke(path, with: .color(ink.opacity(0.6)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
-
-        let lowest = point(heart.lowest)
-        context.fill(Path(ellipseIn: CGRect(x: lowest.x - 2.5, y: lowest.y - 2.5, width: 5, height: 5)), with: .color(ink))
-        let label = context.resolve(
-            Text(heart.lowestLabel).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(ink.opacity(0.8))
-        )
-        let labelSize = label.measure(in: CGSize(width: width, height: height))
-        // Beside the point, on whichever side has room.
-        let rightSide = lowest.x + 6 + labelSize.width <= width
-        let x = max(rightSide ? lowest.x + 6 : lowest.x - 6 - labelSize.width, 0)
-        let y = min(max(lowest.y - labelSize.height / 2, top), top + height - labelSize.height)
-        let rect = CGRect(x: x, y: y, width: labelSize.width, height: labelSize.height)
-        // A halo in the panel's color, so the line steps aside for the
-        // glyphs without a box cut out of it.
-        let halo = context.resolve(
-            Text(heart.lowestLabel).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(NoctisAppColor.nightPanel)
-        )
-        for offset in [(-1.5, 0), (1.5, 0), (0, -1.5), (0, 1.5), (-1.1, -1.1), (1.1, -1.1), (-1.1, 1.1), (1.1, 1.1)] as [(CGFloat, CGFloat)] {
-            context.draw(halo, in: rect.offsetBy(dx: offset.0, dy: offset.1))
-        }
-        context.draw(label, in: rect)
     }
 }
 
@@ -766,19 +463,24 @@ struct InsightEvidenceChart: View {
                     tickLabel(usual, emphasized: false).noctisFraction(usual.position)
                 }
             }
-        case .nights(let dots):
-            HStack(spacing: 10) {
-                ForEach(Array(dots.enumerated()), id: \.offset) { _, dot in
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(dot.within == true ? cocoa : (dot.within == nil ? cocoa.opacity(0.12) : Color.clear))
-                            .overlay(Circle().strokeBorder(dot.within == false ? cocoa.opacity(0.3) : Color.clear, lineWidth: 1.5))
-                            .frame(width: 12, height: 12)
-                        Text(dot.label)
-                            .noctisFont(11, .medium, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
-                            .foregroundStyle(NoctisAppColor.blockInk)
+        case .nights(let dots, let caption):
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 10) {
+                    ForEach(Array(dots.enumerated()), id: \.offset) { _, dot in
+                        VStack(spacing: 4) {
+                            Circle()
+                                .fill(dot.within == true ? cocoa : (dot.within == nil ? cocoa.opacity(0.12) : Color.clear))
+                                .overlay(Circle().strokeBorder(dot.within == false ? cocoa.opacity(0.3) : Color.clear, lineWidth: 1.5))
+                                .frame(width: 12, height: 12)
+                            Text(dot.label)
+                                .noctisFont(11, .medium, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
+                                .foregroundStyle(NoctisAppColor.blockInk)
+                        }
                     }
                 }
+                Text(caption)
+                    .noctisFont(12, relativeTo: .caption)
+                    .foregroundStyle(NoctisAppColor.blockInk)
             }
         }
     }
@@ -833,15 +535,17 @@ private struct InsightSwipeActions: ViewModifier {
 
 /// A white card (Dark: surface) of stage-stacked bars: each night's time
 /// asleep split bottom to top into Deep, Core and REM (a solid sage bar
-/// without stages), last night at full strength and the others at 60%;
-/// an orange dashed need line, weekday initials of the mornings, and the
-/// average. Nights without data are an empty track, never a zero-height
-/// bar.
+/// without stages), fully saturated in both modes; an orange dashed need
+/// line, weekday initials of the mornings (last night's bold, with a dot
+/// under it), and the average. Nights without data are an empty track,
+/// never a zero-height bar.
 ///
-/// Tapping a column (its full width, into the card's padding) selects it —
-/// the others dim to 40% — and shows "Tue · 7h 12m · Deep 1h 20m · REM
-/// 1h 50m"; tapping it again clears. Any other tap opens the Sleep tab.
-/// The bars grow from the baseline in the morning reveal.
+/// One drag gesture over the whole chart picks the night nearest the
+/// finger: the selection follows it with a snap haptic at each bar, the
+/// others dim to 45%, and "Tue · 7h 12m · Deep 1h 20m · REM 1h 50m" shows
+/// in a pill that follows and clamps. The last selection stays until it's
+/// tapped again. Any tap outside the chart opens the Sleep tab. The bars
+/// grow from the baseline in the morning reveal.
 struct WeekCardView: View {
     let content: WeekCardContent
     let open: () -> Void
@@ -850,14 +554,17 @@ struct WeekCardView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selected: Int?
     @State private var tapWidth: CGFloat = 0
+    /// The selection when the current touch began, and where.
+    @State private var touchStart: Int??
 
     static let chartHeight: CGFloat = 110
-    static let barWidth: CGFloat = 16
-    static let restingOpacity = 0.6
     /// The tap area runs this far out past the bars on each side: through
     /// the card's padding and the screen margin. Only the two outer
     /// columns use it.
     static let tapOutset = NoctisSpacing.lg + NoctisSpacing.lg
+
+    private var barsWidth: CGFloat { max(tapWidth - 2 * Self.tapOutset, 0) }
+    private var barWidth: CGFloat { WeekColumns.barWidth(barsWidth: barsWidth, count: content.bars.count) }
 
     var body: some View {
         NoctisAppCard {
@@ -921,38 +628,77 @@ struct WeekCardView: View {
             }
             .frame(height: Self.chartHeight)
             .overlay(alignment: .top) { selectionPill }
-            HStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
                 ForEach(Array(content.bars.enumerated()), id: \.offset) { _, bar in
-                    Text(bar.label)
-                        .noctisFont(13, bar.isLastNight ? .semibold : .medium, relativeTo: .footnote)
-                        .foregroundStyle(bar.isLastNight ? NoctisInkStyle(.primary) : .noctisInk3)
-                        .frame(maxWidth: .infinity)
+                    VStack(spacing: 3) {
+                        Text(bar.label)
+                            .noctisFont(13, bar.isLastNight ? .bold : .medium, relativeTo: .footnote)
+                            .foregroundStyle(bar.isLastNight ? NoctisInkStyle(.primary) : .noctisInk3)
+                        // Last night: a 4pt dot (the others keep the room).
+                        Circle()
+                            .fill(NoctisAppColor.ink)
+                            .frame(width: 4, height: 4)
+                            .opacity(bar.isLastNight ? 1 : 0)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
             }
         }
-        // Each column's tap area is its full column: the width the bar is
-        // centered in, top to bottom (the two outer ones run out past the
-        // card's padding into the screen margin).
+        // One gesture over the whole chart — the bars' columns, top to
+        // bottom, and out past the card's padding into the screen margin
+        // for the two outer ones. The tap gesture keeps a tap on the chart
+        // from opening Sleep; the drag runs beside the page's own scroll.
         .padding(.horizontal, Self.tapOutset)
         .contentShape(Rectangle())
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { tapWidth = $0 }
-        .onTapGesture(coordinateSpace: .local) { location in
-            guard tapWidth > 0, !content.bars.isEmpty else { return }
-            select(WeekColumns.index(x: location.x, barsWidth: tapWidth - 2 * Self.tapOutset, outset: Self.tapOutset, count: content.bars.count))
-        }
+        .onTapGesture {}
+        .simultaneousGesture(scrub)
         .padding(.horizontal, -Self.tapOutset)
     }
 
+    /// The night nearest the finger, following it; a tap on the night that
+    /// was already selected clears it.
+    private var scrub: some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .local)
+            .onChanged { value in
+                if touchStart == nil { touchStart = .some(selected) }
+                let vertical = abs(value.translation.height)
+                // A mostly vertical drag is the page scrolling: put the
+                // selection back to what it was.
+                if vertical > WeekColumns.scrollThreshold, vertical > abs(value.translation.width) {
+                    if selected != touchStart.flatMap({ $0 }) { selected = touchStart.flatMap { $0 } }
+                    return
+                }
+                let column = column(at: value.location.x)
+                guard column != selected else { return }
+                NoctisHaptics.snapLight()
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.15)) { selected = column }
+            }
+            .onEnded { value in
+                defer { touchStart = nil }
+                guard let start = touchStart else { return }
+                let moved = hypot(value.translation.width, value.translation.height)
+                if moved < WeekColumns.tapSlop, column(at: value.location.x) == start {
+                    withAnimation(.easeOut(duration: 0.2)) { selected = nil }
+                }
+            }
+    }
+
+    private func column(at x: CGFloat) -> Int {
+        WeekColumns.index(x: x, barsWidth: barsWidth, outset: Self.tapOutset, count: content.bars.count)
+    }
+
     private func barView(_ bar: WeekBar, index: Int) -> some View {
-        ZStack(alignment: .bottom) {
-            Capsule(style: .continuous)
-                .fill(NoctisAppColor.track)
+        let width = barWidth
+        let shape = RoundedRectangle(cornerRadius: WeekColumns.cornerRadius, style: .continuous)
+        return ZStack(alignment: .bottom) {
+            shape.fill(NoctisAppColor.track)
             if let fraction = bar.fraction {
-                let height = max(Self.chartHeight * fraction, Self.barWidth)
+                let height = max(Self.chartHeight * fraction, WeekColumns.cornerRadius * 2)
                 stack(bar.stages, height: height)
                     .frame(height: height)
-                    .clipShape(Capsule(style: .continuous))
-                    .opacity(opacity(for: bar, index: index))
+                    .clipShape(shape)
+                    .opacity(opacity(index))
                     // Grows from the baseline in the morning reveal.
                     .scaleEffect(x: 1, y: reveal.holdsStart ? 0.001 : 1, anchor: .bottom)
                     .animation(
@@ -961,7 +707,7 @@ struct WeekCardView: View {
                     )
             }
         }
-        .frame(width: Self.barWidth, height: Self.chartHeight)
+        .frame(width: width, height: Self.chartHeight)
         .animation(.easeOut(duration: 0.2), value: selected)
     }
 
@@ -979,16 +725,17 @@ struct WeekCardView: View {
         }
     }
 
-    private func opacity(for bar: WeekBar, index: Int) -> Double {
-        if let selected { return selected == index ? 1 : 0.4 }
-        return bar.isLastNight ? 1 : Self.restingOpacity
+    /// Fully saturated until one is selected; then the others dim.
+    private func opacity(_ index: Int) -> Double {
+        guard let selected else { return 1 }
+        return selected == index ? 1 : WeekColumns.dimmedOpacity
     }
 
     /// Floats just above the bars, over the selected night.
     @ViewBuilder
     private var selectionPill: some View {
         if let selected {
-            NoctisFractionLayout {
+            NoctisFractionLayout(wraps: true) {
                 HomePill(text: content.bars[selected].detail)
                     .noctisFraction((Double(selected) + 0.5) / Double(max(content.bars.count, 1)))
             }
@@ -997,20 +744,13 @@ struct WeekCardView: View {
             .allowsHitTesting(false)
         }
     }
-
-    private func select(_ index: Int) {
-        NoctisHaptics.selectionTick()
-        withAnimation(.easeOut(duration: 0.2)) {
-            selected = selected == index ? nil : index
-        }
-    }
 }
 
-/// This week's tap columns: the bars' area split into equal columns, the
+/// This week's columns: the bars' area split into equal columns, the
 /// same ones the bars are centered in, with the outer two taking
-/// everything past them.
+/// everything past them. The night nearest a finger is its column's.
 nonisolated enum WeekColumns {
-    /// The column at `x`, in a tap area that starts `outset` before the
+    /// The column at `x`, in a touch area that starts `outset` before the
     /// bars' area (`barsWidth` wide) and ends `outset` after it.
     static func index(x: CGFloat, barsWidth: CGFloat, outset: CGFloat, count: Int) -> Int {
         guard count > 0, barsWidth > 0 else { return 0 }
@@ -1022,6 +762,20 @@ nonisolated enum WeekColumns {
     static func width(barsWidth: CGFloat, count: Int) -> CGFloat {
         count > 0 ? barsWidth / CGFloat(count) : 0
     }
+
+    /// A bar is its column less 10pt, at most 26pt wide.
+    static func barWidth(barsWidth: CGFloat, count: Int) -> CGFloat {
+        let column = width(barsWidth: barsWidth, count: count)
+        return column > 0 ? min(column - 10, 26) : 24
+    }
+
+    static let cornerRadius: CGFloat = 6
+    /// The other bars while one is selected.
+    static let dimmedOpacity = 0.45
+    /// A touch that moves less than this is a tap.
+    static let tapSlop: CGFloat = 10
+    /// A drag more vertical than horizontal past this is the page scrolling.
+    static let scrollThreshold: CGFloat = 12
 }
 
 nonisolated struct DashedLine: Shape {

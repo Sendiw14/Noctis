@@ -27,21 +27,22 @@ public nonisolated enum StripStage: String, Sendable, Equatable, CaseIterable {
 }
 
 /// One continuous run of a stage: consecutive samples of the same stage
-/// are one bar, with no gaps inside it.
+/// are one run, with no gaps inside it.
 public nonisolated struct StripSegment: Sendable, Equatable {
     public let stage: StripStage
     /// Position along the night, 0...1.
     public let start: Double
     public let end: Double
-    /// Awake for under `HomeScreenBuilder.briefAwakeMinutes`: drawn as a
-    /// small tick rather than a bar.
-    public let isTick: Bool
+    /// A run under `HomeScreenBuilder.notchMinutes`, of any stage: drawn
+    /// as a small rounded notch in its lane instead of a piece of the
+    /// ribbon, so a brief awakening is never a tall stick.
+    public let isNotch: Bool
 
-    public init(stage: StripStage, start: Double, end: Double, isTick: Bool = false) {
+    public init(stage: StripStage, start: Double, end: Double, isNotch: Bool = false) {
         self.stage = stage
         self.start = start
         self.end = end
-        self.isTick = isTick
+        self.isNotch = isNotch
     }
 }
 
@@ -74,13 +75,24 @@ nonisolated extension StripStage {
     }
 }
 
-/// A step where the night moves from one bar straight into the next in
-/// another lane: drawn from the end of one bar to the start of the next,
-/// in the color of the stage being entered.
+/// Where the ribbon moves from one lane to another: a vertical capsule
+/// from the lane it leaves to the lane it enters, in the color of the
+/// stage entered. Only between runs that touch (a notch between them
+/// doesn't break the ribbon), never across missing data.
 public nonisolated struct NightConnector: Sendable, Equatable {
+    /// 0...1 along the night: where the two runs meet.
     public let position: Double
     public let from: NightLane
     public let to: NightLane
+    /// The stage the ribbon enters (it colors the step).
+    public let entered: StripStage
+
+    public init(position: Double, from: NightLane, to: NightLane, entered: StripStage) {
+        self.position = position
+        self.from = from
+        self.to = to
+        self.entered = entered
+    }
 }
 
 /// The night panel's chart, drawn from SleepSessionEngine's timeline.
@@ -230,8 +242,8 @@ public nonisolated struct LastNightCardContent: Sendable, Equatable {
 // MARK: - Builder
 
 nonisolated extension HomeScreenBuilder {
-    /// Awake for less than this is a tick, not a bar.
-    static let briefAwakeMinutes = 3.0
+    /// A run shorter than this (any stage) is a notch, not ribbon.
+    static let notchMinutes = 3.0
     /// Runs this close together (minutes) join: no gaps inside the night.
     static let joinGapMinutes = 2.0
 
@@ -298,13 +310,11 @@ nonisolated extension HomeScreenBuilder {
         let spans = runs.map { run in
             StripSegment(
                 stage: run.stage, start: run.start, end: run.end,
-                isTick: run.stage == .awake && (run.end - run.start) * minutes < briefAwakeMinutes
+                // Whole seconds, so exactly 3 minutes is a run, not a notch.
+                isNotch: ((run.end - run.start) * span).rounded() < notchMinutes * 60
             )
         }
-        let connectors = zip(spans, spans.dropFirst()).compactMap { previous, next -> NightConnector? in
-            guard abs(next.start - previous.end) < 1e-9, previous.stage.lane != next.stage.lane else { return nil }
-            return NightConnector(position: next.start, from: previous.stage.lane, to: next.stage.lane)
-        }
+        let connectors = ribbonSteps(spans)
         return NightChartContent(
             spans: spans,
             connectors: connectors,
@@ -314,6 +324,29 @@ nonisolated extension HomeScreenBuilder {
             heart: heartContent,
             clock: NightClock(start: start, end: end, timeZone: session.timeZone, format: format)
         )
+    }
+
+    /// The ribbon's lane changes: between each pair of runs that touch
+    /// (any notches between them included) in different lanes, at the
+    /// middle of whatever notches sit between.
+    static func ribbonSteps(_ spans: [StripSegment]) -> [NightConnector] {
+        var steps: [NightConnector] = []
+        var previous: StripSegment?
+        var lastEnd = 0.0
+        var intact = false
+        for span in spans {
+            intact = intact && abs(span.start - lastEnd) < 1e-6
+            lastEnd = span.end
+            guard !span.isNotch else { continue }
+            if let previous, intact, previous.stage.lane != span.stage.lane {
+                steps.append(NightConnector(
+                    position: (previous.end + span.start) / 2, from: previous.stage.lane, to: span.stage.lane, entered: span.stage
+                ))
+            }
+            previous = span
+            intact = true
+        }
+        return steps
     }
 
     static func heartContent(_ series: NightHeartSeries) -> NightHeartContent {

@@ -4,16 +4,27 @@ import SwiftUI
 /// 1 = trailing edge), kept inside the bounds: labels under a strip or
 /// chart (R8: a system `Layout`, not absolute positioning).
 public struct NoctisFractionLayout: Layout {
-    public init() {}
+    /// Offer each subview the layout's width, so text wider than the
+    /// chart wraps instead of running out of it (a pill at accessibility
+    /// sizes). Off: subviews take their ideal size.
+    public var wraps: Bool
+
+    public init(wraps: Bool = false) {
+        self.wraps = wraps
+    }
+
+    private func offer(_ width: CGFloat?) -> ProposedViewSize {
+        wraps ? ProposedViewSize(width: width, height: nil) : .unspecified
+    }
 
     public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let height = subviews.map { $0.sizeThatFits(.unspecified).height }.max() ?? 0
+        let height = subviews.map { $0.sizeThatFits(offer(proposal.width)).height }.max() ?? 0
         return CGSize(width: proposal.width ?? 0, height: height)
     }
 
     public func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
+            let size = subview.sizeThatFits(offer(bounds.width))
             let fraction = subview[NoctisFraction.self]
             let centerX = bounds.minX + bounds.width * fraction
             let x = min(max(centerX - size.width / 2, bounds.minX), bounds.maxX - size.width)
