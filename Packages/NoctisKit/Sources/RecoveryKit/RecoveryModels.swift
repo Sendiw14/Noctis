@@ -68,9 +68,27 @@ public enum RecoveryModelV2 {
     /// tiny change into a large swing.
     public static let hrvStandardDeviationFloor: Double = 3
     public static let restingStandardDeviationFloor: Double = 1
-    /// Within this many standard deviations of baseline is "your normal
-    /// range" (a normal day scores roughly 68–82).
-    public static let normalRange: Double = 0.5
+}
+
+/// "Your normal range": your usual ± 1 standard deviation of your own last
+/// 14 nights. One definition for the detail sentences, Home's "why" line
+/// and the sparklines. Spreads are floored so a very steady window can't
+/// make a tiny change look unusual.
+public enum RecoveryNormalRange {
+    public static let standardDeviations: Double = 1
+    /// Floors for the spreads the models don't already floor.
+    public static let sleepDurationStandardDeviationFloor: Double = 15
+    public static let timingStandardDeviationFloor: Double = 15
+
+    /// `value` against `baseline`, in floored standard deviations (by value:
+    /// positive = more, later, higher).
+    public static func standardDeviations(_ value: Double, from baseline: Baseline, floor: Double) -> Double {
+        (value - baseline.value) / max(baseline.standardDeviation, floor)
+    }
+
+    public static func contains(standardDeviations z: Double) -> Bool {
+        abs(z) <= standardDeviations
+    }
 }
 
 /// Version 3: V2 plus one rule. When HRV is 1.5 SD or more below its
@@ -158,17 +176,87 @@ public struct RecoveryFactor: Sendable, Equatable {
     /// Where the value sits against the person's normal range (V2 only).
     public var range: RecoveryRange? {
         guard let standardScore, let delta else { return nil }
-        if abs(standardScore) <= RecoveryModelV2.normalRange { return .within }
+        if RecoveryNormalRange.contains(standardDeviations: standardScore) { return .within }
         return delta > 0 ? .above : .below
     }
 }
 
-/// A value's place against the person's own variation: within ±0.5 SD of
-/// baseline, or above or below it (by value, not by goodness).
+/// A value's place against the person's own variation: within ±1 SD of
+/// baseline (`RecoveryNormalRange`), or above or below it (by value, not
+/// by goodness).
 public enum RecoveryRange: String, Sendable, Equatable {
     case within
     case above
     case below
+}
+
+/// What moved today's recovery most: of the factors outside their normal
+/// range, the one with the largest weighted deviation (its share of the
+/// score × how many standard deviations it is from usual). Nil when every
+/// factor is within its normal range.
+public struct RecoveryContributor: Sendable, Equatable {
+    /// What was measured. Consistency reports whichever of bedtime and
+    /// wake time was further from usual.
+    public enum Measure: String, Sendable, Equatable {
+        case sleepDuration
+        case hrv
+        case restingHeartRate
+        case bedtime
+        case wakeTime
+    }
+
+    public let factor: RecoveryFactorKind
+    public let measure: Measure
+    /// Last night minus usual, in the measure's unit (minutes, ms, bpm):
+    /// positive is longer, higher or later.
+    public let difference: Double
+    /// `difference` in floored standard deviations.
+    public let standardDeviations: Double
+    /// The factor's weight × |standardDeviations|.
+    public let weightedDeviation: Double
+
+    public init(factor: RecoveryFactorKind, measure: Measure, difference: Double, standardDeviations: Double, weightedDeviation: Double) {
+        self.factor = factor
+        self.measure = measure
+        self.difference = difference
+        self.standardDeviations = standardDeviations
+        self.weightedDeviation = weightedDeviation
+    }
+
+    /// By value: above (longer, higher, later) or below.
+    public var direction: RecoveryRange { difference > 0 ? .above : .below }
+}
+
+/// One factor's last 14 nights against its normal range, for a sparkline.
+/// Consistency is shown as bedtime (minutes after noon).
+public struct RecoveryFactorHistory: Sendable, Equatable {
+    public let kind: RecoveryFactorKind
+    /// The 14 calendar nights before last night, oldest first; nil where a
+    /// night has no value.
+    public let values: [Double?]
+    /// Last night's value.
+    public let today: Double
+    public let usual: Double
+    /// The floored spread the normal range is drawn with.
+    public let standardDeviation: Double
+
+    public init(kind: RecoveryFactorKind, values: [Double?], today: Double, usual: Double, standardDeviation: Double) {
+        self.kind = kind
+        self.values = values
+        self.today = today
+        self.usual = usual
+        self.standardDeviation = standardDeviation
+    }
+
+    public var normalRange: ClosedRange<Double> {
+        let spread = standardDeviation * RecoveryNormalRange.standardDeviations
+        return (usual - spread)...(usual + spread)
+    }
+
+    /// Window nights with a value.
+    public var nightsRecorded: Int { values.compactMap { $0 }.count }
+    /// Window nights inside the normal range.
+    public var nightsWithin: Int { values.compactMap { $0 }.filter { normalRange.contains($0) }.count }
 }
 
 /// Why a factor isn't in today's score.
@@ -243,6 +331,11 @@ public struct RecoveryResult: Sendable, Equatable {
     public let comparison: RecoveryComparison
     /// V3: both heart signals were far enough off to cap the score at 50.
     public let heartCapApplied: Bool
+    /// The factor furthest outside its normal range; nil when all are within.
+    public let topContributor: RecoveryContributor?
+    /// Each scored factor's 14 nights against its normal range, in factor
+    /// order; a factor without a baseline has none.
+    public let histories: [RecoveryFactorHistory]
 
     public init(
         night: SleepNightKey,
@@ -254,7 +347,9 @@ public struct RecoveryResult: Sendable, Equatable {
         baselines: Baselines = .none,
         missingFactors: [RecoveryFactorKind: RecoveryFactorGap] = [:],
         comparison: RecoveryComparison = .unavailable,
-        heartCapApplied: Bool = false
+        heartCapApplied: Bool = false,
+        topContributor: RecoveryContributor? = nil,
+        histories: [RecoveryFactorHistory] = []
     ) {
         self.night = night
         self.score = score
@@ -266,6 +361,8 @@ public struct RecoveryResult: Sendable, Equatable {
         self.missingFactors = missingFactors
         self.comparison = comparison
         self.heartCapApplied = heartCapApplied
+        self.topContributor = topContributor
+        self.histories = histories
     }
 
     public var factorsUsed: [RecoveryFactorKind] { factors.map(\.kind) }
@@ -274,12 +371,24 @@ public struct RecoveryResult: Sendable, Equatable {
         RecoveryResult(
             night: night, score: score, factors: factors, confidence: confidence, baselineNights: baselineNights,
             modelVersion: modelVersion, baselines: baselines, missingFactors: missingFactors, comparison: comparison,
-            heartCapApplied: heartCapApplied
+            heartCapApplied: heartCapApplied, topContributor: topContributor, histories: histories
+        )
+    }
+
+    func with(histories: [RecoveryFactorHistory]) -> RecoveryResult {
+        RecoveryResult(
+            night: night, score: score, factors: factors, confidence: confidence, baselineNights: baselineNights,
+            modelVersion: modelVersion, baselines: baselines, missingFactors: missingFactors, comparison: comparison,
+            heartCapApplied: heartCapApplied, topContributor: topContributor, histories: histories
         )
     }
 
     public func factor(_ kind: RecoveryFactorKind) -> RecoveryFactor? {
         factors.first { $0.kind == kind }
+    }
+
+    public func history(_ kind: RecoveryFactorKind) -> RecoveryFactorHistory? {
+        histories.first { $0.kind == kind }
     }
 }
 

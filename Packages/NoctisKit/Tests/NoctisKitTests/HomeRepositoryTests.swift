@@ -76,7 +76,26 @@ struct HomeRepositoryTests {
         // 70 minutes short outranks 55 minutes late.
         #expect(insight.kind == .sleepDurationShift)
         #expect(abs(insight.evidence.delta + 70) < 1)
-        #expect(insight.message.hasPrefix("Compared with your recent baseline"))
+    }
+
+    @Test func theLateBedtimeScenarioFiresABedtimeShift() async throws {
+        let insight = try #require(await snapshot(mock(.lateBedtime)).topInsight)
+        #expect(insight.kind == .bedtimeShift)
+        #expect(abs(insight.evidence.delta - 55) < 1)
+    }
+
+    @Test func theSteadyScenarioFiresAStreak() async throws {
+        let insight = try #require(await snapshot(mock(.steady)).topInsight)
+        #expect(insight.kind == .consistentBedtime)
+        #expect((insight.evidence.streakNights ?? 0) >= InsightEngine.minimumStreakNights)
+    }
+
+    @Test func lastNightsHeartRateComesWithTheSnapshot() async throws {
+        let heart = try #require(await snapshot(mock(.full)).lastNightHeart)
+        #expect(heart.points.count > 10)
+        #expect(heart.points.count <= NightHeartSeries.maxPoints)
+        #expect(heart.points.allSatisfy { (0...1).contains($0.position) })
+        #expect(await snapshot(mock(.sleepOnly)).lastNightHeart == nil)
     }
 
     @Test func tonightsBedtimeComesFromTheProfile() async {

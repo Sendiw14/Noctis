@@ -92,7 +92,7 @@ struct InsightFatigueTests {
     private let tonight = SleepNightKey(year: 2026, month: 9, day: 23)
 
     private func insight(_ kind: InsightKind, night: SleepNightKey? = nil) -> Insight {
-        Insight(kind: kind, title: kind.rawValue, message: "", evidence: InsightEvidence(night: night ?? tonight, value: 0, baseline: 0, delta: 0, baselineNights: 14))
+        Insight(kind: kind, evidence: InsightEvidence(night: night ?? tonight, value: 0, baseline: 0, delta: 0, baselineNights: 14))
     }
 
     private var candidates: [Insight] {
@@ -298,29 +298,33 @@ struct HomeWeekAndShareTests {
         return (snapshot, HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: locale))
     }
 
-    @Test func aSelectedBarNamesTheDayTheSleepAndThatMorningsRecovery() async throws {
+    @Test func aSelectedBarNamesTheDayTheSleepAndItsDeepAndREM() async throws {
         let (snapshot, screen) = await screen(.full)
-        guard case .scored(let result)? = snapshot.recovery else {
-            Issue.record("full scenario should score")
-            return
-        }
         let week = try #require(screen.week)
         let last = try #require(week.bars.last)
         let lastNight = try #require(snapshot.recentNights.last)
-        let slept = noctisFormattedDuration(minutes: Int(try #require(lastNight.asleepMinutes).rounded()))
-        #expect(last.detail == "Thu · \(slept) · Recovery \(result.score)")
-        // Each morning is scored as it was then; the last is today's.
-        #expect(lastNight.recovery == result.score)
+        let stages = try #require(lastNight.stages)
+        let slept = HomeFormat.compactDuration(Int(try #require(lastNight.asleepMinutes).rounded()))
+        let deep = HomeFormat.compactDuration(Int(stages.deep.rounded()))
+        let rem = HomeFormat.compactDuration(Int(stages.rem.rounded()))
+        #expect(last.detail == "Thu · \(slept) · Deep \(deep) · REM \(rem)")
+        // Deep, Core and REM share the bar; awake isn't in it.
+        let split = try #require(last.stages)
+        #expect(abs(split.deep + split.core + split.rem - 1) < 1e-9)
+        #expect(abs(split.deep - stages.deep / (stages.deep + stages.core + stages.rem)) < 1e-9)
     }
 
-    @Test func barsWithoutASleepOrAScoreSaySo() {
-        // Sep 21: 6h, Sep 22: none, Sep 23: 8h — too few nights to score.
-        let samples = Fixture.plainNight(september: 21, hours: 6) + Fixture.plainNight(september: 23)
+    @Test func barsWithoutASleepOrStagesSaySo() {
+        // Sep 21: 6h, Sep 22: none, Sep 23: 8h — unstaged nights.
+        let samples = Fixture.plainNight(september: 21, hours: 6) + [Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 7), .unspecified)]
         let snapshot = HomeSnapshotBuilder.build(HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: []),
                                                  profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
         let bars = HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: locale).week?.bars ?? []
-        #expect(bars.suffix(3).map(\.detail) == ["Tue · 6h 00m", "Wed · No data", "Thu · 8h 00m"])
-        #expect(snapshot.recentNights.allSatisfy { $0.recovery == nil })
+        // A staged night names its Deep and REM even at zero; an unstaged one can't.
+        #expect(bars.suffix(3).map(\.detail) == ["Tue · 6h · Deep 0m · REM 0m", "Wed · No data", "Thu · 8h"])
+        // Sep 21's plain core night has stages; last night's unspecified sleep doesn't.
+        #expect(bars.last?.stages == nil)
+        #expect(bars[bars.count - 3].stages != nil)
     }
 
     @Test func nightlyScoresSkipLearningNightsAndNightsWithoutSleep() {
@@ -340,7 +344,7 @@ struct HomeWeekAndShareTests {
         let (_, full) = await screen(.full)
         let share = try #require(full.share)
         #expect(share.recovery != nil)
-        #expect(share.lastNight?.hasPrefix("Last night ") == true)
+        #expect(share.lastNight?.parts.contains(.unit("h")) == true)
         #expect(share.details?.contains("HRV ") == true)
         #expect(share.details?.contains("Resting HR ") == true)
         #expect(share.fileName == "noctis-2026-09-24")

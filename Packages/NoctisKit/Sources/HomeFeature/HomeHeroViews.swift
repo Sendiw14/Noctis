@@ -19,7 +19,7 @@ struct DayHeroView: View {
             case .scored(let scored):
                 ScoredHeroView(content: scored, viewModel: viewModel, zoomNamespace: zoomNamespace, actions: actions)
             case .learning(let nights, let required, let text):
-                DormantHeroView(progress: Double(nights) / Double(required), title: nil, detail: text)
+                LearningHeroView(nights: nights, required: required, text: text)
             case .connect(let title, let message, let showsButton):
                 DormantHeroView(title: title, detail: message, titleSize: 22, action: showsButton ? .connect(viewModel) : nil)
             case .noSleepData(let title, let message):
@@ -77,14 +77,24 @@ struct ScoredHeroView: View {
         VStack(spacing: NoctisSpacing.md) {
             HomeCollapseEffect(viewModel: viewModel) { ring }
 
-            // Exactly one line under the ring.
-            HStack(spacing: NoctisSpacing.xs) {
-                if let chip = content.chip {
-                    DeltaChipView(chip: chip)
+            // Exactly one line under the ring, then why (when a factor is
+            // outside its normal range).
+            VStack(spacing: NoctisSpacing.xs) {
+                HStack(spacing: NoctisSpacing.xs) {
+                    if let chip = content.chip {
+                        DeltaChipView(chip: chip)
+                    }
+                    Text(content.comparisonPhrase)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisInk2)
                 }
-                Text(content.comparisonPhrase)
-                    .noctisFont(15, relativeTo: .subheadline)
-                    .foregroundStyle(.noctisInk2)
+                if let why = content.why {
+                    Text(why)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisInk2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .accessibilityElement(children: .combine)
 
@@ -98,17 +108,18 @@ struct ScoredHeroView: View {
 
             FactorCapsulesView(factors: content.factors, open: focus)
         }
-        .onChange(of: reveal) { _, phase in
-            guard phase == .playing, !reduceMotion else { return }
+        // Cancelled with the view, so a skipped reveal never lands a haptic.
+        .task(id: reveal) {
+            guard reveal == .playing, !reduceMotion else { return }
             awaitingCount = true
-            Task {
-                try? await Task.sleep(for: .seconds(HomeRevealPhase.contentDelay))
-                // The score counts up with the ring…
-                withAnimation(Self.introAnimation) { awaitingCount = false }
-                try? await Task.sleep(for: .seconds(HomeReveal.ringDuration))
-                // …and lands.
-                NoctisHaptics.medium()
-            }
+            try? await Task.sleep(for: .seconds(HomeRevealPhase.contentDelay))
+            guard !Task.isCancelled else { return }
+            // The score counts up with the ring…
+            withAnimation(Self.introAnimation) { awaitingCount = false }
+            try? await Task.sleep(for: .seconds(HomeReveal.ringDuration))
+            guard !Task.isCancelled else { return }
+            // …and lands.
+            NoctisHaptics.medium()
         }
     }
 
@@ -220,9 +231,15 @@ struct RecoveryPreviewCard: View {
                 ForEach(rows, id: \.kind) { row in
                     HStack(spacing: NoctisSpacing.xs) {
                         Circle().fill(row.kind.tint).frame(width: 8, height: 8)
-                        Text(row.value)
+                        Text(row.name)
                             .noctisFont(15, relativeTo: .subheadline)
                             .foregroundStyle(NoctisAppColor.ink)
+                        NoctisMetric(row.value, size: 15, relativeTo: .subheadline)
+                        if let suffix = row.valueSuffix {
+                            Text(suffix)
+                                .noctisFont(15, relativeTo: .subheadline)
+                                .foregroundStyle(NoctisAppColor.ink)
+                        }
                         Spacer(minLength: NoctisSpacing.xs)
                         Text("\(row.score)")
                             .noctisFont(15, .semibold, relativeTo: .subheadline)
@@ -329,17 +346,15 @@ struct FactorCapsulesView: View {
     }
 }
 
-/// The ring before there's a score: track only (a thin cocoa arc while
-/// learning), with a moon so it reads as waiting, not broken. 160pt on
-/// the hero, 72pt in the compact card.
+/// The ring before there's a score: track only, with a moon so it reads
+/// as waiting, not broken. 160pt on the hero, 72pt in the compact card.
 struct DormantRingView: View {
-    var progress: Double?
     var diameter: CGFloat = 160
     var glyphSize: CGFloat = 28
 
     var body: some View {
         NoctisRingLayout(maxDiameter: diameter) {
-            NoctisRecoveryRing(segments: [], progress: progress, diameter: diameter, lineWidth: diameter * 18 / 160)
+            NoctisRecoveryRing(segments: [], diameter: diameter, lineWidth: diameter * 18 / 160)
             Image(systemName: "moon.zzz")
                 .font(.system(size: glyphSize, weight: .medium))
                 .foregroundStyle(NoctisAppColor.ink3)
@@ -353,10 +368,46 @@ enum DormantAction {
     case openHealth
 }
 
+/// Learning your baseline: the dormant ring, then one dot per night
+/// needed (recorded nights filled), "Learning your baseline" and "3 of 5
+/// nights".
+struct LearningHeroView: View {
+    let nights: Int
+    let required: Int
+    let text: String
+
+    var body: some View {
+        VStack(spacing: NoctisSpacing.md) {
+            DormantRingView()
+            LearningDots(nights: nights, required: required)
+            DormantTextView(title: "Learning your baseline", detail: text, alignment: .center)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Learning your baseline, \(nights) of \(required) nights recorded.")
+    }
+}
+
+/// 10pt dots, 8pt apart: cocoa (lavender in Dark) for each night recorded,
+/// track for the rest.
+struct LearningDots: View {
+    let nights: Int
+    let required: Int
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<required, id: \.self) { index in
+                Circle()
+                    .fill(index < nights ? NoctisAppColor.progressDot : NoctisAppColor.track)
+                    .frame(width: 10, height: 10)
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
 /// A state with nothing to score, on the paper: the dormant ring, what's
 /// going on, and its one action if it has one.
 struct DormantHeroView: View {
-    var progress: Double?
     let title: String?
     let detail: String?
     var titleSize: CGFloat = 17
@@ -364,7 +415,7 @@ struct DormantHeroView: View {
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            DormantRingView(progress: progress)
+            DormantRingView()
             DormantTextView(title: title, detail: detail, titleSize: titleSize, alignment: .center)
             if let action {
                 DormantActionView(action: action)
@@ -459,23 +510,19 @@ struct EveningHeroView: View {
         HomeCollapseEffect(viewModel: viewModel, anchor: .topLeading) {
             VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
                 NoctisCaption("BEDTIME", style: .noctisInk3)
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(content.time)
-                        .noctisNumeral(88, .heavy)
-                        .foregroundStyle(NoctisAppColor.ink)
-                    if !content.period.isEmpty {
-                        Text(content.period)
-                            .noctisFont(28, .bold, relativeTo: .title)
-                            .foregroundStyle(NoctisAppColor.ink)
+                NoctisMetric(content.time, size: 88)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                if let minutes = content.times.minutesLeft(at: now), let countdown = content.times.countdownMetric(at: now) {
+                    HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        Text("in")
+                            .noctisFont(22, .semibold, relativeTo: .title3)
+                            .foregroundStyle(NoctisAppColor.orangeText)
+                        NoctisMetric(countdown, size: 22, relativeTo: .title3, tone: .accent)
+                            .monospacedDigit()
+                            .contentTransition(.numericText(countsDown: true))
+                            .animation(reduceMotion ? nil : NoctisMotion.settle, value: minutes)
                     }
-                }
-                if let minutes = content.times.minutesLeft(at: now), let countdown = content.times.countdown(at: now) {
-                    Text(countdown)
-                        .noctisFont(22, .semibold, relativeTo: .title3)
-                        .monospacedDigit()
-                        .foregroundStyle(NoctisAppColor.orangeText)
-                        .contentTransition(.numericText(countsDown: true))
-                        .animation(reduceMotion ? nil : NoctisMotion.settle, value: minutes)
                 } else {
                     Text(content.times.passedText)
                         .noctisFont(22, .semibold, relativeTo: .title3)
@@ -497,7 +544,7 @@ struct EveningHeroView: View {
     /// "Bedtime 11:00 PM, in 2h 14m. Tonight's sleep window, 11:00 PM to
     /// 7:00 AM. Wake 7:00 AM · 8h need."
     private var summary: String {
-        let lead = content.times.countdown(at: now).map { "Bedtime \(content.times.bedtimeText), \($0)." } ?? "\(content.times.passedText)."
+        let lead = content.times.countdownMetric(at: now).map { "Bedtime \(content.times.bedtimeText), in \($0.spoken)." } ?? "\(content.times.passedText)."
         return [lead, content.stripAccessibilityLabel, content.detail].joined(separator: " ")
     }
 }
@@ -572,10 +619,8 @@ struct CompactRecoveryCard: View {
                         VStack(alignment: .leading, spacing: 2) {
                             NoctisCaption("RECOVERY", style: .noctisInk3)
                             HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
-                                Text("\(scored.score)")
-                                    .noctisFont(34, .heavy, relativeTo: .largeTitle, maxScale: NoctisTypeScale.maxNumeralScale)
+                                NoctisMetric(NoctisMetricValue(parts: [.number("\(scored.score)")], spoken: "\(scored.score)"), size: 34)
                                     .monospacedDigit()
-                                    .foregroundStyle(NoctisAppColor.ink)
                                     .contentTransition(.numericText(value: Double(scored.score)))
                                     .animation(reduceMotion ? nil : NoctisMotion.settle, value: scored.score)
                                 if let chip = scored.chip {
@@ -597,7 +642,7 @@ struct CompactRecoveryCard: View {
             .accessibilityHint("Opens recovery details.")
             .accessibilityAddTraits(.isButton)
         case .learning(let nights, let required, let text):
-            row(progress: Double(nights) / Double(required), title: nil, detail: text, action: nil)
+            learningRow(nights: nights, required: required, text: text)
         case .connect(let title, let message, let showsButton):
             row(title: title, detail: message, action: showsButton ? .connect(viewModel) : nil)
         case .noSleepData(let title, let message):
@@ -618,11 +663,27 @@ struct CompactRecoveryCard: View {
         }
     }
 
-    private func row(progress: Double? = nil, title: String?, detail: String?, action: DormantAction?) -> some View {
+    private func learningRow(nights: Int, required: Int, text: String) -> some View {
+        NoctisAppCard {
+            HStack(spacing: NoctisSpacing.md) {
+                DormantRingView(diameter: 72, glyphSize: 18)
+                    .frame(width: 72)
+                VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+                    DormantTextView(title: "Learning your baseline", detail: text, alignment: .leading)
+                    LearningDots(nights: nights, required: required)
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Learning your baseline, \(nights) of \(required) nights recorded.")
+    }
+
+    private func row(title: String?, detail: String?, action: DormantAction?) -> some View {
         NoctisAppCard {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
                 HStack(spacing: NoctisSpacing.md) {
-                    DormantRingView(progress: progress, diameter: 72, glyphSize: 18)
+                    DormantRingView(diameter: 72, glyphSize: 18)
                         .frame(width: 72)
                     DormantTextView(title: title, detail: detail, alignment: .leading)
                     Spacer(minLength: 0)

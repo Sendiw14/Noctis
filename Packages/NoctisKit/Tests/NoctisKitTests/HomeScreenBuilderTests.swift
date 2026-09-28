@@ -100,7 +100,7 @@ struct HomeScreenBuilderTests {
 
     @Test func learningStateCountsNightsTowardFive() async {
         let screen = await screen(.learning)
-        #expect(screen.recovery == .learning(nights: 3, required: 5, text: "Learning your baseline · 3 of 5 nights"))
+        #expect(screen.recovery == .learning(nights: 3, required: 5, text: "3 of 5 nights"))
         #expect(screen.lastNight != nil)
         #expect(screen.week != nil)
         #expect(screen.insight == nil)
@@ -142,7 +142,7 @@ struct HomeScreenBuilderTests {
         #expect(screen.recovery == .connect(title: "Your first night starts here.",
                                             message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
         #expect(screen.lastNight == nil && screen.insight == nil && screen.week == nil)
-        #expect(plain(screen.tonight.bedtime) == "Bedtime around 11:00 PM")
+        #expect(plain(screen.tonight.bedtimeText) == "Bedtime around 11:00 PM")
     }
 
     @Test func askedButNoSleepPointsToTheSource() async {
@@ -203,7 +203,8 @@ struct HomeScreenBuilderTests {
         #expect(HomeScreenBuilder.scoredContent(result(delta: -3)).chip == DeltaChip(text: "\u{2212}3", tone: .below))
         #expect(HomeScreenBuilder.scoredContent(result(delta: nil)).chip == nil)
         #expect(HomeScreenBuilder.scoredContent(result(delta: nil)).comparisonPhrase == "Not enough nights yet to compare.")
-        #expect(HomeScreenBuilder.scoredContent(result(delta: 6)).comparisonPhrase == "vs your usual")
+        // No factor outside its normal range: the chip is "in line".
+        #expect(HomeScreenBuilder.scoredContent(result(delta: 6)).comparisonPhrase == "In line with your usual")
         #expect(HomeScreenBuilder.scoredContent(result(delta: 6)).confidenceCaption != nil)
     }
 
@@ -228,7 +229,8 @@ struct HomeScreenBuilderTests {
 
     @Test func lastNightShowsDurationTimesAndTheFourLaneChart() throws {
         let card = try #require(HomeScreenBuilder.build(snapshot(sleep: stagedNight), now: now, calendar: calendar, locale: locale).lastNight)
-        #expect(card.duration == "8h 22m")
+        #expect(card.duration.plain == "8h 22m")
+        #expect(card.duration.parts == [.number("8"), .unit("h"), .space, .number("22"), .unit("m")])
         #expect(plain(card.timeRange) == "11:02 PM – 7:27 AM")
         let chart = card.chart
         #expect(chart.hasStages)
@@ -242,7 +244,8 @@ struct HomeScreenBuilderTests {
         #expect(chart.connectors.map(\.to) == [.core, .deep, .rem, .core])
         #expect(abs(chart.connectors[0].position - 3.0 / 505.0) < 1e-9)
         #expect(chart.timeLabels.map(plain) == ["11:02 PM", "3:14 AM", "7:27 AM"])
-        #expect(plain(card.accessibilityLabel) == "Last night, slept 8h 22m, 11:02 PM to 7:27 AM. Deep 1h, Core 6h 22m, REM 1h, Awake 3m.")
+        #expect(plain(card.accessibilityLabel)
+            == "Last night, slept 8 hours 22 minutes, 11:02 PM to 7:27 AM. Deep 1 hour, Core 6 hours 22 minutes, REM 1 hour, Awake 3 minutes.")
     }
 
     @Test func lanesRunAwakeREMCoreDeepTopToBottom() {
@@ -277,7 +280,8 @@ struct HomeScreenBuilderTests {
         profile.typicalWakeMinutes = 6 * 60 + 30
         profile.needMinutes = 8 * 60 + 15
         let tonight = HomeScreenBuilder.build(snapshot(sleep: [], profile: profile), now: now, calendar: calendar, locale: locale).tonight
-        #expect(plain(tonight.bedtime) == "Bedtime around 10:15 PM")
+        #expect(plain(tonight.bedtimeText) == "Bedtime around 10:15 PM")
+        #expect(tonight.bedtime.parts == [.number("10:15"), .unit("PM")])
         #expect(plain(tonight.detail) == "Wake 6:30 AM · 8h 15m need")
     }
 
@@ -293,9 +297,10 @@ struct HomeScreenBuilderTests {
         #expect(week.bars.map(\.isLastNight) == [false, false, false, false, false, false, true])
         #expect(abs(week.needFraction - 480 / top) < 1e-9)
         #expect(week.needLabel == "8h need")
-        #expect(week.average == "Avg 7h 11m")
+        #expect(week.average?.plain == "7h 11m")
+        #expect(week.average?.spoken == "7 hours 11 minutes")
         #expect(week.bars[5].accessibilityLabel == "Wednesday, no data")
-        #expect(week.bars[6].accessibilityLabel == "Thursday, 8h 22m")
+        #expect(week.bars[6].accessibilityLabel == "Thursday, 8 hours 22 minutes, deep 1 hour, REM 1 hour")
     }
 
     // MARK: - Recovery detail
@@ -305,14 +310,16 @@ struct HomeScreenBuilderTests {
         let rows = HomeScreenBuilder.factorOrder.compactMap { result.factor($0) }.map {
             HomeScreenBuilder.detailRow($0, result: result, needMinutes: 480, format: HomeFormat(calendar: calendar, locale: locale))
         }
-        #expect(rows[0] == FactorDetailRow(kind: .sleepDuration, name: "Sleep", value: "Sleep 7h 50m", baseline: "baseline 7h 30m",
-                                           score: 91, sentence: "You slept 7h 50m of your 8h need."))
-        #expect(rows[1] == FactorDetailRow(kind: .hrv, name: "HRV", value: "HRV 48 ms", baseline: "baseline 44 ms",
-                                           score: 78, sentence: "9% above your baseline."))
-        #expect(rows[2] == FactorDetailRow(kind: .restingHeartRate, name: "Resting HR", value: "Resting HR 52 bpm", baseline: "baseline 54 bpm",
-                                           score: 85, sentence: "2 bpm below your baseline."))
-        #expect(rows[3].value == "Consistency 31 min off")
+        #expect(rows[0].name == "Sleep" && rows[0].value.plain == "7h 50m" && rows[0].baseline == "baseline 7h 30m")
+        #expect(rows[0].score == 91 && rows[0].sentence == "You slept 7h 50m of your 8h need.")
+        #expect(rows[1].name == "HRV" && rows[1].value.plain == "48ms" && rows[1].baseline == "baseline 44 ms")
+        #expect(rows[1].value.spoken == "48 milliseconds")
+        #expect(rows[1].score == 78 && rows[1].sentence == "9% above your baseline.")
+        #expect(rows[2].name == "Resting HR" && rows[2].value.parts == [.number("52"), .unit("bpm")] && rows[2].baseline == "baseline 54 bpm")
+        #expect(rows[2].score == 85 && rows[2].sentence == "2 bpm below your baseline.")
+        #expect(rows[3].value.plain == "31m" && rows[3].valueSuffix == "off")
         #expect(rows[3].sentence == "Bedtime and wake time were 31 min from your usual, on average.")
+        #expect(rows[0].accessibilityLabel.hasPrefix("Sleep 7 hours 50 minutes, baseline 7h 30m, score 91."))
     }
 
     @Test func v2RowsPlaceTheValueInYourNormalRange() {

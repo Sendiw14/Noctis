@@ -10,6 +10,7 @@
 		0CB4B988606AB038E0A61E84 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */; };
 		0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */; };
 		3E0928328CBB9C6CED1BB7F5 /* HomeMotionQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4176437B1713187435A9E79D /* HomeMotionQATests.swift */; };
+		77C1193892B2A92697DBB77A /* HomeV3QATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */; };
 		7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6D414566DC2646DBC6FE09 /* QASupport.swift */; };
 		8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */; };
 		8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F4213CBB03353749905D7E /* HomeQATests.swift */; };
@@ -36,6 +37,7 @@
 		4176437B1713187435A9E79D /* HomeMotionQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeMotionQATests.swift; sourceTree = "<group>"; };
 		4435E6B1989CC790CE6F0F65 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4931DEC833E41A07AE985B2D /* Noctis.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Noctis.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV3QATests.swift; sourceTree = "<group>"; };
 		5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisApp.swift; sourceTree = "<group>"; };
 		811601970E5BB83FD5627B7D /* Noctis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Noctis.entitlements; sourceTree = "<group>"; };
 		85F4213CBB03353749905D7E /* HomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQATests.swift; sourceTree = "<group>"; };
@@ -88,6 +90,7 @@
 			children = (
 				4176437B1713187435A9E79D /* HomeMotionQATests.swift */,
 				85F4213CBB03353749905D7E /* HomeQATests.swift */,
+				49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */,
 				A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */,
 				FE6D414566DC2646DBC6FE09 /* QASupport.swift */,
 				BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */,
@@ -216,6 +219,7 @@
 			files = (
 				3E0928328CBB9C6CED1BB7F5 /* HomeMotionQATests.swift in Sources */,
 				8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */,
+				77C1193892B2A92697DBB77A /* HomeV3QATests.swift in Sources */,
 				8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */,
 				7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */,
 				0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */,

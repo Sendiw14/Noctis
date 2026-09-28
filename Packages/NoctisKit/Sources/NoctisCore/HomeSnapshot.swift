@@ -24,18 +24,34 @@ public nonisolated enum HomeDataState: Sendable, Equatable {
 }
 
 /// One of the last seven nights; `asleepMinutes` is nil when no main
-/// sleep was recorded, `recovery` when that morning had no score.
+/// sleep was recorded, `stages` when its sources gave no stages.
 public nonisolated struct NightDuration: Sendable, Equatable {
     public let night: SleepNightKey
     public let asleepMinutes: Double?
-    /// That morning's recovery, scored as it was then
-    /// (`RecoveryEngine.nightlyScores`).
-    public let recovery: Int?
+    public let stages: NightStageMinutes?
 
-    public init(night: SleepNightKey, asleepMinutes: Double?, recovery: Int? = nil) {
+    public init(night: SleepNightKey, asleepMinutes: Double?, stages: NightStageMinutes? = nil) {
         self.night = night
         self.asleepMinutes = asleepMinutes
-        self.recovery = recovery
+        self.stages = stages
+    }
+}
+
+/// Minutes asleep by stage (awake excluded). Unspecified sleep in a staged
+/// night counts as Core, where the night panel draws it.
+public nonisolated struct NightStageMinutes: Sendable, Equatable {
+    public let deep: Double
+    public let core: Double
+    public let rem: Double
+
+    public init(deep: Double, core: Double, rem: Double) {
+        self.deep = deep
+        self.core = core
+        self.rem = rem
+    }
+
+    public init(_ totals: SleepTotals) {
+        self.init(deep: totals.deep / 60, core: (totals.core + totals.unspecified) / 60, rem: totals.rem / 60)
     }
 }
 
@@ -72,6 +88,8 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
     public let weekAverageMinutes: Double?
     public let tonight: TonightPlan
     public let topInsight: Insight?
+    /// Heart rate recorded during last night; nil without any.
+    public let lastNightHeart: NightHeartSeries?
     /// The newest Health sample of any type; nil with no data at all.
     public let newestSample: Date?
     public let lastUpdated: Date
@@ -85,6 +103,7 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         weekAverageMinutes: Double?,
         tonight: TonightPlan,
         topInsight: Insight?,
+        lastNightHeart: NightHeartSeries? = nil,
         newestSample: Date?,
         lastUpdated: Date
     ) {
@@ -96,6 +115,7 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         self.weekAverageMinutes = weekAverageMinutes
         self.tonight = tonight
         self.topInsight = topInsight
+        self.lastNightHeart = lastNightHeart
         self.newestSample = newestSample
         self.lastUpdated = lastUpdated
     }
@@ -113,6 +133,7 @@ nonisolated extension HomeSnapshot {
             weekAverageMinutes: weekAverageMinutes,
             tonight: tonight,
             topInsight: insight,
+            lastNightHeart: lastNightHeart,
             newestSample: newestSample,
             lastUpdated: lastUpdated
         )

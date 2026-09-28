@@ -43,7 +43,10 @@ final class HomeQATests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Recovery"].waitForExistence(timeout: 5))
         QA.pause(1)
         QA.shot("recovery-detail-focus-consistency")
-        XCTAssertTrue(QA.text(app, containing: "Consistency").isHittable)
+        // The detail row (one element, its value in words) scrolled into view.
+        let row = QA.element(app, labelBeginsWith: "Consistency ")
+        XCTAssertTrue(row.waitForExistence(timeout: 3))
+        XCTAssertTrue(row.isHittable)
     }
 
     func testRecoveryDetailZoom() {

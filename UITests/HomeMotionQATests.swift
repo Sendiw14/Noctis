@@ -51,6 +51,18 @@ final class HomeMotionQATests: XCTestCase {
         }
     }
 
+    /// "Mon": the weekday of last night's morning, or `daysAgo` before it
+    /// (This week's bars are labeled by the morning each night ended). The
+    /// mock's last night ends this morning once it's 9 AM, yesterday's
+    /// morning before that.
+    private func weekday(daysAgo: Int) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateFormat = "EEE"
+        let lastMorning = Calendar.current.component(.hour, from: Date()) >= 9 ? 0 : 1
+        return formatter.string(from: Date().addingTimeInterval(-Double(daysAgo + lastMorning) * 86_400))
+    }
+
     private func dayHero(_ app: XCUIApplication) -> XCUIElement {
         app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'home.hero'")).firstMatch
     }
@@ -101,12 +113,11 @@ final class HomeMotionQATests: XCTestCase {
         }
         XCTAssertTrue(bar.waitForExistence(timeout: 3))
         XCTAssertTrue(bar.label.hasPrefix("Recovery "), bar.label)
+        XCTAssertTrue(bar.label.hasSuffix("Scroll to top"), bar.label)
         QA.pause(0.5)
         QA.shot("collapsed-bar-day")
         mark("collapse-tap")
-        // A coordinate tap: XCUITest treats the bar (an overlay on the
-        // scroll view) as scroll content and taps through it otherwise.
-        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: bar.frame.midX, dy: bar.frame.midY)).tap()
+        bar.tap()
         QA.pause(1)
         XCTAssertFalse(bar.exists, "Tapping the bar returns to the top.")
         XCTAssertTrue(hero.isHittable)
@@ -183,8 +194,9 @@ final class HomeMotionQATests: XCTestCase {
         reveal(panel, in: app)
         QA.pause(3.5)
         let voiceOver = XCUIDevice.shared.voiceOverService
-        let pill = try NSRegularExpression(pattern: #"\d{1,2}:\d{2}\s?[AP]M · (Awake|REM|Core|Deep|Asleep) · (\d+ min|\d+h( \d+m)?)"#)
-        let bar = try NSRegularExpression(pattern: #"(Mon|Tue|Wed|Thu|Fri|Sat|Sun) · (\d+h \d{2}m|No data)"#)
+        // VoiceOver hears the pill in words: "3:41 AM, REM, 47 minutes, 52 beats per minute".
+        let pill = try NSRegularExpression(pattern: #"\d{1,2}:\d{2}\s?[AP]M, (Awake|REM|Core|Deep|Asleep), \d+ (hour|hours|minute|minutes)"#)
+        let bar = try NSRegularExpression(pattern: #"(Mon|Tue|Wed|Thu|Fri|Sat|Sun) · (\d+h( \d+m)?|\d+m|No data)"#)
         func matches(_ regex: NSRegularExpression, _ text: String) -> Bool {
             regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
         }
@@ -253,14 +265,57 @@ final class HomeMotionQATests: XCTestCase {
         QA.pause(0.6)
         QA.shot("week-tapped")
         let value = (card.value as? String) ?? ""
-        XCTAssertTrue(value.hasPrefix("Thu · "), value)
-        XCTAssertTrue(value.contains("Recovery "), "Last night had a score: \(value)")
+        XCTAssertTrue(value.hasPrefix("\(weekday(daysAgo: 0)) · "), value)
+        XCTAssertTrue(value.contains(" · Deep ") && value.contains(" · REM "), "Last night had stages: \(value)")
         QA.write(value, to: "week-selected.txt")
         QA.shot("week-selected")
         XCTAssertFalse(sleepIsShowing(app), "A bar tap selects; it doesn't open Sleep.")
         lastBar.tap()
         QA.pause(0.6)
         XCTAssertEqual((card.value as? String) ?? "", "", "Tapping the bar again clears it.")
+        // The outer columns run out through the card's padding, and past
+        // it into the screen margin: 8pt inside the card, and 8pt outside
+        // it, both select the first night; 8pt outside the right edge
+        // selects the last.
+        for dx in [CGFloat(8), CGFloat(-8)] {
+            origin.withOffset(CGVector(dx: dx, dy: 20 + 30 + 60)).tap()
+            QA.pause(0.6)
+            XCTAssertTrue(((card.value as? String) ?? "").hasPrefix("\(weekday(daysAgo: 6)) · "), "dx \(dx): \((card.value as? String) ?? "")")
+            origin.withOffset(CGVector(dx: dx, dy: 20 + 30 + 60)).tap()
+            QA.pause(0.4)
+        }
+        origin.withOffset(CGVector(dx: frame.width + 8, dy: 20 + 30 + 60)).tap()
+        QA.pause(0.6)
+        XCTAssertTrue(((card.value as? String) ?? "").hasPrefix("\(weekday(daysAgo: 0)) · "), (card.value as? String) ?? "")
+        QA.write("card=\(NSCoder.string(for: frame)) column=\((frame.width) / 7)", to: "week-columns.txt")
+    }
+
+    /// Lane labels answer taps a little beyond their 28pt lanes: 44pt tall.
+    func testLaneLabelTargetsAre44PointsTall() {
+        let app = launchHome()
+        let header = element(app, "Last night")
+        let chart = element(app, "Sleep stages chart")
+        reveal(chart, in: app)
+        QA.pause(3)
+        // The lanes start 16pt below the header (the chart element's own
+        // frame also holds the invisible scrub pill above them).
+        let lanesTop = header.frame.maxY + 16
+        let x = chart.frame.minX + 16
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        QA.write("header=\(NSCoder.string(for: header.frame)) chart=\(NSCoder.string(for: chart.frame)) lanesTop=\(lanesTop)", to: "lane-targets.txt")
+        // 6pt above the Awake lane: outside the lane, inside its 44pt target.
+        origin.withOffset(CGVector(dx: x, dy: lanesTop - 6)).tap()
+        QA.pause(0.6)
+        XCTAssertTrue(((chart.value as? String) ?? "").hasPrefix("Awake · "), (chart.value as? String) ?? "")
+        QA.shot("lane-focused")
+        // Tapping it again clears.
+        origin.withOffset(CGVector(dx: x, dy: lanesTop + 10)).tap()
+        QA.pause(0.6)
+        XCTAssertEqual((chart.value as? String) ?? "", "")
+        // 6pt below the Deep lane (lane 4 ends 112pt down): the same reach.
+        origin.withOffset(CGVector(dx: x, dy: lanesTop + 112 + 6)).tap()
+        QA.pause(0.6)
+        XCTAssertTrue(((chart.value as? String) ?? "").hasPrefix("Deep · "), (chart.value as? String) ?? "")
     }
 
     // MARK: - Insight fatigue

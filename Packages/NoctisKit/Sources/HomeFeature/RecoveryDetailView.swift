@@ -103,37 +103,98 @@ struct FactorDetailRowView: View {
 
     var body: some View {
         NoctisAppCard {
-            HStack(alignment: .top, spacing: NoctisSpacing.sm) {
-                Circle()
-                    .fill(row.kind.tint)
-                    .frame(width: 12, height: 12)
-                    .padding(.top, 6)
-                VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-                    Text(row.value)
-                        .noctisFont(17, .semibold, relativeTo: .body)
-                        .foregroundStyle(NoctisAppColor.ink)
-                    Text(row.baseline)
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(NoctisAppColor.ink3)
-                    Text(row.sentence)
-                        .noctisFont(15, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink2)
-                        .padding(.top, 2)
+            VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+                HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+                    Circle()
+                        .fill(row.kind.tint)
+                        .frame(width: 12, height: 12)
+                        .padding(.top, 6)
+                    VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text(row.name)
+                                .noctisFont(17, .semibold, relativeTo: .body)
+                                .foregroundStyle(NoctisAppColor.ink)
+                            NoctisMetric(row.value, size: 17, relativeTo: .body)
+                            if let suffix = row.valueSuffix {
+                                Text(suffix)
+                                    .noctisFont(17, .semibold, relativeTo: .body)
+                                    .foregroundStyle(NoctisAppColor.ink)
+                            }
+                        }
+                        Text(row.baseline)
+                            .noctisFont(13, relativeTo: .footnote)
+                            .foregroundStyle(.noctisInk3)
+                        Text(row.sentence)
+                            .noctisFont(15, relativeTo: .subheadline)
+                            .foregroundStyle(.noctisInk2)
+                            .padding(.top, 2)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: NoctisSpacing.xs)
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Text("\(row.score)")
+                            .noctisFont(22, .semibold, relativeTo: .title3)
+                            .foregroundStyle(NoctisAppColor.ink)
+                        Text("score")
+                            .noctisFont(13, relativeTo: .footnote)
+                            .foregroundStyle(.noctisInk3)
+                    }
                 }
-                .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: NoctisSpacing.xs)
-                VStack(alignment: .trailing, spacing: 0) {
-                    Text("\(row.score)")
-                        .noctisFont(22, .semibold, relativeTo: .title3)
-                        .foregroundStyle(NoctisAppColor.ink)
-                    Text("score")
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(NoctisAppColor.ink3)
+                if let sparkline = row.sparkline {
+                    FactorSparkline(content: sparkline, tint: row.kind.tint)
+                        .frame(height: FactorSparkline.height)
                 }
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(row.value), \(row.baseline), score \(row.score). \(row.sentence)")
+        .accessibilityLabel(row.accessibilityLabel)
+    }
+}
+
+/// 14 nights, full row width: your normal range as a track-colored band, a
+/// 1pt ink3 line through the nights, and today as a 6pt dot in the
+/// factor's color.
+struct FactorSparkline: View {
+    let content: SparklineContent
+    let tint: Color
+
+    static let height: CGFloat = 36
+
+    var body: some View {
+        Canvas { context, size in
+            let inset: CGFloat = 4
+            let plotHeight = size.height - inset * 2
+            func y(_ value: Double) -> CGFloat { inset + plotHeight * (1 - CGFloat(value)) }
+            // Nights fill the width; today sits one step past the last.
+            let steps = CGFloat(content.nights.count)
+            let step = (size.width - inset * 2) / max(steps, 1)
+            func x(_ index: Int) -> CGFloat { inset + step * CGFloat(index) }
+
+            let bandTop = y(content.band.upperBound)
+            let bandBottom = y(content.band.lowerBound)
+            context.fill(
+                Path(roundedRect: CGRect(x: 0, y: bandTop, width: size.width, height: max(bandBottom - bandTop, 1)), cornerRadius: 4),
+                with: .color(NoctisAppColor.track)
+            )
+
+            var line = Path()
+            var drawing = false
+            for (index, value) in content.nights.enumerated() {
+                guard let value else {
+                    drawing = false
+                    continue
+                }
+                let point = CGPoint(x: x(index), y: y(value))
+                if drawing { line.addLine(to: point) } else { line.move(to: point) }
+                drawing = true
+                context.fill(Path(ellipseIn: CGRect(x: point.x - 1.5, y: point.y - 1.5, width: 3, height: 3)), with: .color(NoctisAppColor.ink3))
+            }
+            let today = CGPoint(x: x(content.nights.count), y: y(content.today))
+            if drawing { line.addLine(to: today) }
+            context.stroke(line, with: .color(NoctisAppColor.ink3), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+            context.fill(Path(ellipseIn: CGRect(x: today.x - 3, y: today.y - 3, width: 6, height: 6)), with: .color(tint))
+        }
+        .accessibilityHidden(true)
     }
 }
 

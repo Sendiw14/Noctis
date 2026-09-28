@@ -6,13 +6,24 @@ import SwiftUI
 /// supported OS, so the system's own top scroll edge effect is turned off
 /// rather than stacked under it.
 struct NoctisStatusBarGuard: ViewModifier {
-    var wash: Color = .clear
-    var washOpacity: Double = 0
+    var washes: [NoctisWash] = []
 
     func body(content: Content) -> some View {
         content
             .scrollEdgeEffectHidden(true, for: .top)
-            .overlay(alignment: .top) { NoctisStatusBarScrim(wash: wash, washOpacity: washOpacity) }
+            .overlay(alignment: .top) { NoctisStatusBarScrim(washes: washes) }
+    }
+}
+
+/// A flat color laid over the paper at some opacity (Home's evening paper
+/// and the morning reveal's dusk), which the scrim must wear too.
+public struct NoctisWash: Equatable, Sendable {
+    public let color: Color
+    public let opacity: Double
+
+    public init(_ color: Color, opacity: Double) {
+        self.color = color
+        self.opacity = opacity
     }
 }
 
@@ -24,22 +35,25 @@ struct NoctisStatusBarGuard: ViewModifier {
 struct NoctisStatusBarScrim: View {
     static let fadeHeight: CGFloat = 16
     static let coverHeight: CGFloat = 200
-    /// A flat color laid over the paper while the background behind the
-    /// content wears it too (Home's dusk).
-    var wash: Color = .clear
-    var washOpacity: Double = 0
+    /// Flat colors laid over the paper, bottom first, while the background
+    /// behind the content wears them too.
+    var washes: [NoctisWash] = []
 
     var body: some View {
         ZStack {
             LinearGradient(colors: [NoctisAppColor.bg, NoctisAppColor.bg.opacity(0)], startPoint: .top, endPoint: .bottom)
-            LinearGradient(colors: [wash, wash.opacity(0)], startPoint: .top, endPoint: .bottom)
-                .opacity(washOpacity)
+            ForEach(Array(washes.enumerated()), id: \.offset) { _, wash in
+                LinearGradient(colors: [wash.color, wash.color.opacity(0)], startPoint: .top, endPoint: .bottom)
+                    .opacity(wash.opacity)
+            }
         }
         .frame(height: Self.fadeHeight)
         .background(alignment: .top) {
             ZStack {
                 NoctisAppColor.bg
-                wash.opacity(washOpacity)
+                ForEach(Array(washes.enumerated()), id: \.offset) { _, wash in
+                    wash.color.opacity(wash.opacity)
+                }
             }
             .frame(height: Self.coverHeight)
             .offset(y: -Self.coverHeight)
@@ -55,9 +69,9 @@ extension View {
         modifier(NoctisStatusBarGuard())
     }
 
-    /// The same, with a flat `wash` over the scrim's paper at
-    /// `washOpacity`, matching a background that wears it.
-    public func noctisStatusBarGuard(wash: Color, opacity: Double) -> some View {
-        modifier(NoctisStatusBarGuard(wash: wash, washOpacity: opacity))
+    /// The same, with flat `washes` over the scrim's paper, matching a
+    /// background that wears them.
+    public func noctisStatusBarGuard(washes: [NoctisWash]) -> some View {
+        modifier(NoctisStatusBarGuard(washes: washes))
     }
 }

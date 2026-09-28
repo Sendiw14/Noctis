@@ -143,7 +143,7 @@ struct ShareCardView: View {
     static let size = CGSize(width: 360, height: 450)
 
     var body: some View {
-        VStack(alignment: .leading, spacing: NoctisSpacing.md) {
+        VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
             HStack(alignment: .firstTextBaseline) {
                 NoctisCaption(content.date.uppercased(), style: NoctisAppColor.ink3)
                 Spacer(minLength: NoctisSpacing.xs)
@@ -154,36 +154,43 @@ struct ShareCardView: View {
             }
             if let recovery = content.recovery {
                 HStack(spacing: NoctisSpacing.lg) {
-                    NoctisRingLayout(maxDiameter: 132) {
+                    NoctisRingLayout(maxDiameter: 112) {
                         NoctisRecoveryRing(
                             segments: recovery.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) },
-                            diameter: 132,
-                            lineWidth: 13
+                            diameter: 112,
+                            lineWidth: 11
                         )
                         Text("\(recovery.score)")
-                            .font(.system(size: 48, weight: .heavy, design: .rounded))
+                            .font(.system(size: 42, weight: .heavy, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(NoctisAppColor.ink)
                     }
-                    .frame(width: 132)
+                    .frame(width: 112)
                     VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
                         Text("Recovery")
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(NoctisAppColor.ink)
                         if let lastNight = content.lastNight {
-                            Text(lastNight)
-                                .font(.system(size: 15, design: .rounded))
-                                .foregroundStyle(NoctisAppColor.ink2)
+                            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                                Text("Last night")
+                                    .font(.system(size: 15, design: .rounded))
+                                    .foregroundStyle(NoctisAppColor.ink2)
+                                NoctisMetric(lastNight, size: 17, relativeTo: .body)
+                            }
                         }
                     }
                 }
             } else if let lastNight = content.lastNight {
-                Text(lastNight)
-                    .font(.system(size: 34, weight: .heavy, design: .rounded))
-                    .foregroundStyle(NoctisAppColor.ink)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("Last night")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(NoctisAppColor.ink)
+                    NoctisMetric(lastNight, size: 34)
+                }
             }
-            if let chart = content.chart {
-                NightChartView(chart: chart)
+            if let chart = content.chart(includeDetails: includeDetails) {
+                // The night panel's chart, lanes a little shorter to fit.
+                NightChartView(chart: chart, laneHeightOverride: 20)
                     .padding(NoctisSpacing.md)
                     .background(NoctisAppColor.nightPanel, in: RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
             }

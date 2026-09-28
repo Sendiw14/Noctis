@@ -26,29 +26,39 @@ public struct InsightEvidence: Sendable, Equatable {
     public let baselineNights: Int
     /// For `.consistentBedtime`: the nights in a row.
     public let streakNights: Int?
+    /// For `.consistentBedtime`: the last `InsightEngine.streakWindowNights`
+    /// nights, oldest first — true within 30 minutes of the typical
+    /// bedtime, false outside it, nil with no sleep recorded.
+    public let recentNights: [Bool?]
 
-    public init(night: SleepNightKey, value: Double, baseline: Double, delta: Double, baselineNights: Int, streakNights: Int? = nil) {
+    public init(
+        night: SleepNightKey,
+        value: Double,
+        baseline: Double,
+        delta: Double,
+        baselineNights: Int,
+        streakNights: Int? = nil,
+        recentNights: [Bool?] = []
+    ) {
         self.night = night
         self.value = value
         self.baseline = baseline
         self.delta = delta
         self.baselineNights = baselineNights
         self.streakNights = streakNights
+        self.recentNights = recentNights
     }
 }
 
-/// One observation about last night, stated against the person's own
-/// baseline. Descriptive only: it never claims a cause.
+/// One observation about last night against the person's own baseline:
+/// what kind it is and the numbers it rests on. No sentences — Home words
+/// it (and draws its evidence). Descriptive only: it never claims a cause.
 public struct Insight: Sendable, Equatable {
     public let kind: InsightKind
-    public let title: String
-    public let message: String
     public let evidence: InsightEvidence
 
-    public init(kind: InsightKind, title: String, message: String, evidence: InsightEvidence) {
+    public init(kind: InsightKind, evidence: InsightEvidence) {
         self.kind = kind
-        self.title = title
-        self.message = message
         self.evidence = evidence
     }
 }

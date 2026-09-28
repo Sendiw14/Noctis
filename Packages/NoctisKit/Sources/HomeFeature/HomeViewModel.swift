@@ -26,6 +26,9 @@ public final class HomeViewModel {
     public private(set) var reveal: HomeRevealPhase = .none
     /// Whether the reveal played during this launch (read by UI tests).
     public private(set) var revealPlayed = false
+    /// Bumped each time a touch or scroll skips the reveal; Home rebuilds
+    /// its content at the end state.
+    public private(set) var revealSkips = 0
     /// How far the hero has scrolled away (`HomeCollapse`).
     public private(set) var collapse = HomeCollapse.expanded
     /// "New night added": true for `HomeLiveUpdate.bannerSeconds` after a
@@ -46,6 +49,7 @@ public final class HomeViewModel {
     private var observation: Task<Void, Never>?
     private var modeFlip: Task<Void, Never>?
     private var bannerTask: Task<Void, Never>?
+    private var revealEnd: Task<Void, Never>?
 
     #if DEBUG
     /// DEBUG: print every new snapshot (`-noctisLogHomeSnapshot`).
@@ -135,6 +139,21 @@ public final class HomeViewModel {
         guard reveal == .pending, screen != nil else { return }
         reveal = .playing
         revealPlayed = true
+        revealEnd?.cancel()
+        revealEnd = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(HomeReveal.totalDuration))
+            guard !Task.isCancelled, let self, self.reveal == .playing else { return }
+            // Played out: the end state and `.none` look the same.
+            self.reveal = .none
+        }
+    }
+
+    /// A touch or scroll during the reveal: straight to the end state.
+    public func skipReveal() {
+        guard reveal != .none else { return }
+        revealEnd?.cancel()
+        reveal = .none
+        revealSkips += 1
     }
 
     /// Scroll collapse: the hero's top and height in the scroll content,
@@ -309,6 +328,11 @@ public nonisolated enum HomeReveal {
     public static let weekStagger = 0.04
     /// The capsules' rise, in points (R9).
     public static let rise: Double = 12
+    /// From the dusk starting to lift to the last bar landing (and the
+    /// score's haptic), with a little room.
+    public static var totalDuration: Double {
+        backgroundDuration + max(ringDuration, nightDuration, capsuleStagger * 3 + 0.5, weekStagger * 6 + 0.5) + 0.4
+    }
 }
 
 /// Scroll collapse: the hero shrinks (1.0 → 0.85) and fades as it scrolls

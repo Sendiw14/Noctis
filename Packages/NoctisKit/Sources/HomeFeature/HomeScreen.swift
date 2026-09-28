@@ -1,3 +1,4 @@
+import DesignSystem
 import Foundation
 import HealthProviding
 import InsightsKit
@@ -41,6 +42,11 @@ public nonisolated struct TonightTimes: Sendable, Equatable {
     public func minutesLeft(at now: Date) -> Int? {
         let seconds = bedtime.timeIntervalSince(now)
         return seconds > 0 ? Int((seconds / 60).rounded(.up)) : nil
+    }
+
+    /// The time left as a metric (after "in"); nil after bedtime.
+    public func countdownMetric(at now: Date) -> NoctisMetricValue? {
+        minutesLeft(at: now).map { HomeFormat.durationMetric($0) }
     }
 
     /// "Bedtime was 11:00 PM" — the hero's line once bedtime has passed.
@@ -132,8 +138,12 @@ public nonisolated struct ScoredRecoveryContent: Sendable, Equatable {
     public let score: Int
     public let segments: [RingSegmentContent]
     public let chip: DeltaChip?
-    /// Beside the chip: "vs your usual" (or, with no chip, why not).
+    /// Beside the chip: "vs your usual", "In line with your usual" when
+    /// every factor is within its normal range, or (no chip) why not.
     public let comparisonPhrase: String
+    /// Under the chip: "Mostly: sleep was 1h 10m shorter than usual"; nil
+    /// when every factor is within its normal range.
+    public let why: String?
     /// The engine's sentence, for detail: "Below your recent baseline."
     public let sentence: String
     /// The full confidence line, for detail.
@@ -153,6 +163,7 @@ public nonisolated enum RecoveryCardContent: Sendable, Equatable {
     /// Access already requested, but no sleep data: "No sleep data yet",
     /// with "Open Health".
     case noSleepData(title: String, message: String)
+    /// "3 of 5 nights", shown with one dot per night needed.
     case learning(nights: Int, required: Int, text: String)
     case scored(ScoredRecoveryContent)
     /// Data is current, but no sleep was recorded last night.
@@ -162,190 +173,65 @@ public nonisolated enum RecoveryCardContent: Sendable, Equatable {
     case failed(message: String)
 }
 
-public nonisolated enum StripStage: String, Sendable, Equatable, CaseIterable {
-    case deep
-    case core
-    case rem
-    case awake
-    /// Asleep without a stage ("unspecified").
-    case asleep
-
-    public var name: String {
-        switch self {
-        case .deep: "Deep"
-        case .core: "Core"
-        case .rem: "REM"
-        case .awake: "Awake"
-        case .asleep: "Asleep"
-        }
-    }
-}
-
-public nonisolated struct StripSegment: Sendable, Equatable {
-    public let stage: StripStage
-    /// Position along the night, 0...1.
-    public let start: Double
-    public let end: Double
-}
-
-/// The night panel's four lanes, top to bottom.
-public nonisolated enum NightLane: Int, Sendable, Equatable, CaseIterable {
-    case awake
-    case rem
-    case core
-    case deep
-
-    public var name: String {
-        switch self {
-        case .awake: "Awake"
-        case .rem: "REM"
-        case .core: "Core"
-        case .deep: "Deep"
-        }
-    }
-}
-
-nonisolated extension StripStage {
-    /// Unspecified sleep sits in the Core lane.
-    public var lane: NightLane {
-        switch self {
-        case .awake: .awake
-        case .rem: .rem
-        case .core, .asleep: .core
-        case .deep: .deep
-        }
-    }
-}
-
-/// A 1pt line where the night moves from one lane to another.
-public nonisolated struct NightConnector: Sendable, Equatable {
-    public let position: Double
-    public let from: NightLane
-    public let to: NightLane
-}
-
-/// The night panel's chart, drawn from SleepSessionEngine's timeline.
-public nonisolated struct NightChartContent: Sendable, Equatable {
-    /// Stage spans, 0...1 along the night; empty without stage data.
-    public let spans: [StripSegment]
-    public let connectors: [NightConnector]
-    /// Start, midpoint and end clock times.
-    public let timeLabels: [String]
-    /// Without stage data: "Stages aren't available from your current
-    /// sources." (the chart shows one sage bar in the Core lane).
-    public let caption: String?
-    /// Each lane's total, top to bottom, for tapping a lane label; empty
-    /// without stage data.
-    public let laneTotals: [NightLaneTotal]
-    /// The night's clock, for scrub readings; nil without stage data.
-    let clock: NightClock?
-
-    public var hasStages: Bool { caption == nil }
-
-    /// What the scrub pill says with the finger at `position` (0...1
-    /// across the chart): "3:41 AM · REM · 47 min" — the clock time
-    /// there, and the stage segment under it with its length. Between
-    /// segments, the nearest one.
-    public func reading(at position: Double) -> NightReading? {
-        guard let clock, !spans.isEmpty else { return nil }
-        let position = min(max(position, 0), 1)
-        let index = spans.firstIndex { position >= $0.start && position < $0.end }
-            ?? spans.indices.min { distance(position, spans[$0]) < distance(position, spans[$1]) }
-        guard let index else { return nil }
-        return reading(segment: index, at: position, clock: clock)
-    }
-
-    /// Stepping through the night one segment at a time (VoiceOver's
-    /// adjustable action): the segment's start, and the same text the
-    /// pill shows there.
-    public func reading(segment index: Int) -> NightReading? {
-        guard let clock, spans.indices.contains(index) else { return nil }
-        return reading(segment: index, at: spans[index].start, clock: clock)
-    }
-
-    /// Clock time at `position`, for the chart's Audio Graph axis.
-    public func clockText(at position: Double) -> String {
-        clock?.text(at: position) ?? ""
-    }
-
-    /// The night's length in minutes (the Audio Graph's x axis).
-    public var minutes: Double { clock.map { $0.end.timeIntervalSince($0.start) / 60 } ?? 0 }
-
-    private func reading(segment index: Int, at position: Double, clock: NightClock) -> NightReading {
-        let span = spans[index]
-        let length = Int(((span.end - span.start) * minutes).rounded())
-        return NightReading(
-            position: position,
-            segment: index,
-            stage: span.stage,
-            text: "\(clock.text(at: position)) · \(span.stage.name) · \(HomeFormat.compactDuration(length, minutesWord: true))"
-        )
-    }
-
-    private func distance(_ position: Double, _ span: StripSegment) -> Double {
-        position < span.start ? span.start - position : max(position - span.end, 0)
-    }
-}
-
-/// Where the scrub is and what the pill says there.
-public nonisolated struct NightReading: Sendable, Equatable {
-    /// 0...1 across the chart.
-    public let position: Double
-    /// Index into `NightChartContent.spans`.
-    public let segment: Int
-    public let stage: StripStage
-    /// "3:41 AM · REM · 47 min".
-    public let text: String
-
-    public var lane: NightLane { stage.lane }
-}
-
-/// A lane label's total: "REM · 1h 32m".
-public nonisolated struct NightLaneTotal: Sendable, Equatable {
-    public let lane: NightLane
-    public let text: String
-}
-
-/// Turns a position along the night into a clock time, on the clock of
-/// the time zone the night was recorded in.
-nonisolated struct NightClock: Sendable, Equatable {
-    let start: Date
-    let end: Date
-    let timeZone: TimeZone
-    let format: HomeFormat
-
-    func text(at position: Double) -> String {
-        let date = start.addingTimeInterval(end.timeIntervalSince(start) * min(max(position, 0), 1))
-        return format.clock(date, in: timeZone)
-    }
-}
-
-public nonisolated struct LastNightCardContent: Sendable, Equatable {
-    /// "8h 25m".
-    public let duration: String
-    /// "11:02 PM – 7:27 AM".
-    public let timeRange: String
-    public let chart: NightChartContent
-    public let accessibilityLabel: String
-}
-
+/// The insight, worded here from `InsightEngine`'s evidence, with a small
+/// chart of that evidence.
 public nonisolated struct InsightCardContent: Sendable, Equatable {
     public let title: String
     public let message: String
+    public let chart: InsightChartContent
+    /// The title, the message and the evidence in words.
+    public let accessibilityLabel: String
+}
+
+/// The evidence behind an insight, as a small flat chart.
+public nonisolated enum InsightChartContent: Sendable, Equatable {
+    /// Two bars: last night against usual. Widths are shares of the longer.
+    case comparison(lastNight: InsightBar, usual: InsightBar)
+    /// A short time axis with two ticks, usual and last night.
+    case timeline(usual: InsightTick, lastNight: InsightTick)
+    /// One dot per recent night: filled within 30 minutes of the usual
+    /// bedtime, open outside it, faint with no sleep recorded.
+    case nights([InsightNightDot])
+}
+
+public nonisolated struct InsightBar: Sendable, Equatable {
+    /// "Last night", "Usual".
+    public let label: String
+    public let value: NoctisMetricValue
+    /// 0...1.
+    public let fraction: Double
+}
+
+public nonisolated struct InsightTick: Sendable, Equatable {
+    /// "Usual", "Last night".
+    public let label: String
+    /// "11:08 PM".
+    public let time: String
+    /// 0...1 along the axis.
+    public let position: Double
+}
+
+public nonisolated struct InsightNightDot: Sendable, Equatable {
+    /// Weekday initial of the morning the night ended.
+    public let label: String
+    /// True within 30 minutes; false outside; nil with no sleep recorded.
+    public let within: Bool?
 }
 
 public nonisolated struct TonightCardContent: Sendable, Equatable {
-    /// "Bedtime around 11:00 PM".
-    public let bedtime: String
+    /// "Bedtime around", then the time.
+    public let bedtimeLead: String
+    public let bedtime: NoctisMetricValue
     /// "Wake 7:00 AM · 8h need".
     public let detail: String
+    /// "Bedtime around 11:00 PM".
+    public var bedtimeText: String { "\(bedtimeLead) \(bedtime.spoken)" }
 }
 
 /// Evening mode's hero: tonight's bedtime, a countdown and the night strip.
 public nonisolated struct EveningHeroContent: Sendable, Equatable {
-    /// "11:00" and "PM" (the period is empty on 24-hour clocks).
-    public let time: String
-    public let period: String
+    /// 11:00 PM, the period as a unit.
+    public let time: NoctisMetricValue
     public let times: TonightTimes
     /// "Wake 7:00 AM · 8h need".
     public let detail: String
@@ -365,11 +251,20 @@ public nonisolated struct WeekBar: Sendable, Equatable {
     public let label: String
     /// Bar height as a share of the chart (0...1); nil with no data.
     public let fraction: Double?
+    /// Deep, Core and REM, bottom to top, as shares of the bar; nil for a
+    /// night without stages (a solid sage bar).
+    public let stages: WeekBarStages?
     public let isLastNight: Bool
     public let accessibilityLabel: String
-    /// The pill when the bar is selected: "Tue · 7h 12m · Recovery 76"
-    /// (recovery only when that morning had one), or "Tue · No data".
+    /// The pill when the bar is selected: "Tue · 7h 12m · Deep 1h 20m ·
+    /// REM 1h 50m", "Tue · 7h 12m" without stages, or "Tue · No data".
     public let detail: String
+}
+
+public nonisolated struct WeekBarStages: Sendable, Equatable {
+    public let deep: Double
+    public let core: Double
+    public let rem: Double
 }
 
 public nonisolated struct WeekCardContent: Sendable, Equatable {
@@ -378,20 +273,38 @@ public nonisolated struct WeekCardContent: Sendable, Equatable {
     public let needFraction: Double
     /// "8h need".
     public let needLabel: String
-    /// "Avg 7h 48m"; nil when no night has data.
-    public let average: String?
+    /// The average (after "Avg"); nil when no night has data.
+    public let average: NoctisMetricValue?
     public let accessibilityLabel: String
 }
 
 public nonisolated struct FactorDetailRow: Sendable, Equatable {
     public let kind: RecoveryFactorKind
+    /// "HRV".
     public let name: String
-    /// "HRV 48 ms".
-    public let value: String
+    /// 48 ms.
+    public let value: NoctisMetricValue
+    /// A word after the value: "off" for consistency.
+    public let valueSuffix: String?
     /// "baseline 44 ms".
     public let baseline: String
     public let score: Int
     public let sentence: String
+    /// The last 14 nights against the normal range; nil under 5 nights.
+    public let sparkline: SparklineContent?
+    public let accessibilityLabel: String
+}
+
+/// A factor's 14 nights for Recovery detail: the normal range as a band,
+/// a line through the nights, and today as a dot.
+public nonisolated struct SparklineContent: Sendable, Equatable {
+    /// 0...1 up the chart, oldest first; nil with no value that night.
+    public let nights: [Double?]
+    public let today: Double
+    /// The band, 0...1 up the chart.
+    public let band: ClosedRange<Double>
+    /// "HRV has been within your normal range on 11 of 14 nights."
+    public let accessibilityLabel: String
 }
 
 public nonisolated struct RecoveryDetailContent: Sendable, Equatable {
@@ -408,8 +321,8 @@ public nonisolated struct RecoveryDetailContent: Sendable, Equatable {
 public nonisolated struct ShareCardContent: Sendable, Equatable {
     /// Nil when there's no score today (the card shows the night only).
     public let recovery: ShareRecovery?
-    /// "Last night 6h 42m".
-    public let lastNight: String?
+    /// Last night's time asleep (after "Last night").
+    public let lastNight: NoctisMetricValue?
     public let chart: NightChartContent?
     /// "Thursday, September 24".
     public let date: String
@@ -423,6 +336,12 @@ public nonisolated struct ShareCardContent: Sendable, Equatable {
     public nonisolated struct ShareRecovery: Sendable, Equatable {
         public let score: Int
         public let segments: [RingSegmentContent]
+    }
+
+    /// The night chart as the card shows it: the heart-rate strip (and
+    /// its "min … bpm") only with "Include details".
+    public func chart(includeDetails: Bool) -> NightChartContent? {
+        includeDetails ? chart : chart?.removingHeart()
     }
 }
 
@@ -473,8 +392,8 @@ public nonisolated enum HomeScreenBuilder {
             mode: mode,
             nextModeChange: nextModeChange(after: now, plan: snapshot.tonight, calendar: calendar),
             recovery: recovery,
-            lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, format: format) } : nil,
-            insight: showsDataCards ? snapshot.topInsight.map { InsightCardContent(title: $0.title, message: $0.message) } : nil,
+            lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, heart: snapshot.lastNightHeart, format: format) } : nil,
+            insight: showsDataCards ? snapshot.topInsight.map { insightCard($0, format: format) } : nil,
             tonight: tonightCard(snapshot.tonight, format: format),
             evening: eveningHero(times, plan: snapshot.tonight, format: format),
             week: showsDataCards ? weekCard(snapshot, format: format) : nil,
@@ -537,11 +456,9 @@ public nonisolated enum HomeScreenBuilder {
     }
 
     static func eveningHero(_ times: TonightTimes, plan: TonightPlan, format: HomeFormat) -> EveningHeroContent {
-        let (time, period) = format.splitClock(times.bedtimeText)
         let labels: [(Int, Double)] = [(18 * 60, 0), (0, 6.0 / 16), (6 * 60, 12.0 / 16), (10 * 60, 1)]
         return EveningHeroContent(
-            time: time,
-            period: period,
+            time: format.clockMetric(times.bedtimeText),
             times: times,
             detail: tonightCard(plan, format: format).detail,
             stripLabels: labels.map { EveningHeroContent.StripLabel(text: format.hour(minutesSinceMidnight: $0.0), position: $0.1) },
@@ -566,12 +483,15 @@ public nonisolated enum HomeScreenBuilder {
         header(now: now, newestSample: newestSample, mode: .day, summary: .text(""), format: HomeFormat(calendar: calendar, locale: locale))
     }
 
+    /// Evening mode always says "Good evening." (in lavender), whatever
+    /// the hour; day mode follows the clock.
     static func header(now: Date, newestSample: Date?, mode: HomeMode, summary: HeaderSummary, format: HomeFormat) -> HomeHeader {
         let hour = format.calendar.component(.hour, from: now)
-        let partOfDay = switch hour {
-        case 4..<12: "morning"
-        case 12..<18: "afternoon"
-        default: "evening"
+        let partOfDay = switch (mode, hour) {
+        case (.evening, _): "evening"
+        case (.day, 4..<12): "morning"
+        case (.day, 12..<18): "afternoon"
+        case (.day, _): "evening"
         }
         let date = format.longDate(now)
         return HomeHeader(
@@ -591,7 +511,7 @@ public nonisolated enum HomeScreenBuilder {
         switch recovery {
         case .scored(let content):
             guard let lastNight = snapshot.lastNight else { return "Recovery is \(content.score)." }
-            return "You slept \(noctisFormattedDuration(minutes: Int((lastNight.totals.asleep / 60).rounded()))). Recovery is \(content.score)."
+            return "You slept \(HomeFormat.compactDuration(Int((lastNight.totals.asleep / 60).rounded()))). Recovery is \(content.score)."
         case .learning: return "We're still learning your pattern."
         case .noSleep: return "No sleep was recorded last night."
         case .stale: return "Apple Health hasn't synced recently."
@@ -637,7 +557,7 @@ public nonisolated enum HomeScreenBuilder {
         switch snapshot.recovery {
         case .learning(let nights)?:
             let required = RecoveryModelV2.learningNights
-            return .learning(nights: nights, required: required, text: "Learning your baseline · \(nights) of \(required) nights")
+            return .learning(nights: nights, required: required, text: "\(nights) of \(required) nights")
         case .noSleepLastNight?:
             let detail = snapshot.latestSleep.map { "Last recorded night ended \(format.shortDate($0.wakeTime, in: $0.timeZone))." }
             return .noSleep(title: "No sleep recorded last night.", detail: detail)
@@ -654,11 +574,18 @@ public nonisolated enum HomeScreenBuilder {
             DeltaChip(text: signed(delta), tone: tone(result.comparison.trend))
         }
         let line = confidenceLine(result)
+        let why = whyLine(result.topContributor)
+        let phrase = switch (chip, why) {
+        case (nil, _): "Not enough nights yet to compare."
+        case (_, nil): "In line with your usual"
+        default: "vs your usual"
+        }
         return ScoredRecoveryContent(
             score: result.score,
             segments: factors.map { RingSegmentContent(kind: $0.kind, weight: $0.weight, fraction: Double($0.score) / 100) },
             chip: chip,
-            comparisonPhrase: chip == nil ? "Not enough nights yet to compare." : "vs your usual",
+            comparisonPhrase: phrase,
+            why: why,
             sentence: result.comparison.sentence,
             confidence: line,
             confidenceCaption: result.confidence == .high ? nil : line,
@@ -666,6 +593,24 @@ public nonisolated enum HomeScreenBuilder {
             factors: factors.map { FactorCell(kind: $0.kind, name: shortName($0.kind), score: $0.score) },
             accessibilityLabel: accessibilitySummary(result, factors: factors)
         )
+    }
+
+    /// "Mostly: sleep was 1h 10m shorter than usual", "Mostly: HRV above
+    /// your normal range", "Mostly: bedtime 45 min later than usual"; with
+    /// `spoken`, durations in words.
+    static func whyLine(_ contributor: RecoveryContributor?, spoken: Bool = false) -> String? {
+        guard let contributor else { return nil }
+        let above = contributor.direction == .above
+        let minutes = Int(abs(contributor.difference).rounded())
+        let amount = spoken ? HomeFormat.spokenDuration(minutes) : HomeFormat.compactDuration(minutes, minutesWord: true)
+        let reason = switch contributor.measure {
+        case .sleepDuration: "sleep was \(amount) \(above ? "longer" : "shorter") than usual"
+        case .hrv: "HRV \(above ? "above" : "below") your normal range"
+        case .restingHeartRate: "resting heart rate \(above ? "above" : "below") your normal range"
+        case .bedtime: "bedtime \(amount) \(above ? "later" : "earlier") than usual"
+        case .wakeTime: "wake-up \(amount) \(above ? "later" : "earlier") than usual"
+        }
+        return (spoken ? "Mostly, " : "Mostly: ") + reason
     }
 
     static let noSleepData = RecoveryCardContent.noSleepData(
@@ -735,7 +680,8 @@ public nonisolated enum HomeScreenBuilder {
             let name = spokenName(factor.kind)
             return "\(index == 0 ? name.prefix(1).uppercased() + name.dropFirst() : name) \(factor.score)"
         }
-        return lead.joined(separator: ", ") + "." + (parts.isEmpty ? "" : " " + parts.joined(separator: ", ") + ".")
+        let why = whyLine(result.topContributor, spoken: true).map { " \($0)." } ?? ""
+        return lead.joined(separator: ", ") + "." + why + (parts.isEmpty ? "" : " " + parts.joined(separator: ", ") + ".")
     }
 
     static func shortName(_ kind: RecoveryFactorKind) -> String {
@@ -779,59 +725,79 @@ public nonisolated enum HomeScreenBuilder {
 
     static func detailRow(_ factor: RecoveryFactor, result: RecoveryResult, needMinutes: Int, format: HomeFormat) -> FactorDetailRow {
         let name = shortName(factor.kind)
+        let value: NoctisMetricValue
+        var suffix: String?
+        let baseline: String
+        let sentence: String
         switch factor.kind {
         case .sleepDuration:
             let slept = Int(factor.value.rounded())
             let need = HomeFormat.compactDuration(needMinutes)
-            return FactorDetailRow(
-                kind: factor.kind, name: name,
-                value: "Sleep \(noctisFormattedDuration(minutes: slept))",
-                baseline: factor.baseline.map { "baseline \(noctisFormattedDuration(minutes: Int($0.rounded())))" } ?? "no baseline yet",
-                score: factor.score,
-                sentence: slept >= needMinutes
-                    ? "You met your \(need) sleep need."
-                    : "You slept \(noctisFormattedDuration(minutes: slept)) of your \(need) need."
-            )
+            value = HomeFormat.durationMetric(slept)
+            baseline = factor.baseline.map { "baseline \(HomeFormat.compactDuration(Int($0.rounded())))" } ?? "no baseline yet"
+            sentence = slept >= needMinutes
+                ? "You met your \(need) sleep need."
+                : "You slept \(HomeFormat.compactDuration(slept)) of your \(need) need."
         case .hrv:
-            let baseline = factor.baseline ?? factor.value
-            let value = Int(factor.value.rounded())
-            let percent = baseline > 0 ? Int(((factor.value / baseline - 1) * 100).rounded()) : 0
+            let usual = factor.baseline ?? factor.value
+            let ms = Int(factor.value.rounded())
+            let percent = usual > 0 ? Int(((factor.value / usual - 1) * 100).rounded()) : 0
             let v1Sentence = percent == 0 ? "In line with your baseline." : "\(abs(percent))% \(percent > 0 ? "above" : "below") your baseline."
-            return FactorDetailRow(
-                kind: factor.kind, name: name,
-                value: "HRV \(value) ms",
-                baseline: "baseline \(Int(baseline.rounded())) ms",
-                score: factor.score,
-                sentence: factor.range.map { rangeSentence($0, value: "\(value) ms", baseline: "\(Int(baseline.rounded())) ms") } ?? v1Sentence
-            )
+            value = HomeFormat.quantityMetric(ms, unit: "ms", spokenUnit: "milliseconds")
+            baseline = "baseline \(Int(usual.rounded())) ms"
+            sentence = factor.range.map { rangeSentence($0, value: "\(ms) ms", baseline: "\(Int(usual.rounded())) ms") } ?? v1Sentence
         case .restingHeartRate:
-            let baseline = factor.baseline ?? factor.value
-            let value = Int(factor.value.rounded())
-            let difference = value - Int(baseline.rounded())
+            let usual = factor.baseline ?? factor.value
+            let bpm = Int(factor.value.rounded())
+            let difference = bpm - Int(usual.rounded())
             let v1Sentence = difference == 0 ? "Same as your baseline." : "\(abs(difference)) bpm \(difference > 0 ? "above" : "below") your baseline."
-            return FactorDetailRow(
-                kind: factor.kind, name: name,
-                value: "Resting HR \(value) bpm",
-                baseline: "baseline \(Int(baseline.rounded())) bpm",
-                score: factor.score,
-                sentence: factor.range.map { rangeSentence($0, value: "\(value) bpm", baseline: "\(Int(baseline.rounded())) bpm") } ?? v1Sentence
-            )
+            value = HomeFormat.quantityMetric(bpm, unit: "bpm", spokenUnit: "beats per minute")
+            baseline = "baseline \(Int(usual.rounded())) bpm"
+            sentence = factor.range.map { rangeSentence($0, value: "\(bpm) bpm", baseline: "\(Int(usual.rounded())) bpm") } ?? v1Sentence
         case .sleepConsistency:
             let minutes = Int(factor.value.rounded())
-            var usual = "no baseline yet"
+            value = HomeFormat.durationMetric(minutes)
+            suffix = "off"
             if let bedtime = result.baselines.bedtime?.value, let wake = result.baselines.wakeTime?.value {
-                usual = "usual \(format.clock(minutesAfterNoon: bedtime)) – \(format.clock(minutesAfterNoon: wake))"
+                baseline = "usual \(format.clock(minutesAfterNoon: bedtime)) – \(format.clock(minutesAfterNoon: wake))"
+            } else {
+                baseline = "no baseline yet"
             }
-            return FactorDetailRow(
-                kind: factor.kind, name: name,
-                value: "Consistency \(HomeFormat.compactDuration(minutes, minutesWord: true)) off",
-                baseline: usual,
-                score: factor.score,
-                sentence: minutes == 0
-                    ? "Right on your usual bedtime and wake time."
-                    : "Bedtime and wake time were \(HomeFormat.compactDuration(minutes, minutesWord: true)) from your usual, on average."
-            )
+            sentence = minutes == 0
+                ? "Right on your usual bedtime and wake time."
+                : "Bedtime and wake time were \(HomeFormat.compactDuration(minutes, minutesWord: true)) from your usual, on average."
         }
+        let sparkline = result.history(factor.kind).map { sparklineContent($0) }
+        let spokenValue = value.spoken + (suffix.map { " \($0)" } ?? "")
+        let label = "\(name) \(spokenValue), \(baseline), score \(factor.score). \(sentence)" + (sparkline.map { " \($0.accessibilityLabel)" } ?? "")
+        return FactorDetailRow(
+            kind: factor.kind, name: name, value: value, valueSuffix: suffix, baseline: baseline,
+            score: factor.score, sentence: sentence, sparkline: sparkline, accessibilityLabel: label
+        )
+    }
+
+    /// The 14 nights, the normal range and today, scaled to one chart
+    /// (0...1 up); consistency is drawn as bedtime.
+    static func sparklineContent(_ history: RecoveryFactorHistory) -> SparklineContent {
+        let range = history.normalRange
+        let all = history.values.compactMap { $0 } + [history.today, range.lowerBound, range.upperBound]
+        let low = all.min() ?? 0
+        let high = all.max() ?? 1
+        let pad = max((high - low) * 0.1, 0.5)
+        let (bottom, top) = (low - pad, high + pad)
+        func scaled(_ value: Double) -> Double { (value - bottom) / (top - bottom) }
+        let subject = switch history.kind {
+        case .sleepDuration: "Sleep"
+        case .hrv: "HRV"
+        case .restingHeartRate: "Resting heart rate"
+        case .sleepConsistency: "Bedtime"
+        }
+        return SparklineContent(
+            nights: history.values.map { $0.map(scaled) },
+            today: scaled(history.today),
+            band: scaled(range.lowerBound)...scaled(range.upperBound),
+            accessibilityLabel: "\(subject) has been within your normal range on \(history.nightsWithin) of \(history.nightsRecorded) nights."
+        )
     }
 
     /// "Within your normal range: 48 ms vs your 50 ms baseline."
@@ -883,105 +849,12 @@ public nonisolated enum HomeScreenBuilder {
         return paragraphs
     }
 
-    // MARK: Last night
-
-    static func lastNightCard(_ session: SleepSession, format: HomeFormat) -> LastNightCardContent {
-        let duration = noctisFormattedDuration(minutes: Int((session.totals.asleep / 60).rounded()))
-        let bedtime = format.clock(session.bedtime, in: session.timeZone)
-        let wake = format.clock(session.wakeTime, in: session.timeZone)
-        let chart = nightChart(session, format: format)
-        var spoken = "Last night, slept \(duration), \(bedtime) to \(wake)."
-        if let caption = chart.caption {
-            spoken += " " + caption
-        } else {
-            let present = Set(chart.spans.map(\.stage))
-            let parts = StripStage.allCases.filter(present.contains).map { stage in
-                "\(stage.name) \(HomeFormat.compactDuration(Int((stageTotal(stage, session.totals) / 60).rounded())))"
-            }
-            spoken += " " + parts.joined(separator: ", ") + "."
-        }
-        return LastNightCardContent(duration: duration, timeRange: "\(bedtime) – \(wake)", chart: chart, accessibilityLabel: spoken)
-    }
-
-    /// The four-lane chart: stage spans along the night (0...1), a
-    /// connector wherever the night moves to another lane, and start,
-    /// midpoint and end times.
-    static func nightChart(_ session: SleepSession, format: HomeFormat) -> NightChartContent {
-        let start = session.timeline.first?.interval.start ?? session.bedtime
-        let end = session.timeline.map(\.interval.end).max() ?? session.wakeTime
-        let span = max(end.timeIntervalSince(start), 1)
-        let labels = [start, start.addingTimeInterval(span / 2), end].map { format.clock($0, in: session.timeZone) }
-        guard session.completeness.hasStageDetail else {
-            return NightChartContent(
-                spans: [], connectors: [], timeLabels: labels, caption: "Stages aren't available from your current sources.",
-                laneTotals: [], clock: nil
-            )
-        }
-        var spans: [StripSegment] = []
-        for segment in session.timeline {
-            guard let stage = stripStage(segment.stage) else { continue }
-            let from = segment.interval.start.timeIntervalSince(start) / span
-            let to = segment.interval.end.timeIntervalSince(start) / span
-            if let last = spans.last, last.stage == stage, abs(last.end - from) < 1e-9 {
-                spans[spans.count - 1] = StripSegment(stage: stage, start: last.start, end: to)
-            } else {
-                spans.append(StripSegment(stage: stage, start: from, end: to))
-            }
-        }
-        let connectors = zip(spans, spans.dropFirst()).compactMap { previous, next -> NightConnector? in
-            guard abs(next.start - previous.end) < 1e-9, previous.stage.lane != next.stage.lane else { return nil }
-            return NightConnector(position: next.start, from: previous.stage.lane, to: next.stage.lane)
-        }
-        return NightChartContent(
-            spans: spans,
-            connectors: connectors,
-            timeLabels: labels,
-            caption: nil,
-            laneTotals: laneTotals(session.totals),
-            clock: NightClock(start: start, end: end, timeZone: session.timeZone, format: format)
-        )
-    }
-
-    /// "REM · 1h 32m" for each lane; unspecified sleep counts in Core,
-    /// where it's drawn.
-    static func laneTotals(_ totals: SleepTotals) -> [NightLaneTotal] {
-        NightLane.allCases.map { lane in
-            let seconds: TimeInterval = switch lane {
-            case .awake: totals.awake
-            case .rem: totals.rem
-            case .core: totals.core + totals.unspecified
-            case .deep: totals.deep
-            }
-            return NightLaneTotal(lane: lane, text: "\(lane.name) · \(HomeFormat.compactDuration(Int((seconds / 60).rounded()), minutesWord: true))")
-        }
-    }
-
-    static func stripStage(_ stage: SleepStageValue) -> StripStage? {
-        switch stage {
-        case .deep: .deep
-        case .core: .core
-        case .rem: .rem
-        case .awake: .awake
-        case .unspecified: .asleep
-        case .inBed: nil
-        }
-    }
-
-    static func stageTotal(_ stage: StripStage, _ totals: SleepTotals) -> TimeInterval {
-        switch stage {
-        case .deep: totals.deep
-        case .core: totals.core
-        case .rem: totals.rem
-        case .awake: totals.awake
-        case .asleep: totals.unspecified
-        }
-    }
-
     // MARK: Tonight
 
     static func tonightCard(_ plan: TonightPlan, format: HomeFormat) -> TonightCardContent {
         TonightCardContent(
-            bedtime: "Bedtime around \(format.clock(minutesSinceMidnight: plan.bedtimeMinutes))",
+            bedtimeLead: "Bedtime around",
+            bedtime: format.clockMetric(format.clock(minutesSinceMidnight: plan.bedtimeMinutes)),
             detail: "Wake \(format.clock(minutesSinceMidnight: plan.wakeMinutes)) · \(HomeFormat.compactDuration(plan.needMinutes)) need"
         )
     }
@@ -995,26 +868,37 @@ public nonisolated enum HomeScreenBuilder {
         let bars = snapshot.recentNights.map { night -> WeekBar in
             let wakeDay = night.night.adding(days: 1)
             let dayName = format.weekday(wakeDay, width: .wide)
-            let duration = night.asleepMinutes.map { noctisFormattedDuration(minutes: Int($0.rounded())) }
-            let parts = [format.weekday(wakeDay, width: .abbreviated), duration ?? "No data"] + [night.recovery.map { "Recovery \($0)" }].compactMap { $0 }
+            let minutes = night.asleepMinutes.map { Int($0.rounded()) }
+            // Deep and REM name the night's quality; Core is the rest.
+            let stageParts: [(String, Int)] = night.stages.map { [("Deep", Int($0.deep.rounded())), ("REM", Int($0.rem.rounded()))] } ?? []
+            let pill = [format.weekday(wakeDay, width: .abbreviated), minutes.map { HomeFormat.compactDuration($0) } ?? "No data"]
+                + stageParts.map { "\($0.0) \(HomeFormat.compactDuration($0.1))" }
+            let spoken = [dayName, minutes.map { HomeFormat.spokenDuration($0) } ?? "no data"]
+                + stageParts.map { "\($0.0 == "Deep" ? "deep" : $0.0) \(HomeFormat.spokenDuration($0.1))" }
+            var stages: WeekBarStages?
+            if let split = night.stages, split.deep + split.core + split.rem > 0 {
+                let total = split.deep + split.core + split.rem
+                stages = WeekBarStages(deep: split.deep / total, core: split.core / total, rem: split.rem / total)
+            }
             return WeekBar(
                 label: format.weekday(wakeDay, width: .narrow),
                 fraction: night.asleepMinutes.map { top > 0 ? $0 / top : 0 },
+                stages: stages,
                 isLastNight: night.night == snapshot.lastNight?.night,
-                accessibilityLabel: "\(dayName), \(duration ?? "no data")",
-                detail: parts.joined(separator: " · ")
+                accessibilityLabel: spoken.joined(separator: ", "),
+                detail: pill.joined(separator: " · ")
             )
         }
         let needLabel = "\(HomeFormat.compactDuration(snapshot.tonight.needMinutes)) need"
-        let averageDuration = snapshot.weekAverageMinutes.map { noctisFormattedDuration(minutes: Int($0.rounded())) }
-        let average = averageDuration.map { "Avg \($0)" }
-        let spokenAverage = averageDuration.map { ", average \($0)" } ?? ""
+        let average = snapshot.weekAverageMinutes.map { HomeFormat.durationMetric(Int($0.rounded())) }
+        let spokenAverage = average.map { ", average \($0.spoken)" } ?? ""
+        let spokenNeed = "\(HomeFormat.spokenDuration(snapshot.tonight.needMinutes)) need"
         return WeekCardContent(
             bars: bars,
             needFraction: top > 0 ? need / top : 0,
             needLabel: needLabel,
             average: average,
-            accessibilityLabel: "This week\(spokenAverage), \(needLabel). " + bars.map(\.accessibilityLabel).joined(separator: "; ") + "."
+            accessibilityLabel: "This week\(spokenAverage), \(spokenNeed). " + bars.map(\.accessibilityLabel).joined(separator: "; ") + "."
         )
     }
 }
@@ -1038,8 +922,8 @@ nonisolated extension HomeScreenBuilder {
         let day = format.calendar.dateComponents([.year, .month, .day], from: now)
         return ShareCardContent(
             recovery: shareRecovery,
-            lastNight: session.map { "Last night \(noctisFormattedDuration(minutes: Int(($0.totals.asleep / 60).rounded())))" },
-            chart: session.map { nightChart($0, format: format) },
+            lastNight: session.map { HomeFormat.durationMetric(Int(($0.totals.asleep / 60).rounded())) },
+            chart: session.map { nightChart($0, heart: snapshot.lastNightHeart, format: format) },
             date: date,
             details: details,
             title: "NOCTIS · \(date)",
@@ -1122,6 +1006,41 @@ nonisolated struct HomeFormat: Sendable, Equatable {
         case .abbreviated: date.formatted(style.weekday(.abbreviated))
         case .wide: date.formatted(style.weekday(.wide))
         }
+    }
+
+    /// 6h 42m, 8h, 45m as a metric; VoiceOver hears "6 hours 42 minutes".
+    static func durationMetric(_ minutes: Int) -> NoctisMetricValue {
+        let hours = minutes / 60
+        let remainder = minutes % 60
+        var parts: [NoctisMetricValue.Part] = []
+        if hours > 0 { parts += [.number("\(hours)"), .unit("h")] }
+        if remainder > 0 || hours == 0 {
+            if !parts.isEmpty { parts.append(.space) }
+            parts += [.number("\(remainder)"), .unit("m")]
+        }
+        return NoctisMetricValue(parts: parts, spoken: spokenDuration(minutes))
+    }
+
+    /// "6 hours 42 minutes", "1 hour", "45 minutes".
+    static func spokenDuration(_ minutes: Int) -> String {
+        let hours = minutes / 60
+        let remainder = minutes % 60
+        var words: [String] = []
+        if hours > 0 { words.append("\(hours) \(hours == 1 ? "hour" : "hours")") }
+        if remainder > 0 || hours == 0 { words.append("\(remainder) \(remainder == 1 ? "minute" : "minutes")") }
+        return words.joined(separator: " ")
+    }
+
+    /// 52 bpm, 48 ms as a metric.
+    static func quantityMetric(_ value: Int, unit: String, spokenUnit: String) -> NoctisMetricValue {
+        NoctisMetricValue(parts: [.number("\(value)"), .unit(unit)], spoken: "\(value) \(spokenUnit)")
+    }
+
+    /// 11:00 PM as a metric: the period is the unit (none on 24-hour
+    /// clocks).
+    func clockMetric(_ text: String) -> NoctisMetricValue {
+        let (time, period) = splitClock(text)
+        return NoctisMetricValue(parts: period.isEmpty ? [.number(time)] : [.number(time), .unit(period)], spoken: text)
     }
 
     /// "8h", "8h 15m", "45m" — or with `minutesWord`, "45 min".

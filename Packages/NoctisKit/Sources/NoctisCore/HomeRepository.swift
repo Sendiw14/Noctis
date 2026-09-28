@@ -56,9 +56,7 @@ public nonisolated enum HomeSnapshotBuilder {
         }
 
         let weekEnd = lastNight?.night ?? expectedLastNight(now: now, timeZone: timeZone, wakeMinutes: profile.typicalWakeMinutes)
-        let weekKeys = (0..<recentNightCount).map { weekEnd.adding(days: -$0) }
-        let scores = RecoveryEngine.nightlyScores(history: metrics, nights: weekKeys, needMinutes: Double(profile.needMinutes), asOf: now)
-        let week = recentNights(history, endingAt: weekEnd, recovery: scores)
+        let week = recentNights(history, endingAt: weekEnd)
         return HomeSnapshot(
             dataState: dataState,
             recovery: recovery,
@@ -68,6 +66,7 @@ public nonisolated enum HomeSnapshotBuilder {
             weekAverageMinutes: averageMinutes(week),
             tonight: TonightPlan(profile: profile),
             topInsight: InsightEngine.topInsight(history: metrics, asOf: now, fatigue: insightHistory),
+            lastNightHeart: lastNight.flatMap { heartSeries(inputs.heartRate, for: $0) },
             newestSample: newest,
             lastUpdated: now
         )
@@ -110,12 +109,24 @@ public nonisolated enum HomeSnapshotBuilder {
         return values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
     }
 
-    static func recentNights(_ history: SleepHistory, endingAt last: SleepNightKey, recovery: [SleepNightKey: Int] = [:]) -> [NightDuration] {
+    static func recentNights(_ history: SleepHistory, endingAt last: SleepNightKey) -> [NightDuration] {
         (0..<recentNightCount).reversed().map { offset in
             let key = last.adding(days: -offset)
-            let asleep = history.night(key).map { $0.totals.asleep / 60 }
-            return NightDuration(night: key, asleepMinutes: asleep, recovery: asleep == nil ? nil : recovery[key])
+            let session = history.night(key)
+            return NightDuration(
+                night: key,
+                asleepMinutes: session.map { $0.totals.asleep / 60 },
+                stages: session.flatMap { $0.completeness.hasStageDetail ? NightStageMinutes($0.totals) : nil }
+            )
         }
+    }
+
+    /// Heart rate across the session's span, the same span the night
+    /// panel's chart runs over.
+    static func heartSeries(_ samples: [HeartRateSample], for session: SleepSession) -> NightHeartSeries? {
+        let start = session.timeline.first?.interval.start ?? session.bedtime
+        let end = session.timeline.map(\.interval.end).max() ?? session.wakeTime
+        return NightHeartSeries.build(samples: samples, from: start, to: end)
     }
 }
 

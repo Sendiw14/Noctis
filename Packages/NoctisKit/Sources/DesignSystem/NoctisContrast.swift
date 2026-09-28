@@ -1,7 +1,22 @@
 import SwiftUI
 
+private nonisolated struct NoctisEveningPaperKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// Set where text sits on Home's evening paper, so tertiary ink uses
+    /// `eveningInk3` and keeps 4.5:1. Nonisolated: shape styles resolve
+    /// off the main actor.
+    public nonisolated var noctisEveningPaper: Bool {
+        get { self[NoctisEveningPaperKey.self] }
+        set { self[NoctisEveningPaperKey.self] = newValue }
+    }
+}
+
 /// Ink that follows Increase Contrast: secondary and tertiary text move
-/// up one level (ink3 → ink2, ink2 → ink) when it's on.
+/// up one level (ink3 → ink2, ink2 → ink) when it's on. On the evening
+/// paper, tertiary ink is `eveningInk3`.
 public struct NoctisInkStyle: ShapeStyle {
     public enum Level: Sendable {
         case primary
@@ -20,7 +35,7 @@ public struct NoctisInkStyle: ShapeStyle {
         return switch (level, raised) {
         case (.primary, _), (.secondary, true): NoctisAppColor.ink
         case (.secondary, false), (.tertiary, true): NoctisAppColor.ink2
-        case (.tertiary, false): NoctisAppColor.ink3
+        case (.tertiary, false): environment.noctisEveningPaper ? NoctisAppColor.eveningInk3 : NoctisAppColor.ink3
         }
     }
 }

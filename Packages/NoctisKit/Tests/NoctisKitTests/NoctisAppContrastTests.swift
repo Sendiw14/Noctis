@@ -46,6 +46,40 @@ struct NoctisAppContrastTests {
         #expect(ratio(palette.cocoa, palette.track) >= 3, "\(mode): cocoa on track")
     }
 
+    // MARK: - Home v3
+
+    /// Evening mode's paper: every ink that sits on it.
+    @Test(arguments: modes)
+    func inksReadOnTheEveningPaper(_ mode: String, _ palette: NoctisAppPalette) {
+        for (name, ink) in [("ink", palette.ink), ("ink2", palette.ink2), ("eveningInk3", palette.eveningInk3)] {
+            let value = ratio(ink, palette.eveningPaper)
+            #expect(value >= 4.5, "\(mode): \(name) on eveningPaper \(value) < 4.5:1")
+        }
+        for (name, ink) in [("orangeText", palette.orangeText), ("lavenderText", palette.lavenderText)] {
+            let value = ratio(ink, palette.eveningPaper)
+            #expect(value >= 3, "\(mode): \(name) on eveningPaper \(value) < 3:1 (display)")
+        }
+        // Still fine back on the day paper.
+        #expect(ratio(palette.eveningInk3, palette.bg) >= 4.5, "\(mode): eveningInk3 on bg")
+    }
+
+    @Test func ink3IsJustTooLightForTheLightEveningPaper() {
+        // Why evening mode uses eveningInk3 rather than ink3.
+        let value = ratio(NoctisAppPalette.light.ink3, NoctisAppPalette.light.eveningPaper)
+        #expect(value < 4.5 && value > 4.4)
+    }
+
+    /// Deep on the night panel and in This week's bars, and the insight's
+    /// cocoa on butter: graphics, 3:1.
+    @Test(arguments: modes)
+    func newGraphicsStandOut(_ mode: String, _ palette: NoctisAppPalette) {
+        #expect(ratio(palette.nightDeep, palette.nightPanel) >= 3, "\(mode): nightDeep on the night panel")
+        #expect(ratio(palette.nightDeep, palette.surface) >= 3, "\(mode): nightDeep on the week card")
+        #expect(ratio(palette.blockCocoa, palette.blockButter) >= 3, "\(mode): cocoa on the insight block")
+        #expect(ratio(palette.progressDot, palette.bg) >= 3, "\(mode): a recorded learning night")
+        #expect(ratio(palette.progressDot, palette.track) >= 3, "\(mode): recorded vs. not yet")
+    }
+
     // MARK: - Home v2
 
     @Test(arguments: modes)

@@ -23,7 +23,8 @@ public enum RecoveryEngine {
         }
         let baselines = BaselineEngine.baselines(for: lastNight.night, history: complete)
         let window = BaselineEngine.window(for: lastNight.night, in: complete)
-        let today = score(lastNight: lastNight, baselines: baselines, baselineNights: window.count, needMinutes: needMinutes, model: model)
+        let scored = score(lastNight: lastNight, baselines: baselines, baselineNights: window.count, needMinutes: needMinutes, model: model)
+        let today = scored.with(histories: histories(lastNight, window: window, baselines: baselines, factors: scored.factors))
         // Each night in the window, scored exactly as today was (same
         // model) — skipping nights that were still in the learning state
         // themselves.
@@ -114,8 +115,88 @@ public enum RecoveryEngine {
             modelVersion: model.version,
             baselines: baselines,
             missingFactors: gaps(lastNight, baselines, used: Set(factors.map(\.kind))),
-            heartCapApplied: heartCapApplied
+            heartCapApplied: heartCapApplied,
+            topContributor: topContributor(lastNight, baselines, factors: factors)
         )
+    }
+
+    // MARK: - Why
+
+    /// Of the scored factors outside their normal range (±1 SD of usual,
+    /// `RecoveryNormalRange`), the one with the largest weight × |SD|; nil
+    /// when all are within. Consistency is judged on whichever of bedtime
+    /// and wake time is further off.
+    static func topContributor(_ night: NightMetrics, _ baselines: Baselines, factors: [RecoveryFactor]) -> RecoveryContributor? {
+        func measure(_ factor: RecoveryFactor, _ measure: RecoveryContributor.Measure, value: Double?, baseline: Baseline?, floor: Double) -> RecoveryContributor? {
+            guard let value, let baseline else { return nil }
+            let z = RecoveryNormalRange.standardDeviations(value, from: baseline, floor: floor)
+            return RecoveryContributor(
+                factor: factor.kind, measure: measure, difference: value - baseline.value,
+                standardDeviations: z, weightedDeviation: factor.weight * abs(z)
+            )
+        }
+        let candidates = factors.compactMap { factor -> RecoveryContributor? in
+            switch factor.kind {
+            case .sleepDuration:
+                return measure(factor, .sleepDuration, value: night.asleepMinutes, baseline: baselines.sleepDuration,
+                               floor: RecoveryNormalRange.sleepDurationStandardDeviationFloor)
+            case .hrv:
+                return measure(factor, .hrv, value: night.hrv, baseline: baselines.hrv, floor: RecoveryModelV2.hrvStandardDeviationFloor)
+            case .restingHeartRate:
+                return measure(factor, .restingHeartRate, value: night.restingHeartRate, baseline: baselines.restingHeartRate,
+                               floor: RecoveryModelV2.restingStandardDeviationFloor)
+            case .sleepConsistency:
+                let floor = RecoveryNormalRange.timingStandardDeviationFloor
+                return [
+                    measure(factor, .bedtime, value: night.bedtimeMinutes, baseline: baselines.bedtime, floor: floor),
+                    measure(factor, .wakeTime, value: night.wakeMinutes, baseline: baselines.wakeTime, floor: floor),
+                ]
+                .compactMap { $0 }
+                .max { abs($0.standardDeviations) < abs($1.standardDeviations) }
+            }
+        }
+        // `max` keeps the first of equals, so ties go to the factor listed first.
+        return candidates
+            .filter { !RecoveryNormalRange.contains(standardDeviations: $0.standardDeviations) }
+            .reduce(nil) { best, next in
+                guard let best else { return next }
+                return next.weightedDeviation > best.weightedDeviation ? next : best
+            }
+    }
+
+    // MARK: - Sparklines
+
+    /// Each scored factor's 14 window nights (oldest first) against its
+    /// normal range, for Recovery detail. A factor without a baseline (under
+    /// 5 nights) has none.
+    static func histories(_ night: NightMetrics, window: [NightMetrics], baselines: Baselines, factors: [RecoveryFactor]) -> [RecoveryFactorHistory] {
+        let byNight = Dictionary(window.map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
+        let keys = (1...BaselineEngine.windowNights).reversed().map { night.night.adding(days: -$0) }
+        func history(_ kind: RecoveryFactorKind, today: Double?, baseline: Baseline?, floor: Double, value: (NightMetrics) -> Double?) -> RecoveryFactorHistory? {
+            guard let today, let baseline else { return nil }
+            return RecoveryFactorHistory(
+                kind: kind,
+                values: keys.map { byNight[$0].flatMap(value) },
+                today: today,
+                usual: baseline.value,
+                standardDeviation: max(baseline.standardDeviation, floor)
+            )
+        }
+        return factors.compactMap { factor in
+            switch factor.kind {
+            case .sleepDuration:
+                history(.sleepDuration, today: night.asleepMinutes, baseline: baselines.sleepDuration,
+                        floor: RecoveryNormalRange.sleepDurationStandardDeviationFloor) { $0.asleepMinutes }
+            case .hrv:
+                history(.hrv, today: night.hrv, baseline: baselines.hrv, floor: RecoveryModelV2.hrvStandardDeviationFloor) { $0.hrv }
+            case .restingHeartRate:
+                history(.restingHeartRate, today: night.restingHeartRate, baseline: baselines.restingHeartRate,
+                        floor: RecoveryModelV2.restingStandardDeviationFloor) { $0.restingHeartRate }
+            case .sleepConsistency:
+                history(.sleepConsistency, today: night.bedtimeMinutes, baseline: baselines.bedtime,
+                        floor: RecoveryNormalRange.timingStandardDeviationFloor) { $0.bedtimeMinutes }
+            }
+        }
     }
 
     /// V3's cap: HRV at least 1.5 SD below baseline and resting heart rate

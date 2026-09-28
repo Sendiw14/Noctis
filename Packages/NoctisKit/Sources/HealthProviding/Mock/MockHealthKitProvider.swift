@@ -16,6 +16,10 @@ public enum MockScenario: String, Sendable, CaseIterable {
     case stale
     /// No data last night; today's daytime heart rate still arrives.
     case gap
+    /// Like `full`, but last night was only later (a bedtime-shift insight).
+    case lateBedtime
+    /// Like `full`, but a steady sleeper on their usual (a streak insight).
+    case steady
 }
 
 /// Development-only stand-in for a real HealthKit-backed provider. Clearly
@@ -61,9 +65,14 @@ public final class MockHealthKitProvider: HealthDataProviding {
         self.isHealthDataAvailable = isHealthDataAvailable
         self.failsQueries = failsQueries
 
-        let generated = MockNightGenerator.generate(seed: seed, count: historyDays, referenceDate: referenceDate, calendar: calendar)
+        let lastNight: MockLastNight = switch scenario {
+        case .lateBedtime: .later
+        case .steady: .steady
+        default: .laterAndShorter
+        }
+        let generated = MockNightGenerator.generate(seed: seed, count: historyDays, referenceDate: referenceDate, calendar: calendar, lastNight: lastNight)
         let nights: [NightProfile] = switch scenario {
-        case .full, .sleepOnly, .stale: generated
+        case .full, .sleepOnly, .stale, .lateBedtime, .steady: generated
         case .learning: Array(generated.suffix(3))
         case .empty: []
         case .gap: Array(generated.dropLast())

@@ -44,6 +44,18 @@ public nonisolated struct NoctisAppPalette: Sendable {
     /// The morning reveal's first frame: a flat dusk that crossfades to
     /// the paper.
     public let dusk: String
+    /// Home's paper in evening mode: the paper with a faint dusk tint.
+    public let eveningPaper: String
+    /// ink3 on the evening paper: two steps deeper in Light, where ink3
+    /// is only 4.43:1 on #F2EDEF.
+    public let eveningInk3: String
+    /// Deep sleep on the night panel (and the stage-stacked week bars).
+    public let nightDeep: String
+    /// Cocoa on the color blocks (insight evidence, the Tonight crescent):
+    /// #4A2F22 in both modes, like the block ink.
+    public let blockCocoa: String
+    /// A recorded night in the learning dots: cocoa, lavender in Dark.
+    public let progressDot: String
 
     public static let light = NoctisAppPalette(
         bg: "F8F5EE", surface: "FFFFFF", hairline: "E9E3D8", track: "ECE6DA",
@@ -53,7 +65,7 @@ public nonisolated struct NoctisAppPalette: Sendable {
         nightPanel: "4A2F22", nightInk: "F8F5EE", nightBorder: "4A2F22",
         blockLavender: "A08CEB", blockButter: "F2CE6B", blockInk: "2B1D14",
         ringTrack: "ECE6DA", weekHighlight: "4A2F22", lavenderText: "7B63D6",
-        dusk: "E6E0EE"
+        dusk: "E6E0EE", eveningPaper: "F2EDEF", eveningInk3: "78695C", nightDeep: "8C7AE6", blockCocoa: "4A2F22", progressDot: "4A2F22"
     )
 
     public static let dark = NoctisAppPalette(
@@ -68,7 +80,7 @@ public nonisolated struct NoctisAppPalette: Sendable {
         nightPanel: "0E0A08", nightInk: "F4EDE3", nightBorder: "33281F",
         blockLavender: "8E7BDC", blockButter: "E0B955", blockInk: "2B1D14",
         ringTrack: "2A211B", weekHighlight: "9A87E6", lavenderText: "A897F0",
-        dusk: "120E17"
+        dusk: "120E17", eveningPaper: "150F13", eveningInk3: "9C8C7B", nightDeep: "9A87E6", blockCocoa: "4A2F22", progressDot: "9A87E6"
     )
 }
 
@@ -116,6 +128,11 @@ public nonisolated enum NoctisAppColor {
     public static let weekHighlight = adaptive(\.weekHighlight)
     public static let lavenderText = adaptive(\.lavenderText)
     public static let dusk = adaptive(\.dusk)
+    public static let eveningPaper = adaptive(\.eveningPaper)
+    public static let eveningInk3 = adaptive(\.eveningInk3)
+    public static let nightDeep = adaptive(\.nightDeep)
+    public static let blockCocoa = adaptive(\.blockCocoa)
+    public static let progressDot = adaptive(\.progressDot)
 
     // MARK: Sleep stages
 

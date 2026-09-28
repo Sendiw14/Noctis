@@ -23,8 +23,6 @@ struct InsightEngineTests {
     @Test func sleepThirtyMinutesShorterThanBaselineFires() throws {
         let insight = try #require(top(history(lastAsleep: 390)))
         #expect(insight.kind == .sleepDurationShift)
-        #expect(insight.title == "Shorter night than usual")
-        #expect(insight.message == "Compared with your recent baseline, you slept 30 min less last night.")
         #expect(insight.evidence.value == 390)
         #expect(insight.evidence.baseline == 420)
         #expect(insight.evidence.delta == -30)
@@ -34,7 +32,6 @@ struct InsightEngineTests {
     @Test func sleepLongerThanBaselineFires() throws {
         let insight = try #require(top(history(lastAsleep: 490)))
         #expect(insight.kind == .sleepDurationShift)
-        #expect(insight.message == "Compared with your recent baseline, you slept 1h 10m more last night.")
     }
 
     @Test func underThirtyMinutesDoesNotFire() {
@@ -48,15 +45,12 @@ struct InsightEngineTests {
     @Test func laterBedtimeFires() throws {
         let insight = try #require(top(history(lastBedtime: 715)))
         #expect(insight.kind == .bedtimeShift)
-        #expect(insight.title == "Later bedtime than usual")
-        #expect(insight.message == "Compared with your recent baseline, you went to bed 55 min later last night.")
         #expect(insight.evidence.delta == 55)
     }
 
     @Test func earlierBedtimeFires() throws {
         let insight = try #require(top(history(lastBedtime: 600)))
         #expect(insight.kind == .bedtimeShift)
-        #expect(insight.message == "Compared with your recent baseline, you went to bed 1h earlier last night.")
     }
 
     // MARK: - Streak
@@ -69,7 +63,6 @@ struct InsightEngineTests {
         let insight = try #require(top(history))
         #expect(insight.kind == .consistentBedtime)
         #expect(insight.evidence.streakNights == 5)
-        #expect(insight.message == "Compared with your recent baseline, you went to bed within 30 minutes of your typical time for 5 nights in a row.")
     }
 
     @Test func fourSteadyNightsDoNotFire() {
@@ -117,7 +110,7 @@ struct InsightEngineTests {
         #expect(InsightEngine.topInsight(history: history(lastAsleep: 300), asOf: later) == nil)
     }
 
-    @Test func everyInsightComparesWithTheBaselineAndClaimsNoCause() throws {
+    @Test func everyKindCarriesItsEvidence() throws {
         let insights = try [
             #require(top(history(lastAsleep: 300))),
             #require(top(history(lastAsleep: 500))),
@@ -126,23 +119,21 @@ struct InsightEngineTests {
             #require(top(history())),
         ]
         #expect(Set(insights.map(\.kind)) == Set(InsightKind.allCases))
-        let causal = ["because", "caused", "cause", "due to", "led to", "leads to", "so you", "result", "thanks to", "helped", "made you"]
         for insight in insights {
-            #expect(insight.message.hasPrefix("Compared with your recent baseline, "))
-            let text = (insight.title + " " + insight.message).lowercased()
-            for word in causal {
-                #expect(!text.contains(word), "\"\(word)\" in \(insight.kind): \(text)")
-            }
+            #expect(insight.evidence.baselineNights == 14)
+            #expect(insight.evidence.delta == insight.evidence.value - insight.evidence.baseline)
         }
+    }
+
+    @Test func aStreakShowsTheLastSevenNights() throws {
+        // Nights 0–9 alternate 45 minutes either side; 10–14 sit on 11 PM.
+        let insight = try #require(top(history(bedtimes: { $0 < 10 ? ($0.isMultiple(of: 2) ? 615 : 705) : 660 })))
+        #expect(insight.evidence.recentNights.count == InsightEngine.streakWindowNights)
+        // Nights 8 and 9 were 45 min off; 10–14 within.
+        #expect(insight.evidence.recentNights == [false, false, true, true, true, true, true])
     }
 
     @Test func theSameHistoryAlwaysGivesTheSameInsight() {
         #expect(top(history(lastAsleep: 350)) == top(history(lastAsleep: 350)))
-    }
-
-    @Test func minutesAreWrittenPlainly() {
-        #expect(InsightEngine.formatMinutes(45) == "45 min")
-        #expect(InsightEngine.formatMinutes(60) == "1h")
-        #expect(InsightEngine.formatMinutes(70.4) == "1h 10m")
     }
 }

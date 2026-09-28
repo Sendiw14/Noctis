@@ -98,8 +98,8 @@ struct HomeModeTests {
     @Test func theEveningHeroSplitsTheTimeAndLabelsTheStrip() {
         let format = HomeFormat(calendar: calendar, locale: locale)
         let hero = HomeScreenBuilder.eveningHero(times(at(24, 21)), plan: plan, format: format)
-        #expect(hero.time == "11:00")
-        #expect(hero.period == "PM")
+        #expect(hero.time.parts == [.number("11:00"), .unit("PM")])
+        #expect(plain(hero.time.spoken) == "11:00 PM")
         #expect(plain(hero.detail) == "Wake 7:00 AM · 8h need")
         #expect(hero.stripLabels.map { plain($0.text) } == ["6 PM", "12 AM", "6 AM", "10 AM"])
         #expect(hero.stripLabels.map(\.position) == [0, 6.0 / 16, 12.0 / 16, 1])
@@ -141,7 +141,7 @@ struct HomeModeTests {
         let sentence = day.header.summary.text(at: at(24, 10))
         guard case .scored(let scored) = day.recovery else { Issue.record("expected a score"); return }
         let slept = try #require(day.lastNight?.duration)
-        #expect(sentence == "You slept \(slept). Recovery is \(scored.score).")
+        #expect(sentence == "You slept \(slept.plain). Recovery is \(scored.score).")
     }
 
     @Test func everyStateHasAnHonestSentence() async {

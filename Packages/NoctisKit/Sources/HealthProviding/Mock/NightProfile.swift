@@ -30,6 +30,17 @@ struct LastNightOverride {
     let quality: Double
 }
 
+/// How the mock's last night relates to the nights before it, which
+/// decides the insight Home shows.
+enum MockLastNight {
+    /// 55 minutes later and 70 minutes shorter: the duration shift wins.
+    case laterAndShorter
+    /// 55 minutes later, the usual length: a bedtime shift.
+    case later
+    /// A steady sleeper whose last night is on the usual: a bedtime streak.
+    case steady
+}
+
 enum MockNightGenerator {
     static let watchSource = "Apple Watch (Simulated)"
     static let watchBundleID = "com.noctis.mock.watch"
@@ -44,7 +55,7 @@ enum MockNightGenerator {
     /// `count` nights ending with last night. Last night is the night of
     /// yesterday's evening once it's 9 AM (so it has surely ended), or the
     /// evening before that earlier in the morning.
-    static func generate(seed: UInt64, count: Int, referenceDate: Date, calendar: Calendar) -> [NightProfile] {
+    static func generate(seed: UInt64, count: Int, referenceDate: Date, calendar: Calendar, lastNight: MockLastNight = .laterAndShorter) -> [NightProfile] {
         guard count > 0 else { return [] }
         let hour = calendar.component(.hour, from: referenceDate)
         let today = calendar.startOfDay(for: referenceDate)
@@ -59,13 +70,20 @@ enum MockNightGenerator {
                 let previous = nights.suffix(14)
                 let meanBedtimeHour = previous.map { $0.bedtime.timeIntervalSince(calendar.startOfDay(for: $0.date)) / 3600 }.reduce(0, +) / Double(previous.count)
                 let meanAsleepHours = previous.map(\.asleepSeconds).reduce(0, +) / Double(previous.count) / 3600
-                override = LastNightOverride(
-                    bedtimeHour: meanBedtimeHour + lastNightBedtimeShiftMinutes / 60,
-                    asleepHours: meanAsleepHours + lastNightDurationShiftMinutes / 60,
-                    quality: 0.3
-                )
+                override = switch lastNight {
+                case .laterAndShorter:
+                    LastNightOverride(
+                        bedtimeHour: meanBedtimeHour + lastNightBedtimeShiftMinutes / 60,
+                        asleepHours: meanAsleepHours + lastNightDurationShiftMinutes / 60,
+                        quality: 0.3
+                    )
+                case .later:
+                    LastNightOverride(bedtimeHour: meanBedtimeHour + lastNightBedtimeShiftMinutes / 60, asleepHours: meanAsleepHours, quality: 0.55)
+                case .steady:
+                    LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours, quality: 0.7)
+                }
             }
-            nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override))
+            nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady))
         }
         return nights
     }
@@ -87,7 +105,7 @@ enum MockNightGenerator {
         return samples
     }
 
-    private static func generateNight(index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?) -> NightProfile {
+    private static func generateNight(index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?, steady: Bool = false) -> NightProfile {
         var rng = SeededGenerator(seed: seed &+ UInt64(index) &* 0x9E3779B1)
 
         let weekday = calendar.component(.weekday, from: day)
@@ -98,8 +116,9 @@ enum MockNightGenerator {
         let noise = Double.random(in: -0.16...0.16, using: &rng)
         let quality = override?.quality ?? min(max(trend + noise, 0.12), 0.97)
 
-        let bedtimeHourBase = isWeekend ? 23.6 : 23.0
-        let bedtimeJitter = Double.random(in: -35...35, using: &rng)
+        // A steady sleeper keeps weekends and weeknights within minutes.
+        let bedtimeHourBase = isWeekend && !steady ? 23.6 : 23.0
+        let bedtimeJitter = Double.random(in: -35...35, using: &rng) * (steady ? 0.25 : 1)
         let bedtimeHour = override?.bedtimeHour ?? bedtimeHourBase + bedtimeJitter / 60
         let bedtime = day.addingTimeInterval(bedtimeHour * 3600)
 

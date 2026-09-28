@@ -51,9 +51,8 @@ public enum NoctisRecoveryRingLayout {
 
 /// The recovery ring, from the Sample ring's drawing family (`NoctisStageRing`):
 /// flat round-capped arcs on a `Canvas`, fixed 3° visible gaps. Each
-/// segment is a track with a filled part. With no segments it's dormant
-/// — a plain track circle — optionally carrying a thin cocoa progress arc
-/// (learning your baseline). `Animatable` over `reveal` (the daily
+/// segment is a track with a filled part. With no segments it's dormant:
+/// a plain track circle. `Animatable` over `reveal` (the daily
 /// draw-in), `dim` (every segment but `highlight` fading to 40%) and each
 /// segment's fill (a live update moves only what changed).
 ///
@@ -67,7 +66,6 @@ public struct NoctisRecoveryRing: View, Animatable {
     private var fractions: [Double]
     private let segments: [NoctisRingSegment]
     private let highlight: Int?
-    private let progress: Double?
     private let diameter: CGFloat
     private let lineWidthAtFullSize: CGFloat
 
@@ -79,7 +77,6 @@ public struct NoctisRecoveryRing: View, Animatable {
         reveal: Double = 1,
         highlight: Int? = nil,
         dim: Double = 0,
-        progress: Double? = nil,
         diameter: CGFloat = 200,
         lineWidth: CGFloat = 18
     ) {
@@ -88,7 +85,6 @@ public struct NoctisRecoveryRing: View, Animatable {
         self.reveal = reveal
         self.highlight = highlight
         self.dim = dim
-        self.progress = progress
         self.diameter = diameter
         self.lineWidthAtFullSize = lineWidth
     }
@@ -124,12 +120,6 @@ public struct NoctisRecoveryRing: View, Animatable {
             var track = Path()
             track.addArc(center: center, radius: radius, startAngle: .degrees(0), endAngle: .degrees(360), clockwise: false)
             context.stroke(track, with: .color(NoctisAppColor.ringTrack), style: StrokeStyle(lineWidth: lineWidth))
-            if let progress, progress > 0 {
-                let thin = lineWidth / 3
-                let end = min(progress, 1) * 360
-                context.stroke(arcPath(from: 0, to: end, center: center, radius: radius), with: .color(NoctisAppColor.cocoa),
-                               style: StrokeStyle(lineWidth: thin, lineCap: .round))
-            }
             return
         }
 
@@ -243,7 +233,7 @@ public struct NoctisRingLayout: Layout {
             NoctisRingSegment(color: NoctisAppColor.orange, weight: 20, fraction: 0.85),
             NoctisRingSegment(color: NoctisAppColor.butter, weight: 20, fraction: 0.74),
         ])
-        NoctisRecoveryRing(segments: [], progress: 3.0 / 5.0, diameter: 120)
+        NoctisRecoveryRing(segments: [], diameter: 120)
     }
     .padding()
 }

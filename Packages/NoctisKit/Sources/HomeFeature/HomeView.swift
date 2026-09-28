@@ -67,44 +67,34 @@ struct HomeView: View {
     @State private var sharing = false
     /// The morning reveal's dusk over the paper (and the status bar scrim).
     @State private var dusk: Double
+    /// The evening paper over the day paper: 1 in evening mode.
+    @State private var evening: Double
 
     init(viewModel: HomeViewModel, zoomNamespace: Namespace.ID) {
         self.viewModel = viewModel
         self.zoomNamespace = zoomNamespace
         _dusk = State(initialValue: viewModel.reveal == .pending ? 1 : 0)
+        _evening = State(initialValue: viewModel.header.mode == .evening ? 1 : 0)
     }
 
     var body: some View {
-        ScrollView {
-            HomeContent(viewModel: viewModel, zoomNamespace: zoomNamespace, actions: actions) { heroFrame = $0 }
-        }
-        .scrollPosition($scrollPosition)
-        .onScrollGeometryChange(for: Double.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, top in
-            visibleTop = top
-            viewModel.scrolled(visibleTop: top, heroTop: heroFrame.minY, heroHeight: heroFrame.height)
-        }
-        .onChange(of: heroFrame) { _, frame in
-            viewModel.scrolled(visibleTop: visibleTop, heroTop: frame.minY, heroHeight: frame.height)
-        }
-        // R14: cards keep their shadows at the scroll view's edges.
-        .scrollClipDisabled()
-        .modifier(HomeSwipeActionsContainer())
-        // Nothing may show behind the status bar; at dusk, neither may paper.
-        .noctisStatusBarGuard(wash: NoctisAppColor.dusk, opacity: dusk)
-        .overlay(alignment: .top) {
+        // The compact bar is a sibling above the scroll view, not part of it.
+        ZStack(alignment: .top) {
+            scroll
             HomeTopOverlay(viewModel: viewModel, scrollToTop: scrollToTop)
+                .zIndex(1)
         }
-        // Paper plus the 3% grain, in both modes, under a flat dusk that
-        // lifts during the morning reveal.
+        // Paper plus the 3% grain, in both modes; the evening paper over it
+        // in evening mode, and a flat dusk that lifts during the morning
+        // reveal.
         .background {
             PaperBackground(adaptive: true)
-                .overlay(NoctisAppColor.dusk.opacity(dusk))
+                .overlay(NoctisAppColor.eveningPaper.opacity(evening))
+                .overlay(NoctisAppColor.dusk.opacity(dusk).id(viewModel.revealSkips))
                 .ignoresSafeArea()
         }
-        .refreshable {
-            await viewModel.refresh()
-            NoctisHaptics.soft()
-        }
+        // Any touch or scroll during the morning reveal skips to its end.
+        .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in skipReveal() }, including: revealRunning ? .all : .subviews)
         .task { await viewModel.onAppear() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { viewModel.updateClock() }
@@ -121,6 +111,13 @@ struct HomeView: View {
                 dusk = target
             }
         }
+        .onChange(of: viewModel.header.mode) { _, mode in
+            // The paper crossfades with the mode morph (instantly under
+            // Reduce Motion).
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: HomeMorph.paperDuration)) {
+                evening = mode == .evening ? 1 : 0
+            }
+        }
         .sheet(isPresented: $sharing) {
             if let share = viewModel.screen?.share {
                 SharePreviewSheet(content: share)
@@ -128,6 +125,49 @@ struct HomeView: View {
         }
         .navigationTitle("Home")
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var revealRunning: Bool { viewModel.reveal != .none }
+
+    /// Jumps straight to the reveal's end state, with no animation.
+    private func skipReveal() {
+        guard revealRunning else { return }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            dusk = 0
+            viewModel.skipReveal()
+        }
+    }
+
+    private var scroll: some View {
+        ScrollView {
+            HomeContent(viewModel: viewModel, zoomNamespace: zoomNamespace, actions: actions) { heroFrame = $0 }
+        }
+        .scrollPosition($scrollPosition)
+        .onScrollPhaseChange { _, phase in
+            if phase == .interacting { skipReveal() }
+        }
+        .onScrollGeometryChange(for: Double.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, top in
+            visibleTop = top
+            viewModel.scrolled(visibleTop: top, heroTop: heroFrame.minY, heroHeight: heroFrame.height)
+        }
+        .onChange(of: heroFrame) { _, frame in
+            viewModel.scrolled(visibleTop: visibleTop, heroTop: frame.minY, heroHeight: frame.height)
+        }
+        // R14: cards keep their shadows at the scroll view's edges.
+        .scrollClipDisabled()
+        .modifier(HomeSwipeActionsContainer())
+        // Nothing may show behind the status bar; the scrim wears the
+        // evening paper and the dusk too.
+        .noctisStatusBarGuard(washes: [
+            NoctisWash(NoctisAppColor.eveningPaper, opacity: evening),
+            NoctisWash(NoctisAppColor.dusk, opacity: dusk),
+        ])
+        .refreshable {
+            await viewModel.refresh()
+            NoctisHaptics.soft()
+        }
     }
 
     private var actions: HomeActions {
@@ -220,6 +260,9 @@ struct HomeContent: View {
             ZStack(alignment: .top) {
                 if let screen = viewModel.screen {
                     sections(screen)
+                        // A skipped reveal rebuilds the content at its end
+                        // state, cutting every animation in flight.
+                        .id(viewModel.revealSkips)
                         .transition(.opacity)
                 } else {
                     HomeSkeletonView(columns: isRegular ? 2 : 1, mode: viewModel.header.mode)
@@ -234,6 +277,7 @@ struct HomeContent: View {
         .padding(.bottom, NoctisSpacing.xl)
         .frame(maxWidth: .infinity)
         .coordinateSpace(.named(HomeView.contentSpace))
+        .environment(\.noctisEveningPaper, viewModel.header.mode == .evening)
         .environment(\.homeReveal, viewModel.reveal)
         .environment(\.homeMorph, reduceMotion ? nil : morph)
         .task(id: revealReady) {
@@ -533,14 +577,21 @@ extension RecoveryFactorKind {
 }
 
 extension NightLane {
-    /// On the night panel: Awake butter, REM sage, Core orange, Deep
-    /// lavender (cocoa would vanish on the cocoa panel).
+    /// On the night panel (and This week's stacked bars): Awake butter,
+    /// REM sage, Core orange, Deep night lavender (cocoa would vanish on
+    /// the cocoa panel).
     var tint: Color {
         switch self {
         case .awake: NoctisAppColor.butter
         case .rem: NoctisAppColor.sage
         case .core: NoctisAppColor.orange
-        case .deep: NoctisAppColor.lavender
+        case .deep: NoctisAppColor.nightDeep
         }
     }
+}
+
+/// The day ↔ evening morph's timing.
+enum HomeMorph {
+    /// The paper crossfades over this long.
+    static let paperDuration = 1.2
 }

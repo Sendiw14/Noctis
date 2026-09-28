@@ -44,32 +44,38 @@ struct HomeCollapsedBar: View {
     }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                content
-                Spacer(minLength: 0)
+        VStack(spacing: 0) {
+            Button(action: action) {
+                HStack(spacing: 10) {
+                    content
+                    Spacer(minLength: 0)
+                }
+                .frame(minHeight: 44)
+                .frame(maxWidth: HomeContent.compactMaxWidth)
+                .padding(.horizontal, NoctisSpacing.lg)
+                .padding(.vertical, NoctisSpacing.xxs)
+                .frame(maxWidth: .infinity)
+                .background(paper)
+                .contentShape(Rectangle())
             }
-            .frame(minHeight: 44)
-            .frame(maxWidth: HomeContent.compactMaxWidth)
-            .padding(.horizontal, NoctisSpacing.lg)
-            .padding(.vertical, NoctisSpacing.xxs)
-            .frame(maxWidth: .infinity)
-            .background(NoctisAppColor.bg)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        // The same paper fade as the status bar scrim, under the bar.
-        .background(alignment: .bottom) {
-            LinearGradient(colors: [NoctisAppColor.bg, NoctisAppColor.bg.opacity(0)], startPoint: .top, endPoint: .bottom)
+            .buttonStyle(.plain)
+            // The button's frame is exactly what it answers to.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(label). Scroll to top")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityIdentifier("home.collapsedBar")
+            // The same paper fade as the status bar scrim, under the bar;
+            // touches pass through it to the content.
+            LinearGradient(colors: [paper, paper.opacity(0)], startPoint: .top, endPoint: .bottom)
                 .frame(height: NoctisStatusBarScrimMetrics.fadeHeight)
-                .offset(y: NoctisStatusBarScrimMetrics.fadeHeight)
                 .allowsHitTesting(false)
+                .accessibilityHidden(true)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(label)
-        .accessibilityHint("Scrolls to the top.")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityIdentifier("home.collapsedBar")
+    }
+
+    /// The page's paper: the evening paper in evening mode.
+    private var paper: Color {
+        screen.mode == .evening ? NoctisAppColor.eveningPaper : NoctisAppColor.bg
     }
 
     @ViewBuilder
@@ -108,7 +114,8 @@ struct HomeCollapsedBar: View {
             if case .scored(let scored) = screen.recovery { return "Recovery \(scored.score)" }
             return "Recovery"
         case .evening:
-            return screen.evening.times.status(at: now)
+            let times = screen.evening.times
+            return times.countdownMetric(at: now).map { "Bedtime \(times.bedtimeText), in \($0.spoken)" } ?? times.passedText
         }
     }
 }

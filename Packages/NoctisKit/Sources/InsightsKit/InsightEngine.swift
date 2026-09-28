@@ -22,6 +22,8 @@ public enum InsightEngine {
     public static let shiftThresholdMinutes: Double = 30
     public static let streakToleranceMinutes: Double = 30
     public static let minimumStreakNights = 5
+    /// The streak's evidence shows this many nights, ending last night.
+    public static let streakWindowNights = 7
 
     /// The top insight for the most recent night in `history` that ended
     /// within the last 24 hours, after fatigue, or nil.
@@ -60,11 +62,8 @@ public enum InsightEngine {
         guard let baseline = baselines.sleepDuration else { return nil }
         let delta = night.asleepMinutes - baseline.value
         guard abs(delta).rounded() >= shiftThresholdMinutes else { return nil }
-        let less = delta < 0
         return Insight(
             kind: .sleepDurationShift,
-            title: less ? "Shorter night than usual" : "Longer night than usual",
-            message: "Compared with your recent baseline, you slept \(formatMinutes(abs(delta))) \(less ? "less" : "more") last night.",
             evidence: InsightEvidence(night: night.night, value: night.asleepMinutes, baseline: baseline.value, delta: delta, baselineNights: baseline.nights)
         )
     }
@@ -73,11 +72,8 @@ public enum InsightEngine {
         guard let baseline = baselines.bedtime else { return nil }
         let delta = night.bedtimeMinutes - baseline.value
         guard abs(delta).rounded() >= shiftThresholdMinutes else { return nil }
-        let later = delta > 0
         return Insight(
             kind: .bedtimeShift,
-            title: later ? "Later bedtime than usual" : "Earlier bedtime than usual",
-            message: "Compared with your recent baseline, you went to bed \(formatMinutes(abs(delta))) \(later ? "later" : "earlier") last night.",
             evidence: InsightEvidence(night: night.night, value: night.bedtimeMinutes, baseline: baseline.value, delta: delta, baselineNights: baseline.nights)
         )
     }
@@ -92,27 +88,20 @@ public enum InsightEngine {
             key = key.adding(days: -1)
         }
         guard streak >= minimumStreakNights else { return nil }
+        let recent = (0..<streakWindowNights).reversed().map { offset -> Bool? in
+            byNight[night.night.adding(days: -offset)].map { abs($0.bedtimeMinutes - baseline.value) <= streakToleranceMinutes }
+        }
         return Insight(
             kind: .consistentBedtime,
-            title: "Steady bedtime",
-            message: "Compared with your recent baseline, you went to bed within 30 minutes of your typical time for \(streak) nights in a row.",
             evidence: InsightEvidence(
                 night: night.night,
                 value: night.bedtimeMinutes,
                 baseline: baseline.value,
                 delta: night.bedtimeMinutes - baseline.value,
                 baselineNights: baseline.nights,
-                streakNights: streak
+                streakNights: streak,
+                recentNights: recent
             )
         )
-    }
-
-    /// "45 min", "1h", "1h 10m".
-    static func formatMinutes(_ minutes: Double) -> String {
-        let rounded = Int(minutes.rounded())
-        guard rounded >= 60 else { return "\(rounded) min" }
-        let hours = rounded / 60
-        let remainder = rounded % 60
-        return remainder == 0 ? "\(hours)h" : "\(hours)h \(remainder)m"
     }
 }
