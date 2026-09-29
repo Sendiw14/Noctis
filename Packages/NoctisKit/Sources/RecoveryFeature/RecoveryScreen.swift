@@ -161,7 +161,8 @@ struct RecoveryHeaderView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-            NoctisCaption(viewModel.screen?.dateCaption ?? "", style: .noctisInk3)
+            // A space while loading keeps the caption's line, so the title doesn't drop when it arrives.
+            NoctisCaption(viewModel.screen?.dateCaption ?? " ", style: .noctisInk3)
             if presentation == .tab {
                 Text("Recovery")
                     .noctisFont(34, .bold, relativeTo: .largeTitle)

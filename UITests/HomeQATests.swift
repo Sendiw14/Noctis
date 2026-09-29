@@ -81,6 +81,7 @@ final class HomeQATests: XCTestCase {
         // calculation on it, and back returns to Home.
         QA.tap(recoveryCard(app), in: app)
         XCTAssertTrue(app.navigationBars["Recovery"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["recovery.hero"].waitForExistence(timeout: 8), "Today")
         XCTAssertTrue(app.buttons["How this is calculated"].waitForExistence(timeout: 5))
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(recoveryCard(app).waitForExistence(timeout: 5))
@@ -98,5 +99,19 @@ final class HomeQATests: XCTestCase {
         let hero = app.descendants(matching: .any)["sleep.hero"]
         XCTAssertTrue(hero.waitForExistence(timeout: 8))
         XCTAssertTrue(hero.label.hasPrefix("Last Night, slept"), hero.label)
+    }
+
+    /// Evening's compact Recovery card opens the same Recovery Today.
+    func testTheEveningRecoveryCardOpensRecoveryToday() {
+        let app = launchHome(mode: "evening")
+        // "Recovery 70, ...": not the tab bar's own "Recovery" button.
+        let card = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Recovery ' AND identifier != 'Recovery'")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        QA.pause(2)
+        QA.tap(card, in: app)
+        XCTAssertTrue(app.navigationBars["Recovery"].waitForExistence(timeout: 5), "pushed, not the tab")
+        QA.shot("evening-compact-opens-recovery")
+        XCTAssertTrue(app.descendants(matching: .any)["recovery.hero"].waitForExistence(timeout: 8), "Today")
+        XCTAssertTrue(app.buttons["How this is calculated"].waitForExistence(timeout: 5))
     }
 }

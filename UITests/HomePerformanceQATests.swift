@@ -178,7 +178,8 @@ final class HomePerformanceQATests: XCTestCase {
             let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.0, dy: 0.5))
             let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5))
             start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
-            XCTAssertTrue(hero.waitForExistence(timeout: 4), "Round \(round) comes back.")
+            if !hero.waitForExistence(timeout: 4) { QA.shot("interrupt-zoom-round-\(round)-stuck") }
+            XCTAssertTrue(hero.exists, "Round \(round) comes back.")
             XCTAssertFalse(app.navigationBars["Recovery"].exists, "Round \(round) left Recovery.")
             XCTAssertTrue(hero.isHittable)
         }

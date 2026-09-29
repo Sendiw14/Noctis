@@ -92,11 +92,16 @@ struct RecoveryLearningView: View {
 /// Data is current, but no sleep was recorded last night.
 struct RecoveryNoSleepView: View {
     let content: RecoveryNoSleepContent
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
             DormantRingView()
             DormantTextView(title: content.title, detail: content.detail)
+            if content.opensHealth, let health = URL(string: "x-apple-health://") {
+                NoctisTextButton("Open Health", adaptive: true) { openURL(health) }
+                    .accessibilityHint("Opens the Health app.")
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.top, NoctisSpacing.md)
@@ -141,6 +146,7 @@ struct RecoverySkeletonView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Loading your recovery")
+        .accessibilityIdentifier("recovery.skeleton")
     }
 
     private func block(height: CGFloat) -> some View {

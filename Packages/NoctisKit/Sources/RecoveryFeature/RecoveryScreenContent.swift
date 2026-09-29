@@ -102,6 +102,8 @@ public nonisolated struct RecoveryLearningContent: Sendable, Equatable {
 public nonisolated struct RecoveryNoSleepContent: Sendable, Equatable {
     public let title: String
     public let detail: String?
+    /// Whether it offers "Open Health": Health's sync is behind (stale).
+    public var opensHealth = false
 }
 
 public nonisolated struct RecoveryBanner: Sendable, Equatable {
@@ -159,7 +161,7 @@ public nonisolated enum RecoveryScreenBuilder {
             case .noSleepLastNight?:
                 if let stale = banner(snapshot, format: format) {
                     // Sync is behind; it doesn't mean the person didn't sleep.
-                    noSleep = RecoveryNoSleepContent(title: stale.title, detail: stale.detail)
+                    noSleep = RecoveryNoSleepContent(title: stale.title, detail: stale.detail, opensHealth: true)
                 } else {
                     let latest = snapshot.scores.last
                     noSleep = RecoveryNoSleepContent(

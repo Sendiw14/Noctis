@@ -72,6 +72,68 @@ final class RecoveryQATests: XCTestCase {
         QA.shot("recovery-gap")
     }
 
+    /// No Health access: the dormant ring, "Your first night starts here." and
+    /// the one action, with no score anywhere.
+    func testNoPermission() {
+        let app = launchRecovery("full", extra: ["-mockUnauthorized"])
+        settled(app, waitFor: "recovery.state")
+        XCTAssertTrue(app.buttons["Connect Apple Health"].exists)
+        XCTAssertFalse(element(app, "recovery.hero").exists)
+        QA.shot("recovery-nopermission")
+    }
+
+    /// A failed read is its own state, with "Try again", not "no data".
+    func testError() {
+        let app = launchRecovery("full", extra: ["-noctisHealthQueryFails"])
+        settled(app, waitFor: "recovery.state")
+        XCTAssertTrue(app.buttons["Try again"].exists)
+        XCTAssertFalse(element(app, "recovery.hero").exists)
+        QA.shot("recovery-error")
+    }
+
+    /// Nothing newer than 30 hours: Home's words, not a claim of no sleep.
+    func testStale() {
+        let app = launchRecovery("stale")
+        settled(app, waitFor: "recovery.noSleep")
+        XCTAssertTrue(QA.text(app, containing: "hasn't updated").exists)
+        QA.shot("recovery-stale")
+    }
+
+    /// The first snapshot is loading: blocks shaped like the segment, and the
+    /// segment control is already there.
+    func testSkeleton() {
+        let app = launchRecovery("full", extra: ["-mockLatency", "8"])
+        XCTAssertTrue(element(app, "recovery.skeleton").waitForExistence(timeout: 8))
+        QA.shot("recovery-skeleton")
+        XCTAssertTrue(element(app, "recovery.hero").waitForExistence(timeout: 20))
+    }
+
+    /// A second press of the Recovery tab scrolls it back to the top.
+    func testPressingTheRecoveryTabAgainScrollsToTheTop() {
+        let app = launchRecovery()
+        settled(app, waitFor: "recovery.hero")
+        let hero = element(app, "recovery.hero")
+        let topY = hero.frame.minY
+        let scrollView = app.scrollViews.firstMatch
+        for _ in 0..<2 {
+            scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
+                .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.2)), withVelocity: .slow, thenHoldForDuration: 0.3)
+            QA.pause(0.4)
+        }
+        XCTAssertNotEqual(hero.frame.minY, topY, accuracy: 20, "scrolled away")
+        // Scrolling minimizes the tab bar: its button opens the bar, then the
+        // Recovery tab's is a press on the tab that's already showing.
+        let tab = app.tabBars.buttons["Recovery"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 3))
+        tab.tap()
+        QA.pause(0.8)
+        if abs(hero.frame.minY - topY) > 2 {
+            tab.tap()
+            QA.pause(1.2)
+        }
+        XCTAssertEqual(hero.frame.minY, topY, accuracy: 2)
+    }
+
     func testRecoveryDip() {
         let app = launchRecovery("recoveryDip")
         settled(app, waitFor: "recovery.hero")

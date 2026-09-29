@@ -146,6 +146,7 @@ struct RecoveryStatesTests {
         #expect(gap.noSleep?.title == "No sleep recorded last night.")
         #expect(gap.noSleep?.detail?.hasPrefix("Last recorded night ended ") == true)
         #expect(gap.today == nil)
+        #expect(gap.noSleep?.opensHealth == false, "Health is in sync; there's nothing to open it for")
     }
 
     @Test func aStaleSnapshotSaysHealthHasntUpdatedInsteadOfClaimingNoSleep() async throws {
@@ -154,6 +155,7 @@ struct RecoveryStatesTests {
         let message = try #require(stale.noSleep)
         #expect(message.title.hasPrefix("Apple Health hasn't updated since "))
         #expect(message.detail == "Open Health or pull to refresh.")
+        #expect(message.opensHealth, "the message says to open Health, so it offers to")
         #expect(stale.banner == nil, "said once")
         #expect(!message.title.contains("No sleep"))
     }
