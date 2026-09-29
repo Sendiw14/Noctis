@@ -72,9 +72,9 @@ final class HomeMotionQATests: XCTestCase {
     }
 
     /// The tab bar minimizes as Home scrolls, so "Sleep is showing" is
-    /// read from its placeholder screen.
+    /// read from the Sleep tab's own range control.
     private func sleepIsShowing(_ app: XCUIApplication) -> Bool {
-        QA.text(app, containing: "Coming soon").waitForExistence(timeout: 2)
+        app.descendants(matching: .any)["sleep.range"].waitForExistence(timeout: 2)
     }
 
     // MARK: - Morning reveal

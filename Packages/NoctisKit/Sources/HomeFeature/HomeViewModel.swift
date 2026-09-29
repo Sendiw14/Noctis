@@ -16,6 +16,12 @@ import UIKit
 @Observable
 public final class HomeViewModel {
     public private(set) var snapshot: HomeSnapshot?
+    /// Noon of the evening the last night began: a moment of that night,
+    /// for opening it in Sleep. Nil without a last night.
+    public var lastNightMoment: Date? {
+        guard let key = snapshot?.lastNight?.night else { return nil }
+        return calendar.date(from: DateComponents(year: key.year, month: key.month, day: key.day, hour: 12))
+    }
     /// Nil until the first snapshot arrives (Home shows its skeleton).
     public private(set) var screen: HomeScreen?
     /// Always available, even while loading.

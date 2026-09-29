@@ -11,6 +11,11 @@ public final class AppModel {
     public var selectedTab: AppTab = .home
     /// The Home tab's navigation stack.
     public var homePath: [HomeRoute] = []
+    /// Where the Sleep tab should land, until it takes it (`takeSleepDestination`).
+    public private(set) var sleepDestination: SleepDestination?
+    /// The tab whose button was pressed while it was already showing.
+    public private(set) var tabRetap: TabRetap?
+    private var serial = 0
 
     let healthProvider: any HealthDataProviding
     private let profileStore: ProfileStore
@@ -44,13 +49,43 @@ public final class AppModel {
     }
 
     /// Shows `route`: selects its tab. Profile opens on Home's stack, as
-    /// it does from the avatar button.
+    /// it does from the avatar button; Sleep is handed the night and range.
     public func open(_ route: AppRoute) {
         selectedTab = route.tab
         switch route {
         case .profile: homePath = [.profile]
         case .home: homePath = []
-        case .sleep, .recovery, .insights, .coach: break
+        case .sleep(let night, let range):
+            serial += 1
+            sleepDestination = SleepDestination(night: night, range: range, serial: serial)
+        case .recovery, .insights, .coach: break
         }
     }
+
+    /// The Sleep destination waiting for the tab, once.
+    public func takeSleepDestination() -> SleepDestination? {
+        defer { sleepDestination = nil }
+        return sleepDestination
+    }
+
+    /// A press on the tab that's already showing: each tab scrolls its own
+    /// content back to the top.
+    public func retap(_ tab: AppTab) {
+        serial += 1
+        tabRetap = TabRetap(tab: tab, serial: serial)
+    }
+}
+
+/// Where in Sleep to land: a night (any moment of it) and a range. Each is
+/// distinct, so opening the same place twice is still a change.
+public nonisolated struct SleepDestination: Sendable, Equatable {
+    public let night: Date?
+    public let range: SleepRange
+    let serial: Int
+}
+
+/// A press on the tab that was already showing.
+public nonisolated struct TabRetap: Sendable, Equatable {
+    public let tab: AppTab
+    let serial: Int
 }

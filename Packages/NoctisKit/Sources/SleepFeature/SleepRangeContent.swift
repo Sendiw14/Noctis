@@ -46,6 +46,11 @@ public nonisolated struct SleepBarsContent: Sendable, Equatable {
     public let needLabel: String
     public let average: NoctisMetricValue?
     public let averageFraction: Double?
+    /// Whether any bar is split into Deep, Core and REM.
+    public let hasStages: Bool
+    /// What to say when stages are missing: for every night ("Stages aren't
+    /// available from your current sources."), or for some of them.
+    public let stagesNote: String?
     /// "No sleep recorded in this period." when every night is empty.
     public let emptyNote: String?
     public let accessibilityLabel: String
@@ -315,6 +320,16 @@ nonisolated extension SleepScreenBuilder {
         label += ", \(HomeFormat.spokenDuration(snapshot.needMinutes)) need."
         if range == .week { label += " " + bars.map(\.accessibilityLabel).joined(separator: "; ") + "." }
         if !notes.isEmpty { label += " " + notes.joined(separator: ". ") + "." }
+        let recorded = bars.filter { $0.fraction != nil }
+        let hasStages = bars.contains { $0.stages != nil }
+        var stagesNote: String?
+        if range == .week, !recorded.isEmpty {
+            if !hasStages {
+                stagesNote = "Stages aren't available from your current sources."
+            } else if recorded.contains(where: { $0.stages == nil }) {
+                stagesNote = "Nights without stage detail are drawn as one bar."
+            }
+        }
         return SleepBarsContent(
             caption: "\(first) – \(last)".uppercased(),
             bars: bars,
@@ -322,6 +337,8 @@ nonisolated extension SleepScreenBuilder {
             needLabel: need,
             average: average,
             averageFraction: render.averageFraction,
+            hasStages: hasStages,
+            stagesNote: stagesNote,
             emptyNote: bars.allSatisfy({ $0.fraction == nil }) ? "No sleep recorded in this period." : nil,
             accessibilityLabel: label
         )

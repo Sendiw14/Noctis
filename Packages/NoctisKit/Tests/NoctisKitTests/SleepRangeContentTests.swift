@@ -260,6 +260,23 @@ struct SleepWeekContentTests {
         #expect(bars.bars.allSatisfy { $0.fraction == nil })
     }
 
+    @Test func aWeekWithoutStageDataIsOneBarWithAnHonestCaptionAndNoStageLegend() throws {
+        let unstaged = (0..<7).flatMap { index in
+            SleepFixture.night(lastNight.adding(days: index - 6), blocks: [(.unspecified, 420)], inBed: true)
+        }
+        let snap = SleepSnapshotBuilder.build(
+            HomeHealthInputs(sleep: unstaged, hrv: [], restingHeartRate: [], heartRate: []),
+            profile: UserProfileSnapshot(), now: SleepFixture.now, timeZone: SleepFixture.zone
+        )
+        let bars = try #require(screen(snap, range: .week).week?.bars)
+        #expect(!bars.hasStages)
+        #expect(bars.stagesNote == "Stages aren't available from your current sources.")
+        #expect(bars.bars.allSatisfy { $0.stages == nil && $0.fraction != nil })
+        // A week with stages says nothing of the kind.
+        let staged = try #require(screen(snapshot(count: 14), range: .week).week?.bars)
+        #expect(staged.hasStages && staged.stagesNote == nil)
+    }
+
     @Test func theCaptionIsTheDatesTheWeekCovers() throws {
         let bars = try #require(screen(snapshot(count: 14), range: .week).week?.bars)
         #expect(bars.caption == "SEP 18 – SEP 24")

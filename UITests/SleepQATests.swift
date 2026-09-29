@@ -225,4 +225,72 @@ final class SleepQATests: XCTestCase {
             QA.shot("sleep-sheet-closed-\(name)")
         }
     }
+
+    // MARK: - Routing
+
+    private func launchHome() -> XCUIApplication {
+        QA.launch(extra: ["-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-homeMode", "day"])
+    }
+
+    private func scrollHome(to target: XCUIElement, in app: XCUIApplication) {
+        XCTAssertTrue(target.waitForExistence(timeout: 10))
+        for _ in 0..<8 where !target.isHittable || target.frame.maxY > app.frame.maxY - 120 {
+            let scrollView = app.scrollViews.firstMatch
+            let start = scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
+            let end = scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.55))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+            QA.pause(0.5)
+        }
+    }
+
+    /// Home's Last night card opens Sleep on Day, on that night.
+    func testHomesLastNightOpensSleepOnDay() {
+        let app = launchHome()
+        let card = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Last night'")).firstMatch
+        scrollHome(to: card, in: app)
+        QA.pause(2.5)
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        XCTAssertTrue(element(app, "sleep.range").waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, "sleep.hero").waitForExistence(timeout: 8))
+        XCTAssertTrue(element(app, "sleep.hero").label.hasPrefix("Last Night, slept"), element(app, "sleep.hero").label)
+        XCTAssertFalse(element(app, "sleep.bars").exists)
+    }
+
+    /// Home's This week card opens Sleep on Week.
+    func testHomesThisWeekOpensSleepOnWeek() {
+        let app = launchHome()
+        let card = QA.element(app, labelBeginsWith: "This week")
+        scrollHome(to: card, in: app)
+        QA.pause(2.5)
+        // Below the bars: the caption row, where a tap isn't a bar's.
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.06)).tap()
+        XCTAssertTrue(element(app, "sleep.bars").waitForExistence(timeout: 8))
+        XCTAssertTrue(app.segmentedControls.buttons["Week"].isSelected)
+    }
+
+    /// A second press of the Sleep tab scrolls it back to the top.
+    func testPressingTheSleepTabAgainScrollsToTheTop() {
+        let app = launchSleep()
+        settled(app, waitFor: "sleep.hero")
+        let hero = element(app, "sleep.hero")
+        let topY = hero.frame.minY
+        let scrollView = app.scrollViews.firstMatch
+        for _ in 0..<2 {
+            scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
+                .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.2)), withVelocity: .slow, thenHoldForDuration: 0.3)
+            QA.pause(0.4)
+        }
+        XCTAssertNotEqual(hero.frame.minY, topY, accuracy: 20, "scrolled away")
+        // Scrolling minimizes the tab bar: its button opens the bar, then the
+        // Sleep tab's is a press on the tab that's already showing.
+        let tab = app.tabBars.buttons["Sleep"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 3))
+        tab.tap()
+        QA.pause(0.8)
+        if abs(hero.frame.minY - topY) > 2 {
+            tab.tap()
+            QA.pause(1.2)
+        }
+        XCTAssertEqual(hero.frame.minY, topY, accuracy: 2)
+    }
 }

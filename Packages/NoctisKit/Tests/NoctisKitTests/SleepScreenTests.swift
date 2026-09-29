@@ -344,6 +344,21 @@ struct SleepViewModelTests {
         #expect(model.selection == SleepSelection(night: target, range: .day))
     }
 
+    @Test func aRouteDestinationOpensTheNightContainingItsMomentOnItsRange() async throws {
+        let model = model()
+        await model.refresh()
+        let snap = try #require(model.snapshot)
+        let target = snap.records[snap.records.count - 5]
+        // Any moment of the night: its bedtime, or its waking the next morning.
+        model.open(SleepDestination(night: target.session.wakeTime, range: .week, serial: 1))
+        #expect(model.selection == SleepSelection(night: target.night, range: .week))
+        model.open(SleepDestination(night: target.session.bedtime, range: .day, serial: 2))
+        #expect(model.selection == SleepSelection(night: target.night, range: .day))
+        // No night: the newest, on the range asked for.
+        model.open(SleepDestination(night: nil, range: .month, serial: 3))
+        #expect(model.selection == SleepSelection(night: snap.defaultNight, range: .month))
+    }
+
     @Test func theRevealPlaysOncePerDayOnTheFirstDayViewOnScreen() async throws {
         let defaults = UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? .standard
         let first = model(defaults: defaults)

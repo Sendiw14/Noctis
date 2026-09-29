@@ -130,6 +130,12 @@ public final class SleepViewModel {
         move(to: next)
     }
 
+    /// A deep link's destination (`AppRoute.sleep`): the night containing
+    /// `destination.night` (the newest when nil) on its range.
+    public func open(_ destination: SleepDestination) {
+        open(night: destination.night.map { SleepNightKey(containing: $0, in: calendar.timeZone) }, range: destination.range)
+    }
+
     /// A deep link: `night` (nil for the newest) on `range`.
     public func open(night: SleepNightKey?, range: SleepRange) {
         guard let snapshot else {

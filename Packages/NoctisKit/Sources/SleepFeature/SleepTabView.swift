@@ -10,7 +10,9 @@ public struct SleepTabView: View {
     static let contentMaxWidth: CGFloat = 680
 
     let viewModel: SleepViewModel
+    @Environment(AppModel.self) private var appModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var scrollPosition = ScrollPosition(edge: .top)
 
     public init(viewModel: SleepViewModel) {
         self.viewModel = viewModel
@@ -21,6 +23,7 @@ public struct SleepTabView: View {
         ScrollView {
             SleepContent(viewModel: viewModel)
         }
+        .scrollPosition($scrollPosition)
         .scrollClipDisabled()
         .noctisStatusBarGuard()
         .refreshable {
@@ -32,6 +35,13 @@ public struct SleepTabView: View {
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
         .task { await viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
+        // The Sleep tab pressed again: back to the top.
+        .onChange(of: appModel.tabRetap) { _, retap in
+            guard retap?.tab == .sleep else { return }
+            withAnimation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion)) {
+                scrollPosition.scrollTo(edge: .top)
+            }
+        }
         .task(id: viewModel.reveal == .pending && viewModel.screen?.day != nil) {
             guard viewModel.reveal == .pending, viewModel.screen?.day != nil else { return }
             // After the content has laid out in its start state.

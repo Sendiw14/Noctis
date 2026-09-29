@@ -167,7 +167,7 @@ struct DebugLaunchOptions {
         resetState = arguments.contains("-noctisResetState")
         healthUnavailable = arguments.contains("-noctisHealthUnavailable")
         healthQueryFails = arguments.contains("-noctisHealthQueryFails")
-        initialRoute = value(after: "-noctisInitialRoute").flatMap(AppRoute.init(rawValue:))
+        initialRoute = value(after: "-noctisInitialRoute").flatMap { AppRoute(name: $0) }
         logHomeSnapshot = arguments.contains("-noctisLogHomeSnapshot")
         unauthorized = arguments.contains("-mockUnauthorized")
         mockLatency = .seconds(value(after: "-mockLatency").flatMap(Double.init) ?? 0)

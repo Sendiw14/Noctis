@@ -15,7 +15,7 @@ final class HomeQATests: XCTestCase {
     }
 
     private func recoveryCard(_ app: XCUIApplication) -> XCUIElement {
-        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Recovery '")).firstMatch
+        app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'home.hero'")).firstMatch
     }
 
     func testFullStatePages() {
@@ -84,7 +84,7 @@ final class HomeQATests: XCTestCase {
         let lastNight = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Last night'")).firstMatch
         QA.tap(lastNight, in: app)
         // The tab bar minimizes once Home scrolls, so read the Sleep tab's
-        // placeholder rather than the bar.
-        XCTAssertTrue(QA.text(app, containing: "Coming soon").waitForExistence(timeout: 3))
+        // own range control rather than the bar.
+        XCTAssertTrue(app.descendants(matching: .any)["sleep.range"].waitForExistence(timeout: 3))
     }
 }

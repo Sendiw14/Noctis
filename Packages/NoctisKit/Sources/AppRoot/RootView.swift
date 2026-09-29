@@ -58,7 +58,15 @@ struct RootTabView: View {
     var body: some View {
         tabs
             .environment(\.homeClock, clock)
-            .task { clock.start() }
+            .task {
+                clock.start()
+                // A deep link that arrived before this view existed.
+                if let destination = model.takeSleepDestination() { sleep.open(destination) }
+            }
+            .onChange(of: model.sleepDestination) { _, destination in
+                guard destination != nil, let taken = model.takeSleepDestination() else { return }
+                sleep.open(taken)
+            }
             .onChange(of: scenePhase) { _, phase in
                 // Ticks only while the app is up; catches up on return.
                 if phase == .active { clock.start() } else { clock.stop() }
@@ -76,8 +84,18 @@ struct RootTabView: View {
 
     @ViewBuilder
     private var tabs: some View {
-        @Bindable var model = model
-        let tabView = TabView(selection: $model.selectedTab) {
+        // Pressing the tab that's showing is a re-tap, not a change.
+        let selection = Binding<AppTab>(
+            get: { model.selectedTab },
+            set: { tab in
+                if tab == model.selectedTab {
+                    model.retap(tab)
+                } else {
+                    model.selectedTab = tab
+                }
+            }
+        )
+        let tabView = TabView(selection: selection) {
             ForEach(AppTab.allCases) { tab in
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
                     destination(for: tab)

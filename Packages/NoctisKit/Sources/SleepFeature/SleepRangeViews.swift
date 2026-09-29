@@ -92,6 +92,12 @@ struct SleepBarsCard: View {
                     }
                 }
                 legend
+                if let note = content.stagesNote {
+                    Text(note)
+                        .noctisFont(12, relativeTo: .caption)
+                        .foregroundStyle(.noctisInk3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 if let month, month.longest != nil || month.shortest != nil {
                     markers(month)
                 }
@@ -300,10 +306,13 @@ struct SleepBarsCard: View {
 
     private var legend: some View {
         SleepLegend {
-            if isWeek {
+            if isWeek && content.hasStages {
                 key(NoctisAppColor.nightDeep, "Deep")
                 key(NoctisAppColor.orange, "Core")
                 key(NoctisAppColor.sage, "REM")
+                lineKey("Average")
+            } else if isWeek {
+                key(NoctisAppColor.sage, "Slept")
                 lineKey("Average")
             } else {
                 key(NoctisAppColor.sage, "Slept")

@@ -37,7 +37,10 @@ struct HomeActions {
     var openProfile: () -> Void = {}
     /// Recovery detail, optionally scrolled to one factor.
     var openRecoveryDetail: (RecoveryFactorKind?) -> Void = { _ in }
-    var openSleep: () -> Void = {}
+    /// Sleep on Day, on the night the Last night card shows.
+    var openLastNight: () -> Void = {}
+    /// Sleep on Week.
+    var openWeek: () -> Void = {}
     /// The share preview ("Share today", "Share this night").
     var share: () -> Void = {}
     var dismissInsight: () -> Void = {}
@@ -105,6 +108,12 @@ struct HomeView: View {
         .onAppear { NoctisSignpost.end(.launchToFirstFrame) }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { viewModel.updateClock() }
+        }
+        .onChange(of: model.tabRetap) { _, retap in
+            // The Home tab pressed again: back out of any pushed screen, or
+            // else back to the top.
+            guard retap?.tab == .home else { return }
+            if model.homePath.isEmpty { scrollToTop() } else { model.homePath = [] }
         }
         .onChange(of: viewModel.reveal) { _, phase in
             let target: Double = phase == .pending ? 1 : 0
@@ -187,7 +196,8 @@ struct HomeView: View {
         HomeActions(
             openProfile: { model.homePath.append(.profile) },
             openRecoveryDetail: { model.homePath.append(.recoveryDetail(focus: $0)) },
-            openSleep: { model.open(.sleep) },
+            openLastNight: { model.open(.sleep(night: viewModel.lastNightMoment, range: .day)) },
+            openWeek: { model.open(.sleep(night: nil, range: .week)) },
             share: { sharing = true },
             dismissInsight: { removeInsight(viewModel.dismissInsight) },
             hideInsights: { removeInsight(viewModel.hideInsights) }
@@ -396,7 +406,7 @@ struct HomeContent: View {
                 .transition(.opacity)
         }
         if let lastNight = screen.lastNight {
-            NightPanelView(content: lastNight, open: actions.openSleep, share: actions.share)
+            NightPanelView(content: lastNight, open: actions.openLastNight, share: actions.share)
                 .accessibilityRotorEntry(id: HomeSection.lastNight, in: rotor)
         }
     }
@@ -420,7 +430,7 @@ struct HomeContent: View {
                 .transition(.opacity)
         }
         if let week = screen.week {
-            WeekCardView(content: week, open: actions.openSleep)
+            WeekCardView(content: week, open: actions.openWeek)
                 .accessibilityRotorEntry(id: HomeSection.week, in: rotor)
         }
     }
