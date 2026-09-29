@@ -406,6 +406,17 @@ struct RecoveryHistoryContentTests {
         #expect(content.learning == RecoveryLearningContent(nights: 4, required: 5, text: "4 of 5 nights"))
     }
 
+    @Test func everyRangeSaysTheSameNightsTodayDoesWhileTheBaselineForms() async throws {
+        let learning = await snapshot(.learning)
+        let today = screen(learning, segment: .today).learning
+        #expect(today == RecoveryLearningContent(nights: 3, required: 5, text: "3 of 5 nights"))
+        for segment in [RecoverySegment.week, .month, .quarter] {
+            let content = screen(learning, segment: segment)
+            #expect(content.history == nil)
+            #expect(content.learning == today, "\(segment)")
+        }
+    }
+
     @Test func aGapNightStillHasItsHistoryThoughNoScoreToday() async throws {
         let gap = screen(await snapshot(.gap), segment: .week)
         #expect(gap.history != nil && gap.noSleep == nil && gap.today == nil)

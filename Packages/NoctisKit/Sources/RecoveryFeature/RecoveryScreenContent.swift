@@ -149,7 +149,14 @@ public nonisolated enum RecoveryScreenBuilder {
             // A history needs 5 scored nights; before that, the learning dots.
             history = historyContent(snapshot, segment: selection.segment, format: format)
             if history == nil {
-                let nights = snapshot.history(selection.segment.historyRange ?? .week)?.stats.scoredDays ?? 0
+                // While the baseline is still forming, the same count Today shows
+                // (the recorded nights); otherwise the nights the range could score.
+                let nights: Int
+                if case .learning(let recorded)? = snapshot.recovery {
+                    nights = recorded
+                } else {
+                    nights = snapshot.history(selection.segment.historyRange ?? .week)?.stats.scoredDays ?? 0
+                }
                 let required = RecoveryModelV1.learningNights
                 learning = RecoveryLearningContent(nights: nights, required: required, text: "\(nights) of \(required) nights")
             }
