@@ -367,11 +367,16 @@ struct FactorCapsulesView: View {
 
 /// The ring before there's a score: track only, with a moon so it reads
 /// as waiting, not broken. 160pt on the hero, 72pt in the compact card.
-struct DormantRingView: View {
+public struct DormantRingView: View {
     var diameter: CGFloat = 160
     var glyphSize: CGFloat = 28
 
-    var body: some View {
+    public init(diameter: CGFloat = 160, glyphSize: CGFloat = 28) {
+        self.diameter = diameter
+        self.glyphSize = glyphSize
+    }
+
+    public var body: some View {
         NoctisRingLayout(maxDiameter: diameter) {
             NoctisRecoveryRing(segments: [], diameter: diameter, lineWidth: diameter * 18 / 160)
             Image(systemName: "moon.zzz")
@@ -408,11 +413,16 @@ struct LearningHeroView: View {
 
 /// 10pt dots, 8pt apart: cocoa (lavender in Dark) for each night recorded,
 /// track for the rest.
-struct LearningDots: View {
+public struct LearningDots: View {
     let nights: Int
     let required: Int
 
-    var body: some View {
+    public init(nights: Int, required: Int) {
+        self.nights = nights
+        self.required = required
+    }
+
+    public var body: some View {
         HStack(spacing: 8) {
             ForEach(0..<required, id: \.self) { index in
                 Circle()
@@ -443,13 +453,20 @@ struct DormantHeroView: View {
     }
 }
 
-struct DormantTextView: View {
+public struct DormantTextView: View {
     let title: String?
     let detail: String?
     var titleSize: CGFloat = 17
     var alignment: TextAlignment = .center
 
-    var body: some View {
+    public init(title: String?, detail: String?, titleSize: CGFloat = 17, alignment: TextAlignment = .center) {
+        self.title = title
+        self.detail = detail
+        self.titleSize = titleSize
+        self.alignment = alignment
+    }
+
+    public var body: some View {
         VStack(alignment: alignment == .center ? .center : .leading, spacing: NoctisSpacing.xxs) {
             if let title {
                 Text(title)

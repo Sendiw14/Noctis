@@ -940,33 +940,38 @@ nonisolated extension HomeScreenBuilder {
 
 /// Locale-aware formatting with an explicit calendar, time zone and
 /// locale, so every string is reproducible in tests.
-nonisolated struct HomeFormat: Sendable, Equatable {
-    let calendar: Calendar
-    let locale: Locale
+public nonisolated struct HomeFormat: Sendable, Equatable {
+    public let calendar: Calendar
+    public let locale: Locale
+
+    public init(calendar: Calendar, locale: Locale) {
+        self.calendar = calendar
+        self.locale = locale
+    }
 
     /// "Thursday, September 24".
-    func longDate(_ date: Date, in timeZone: TimeZone? = nil) -> String {
+    public func longDate(_ date: Date, in timeZone: TimeZone? = nil) -> String {
         date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: timeZone ?? calendar.timeZone).weekday(.wide).month(.wide).day())
     }
 
     /// "Wed, Sep 23".
-    func shortDate(_ date: Date, in timeZone: TimeZone? = nil) -> String {
+    public func shortDate(_ date: Date, in timeZone: TimeZone? = nil) -> String {
         date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: timeZone ?? calendar.timeZone).weekday(.abbreviated).month(.abbreviated).day())
     }
 
     /// "Wed 7:02 AM", kept on one line (no-break spaces).
-    func dayAndTime(_ date: Date) -> String {
+    public func dayAndTime(_ date: Date) -> String {
         date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).weekday(.abbreviated).hour().minute())
             .replacingOccurrences(of: " ", with: "\u{00A0}")
     }
 
     /// "11:02 PM" on the clock of `timeZone`.
-    func clock(_ date: Date, in timeZone: TimeZone) -> String {
+    public func clock(_ date: Date, in timeZone: TimeZone) -> String {
         date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: locale, calendar: calendar, timeZone: timeZone))
     }
 
     /// A clock time given as minutes since midnight.
-    func clock(minutesSinceMidnight minutes: Int) -> String {
+    public func clock(minutesSinceMidnight minutes: Int) -> String {
         let normalized = ((minutes % 1440) + 1440) % 1440
         let components = DateComponents(year: 2026, month: 1, day: 1, hour: normalized / 60, minute: normalized % 60)
         guard let date = calendar.date(from: components) else { return "" }
@@ -974,7 +979,7 @@ nonisolated struct HomeFormat: Sendable, Equatable {
     }
 
     /// "6 PM": the hour alone.
-    func hour(minutesSinceMidnight minutes: Int) -> String {
+    public func hour(minutesSinceMidnight minutes: Int) -> String {
         let normalized = ((minutes % 1440) + 1440) % 1440
         let components = DateComponents(year: 2026, month: 1, day: 1, hour: normalized / 60, minute: normalized % 60)
         guard let date = calendar.date(from: components) else { return "" }
@@ -982,7 +987,7 @@ nonisolated struct HomeFormat: Sendable, Equatable {
     }
 
     /// "11:00 PM" → ("11:00", "PM"); 24-hour clocks have no period.
-    func splitClock(_ text: String) -> (time: String, period: String) {
+    public func splitClock(_ text: String) -> (time: String, period: String) {
         let formatter = DateFormatter()
         formatter.locale = locale
         for symbol in [formatter.amSymbol, formatter.pmSymbol] where !(symbol ?? "").isEmpty {
@@ -995,13 +1000,13 @@ nonisolated struct HomeFormat: Sendable, Equatable {
     }
 
     /// A clock time given as minutes after noon (baselines' unit).
-    func clock(minutesAfterNoon: Double) -> String {
+    public func clock(minutesAfterNoon: Double) -> String {
         clock(minutesSinceMidnight: Int(minutesAfterNoon.rounded()) + 720)
     }
 
-    enum WeekdayWidth { case narrow, abbreviated, wide }
+    public enum WeekdayWidth { case narrow, abbreviated, wide }
 
-    func weekday(_ day: SleepNightKey, width: WeekdayWidth) -> String {
+    public func weekday(_ day: SleepNightKey, width: WeekdayWidth) -> String {
         let components = DateComponents(year: day.year, month: day.month, day: day.day, hour: 12)
         guard let date = calendar.date(from: components) else { return "" }
         let style = Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone)
@@ -1013,7 +1018,7 @@ nonisolated struct HomeFormat: Sendable, Equatable {
     }
 
     /// 6h 42m, 8h, 45m as a metric; VoiceOver hears "6 hours 42 minutes".
-    static func durationMetric(_ minutes: Int) -> NoctisMetricValue {
+    public static func durationMetric(_ minutes: Int) -> NoctisMetricValue {
         let hours = minutes / 60
         let remainder = minutes % 60
         var parts: [NoctisMetricValue.Part] = []
@@ -1026,7 +1031,7 @@ nonisolated struct HomeFormat: Sendable, Equatable {
     }
 
     /// "6 hours 42 minutes", "1 hour", "45 minutes".
-    static func spokenDuration(_ minutes: Int) -> String {
+    public static func spokenDuration(_ minutes: Int) -> String {
         let hours = minutes / 60
         let remainder = minutes % 60
         var words: [String] = []
@@ -1036,19 +1041,19 @@ nonisolated struct HomeFormat: Sendable, Equatable {
     }
 
     /// 52 bpm, 48 ms as a metric.
-    static func quantityMetric(_ value: Int, unit: String, spokenUnit: String) -> NoctisMetricValue {
+    public static func quantityMetric(_ value: Int, unit: String, spokenUnit: String) -> NoctisMetricValue {
         NoctisMetricValue(parts: [.number("\(value)"), .unit(unit)], spoken: "\(value) \(spokenUnit)")
     }
 
     /// 11:00 PM as a metric: the period is the unit (none on 24-hour
     /// clocks).
-    func clockMetric(_ text: String) -> NoctisMetricValue {
+    public func clockMetric(_ text: String) -> NoctisMetricValue {
         let (time, period) = splitClock(text)
         return NoctisMetricValue(parts: period.isEmpty ? [.number(time)] : [.number(time), .unit(period)], spoken: text)
     }
 
     /// "8h", "8h 15m", "45m" — or with `minutesWord`, "45 min".
-    static func compactDuration(_ minutes: Int, minutesWord: Bool = false) -> String {
+    public static func compactDuration(_ minutes: Int, minutesWord: Bool = false) -> String {
         let hours = minutes / 60
         let remainder = minutes % 60
         if hours == 0 { return minutesWord ? "\(remainder) min" : "\(remainder)m" }

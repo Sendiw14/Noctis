@@ -2,6 +2,7 @@ import DesignSystem
 import HomeFeature
 import NoctisCore
 import OnboardingFeature
+import SleepFeature
 import SwiftUI
 
 /// Onboarding until it's complete, then the main app — on every later
@@ -50,6 +51,7 @@ public struct RootView: View {
 struct RootTabView: View {
     @Environment(AppModel.self) private var model
     @Environment(HomeViewModel.self) private var home
+    @Environment(SleepViewModel.self) private var sleep
     @Environment(\.scenePhase) private var scenePhase
     @State private var clock = HomeClock()
 
@@ -101,7 +103,10 @@ struct RootTabView: View {
         case .home:
             HomeTabView(viewModel: home)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
-        case .sleep, .recovery, .insights, .coach:
+        case .sleep:
+            SleepTabView(viewModel: sleep)
+                .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
+        case .recovery, .insights, .coach:
             // R19: unbuilt tabs, listed in ROADMAP.md.
             NoctisComingSoonView(title: tab.title, systemImage: tab.systemImage)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }

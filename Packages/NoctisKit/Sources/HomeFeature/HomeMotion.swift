@@ -14,7 +14,7 @@ extension EnvironmentValues {
 
 extension HomeRevealPhase {
     /// Whether a view shows its start state (empty ring, bars not drawn).
-    var holdsStart: Bool { self == .pending }
+    public var holdsStart: Bool { self == .pending }
 
     /// When the ring, capsules and bars start: after the dusk crossfade.
     static let contentDelay = HomeReveal.backgroundDuration
@@ -96,11 +96,16 @@ struct HorizontalScrubGesture: UIGestureRecognizerRepresentable {
 
 /// The scrub and selection pill: ink-on-ivory on the night panel,
 /// ivory-on-ink on the paper.
-struct HomePill: View {
+public struct HomePill: View {
     let text: String
     var onNightPanel = false
 
-    var body: some View {
+    public init(text: String, onNightPanel: Bool = false) {
+        self.text = text
+        self.onNightPanel = onNightPanel
+    }
+
+    public var body: some View {
         Text(text)
             .noctisFont(13, .semibold, relativeTo: .footnote)
             .monospacedDigit()

@@ -22,9 +22,6 @@ struct NightPanelView: View {
 
     @Environment(\.homeReveal) private var reveal
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// The latest scrub reading, kept after release so the pill can fade.
-    @State private var scrub: NightReading?
-    @State private var scrubbing = false
     @State private var laneFocus: NightLane?
     /// VoiceOver's position when stepping through the night.
     @State private var spokenSegment: Int?
@@ -74,7 +71,6 @@ struct NightPanelView: View {
             .accessibilityAction(named: "Share this night", share)
             .modifier(NightStepping(chart: chart, segment: $spokenSegment))
             chartView
-                .modifier(NightChartAudioGraph(chart: chart, focus: laneFocus.flatMap(total)))
             if let caption = chart.caption {
                 Text(caption)
                     .noctisFont(13, relativeTo: .footnote)
@@ -99,53 +95,13 @@ struct NightPanelView: View {
 
     private var chartView: some View {
         let drawIn: Animation? = reduceMotion ? nil : NoctisMotion.draw(HomeReveal.nightDuration).delay(HomeRevealPhase.contentDelay)
-        let focusLane: NightLane? = scrubbing ? scrub?.lane : (laneFocus ?? scrub?.lane)
-        let laneTotal: String? = laneFocus.flatMap { total($0) }
-        let pillText: String? = scrubbing ? scrub?.text : (laneTotal ?? scrub?.text)
-        let pillPosition: Double = scrubbing || laneFocus == nil ? (scrub?.position ?? 0) : 0
-        let onScrub: ((Double?) -> Void)? = chart.hasStages ? { scrubbed($0) } : nil
-        let onLaneTap: ((NightLane) -> Void)? = chart.hasStages ? { toggle($0) } : nil
-        return NightChartView(
+        return NightLandscapeView(
             chart: chart,
             drawn: reveal.holdsStart ? 0 : 1,
             details: reveal.holdsStart ? 0 : 1,
-            focusLane: focusLane,
-            focusActive: scrubbing || laneFocus != nil,
-            line: scrub,
-            showsLine: scrubbing,
-            pillText: pillText,
-            pillPosition: pillPosition,
-            onScrub: onScrub,
-            onLaneTap: onLaneTap
+            laneFocus: $laneFocus
         )
         .animation(drawIn, value: reveal)
-        .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: scrubbing)
-        .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: laneFocus)
-    }
-
-    private func total(_ lane: NightLane) -> String? {
-        chart.laneTotals.first { $0.lane == lane }?.text
-    }
-
-    /// The finger at `position` (0...1), or lifted (nil).
-    private func scrubbed(_ position: Double?) {
-        guard let position else {
-            scrubbing = false
-            NoctisSignpost.end(.scrub)
-            return
-        }
-        NoctisSignpost.begin(.scrub)
-        let reading = chart.reading(at: position)
-        if scrubbing, let reading, reading.stage != scrub?.stage {
-            NoctisHaptics.snapLight()
-        }
-        laneFocus = nil
-        scrub = reading
-        scrubbing = true
-    }
-
-    private func toggle(_ lane: NightLane) {
-        laneFocus = laneFocus == lane ? nil : lane
     }
 }
 
@@ -174,7 +130,7 @@ private struct NightStepping: ViewModifier {
 
 /// The chart as its own element, for Audio Graph; its value is the lane
 /// total a tapped label is showing.
-private struct NightChartAudioGraph: ViewModifier {
+struct NightChartAudioGraph: ViewModifier {
     let chart: NightChartContent
     let focus: String?
 
@@ -234,6 +190,10 @@ struct NightChartDescriptor: AXChartDescriptorRepresentable {
 /// 2×2 grid at accessibility sizes).
 struct NightStageTotalsView: View {
     let totals: [NightLaneTotal]
+    /// Sleep makes each total a button that highlights its stage across
+    /// the night; on Home they're plain text.
+    var onTap: ((NightLane) -> Void)?
+    var focus: NightLane?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
@@ -249,16 +209,36 @@ struct NightStageTotalsView: View {
                 }
             }
         }
-        // The night's own label already reads every total.
-        .accessibilityHidden(true)
+        // The night's own label already reads every total (unless they're
+        // buttons of their own).
+        .accessibilityHidden(onTap == nil)
     }
 
+    @ViewBuilder
     private func stat(_ total: NightLaneTotal) -> some View {
+        if let onTap {
+            Button { onTap(total.lane) } label: {
+                content(total)
+                    .frame(minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .opacity(focus == nil || focus == total.lane ? 1 : 0.5)
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(total.lane.name) \(total.duration.spoken)")
+            .accessibilityHint(focus == total.lane ? "Stops highlighting it." : "Highlights it across the night.")
+            .accessibilityAddTraits(focus == total.lane ? [.isButton, .isSelected] : .isButton)
+        } else {
+            content(total)
+        }
+    }
+
+    private func content(_ total: NightLaneTotal) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 5) {
                 Circle().fill(total.lane.tint).frame(width: 7, height: 7)
                 Text(total.lane.name)
-                    .noctisFont(11, .medium, relativeTo: .caption2)
+                    .noctisFont(12, .medium, relativeTo: .caption2)
                     .foregroundStyle(.noctisNightInk2)
             }
             NoctisMetric(total.duration, size: 17, relativeTo: .body, tone: .nightPanel)
@@ -779,33 +759,33 @@ struct WeekCardView: View {
 /// This week's columns: the bars' area split into equal columns, the
 /// same ones the bars are centered in, with the outer two taking
 /// everything past them. The night nearest a finger is its column's.
-nonisolated enum WeekColumns {
+public nonisolated enum WeekColumns {
     /// The column at `x`, in a touch area that starts `outset` before the
     /// bars' area (`barsWidth` wide) and ends `outset` after it.
-    static func index(x: CGFloat, barsWidth: CGFloat, outset: CGFloat, count: Int) -> Int {
+    public static func index(x: CGFloat, barsWidth: CGFloat, outset: CGFloat, count: Int) -> Int {
         guard count > 0, barsWidth > 0 else { return 0 }
         let column = Int(((x - outset) / (barsWidth / CGFloat(count))).rounded(.down))
         return min(max(column, 0), count - 1)
     }
 
     /// How wide each interior column is.
-    static func width(barsWidth: CGFloat, count: Int) -> CGFloat {
+    public static func width(barsWidth: CGFloat, count: Int) -> CGFloat {
         count > 0 ? barsWidth / CGFloat(count) : 0
     }
 
     /// A bar is its column less 10pt, at most 26pt wide.
-    static func barWidth(barsWidth: CGFloat, count: Int) -> CGFloat {
+    public static func barWidth(barsWidth: CGFloat, count: Int) -> CGFloat {
         let column = width(barsWidth: barsWidth, count: count)
         return column > 0 ? min(column - 10, 26) : 24
     }
 
-    static let cornerRadius: CGFloat = 6
+    public static let cornerRadius: CGFloat = 6
     /// The other bars while one is selected.
-    static let dimmedOpacity = 0.45
+    public static let dimmedOpacity = 0.45
     /// A touch that moves less than this is a tap.
-    static let tapSlop: CGFloat = 10
+    public static let tapSlop: CGFloat = 10
     /// A drag more vertical than horizontal past this is the page scrolling.
-    static let scrollThreshold: CGFloat = 12
+    public static let scrollThreshold: CGFloat = 12
 }
 
 nonisolated struct DashedLine: Shape {

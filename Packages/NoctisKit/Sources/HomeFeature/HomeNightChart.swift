@@ -189,7 +189,7 @@ nonisolated extension HomeScreenBuilder {
     /// times, each lane's total, the heart-rate label. Its geometry (runs,
     /// steps, the heart line) comes from `render`, which the snapshot
     /// carries; without one it's worked out here.
-    static func nightChart(_ session: SleepSession, heart: NightHeartSeries?, render: NightRender? = nil, format: HomeFormat) -> NightChartContent {
+    public static func nightChart(_ session: SleepSession, heart: NightHeartSeries?, render: NightRender? = nil, format: HomeFormat) -> NightChartContent {
         let render = render ?? NightRenderBuilder.build(session, heart: heart)
         let labels = [render.start, render.start.addingTimeInterval(render.end.timeIntervalSince(render.start) / 2), render.end]
             .map { format.clock($0, in: session.timeZone) }

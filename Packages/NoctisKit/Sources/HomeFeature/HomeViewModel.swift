@@ -390,20 +390,24 @@ public final class HomeViewModel {
 public final class HomeIntroGate {
     public static let defaultsKey = "noctis.home.lastIntroDay"
     private let defaults: UserDefaults
+    private let key: String
 
-    public init(defaults: UserDefaults = .standard) {
+    /// `key` names the tab whose reveal this gates ("noctis.<tab>.lastIntroDay"):
+    /// each tab plays its reveal once per calendar day.
+    public init(defaults: UserDefaults = .standard, key: String = HomeIntroGate.defaultsKey) {
         self.defaults = defaults
+        self.key = key
     }
 
     public func claim(now: Date, calendar: Calendar) -> Bool {
         guard !isClaimed(now: now, calendar: calendar) else { return false }
-        defaults.set(Self.key(now, calendar), forKey: Self.defaultsKey)
+        defaults.set(Self.key(now, calendar), forKey: key)
         return true
     }
 
     /// Whether today's reveal is already used up, without using it.
     public func isClaimed(now: Date, calendar: Calendar) -> Bool {
-        defaults.string(forKey: Self.defaultsKey) == Self.key(now, calendar)
+        defaults.string(forKey: key) == Self.key(now, calendar)
     }
 
     private static func key(_ now: Date, _ calendar: Calendar) -> String {

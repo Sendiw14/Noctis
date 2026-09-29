@@ -478,16 +478,16 @@ struct HomeHeaderView: View {
 }
 
 /// 13pt uppercase caption with 0.08em tracking ("LAST NIGHT").
-struct NoctisCaption<Style: ShapeStyle>: View {
+public struct NoctisCaption<Style: ShapeStyle>: View {
     let text: String
     let style: Style
 
-    init(_ text: String, style: Style) {
+    public init(_ text: String, style: Style) {
         self.text = text
         self.style = style
     }
 
-    var body: some View {
+    public var body: some View {
         Text(text)
             .noctisFont(13, .semibold, relativeTo: .footnote)
             .tracking(13 * 0.08)
@@ -582,7 +582,7 @@ struct HomeSkeletonView: View {
 
 extension RecoveryFactorKind {
     /// Sleep sage, HRV lavender, resting HR orange, consistency butter.
-    var tint: Color {
+    public var tint: Color {
         switch self {
         case .sleepDuration: NoctisAppColor.sage
         case .hrv: NoctisAppColor.lavender
@@ -607,7 +607,7 @@ extension NightLane {
     /// On the night panel (and This week's stacked bars): Awake butter,
     /// REM sage, Core orange, Deep night lavender (cocoa would vanish on
     /// the cocoa panel).
-    var tint: Color {
+    public var tint: Color {
         switch self {
         case .awake: NoctisAppColor.butter
         case .rem: NoctisAppColor.sage

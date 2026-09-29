@@ -17,6 +17,7 @@
 		8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */; };
 		8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F4213CBB03353749905D7E /* HomeQATests.swift */; };
 		98B4052A9E1C5519A27C8213 /* NoctisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */; };
+		B88BAE63AC69365D3DD5E6E9 /* SleepQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A364E8BF38E298E7413078 /* SleepQATests.swift */; };
 		C4E097F8552FBF47761B4A59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4435E6B1989CC790CE6F0F65 /* Assets.xcassets */; };
 		C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */; };
 		F432F7BBD5A4F6990A6BA96C /* AppRoot in Frameworks */ = {isa = PBXBuildFile; productRef = 17C413CE67E2BAD13B2C2447 /* AppRoot */; };
@@ -34,6 +35,7 @@
 
 /* Begin PBXFileReference section */
 		04379147675C3293572F976D /* NoctisUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NoctisUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		14A364E8BF38E298E7413078 /* SleepQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQATests.swift; sourceTree = "<group>"; };
 		2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3B85D922D7533E3338F79684 /* NoctisKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NoctisKit; path = Packages/NoctisKit; sourceTree = SOURCE_ROOT; };
 		4176437B1713187435A9E79D /* HomeMotionQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeMotionQATests.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 				CE9541D19A4C980942925904 /* HomeV4QATests.swift */,
 				A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */,
 				FE6D414566DC2646DBC6FE09 /* QASupport.swift */,
+				14A364E8BF38E298E7413078 /* SleepQATests.swift */,
 				BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */,
 			);
 			path = UITests;
@@ -230,6 +233,7 @@
 				182F75BB96926890C7F1111B /* HomeV4QATests.swift in Sources */,
 				8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */,
 				7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */,
+				B88BAE63AC69365D3DD5E6E9 /* SleepQATests.swift in Sources */,
 				0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

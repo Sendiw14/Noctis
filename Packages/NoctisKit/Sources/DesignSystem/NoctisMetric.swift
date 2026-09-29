@@ -55,6 +55,9 @@ public struct NoctisMetric: View {
     @ScaledMetric private var scaledSize: CGFloat
 
     public static let unitScale: CGFloat = 0.5
+    /// A unit is never smaller than this, whatever the number's size (R4:
+    /// no text under 12pt).
+    public static let minimumUnitSize: CGFloat = 12
     /// The gap between a number and its unit.
     public static let unitGap: CGFloat = 1
 
@@ -77,7 +80,7 @@ public struct NoctisMetric: View {
     public var body: some View {
         let numberSize = min(scaledSize, size * maxScale)
         let numberFont = Font.system(size: numberSize, weight: weight, design: .rounded)
-        let unitFont = Font.system(size: numberSize * Self.unitScale, weight: .semibold, design: .rounded)
+        let unitFont = Font.system(size: max(numberSize * Self.unitScale, Self.minimumUnitSize), weight: .semibold, design: .rounded)
         return value.parts.enumerated().reduce(Text(verbatim: "")) { text, item in
             let (index, part) = item
             let nextIsUnit = index + 1 < value.parts.count && { if case .unit = value.parts[index + 1] { true } else { false } }()

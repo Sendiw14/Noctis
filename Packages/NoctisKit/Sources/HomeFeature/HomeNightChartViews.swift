@@ -78,7 +78,7 @@ nonisolated struct NightPlot: Equatable {
 
 /// The ribbon's color for a stage.
 extension StripStage {
-    var ribbonColor: Color {
+    public var ribbonColor: Color {
         self == .asleep ? NoctisAppColor.sage : lane.tint
     }
 }
@@ -221,6 +221,8 @@ struct NightChartView: View {
     var pillPosition: Double = 0
     var onScrub: ((Double?) -> Void)?
     var onLaneTap: ((NightLane) -> Void)?
+    /// Sleep's stage totals are buttons too.
+    var onTotalTap: ((NightLane) -> Void)?
     /// A fixed lane height (the share card); otherwise it scales with the
     /// lane labels (R4).
     var laneHeightOverride: CGFloat?
@@ -253,14 +255,14 @@ struct NightChartView: View {
                         ForEach(Array(chart.timeLabels.enumerated()), id: \.offset) { index, label in
                             if index > 0 { Spacer(minLength: NoctisSpacing.xxs) }
                             Text(label)
-                                .noctisFont(11, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
+                                .noctisFont(12, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
                                 .foregroundStyle(.noctisNightInk2)
                         }
                     }
                 }
             }
             if !chart.laneTotals.isEmpty {
-                NightStageTotalsView(totals: chart.laneTotals)
+                NightStageTotalsView(totals: chart.laneTotals, onTap: onTotalTap, focus: focusActive ? focusLane : nil)
                     .opacity(details)
                     .animation(fade, value: details)
             }
@@ -322,7 +324,7 @@ struct NightChartView: View {
         VStack(alignment: .trailing, spacing: 0) {
             ForEach(NightLane.allCases, id: \.self) { lane in
                 Text(lane.name)
-                    .noctisFont(11, focusActive && focusLane == lane ? .bold : .medium, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
+                    .noctisFont(12, focusActive && focusLane == lane ? .bold : .medium, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
                     .foregroundStyle(.noctisNightInk2)
                     .frame(height: laneHeight)
                     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -441,7 +443,7 @@ struct NightHeartLayer: View, Equatable {
             context.stroke(line, with: .color(ink.opacity(0.6)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
             context.fill(dot, with: .color(ink))
             let text = context.resolve(
-                Text(label).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(ink.opacity(0.8))
+                Text(label).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(ink.opacity(0.8))
             )
             let labelSize = text.measure(in: CGSize(width: size.width, height: height))
             // Beside the point, on whichever side has room.
@@ -452,7 +454,7 @@ struct NightHeartLayer: View, Equatable {
             // A halo in the panel's color, so the line steps aside for the
             // glyphs without a box cut out of it.
             let halo = context.resolve(
-                Text(label).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(NoctisAppColor.nightPanel)
+                Text(label).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(NoctisAppColor.nightPanel)
             )
             for offset in [(-1.5, 0), (1.5, 0), (0, -1.5), (0, 1.5), (-1.1, -1.1), (1.1, -1.1), (-1.1, 1.1), (1.1, 1.1)] as [(CGFloat, CGFloat)] {
                 context.draw(halo, in: rect.offsetBy(dx: offset.0, dy: offset.1))

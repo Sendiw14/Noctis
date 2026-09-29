@@ -10,6 +10,7 @@ struct NoctisApp: App {
             RootView(initiallyOnboarded: container.model.isOnboarded)
                 .environment(container.model)
                 .environment(container.homeViewModel)
+                .environment(container.sleepViewModel)
                 .environment(container.storeManager)
         }
     }

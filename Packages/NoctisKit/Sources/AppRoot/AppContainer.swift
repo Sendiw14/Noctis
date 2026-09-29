@@ -3,11 +3,13 @@ import Foundation
 import HealthProviding
 import HomeFeature
 import NoctisCore
+import SleepFeature
 import SwiftData
 
 public struct AppContainer {
     public let model: AppModel
     public let homeViewModel: HomeViewModel
+    public let sleepViewModel: SleepViewModel
     public let storeManager: StoreManager
     public let modelContainer: ModelContainer
 
@@ -107,6 +109,11 @@ public struct AppContainer {
             // "Connect Apple Health" reuses onboarding's authorization flow.
             connectHealth: { await model.requestHealthAuthorization() },
             modeOverride: modeOverride
+        )
+        self.sleepViewModel = SleepViewModel(
+            repository: SleepRepository(provider: provider),
+            profile: { model.profile },
+            connectHealth: { await model.requestHealthAuthorization() }
         )
         #if DEBUG
         if debug.logHomeSnapshot {
