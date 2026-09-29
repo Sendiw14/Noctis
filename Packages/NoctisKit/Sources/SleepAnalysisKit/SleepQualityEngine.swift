@@ -150,6 +150,10 @@ public struct SleepQualityResult: Sendable, Equatable, Codable {
 
     public var factorsUsed: [SleepQualityFactorKind] { factors.map(\.kind) }
 
+    /// Whether any factor could be scored: without one there is no score
+    /// to show (the number is 0 only because there was nothing to blend).
+    public var isScored: Bool { !factors.isEmpty }
+
     public func factor(_ kind: SleepQualityFactorKind) -> SleepQualityFactor? {
         factors.first { $0.kind == kind }
     }

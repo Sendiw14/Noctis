@@ -21,6 +21,11 @@ public nonisolated enum HomeDataState: Sendable, Equatable, Codable {
     /// Recent data exists, but no main sleep ended in the last 24 hours.
     case noSleepLastNight
     case ready
+
+    /// Still learning the person's baseline.
+    public var isLearning: Bool {
+        if case .learning = self { true } else { false }
+    }
 }
 
 /// One of the last seven nights; `asleepMinutes` is nil when no main
@@ -90,6 +95,9 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
     public let topInsight: Insight?
     /// Heart rate recorded during last night; nil without any.
     public let lastNightHeart: NightHeartSeries?
+    /// Last night's sleep quality (0...100), the same number the Sleep tab
+    /// shows; nil while learning or when no factor could be scored.
+    public let lastNightSleepQuality: Int?
     /// The newest Health sample of any type; nil with no data at all.
     public let newestSample: Date?
     public let lastUpdated: Date
@@ -107,6 +115,7 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         tonight: TonightPlan,
         topInsight: Insight?,
         lastNightHeart: NightHeartSeries? = nil,
+        lastNightSleepQuality: Int? = nil,
         newestSample: Date?,
         lastUpdated: Date,
         render: HomeRenderModel? = nil
@@ -120,6 +129,7 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         self.tonight = tonight
         self.topInsight = topInsight
         self.lastNightHeart = lastNightHeart
+        self.lastNightSleepQuality = lastNightSleepQuality
         self.newestSample = newestSample
         self.lastUpdated = lastUpdated
         self.render = render ?? HomeRenderModelBuilder.build(
@@ -145,6 +155,7 @@ nonisolated extension HomeSnapshot {
             tonight: tonight,
             topInsight: insight,
             lastNightHeart: lastNightHeart,
+            lastNightSleepQuality: lastNightSleepQuality,
             newestSample: newestSample,
             lastUpdated: lastUpdated,
             render: render

@@ -142,6 +142,8 @@ nonisolated struct PersistedHome: Codable {
     var tonight: TonightPlan
     var topInsight: Insight?
     var lastNightHeart: NightHeartSeries?
+    /// Added after schema 1: a file without it reads as nil.
+    var lastNightSleepQuality: Int?
     var newestSample: Date?
     var lastUpdated: Date
     var render: HomeRenderModel
@@ -156,6 +158,7 @@ nonisolated struct PersistedHome: Codable {
         tonight = snapshot.tonight
         topInsight = snapshot.topInsight
         lastNightHeart = snapshot.lastNightHeart
+        lastNightSleepQuality = snapshot.lastNightSleepQuality
         newestSample = snapshot.newestSample
         lastUpdated = snapshot.lastUpdated
         render = snapshot.render
@@ -180,6 +183,7 @@ nonisolated struct PersistedHome: Codable {
             tonight: tonight,
             topInsight: topInsight,
             lastNightHeart: lastNightHeart,
+            lastNightSleepQuality: lastNightSleepQuality,
             newestSample: newestSample,
             lastUpdated: lastUpdated,
             render: render

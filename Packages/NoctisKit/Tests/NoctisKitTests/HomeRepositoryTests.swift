@@ -5,6 +5,7 @@ import Testing
 @testable import InsightsKit
 @testable import NoctisCore
 @testable import RecoveryKit
+@testable import SleepAnalysisKit
 @testable import SleepKit
 
 /// Home's snapshot for every mock scenario, built end to end: mock
@@ -34,6 +35,37 @@ struct HomeRepositoryTests {
     private func scored(_ snapshot: HomeSnapshot) -> RecoveryResult? {
         if case .scored(let result)? = snapshot.recovery { return result }
         return nil
+    }
+
+    // MARK: - Sleep quality on the Last night card
+
+    @Test func lastNightCarriesTheSleepTabsQualityWhenThereIsAScore() async throws {
+        let snapshot = await snapshot(mock(.full))
+        let sleep = await SleepRepository(provider: mock(.full), timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot())
+        let record = try #require(sleep.record(lastNightKey))
+        #expect(snapshot.lastNightSleepQuality == record.quality.score, "Home and Sleep say the same number")
+        let screen = HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
+        let card = try #require(screen.lastNight)
+        #expect(card.sleepQuality?.plain == "\(record.quality.score)")
+        #expect(card.accessibilityLabel.contains("Sleep quality \(record.quality.score)."))
+    }
+
+    @Test func noQualityWhileLearningOrWithoutANight() async throws {
+        let learning = await snapshot(mock(.learning))
+        #expect(learning.dataState.isLearning)
+        #expect(learning.lastNightSleepQuality == nil)
+        let card = HomeScreenBuilder.build(learning, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US")).lastNight
+        #expect(card == nil || card?.sleepQuality == nil)
+        let none = await snapshot(mock(.empty))
+        #expect(none.lastNightSleepQuality == nil)
+    }
+
+    @Test func aNightWithNothingToScoreHasNoQuality() {
+        let unscored = SleepQualityResult(
+            night: lastNightKey, score: 0, factors: [], confidence: .low, baselineNights: 0,
+            modelVersion: "sleep-quality-v1", missingFactors: [:], stageBalance: nil, topContributor: nil
+        )
+        #expect(!unscored.isScored)
     }
 
     // MARK: - Scenarios

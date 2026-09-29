@@ -2,6 +2,7 @@ import Foundation
 import HealthProviding
 import InsightsKit
 import RecoveryKit
+import SleepAnalysisKit
 import SleepKit
 
 /// The Health data one Home snapshot is built from.
@@ -55,6 +56,14 @@ public nonisolated enum HomeSnapshotBuilder {
             dataState = .ready
         }
 
+        // The Sleep tab's number for the same night; none while learning or
+        // when nothing could be scored.
+        var sleepQuality: Int?
+        if let lastNight, !dataState.isLearning {
+            let quality = SleepQualityEngine.score(night: lastNight, history: history.nights, needMinutes: Double(profile.needMinutes))
+            sleepQuality = quality.isScored ? quality.score : nil
+        }
+
         let weekEnd = lastNight?.night ?? expectedLastNight(now: now, timeZone: timeZone, wakeMinutes: profile.typicalWakeMinutes)
         let week = recentNights(history, endingAt: weekEnd)
         return HomeSnapshot(
@@ -67,6 +76,7 @@ public nonisolated enum HomeSnapshotBuilder {
             tonight: TonightPlan(profile: profile),
             topInsight: InsightEngine.topInsight(history: metrics, asOf: now, fatigue: insightHistory),
             lastNightHeart: lastNight.flatMap { heartSeries(inputs.heartRate, for: $0) },
+            lastNightSleepQuality: sleepQuality,
             newestSample: newest,
             lastUpdated: now
         )

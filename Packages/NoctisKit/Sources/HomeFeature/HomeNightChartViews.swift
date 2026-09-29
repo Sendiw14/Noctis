@@ -226,8 +226,13 @@ struct NightChartView: View {
     /// A fixed lane height (the share card); otherwise it scales with the
     /// lane labels (R4).
     var laneHeightOverride: CGFloat?
+    /// The pill gets its own row above the lanes, so it never covers the
+    /// caption above the chart (Sleep); otherwise it floats over the top
+    /// of the chart.
+    var reservesPillRow = false
 
     @NoctisScaledLength(relativeTo: .caption2) private var scaledLaneHeight: CGFloat = 28
+    @NoctisScaledLength(relativeTo: .footnote) private var pillRowHeight: CGFloat = 28
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var width: CGFloat = 0
     /// The ribbon's and heart line's paths, resolved when the width, the
@@ -249,7 +254,9 @@ struct NightChartView: View {
         VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
             HStack(alignment: .top, spacing: 0) {
                 laneLabels
+                    .padding(.top, reservesPillRow ? pillRowHeight + NoctisSpacing.xxs : 0)
                 VStack(spacing: NoctisSpacing.xxs) {
+                    if reservesPillRow { pillRow }
                     layers
                     HStack {
                         ForEach(Array(chart.timeLabels.enumerated()), id: \.offset) { index, label in
@@ -309,7 +316,7 @@ struct NightChartView: View {
                 .allowsHitTesting(false)
         }
         .frame(height: plot.lanesHeight + heartBlock, alignment: .top)
-        .overlay(alignment: .top) { pill }
+        .overlay(alignment: .top) { if !reservesPillRow { pill } }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .onChange(of: pathsKey, initial: true) { _, key in
             guard key.plot.width > 0 else { return }
@@ -349,6 +356,21 @@ struct NightChartView: View {
         }
         .fixedSize(horizontal: true, vertical: false)
         .padding(.trailing, NoctisSpacing.xs)
+    }
+
+    /// The pill's own row above the lanes: always there, so nothing moves
+    /// when it appears; text too wide for it wraps and grows upward.
+    private var pillRow: some View {
+        ZStack(alignment: .bottom) {
+            Color.clear
+            NoctisFractionLayout(wraps: true) {
+                HomePill(text: pillText ?? "", onNightPanel: true)
+                    .noctisFraction(pillPosition)
+            }
+            .opacity(focusActive && pillText != nil ? 1 : 0)
+        }
+        .frame(height: pillRowHeight, alignment: .bottom)
+        .allowsHitTesting(false)
     }
 
     /// The pill floats just above the chart, kept inside it.

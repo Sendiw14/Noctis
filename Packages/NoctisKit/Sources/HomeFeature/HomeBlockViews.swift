@@ -49,16 +49,32 @@ struct NightPanelView: View {
 
     private var panel: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-            VStack(alignment: .leading, spacing: 2) {
-                NoctisCaption("LAST NIGHT", style: .noctisNightInk2)
-                NoctisMetric(content.duration, size: 48, tone: .nightPanel)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : NoctisMotion.settle, value: content.duration)
-                Text(content.timeRange)
-                    .noctisFont(15, relativeTo: .subheadline)
-                    .foregroundStyle(.noctisNightInk2)
+            HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+                VStack(alignment: .leading, spacing: 2) {
+                    NoctisCaption("LAST NIGHT", style: .noctisNightInk2)
+                    NoctisMetric(content.duration, size: 48, tone: .nightPanel)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .contentTransition(.numericText())
+                        .animation(reduceMotion ? nil : NoctisMotion.settle, value: content.duration)
+                    Text(content.timeRange)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisNightInk2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                // Sleep quality, when the Sleep tab has a score for the night.
+                if let quality = content.sleepQuality {
+                    VStack(alignment: .trailing, spacing: 0) {
+                        NoctisMetric(quality, size: 34, tone: .nightPanel)
+                            .lineLimit(1)
+                        Text("Sleep quality")
+                            .noctisFont(12, relativeTo: .caption)
+                            .foregroundStyle(.noctisNightInk2)
+                            .lineLimit(1)
+                            .fixedSize()
+                    }
+                    .padding(.top, NoctisSpacing.md)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .ignore)

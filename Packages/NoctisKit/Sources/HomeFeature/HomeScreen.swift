@@ -404,7 +404,7 @@ public nonisolated enum HomeScreenBuilder {
             mode: mode,
             nextModeChange: nextModeChange(after: now, plan: snapshot.tonight, calendar: calendar),
             recovery: recovery,
-            lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, heart: snapshot.lastNightHeart, render: snapshot.render.night, format: format) } : nil,
+            lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, heart: snapshot.lastNightHeart, quality: snapshot.lastNightSleepQuality, render: snapshot.render.night, format: format) } : nil,
             insight: showsDataCards ? snapshot.topInsight.map { insightCard($0, format: format) } : nil,
             tonight: tonightCard(snapshot.tonight, format: format),
             evening: eveningHero(times, plan: snapshot.tonight, format: format),

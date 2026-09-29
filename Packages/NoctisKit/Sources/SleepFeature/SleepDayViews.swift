@@ -309,6 +309,7 @@ struct SleepNightPanel: View {
                 drawn: reveal.holdsStart ? 0 : 1,
                 details: reveal.holdsStart ? 0 : 1,
                 tapsTotals: true,
+                reservesPillRow: true,
                 laneFocus: $laneFocus
             )
             .animation(reduceMotion ? nil : NoctisMotion.draw(HomeReveal.nightDuration).delay(0.1), value: reveal)

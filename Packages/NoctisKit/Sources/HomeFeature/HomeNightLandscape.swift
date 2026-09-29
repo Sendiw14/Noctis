@@ -15,6 +15,7 @@ public struct NightLandscapeView: View {
     private let drawn: Double
     private let details: Double
     private let tapsTotals: Bool
+    private let reservesPillRow: Bool
     @Binding private var laneFocus: NightLane?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -33,6 +34,7 @@ public struct NightLandscapeView: View {
         drawn: Double = 1,
         details: Double = 1,
         tapsTotals: Bool = false,
+        reservesPillRow: Bool = false,
         laneFocus: Binding<NightLane?>
     ) {
         self.chart = chart
@@ -40,6 +42,7 @@ public struct NightLandscapeView: View {
         self.drawn = drawn
         self.details = details
         self.tapsTotals = tapsTotals
+        self.reservesPillRow = reservesPillRow
         _laneFocus = laneFocus
     }
 
@@ -62,7 +65,8 @@ public struct NightLandscapeView: View {
             onScrub: chart.hasStages ? { scrubbed($0) } : nil,
             onLaneTap: toggleLane,
             onTotalTap: tapsTotals ? toggleLane : nil,
-            laneHeightOverride: laneHeight
+            laneHeightOverride: laneHeight,
+            reservesPillRow: reservesPillRow
         )
         .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: scrubbing)
         .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: laneFocus)

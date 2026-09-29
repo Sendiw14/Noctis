@@ -77,6 +77,14 @@ final class HomeQATests: XCTestCase {
         let app = launchHome()
         XCTAssertTrue(recoveryCard(app).waitForExistence(timeout: 10))
 
+        // The Recovery card opens Recovery: its own screen, with the
+        // calculation on it, and back returns to Home.
+        QA.tap(recoveryCard(app), in: app)
+        XCTAssertTrue(app.navigationBars["Recovery"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["How this is calculated"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(recoveryCard(app).waitForExistence(timeout: 5))
+
         QA.tap(app.buttons["Profile"], in: app)
         XCTAssertTrue(QA.text(app, containing: "Coming soon").waitForExistence(timeout: 5))
         app.navigationBars.buttons.firstMatch.tap()
@@ -86,5 +94,9 @@ final class HomeQATests: XCTestCase {
         // The tab bar minimizes once Home scrolls, so read the Sleep tab's
         // own range control rather than the bar.
         XCTAssertTrue(app.descendants(matching: .any)["sleep.range"].waitForExistence(timeout: 3))
+        // On Day, on the night the card showed.
+        let hero = app.descendants(matching: .any)["sleep.hero"]
+        XCTAssertTrue(hero.waitForExistence(timeout: 8))
+        XCTAssertTrue(hero.label.hasPrefix("Last Night, slept"), hero.label)
     }
 }

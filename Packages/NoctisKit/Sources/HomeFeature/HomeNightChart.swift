@@ -150,6 +150,9 @@ nonisolated struct NightClock: Sendable, Equatable {
 public nonisolated struct LastNightCardContent: Sendable, Equatable {
     /// 8h 25m.
     public let duration: NoctisMetricValue
+    /// "84", under a 12pt "Sleep quality" caption in the header; nil when
+    /// the Sleep tab has no score for the night.
+    public let sleepQuality: NoctisMetricValue?
     /// "11:02 PM – 7:27 AM".
     public let timeRange: String
     public let chart: NightChartContent
@@ -159,7 +162,7 @@ public nonisolated struct LastNightCardContent: Sendable, Equatable {
 // MARK: - Builder
 
 nonisolated extension HomeScreenBuilder {
-    static func lastNightCard(_ session: SleepSession, heart: NightHeartSeries?, render: NightRender? = nil, format: HomeFormat) -> LastNightCardContent {
+    static func lastNightCard(_ session: SleepSession, heart: NightHeartSeries?, quality: Int? = nil, render: NightRender? = nil, format: HomeFormat) -> LastNightCardContent {
         let minutes = Int((session.totals.asleep / 60).rounded())
         let bedtime = format.clock(session.bedtime, in: session.timeZone)
         let wake = format.clock(session.wakeTime, in: session.timeZone)
@@ -177,8 +180,12 @@ nonisolated extension HomeScreenBuilder {
         if let heart = chart.heart {
             spoken += " " + heart.accessibilityLabel
         }
+        if let quality {
+            spoken += " Sleep quality \(quality)."
+        }
         return LastNightCardContent(
             duration: HomeFormat.durationMetric(minutes),
+            sleepQuality: quality.map { NoctisMetricValue(parts: [.number("\($0)")], spoken: "\($0)") },
             timeRange: "\(bedtime) – \(wake)",
             chart: chart,
             accessibilityLabel: spoken
