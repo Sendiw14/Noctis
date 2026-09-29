@@ -567,6 +567,10 @@ struct WeekCardView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selected: Int?
     @State private var tapWidth: CGFloat = 0
+    /// The row the selection pill lives in, above the bars: reserved
+    /// whether or not a night is selected, so nothing moves and the pill
+    /// never covers a bar.
+    @NoctisScaledLength(relativeTo: .footnote) private var pillRowHeight: CGFloat = 28
     /// The selection when the current touch began, and where.
     @State private var touchStart: Int??
 
@@ -630,6 +634,7 @@ struct WeekCardView: View {
 
     private var chart: some View {
         VStack(spacing: NoctisSpacing.xs) {
+            selectionPill
             ZStack(alignment: .bottom) {
                 HStack(alignment: .bottom, spacing: 0) {
                     ForEach(Array(content.bars.enumerated()), id: \.offset) { index, bar in
@@ -643,7 +648,6 @@ struct WeekCardView: View {
                     .padding(.bottom, Self.chartHeight * content.needFraction)
             }
             .frame(height: Self.chartHeight)
-            .overlay(alignment: .top) { selectionPill }
             HStack(alignment: .top, spacing: 0) {
                 ForEach(Array(content.bars.enumerated()), id: \.offset) { _, bar in
                     VStack(spacing: 3) {
@@ -753,18 +757,22 @@ struct WeekCardView: View {
         return selected == index ? 1 : WeekColumns.dimmedOpacity
     }
 
-    /// Floats just above the bars, over the selected night.
-    @ViewBuilder
+    /// The pill sits in its own row above the bars, centered over the
+    /// selected night and kept inside the card; text too wide for the row
+    /// (accessibility sizes) wraps and grows upward, never down over a bar.
     private var selectionPill: some View {
-        if let selected {
-            NoctisFractionLayout(wraps: true) {
-                HomePill(text: content.bars[selected].detail)
-                    .noctisFraction((Double(selected) + 0.5) / Double(max(content.bars.count, 1)))
+        ZStack(alignment: .bottom) {
+            Color.clear
+            if let selected {
+                NoctisFractionLayout(wraps: true) {
+                    HomePill(text: content.bars[selected].detail)
+                        .noctisFraction((Double(selected) + 0.5) / Double(max(content.bars.count, 1)))
+                }
+                .transition(.opacity)
             }
-            .alignmentGuide(.top) { $0[.bottom] + 6 }
-            .transition(.opacity)
-            .allowsHitTesting(false)
         }
+        .frame(height: pillRowHeight, alignment: .bottom)
+        .allowsHitTesting(false)
     }
 }
 
