@@ -566,6 +566,27 @@ struct HomePerformanceRulesTests {
             .map { ($0.lastPathComponent, try String(contentsOf: $0, encoding: .utf8)) }
     }
 
+    /// No text under 12pt in the main app (R4): every `noctisFont`,
+    /// `noctisNumeral` and `Font.system(size:)` in the feature and design
+    /// system sources names 12 or more. (Onboarding, which has its own rules,
+    /// and its badge are left out.)
+    @Test func noTextInTheMainAppIsUnder12pt() throws {
+        let pattern = try Regex(#"(?:noctisFont|noctisNumeral)\(\s*(\d+(?:\.\d+)?)|Font\.system\(size:\s*(\d+(?:\.\d+)?)|\.font\(\.system\(size:\s*(\d+(?:\.\d+)?)"#)
+        var checked = 0
+        for module in ["HomeFeature", "SleepFeature", "RecoveryFeature", "DesignSystem", "AppRoot"] {
+            for file in try Self.sources(module) where !["NoctisBadge.swift", "NoctisScaledType.swift", "NoctisMetric.swift", "OnboardingScaffold.swift", "SampleNight.swift", "NoctisPaper.swift", "NoctisColor.swift"].contains(file.name) {
+                for match in file.text.matches(of: pattern) {
+                    let number = (1...3).compactMap { match.output[$0].substring }.first.flatMap { Double($0) }
+                    if let number {
+                        checked += 1
+                        #expect(number >= 12, "\(file.name): a \(number)pt font")
+                    }
+                }
+            }
+        }
+        #expect(checked > 100, "the scan reads the fonts (\(checked))")
+    }
+
     @Test func homeAnimatesWithSpringTokensAndNoTimedCurves() throws {
         // Springs can be interrupted and retargeted; a timed curve restarts.
         let banned = [".easeIn(", ".easeOut(", ".easeInOut(", ".linear(", ".timingCurve(", ".easeIn)", ".easeOut)", ".easeInOut)", ".linear)"]

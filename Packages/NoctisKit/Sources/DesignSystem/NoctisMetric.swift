@@ -31,9 +31,11 @@ public nonisolated struct NoctisMetricValue: Sendable, Equatable {
     }
 }
 
-/// Unit typography (R4): the number heavy and rounded; each unit at half
-/// the number's size, semibold, in a quieter ink, on the same baseline 1pt
-/// after its number. One `Text`, so it scales and shrinks as a whole and
+/// Unit typography (R4): the number heavy and rounded, in a quieter ink for
+/// each unit on the same baseline 1pt after its number. A number of 28pt or
+/// more has its unit at 55% of the number (never under 14pt), semibold; a
+/// smaller number has its unit the size of the number, regular weight. No
+/// unit is ever under 12pt. One `Text`, so it scales and shrinks as a whole and
 /// VoiceOver reads it as `spoken`.
 public struct NoctisMetric: View {
     public enum Tone: Sendable {
@@ -54,10 +56,26 @@ public struct NoctisMetric: View {
     private let maxScale: CGFloat
     @ScaledMetric private var scaledSize: CGFloat
 
-    public static let unitScale: CGFloat = 0.5
+    /// A unit beside a large number, as a share of the number.
+    public static let unitScale: CGFloat = 0.55
+    /// Numbers of this size and up have a scaled unit; smaller ones a unit
+    /// as big as the number.
+    public static let largeNumberSize: CGFloat = 28
+    /// A scaled unit is never smaller than this.
+    public static let minimumLargeUnitSize: CGFloat = 14
     /// A unit is never smaller than this, whatever the number's size (R4:
     /// no text under 12pt).
     public static let minimumUnitSize: CGFloat = 12
+
+    /// The unit's size and weight beside a number: `designSize` is the
+    /// number's size at the default text size (it decides which rule
+    /// applies), `numberSize` its rendered size.
+    public static func unitStyle(designSize: CGFloat, numberSize: CGFloat) -> (size: CGFloat, weight: Font.Weight) {
+        if designSize >= largeNumberSize {
+            return (max(numberSize * unitScale, minimumLargeUnitSize), .semibold)
+        }
+        return (max(numberSize, minimumUnitSize), .regular)
+    }
     /// The gap between a number and its unit.
     public static let unitGap: CGFloat = 1
 
@@ -80,7 +98,8 @@ public struct NoctisMetric: View {
     public var body: some View {
         let numberSize = min(scaledSize, size * maxScale)
         let numberFont = Font.system(size: numberSize, weight: weight, design: .rounded)
-        let unitFont = Font.system(size: max(numberSize * Self.unitScale, Self.minimumUnitSize), weight: .semibold, design: .rounded)
+        let unit = Self.unitStyle(designSize: size, numberSize: numberSize)
+        let unitFont = Font.system(size: unit.size, weight: unit.weight, design: .rounded)
         return value.parts.enumerated().reduce(Text(verbatim: "")) { text, item in
             let (index, part) = item
             let nextIsUnit = index + 1 < value.parts.count && { if case .unit = value.parts[index + 1] { true } else { false } }()

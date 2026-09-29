@@ -275,7 +275,8 @@ public nonisolated struct WeekBar: Sendable, Equatable {
     public let isLastNight: Bool
     public let accessibilityLabel: String
     /// The pill when the bar is selected: "Tue · 7h 12m · Deep 1h 20m ·
-    /// REM 1h 50m", "Tue · 7h 12m" without stages, or "Tue · No data".
+    /// REM 1h 50m", "Tue · 7h 12m · No stages" without stages, or
+    /// "Tue · No data".
     public let detail: String
 }
 
@@ -880,10 +881,14 @@ public nonisolated enum HomeScreenBuilder {
             let minutes = night.asleepMinutes.map { Int($0.rounded()) }
             // Deep and REM name the night's quality; Core is the rest.
             let stageParts: [(String, Int)] = night.stages.map { [("Deep", Int($0.deep.rounded())), ("REM", Int($0.rem.rounded()))] } ?? []
+            // A night that was recorded without stages says so.
+            let noStages = minutes != nil && night.stages == nil
             let pill = [format.weekday(wakeDay, width: .abbreviated), minutes.map { HomeFormat.compactDuration($0) } ?? "No data"]
                 + stageParts.map { "\($0.0) \(HomeFormat.compactDuration($0.1))" }
+                + (noStages ? ["No stages"] : [])
             let spoken = [dayName, minutes.map { HomeFormat.spokenDuration($0) } ?? "no data"]
                 + stageParts.map { "\($0.0 == "Deep" ? "deep" : $0.0) \(HomeFormat.spokenDuration($0.1))" }
+                + (noStages ? ["no stage detail"] : [])
             return WeekBar(
                 label: format.weekday(wakeDay, width: .narrow),
                 fraction: render.bars[index].fraction,

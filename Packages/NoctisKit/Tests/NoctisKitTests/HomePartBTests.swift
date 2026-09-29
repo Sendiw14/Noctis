@@ -321,9 +321,10 @@ struct HomeWeekAndShareTests {
                                                  profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
         let bars = HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: locale).week?.bars ?? []
         // A staged night names its Deep and REM even at zero; an unstaged one can't.
-        #expect(bars.suffix(3).map(\.detail) == ["Tue · 6h · Deep 0m · REM 0m", "Wed · No data", "Thu · 8h"])
+        #expect(bars.suffix(3).map(\.detail) == ["Tue · 6h · Deep 0m · REM 0m", "Wed · No data", "Thu · 8h · No stages"])
         // Sep 21's plain core night has stages; last night's unspecified sleep doesn't.
         #expect(bars.last?.stages == nil)
+        #expect(bars.last?.accessibilityLabel.hasSuffix("no stage detail") == true)
         #expect(bars[bars.count - 3].stages != nil)
     }
 

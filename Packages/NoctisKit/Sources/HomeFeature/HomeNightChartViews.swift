@@ -366,7 +366,7 @@ struct NightChartView: View {
             }
             if chart.heart != nil {
                 Image(systemName: "heart.fill")
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.noctisNightInk2)
                     .frame(height: Self.heartHeight)
                     .padding(.top, Self.heartGap)

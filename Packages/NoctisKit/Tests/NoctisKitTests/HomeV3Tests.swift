@@ -423,9 +423,38 @@ struct NoctisMetricTests {
         #expect(twentyFour.clockMetric(twentyFour.clock(minutesSinceMidnight: 23 * 60)).parts == [.number("23:00")])
     }
 
-    @Test func unitsAreHalfSizeAndOnePointAway() {
-        #expect(NoctisMetric.unitScale == 0.5)
+    @Test func aUnitIsOnePointFromItsNumber() {
         #expect(NoctisMetric.unitGap == 1)
+    }
+
+    @Test func aBigNumbersUnitIs55PercentSemiboldAndNeverUnder14() {
+        for size: CGFloat in [28, 34, 48, 56, 72, 88] {
+            let unit = NoctisMetric.unitStyle(designSize: size, numberSize: size)
+            #expect(unit.size == max(size * 0.55, 14), "\(size)")
+            #expect(unit.weight == .semibold)
+        }
+        // 28pt: 55% is 15.4; a scaled-down number never takes the unit below 14.
+        #expect(NoctisMetric.unitStyle(designSize: 28, numberSize: 20).size == 14)
+    }
+
+    @Test func aSmallNumbersUnitIsTheNumbersSizeAndRegular() {
+        for size: CGFloat in [15, 17, 22, 26] {
+            let unit = NoctisMetric.unitStyle(designSize: size, numberSize: size)
+            #expect(unit.size == size, "\(size)")
+            #expect(unit.weight == .regular)
+        }
+        // The rule follows the design size, not the scaled one: a 22pt number
+        // at a large text size (34pt on screen) is still a "small" number.
+        #expect(NoctisMetric.unitStyle(designSize: 22, numberSize: 34).size == 34)
+    }
+
+    @Test func noUnitIsEverUnder12pt() {
+        for design: CGFloat in [10, 12, 15, 17, 22, 26, 28, 34, 48, 72, 88] {
+            for scale: CGFloat in [0.5, 0.8, 1, 1.3, 1.6] {
+                let unit = NoctisMetric.unitStyle(designSize: design, numberSize: design * scale)
+                #expect(unit.size >= 12, "design \(design) at \(scale)x → \(unit.size)")
+            }
+        }
     }
 }
 

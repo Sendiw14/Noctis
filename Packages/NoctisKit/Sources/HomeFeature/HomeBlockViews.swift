@@ -482,7 +482,7 @@ struct InsightEvidenceChart: View {
                                 .overlay(Circle().strokeBorder(dot.within == false ? cocoa.opacity(0.3) : Color.clear, lineWidth: 1.5))
                                 .frame(width: 12, height: 12)
                             Text(dot.label)
-                                .noctisFont(11, .medium, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
+                                .noctisFont(12, .medium, relativeTo: .caption2, maxScale: NoctisTypeScale.maxIconScale)
                                 .foregroundStyle(NoctisAppColor.blockInk)
                         }
                     }
@@ -605,6 +605,9 @@ struct WeekCardView: View {
                             .animation(reduceMotion ? nil : NoctisMotion.settle, value: average)
                     }
                 }
+                if content.bars.contains(where: { $0.stages != nil }) {
+                    stageLegend
+                }
             }
         }
         .contentShape(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous))
@@ -692,6 +695,27 @@ struct WeekCardView: View {
     private func opacity(_ index: Int) -> Double {
         guard let selected else { return 1 }
         return selected == index ? 1 : WeekColumns.dimmedOpacity
+    }
+
+    /// One line: Deep, Core, REM at 12pt.
+    private var stageLegend: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: NoctisSpacing.md) { legendKeys }
+            VStack(alignment: .leading, spacing: 4) { legendKeys }
+        }
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var legendKeys: some View {
+        ForEach([("Deep", NoctisAppColor.nightDeep), ("Core", NoctisAppColor.coreTint), ("REM", NoctisAppColor.sage)], id: \.0) { key in
+            HStack(spacing: 6) {
+                RoundedRectangle(cornerRadius: 3, style: .continuous).fill(key.1).frame(width: 10, height: 10)
+                Text(key.0)
+                    .noctisFont(12, relativeTo: .caption)
+                    .foregroundStyle(.noctisInk3)
+            }
+        }
     }
 
     /// The pill sits in its own row above the bars, centered over the

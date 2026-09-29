@@ -301,6 +301,9 @@ nonisolated extension SleepScreenBuilder {
                 let rem = Int(stages.rem.rounded())
                 pill += ["Deep \(HomeFormat.compactDuration(deep))", "REM \(HomeFormat.compactDuration(rem))"]
                 spoken += ["deep \(HomeFormat.spokenDuration(deep))", "REM \(HomeFormat.spokenDuration(rem))"]
+            } else if range == .week, minutes != nil {
+                pill.append("No stages")
+                spoken.append("no stage detail")
             }
             return SleepBarContent(
                 night: entry.night,

@@ -629,7 +629,7 @@ struct NightStripView: View {
             NoctisFractionLayout {
                 ForEach(content.stripLabels, id: \.position) { label in
                     Text(label.text)
-                        .noctisFont(11, .medium, relativeTo: .caption2)
+                        .noctisFont(12, .medium, relativeTo: .caption2)
                         .foregroundStyle(.noctisInk3)
                         .noctisFraction(label.position)
                 }
