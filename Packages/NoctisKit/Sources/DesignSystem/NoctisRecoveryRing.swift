@@ -316,10 +316,12 @@ private func ringOpacity(_ index: Int, dim: Double, highlight: Int?) -> Double {
 private struct NoctisRingDormantLayer: View {
     let path: Path
     let lineWidth: CGFloat
+    @Environment(\.noctisRingTrack) private var trackOverride
 
     var body: some View {
+        let track = trackOverride ?? NoctisAppColor.ringTrack
         Canvas { context, _ in
-            context.stroke(path, with: .color(NoctisAppColor.ringTrack), style: StrokeStyle(lineWidth: lineWidth))
+            context.stroke(path, with: .color(track), style: StrokeStyle(lineWidth: lineWidth))
         }
         .drawingGroup()
     }
@@ -331,6 +333,7 @@ private struct NoctisRingTrackLayer: View, Equatable {
     let dim: Double
     let highlight: Int?
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.noctisRingTrack) private var trackOverride
 
     static func == (lhs: NoctisRingTrackLayer, rhs: NoctisRingTrackLayer) -> Bool {
         lhs.paths == rhs.paths && lhs.dim == rhs.dim && lhs.highlight == rhs.highlight
@@ -338,15 +341,16 @@ private struct NoctisRingTrackLayer: View, Equatable {
 
     var body: some View {
         let _ = colorScheme
+        let track = trackOverride ?? NoctisAppColor.ringTrack
         Canvas { context, _ in
             let style = StrokeStyle(lineWidth: paths.lineWidth, lineCap: .round)
             for (index, segment) in paths.segments.enumerated() {
                 var layer = context
                 layer.opacity = ringOpacity(index, dim: dim, highlight: highlight)
                 if segment.track.isDot {
-                    layer.fill(segment.track.path, with: .color(NoctisAppColor.ringTrack))
+                    layer.fill(segment.track.path, with: .color(track))
                 } else {
-                    layer.stroke(segment.track.path, with: .color(NoctisAppColor.ringTrack), style: style)
+                    layer.stroke(segment.track.path, with: .color(track), style: style)
                 }
             }
         }

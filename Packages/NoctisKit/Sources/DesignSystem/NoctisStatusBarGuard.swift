@@ -38,10 +38,13 @@ struct NoctisStatusBarScrim: View {
     /// Flat colors laid over the paper, bottom first, while the background
     /// behind the content wears them too.
     var washes: [NoctisWash] = []
+    /// The scrim's color: the paper, or a section field's color while the
+    /// field is what shows under the status bar.
+    var fill: Color = NoctisAppColor.bg
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [NoctisAppColor.bg, NoctisAppColor.bg.opacity(0)], startPoint: .top, endPoint: .bottom)
+            LinearGradient(colors: [fill, fill.opacity(0)], startPoint: .top, endPoint: .bottom)
             ForEach(Array(washes.enumerated()), id: \.offset) { _, wash in
                 LinearGradient(colors: [wash.color, wash.color.opacity(0)], startPoint: .top, endPoint: .bottom)
                     .opacity(wash.opacity)
@@ -50,7 +53,7 @@ struct NoctisStatusBarScrim: View {
         .frame(height: Self.fadeHeight)
         .background(alignment: .top) {
             ZStack {
-                NoctisAppColor.bg
+                fill
                 ForEach(Array(washes.enumerated()), id: \.offset) { _, wash in
                     wash.color.opacity(wash.opacity)
                 }

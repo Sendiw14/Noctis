@@ -5,9 +5,9 @@ import SleepAnalysisKit
 import SleepKit
 import SwiftUI
 
-/// Sleep, Day: a strip of the last 14 nights, then the selected night as
-/// a hero, a quality ring, the night's landscape, its stages, what made up
-/// its quality, and the details.
+/// Sleep, Day, under the field (which holds the night strip and the hero):
+/// the night's landscape, its stages, what made up its quality, and the
+/// details.
 struct SleepDayView: View {
     let screen: SleepScreen
     let viewModel: SleepViewModel
@@ -15,10 +15,6 @@ struct SleepDayView: View {
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            SleepNightPicker(items: screen.picker, selected: screen.selection.night) { night in
-                NoctisHaptics.snapLight()
-                viewModel.select(night: night)
-            }
             if let day = screen.day {
                 SleepDayContentView(day: day, viewModel: viewModel)
                     // The content morphs when another night is chosen.
@@ -35,7 +31,7 @@ struct SleepDayView: View {
 // MARK: - Night picker
 
 /// The last 14 nights, weekday initial over day number, in 44pt-wide
-/// targets. The selected night is a cocoa capsule.
+/// targets, on the sage field. The selected night is a cocoa capsule.
 struct SleepNightPicker: View {
     let items: [SleepPickerItem]
     let selected: SleepNightKey
@@ -80,12 +76,12 @@ struct SleepNightPicker: View {
                     .noctisFont(17, .semibold, relativeTo: .body)
                     .monospacedDigit()
             }
-            .foregroundStyle(isSelected ? NoctisAppColor.ctaLabel : (item.hasData ? NoctisAppColor.ink : NoctisAppColor.ink3))
-            .opacity(item.hasData || isSelected ? 1 : 0.6)
+            .foregroundStyle(isSelected ? NoctisAppColor.nightInk : NoctisAppColor.blockInk)
+            .opacity(item.hasData || isSelected ? 1 : 0.55)
             .frame(width: Self.itemWidth, height: Self.itemHeight)
             .background {
                 if isSelected {
-                    Capsule(style: .continuous).fill(NoctisAppColor.ctaFill)
+                    Capsule(style: .continuous).fill(NoctisAppColor.blockCocoa)
                 }
             }
             .contentShape(Capsule(style: .continuous))
@@ -125,7 +121,6 @@ struct SleepDayContentView: View {
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            SleepHeroView(day: day, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
             if let learning = day.learning {
                 SleepLearningCard(content: learning)
             }
@@ -145,7 +140,7 @@ struct SleepDayContentView: View {
 }
 
 /// The duration at 72pt with "slept" and the time range, beside the
-/// quality ring; on the paper, no card.
+/// quality ring; on the sage field, no card.
 struct SleepHeroView: View {
     let day: SleepDayContent
     let reveal: HomeRevealPhase
@@ -206,17 +201,17 @@ struct SleepHeroView: View {
 
     private var copy: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-            NoctisCaption(day.caption, style: .noctisInk3)
-            NoctisMetric(HomeFormat.durationMetric(shownMinutes), size: 72)
+            NoctisCaption(day.caption, style: .noctisFieldInk2)
+            NoctisMetric(HomeFormat.durationMetric(shownMinutes), size: 72, tone: .block)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .contentTransition(.numericText(value: Double(shownMinutes)))
             Text("slept")
                 .noctisFont(15, relativeTo: .subheadline)
-                .foregroundStyle(.noctisInk2)
+                .foregroundStyle(.noctisFieldInk2)
             Text(day.timeRange)
                 .noctisFont(15, .medium, relativeTo: .subheadline)
-                .foregroundStyle(NoctisAppColor.ink)
+                .foregroundStyle(.noctisFieldInk)
         }
     }
 
@@ -232,16 +227,17 @@ struct SleepHeroView: View {
                         diameter: Self.ringDiameter,
                         lineWidth: 12
                     )
+                    .environment(\.noctisRingTrack, NoctisAppColor.blockCocoa.opacity(0.15))
                     .animation(reduceMotion ? nil : NoctisMotion.draw(HomeReveal.ringDuration).delay(0.1), value: reveal)
                     VStack(spacing: 0) {
                         Text("\(shownScore)")
                             .noctisNumeral(34, .heavy)
                             .monospacedDigit()
                             .contentTransition(.numericText(value: Double(shownScore)))
-                            .foregroundStyle(NoctisAppColor.ink)
+                            .foregroundStyle(.noctisFieldInk)
                         Text("Quality")
                             .noctisFont(12, relativeTo: .caption)
-                            .foregroundStyle(.noctisInk2)
+                            .foregroundStyle(.noctisFieldInk2)
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
                     }
@@ -250,7 +246,7 @@ struct SleepHeroView: View {
                 if content.typicalText != nil {
                     Text("Tick = typical range")
                         .noctisFont(12, relativeTo: .caption)
-                        .foregroundStyle(.noctisInk3)
+                        .foregroundStyle(.noctisFieldInk2)
                 }
             }
         } else {
@@ -261,7 +257,7 @@ struct SleepHeroView: View {
     /// One segment around the whole ring; its angles come from the render
     /// model.
     private func segment(_ content: SleepQualityRingContent) -> NoctisRingSegment {
-        NoctisRingSegment(color: NoctisAppColor.lavender, weight: 1, fraction: content.fraction, usual: content.usual, arc: content.arc)
+        NoctisRingSegment(color: NoctisAppColor.blockCocoa, weight: 1, fraction: content.fraction, usual: content.usual, arc: content.arc)
     }
 }
 

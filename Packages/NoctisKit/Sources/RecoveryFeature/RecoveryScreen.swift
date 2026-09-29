@@ -28,6 +28,7 @@ public struct RecoveryScreen: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollPosition = ScrollPosition(edge: .top)
+    @State private var fieldHeight: CGFloat = 0
 
     public init(
         viewModel: RecoveryViewModel,
@@ -44,7 +45,7 @@ public struct RecoveryScreen: View {
     public var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                RecoveryContent(viewModel: viewModel, presentation: presentation, openFactor: openFactor)
+                RecoveryContent(viewModel: viewModel, presentation: presentation, fieldHeight: $fieldHeight, openFactor: openFactor)
             }
             .scrollPosition($scrollPosition)
             .scrollClipDisabled()
@@ -54,7 +55,7 @@ public struct RecoveryScreen: View {
                 proxy.scrollTo(focus, anchor: .top)
             }
         }
-        .modifier(RecoveryChrome(presentation: presentation))
+        .modifier(RecoveryChrome(presentation: presentation, fieldHeight: fieldHeight))
         .refreshable {
             await viewModel.refresh()
             NoctisHaptics.soft()
@@ -85,12 +86,13 @@ public struct RecoveryScreen: View {
 /// button.
 private struct RecoveryChrome: ViewModifier {
     let presentation: RecoveryPresentation
+    let fieldHeight: CGFloat
 
     func body(content: Content) -> some View {
         switch presentation {
         case .tab:
             content
-                .noctisStatusBarGuard()
+                .noctisSectionStatusBar(.recovery, fieldHeight: fieldHeight)
                 .navigationTitle("Recovery")
                 .toolbar(.hidden, for: .navigationBar)
         case .pushed:
@@ -101,17 +103,32 @@ private struct RecoveryChrome: ViewModifier {
     }
 }
 
-/// The scrolling content: the header, then whatever the selection shows.
+/// The scrolling content: the lavender field (date, title, control), then
+/// whatever the selection shows.
 struct RecoveryContent: View {
     let viewModel: RecoveryViewModel
     let presentation: RecoveryPresentation
+    @Binding var fieldHeight: CGFloat
     let openFactor: (RecoveryFactorKind, RecoveryFactorRange) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// How far the first thing under the field rides up over its edge: a
+    /// card by 24pt; Today's ring, on its paper disc, so the disc's top is
+    /// 24pt in; nothing for a state's dormant ring or the skeleton.
+    private var overlap: CGFloat {
+        let full = NoctisSectionField<EmptyView, EmptyView>.overlap
+        guard let screen = viewModel.screen else { return 0 }
+        if screen.state != nil || screen.learning != nil || screen.noSleep != nil { return 0 }
+        return screen.today != nil ? full - RecoveryHeroView.discMargin : full
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            RecoveryHeaderView(viewModel: viewModel, presentation: presentation)
-            Color.clear.frame(height: NoctisSpacing.md)
+            NoctisSectionField(.recovery, bottomInset: NoctisSpacing.md + NoctisSectionField<EmptyView, EmptyView>.overlap, height: $fieldHeight) {
+                RecoveryHeaderView(viewModel: viewModel, presentation: presentation)
+            } motif: {
+                NoctisArcsMotif()
+            }
             ZStack(alignment: .top) {
                 if let screen = viewModel.screen {
                     body(screen)
@@ -123,12 +140,12 @@ struct RecoveryContent: View {
                 }
             }
             .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.screen == nil)
+            .frame(maxWidth: RecoveryScreen.contentMaxWidth)
+            .padding(.horizontal, NoctisSpacing.lg)
+            .padding(.top, overlap > 0 ? -overlap : NoctisSpacing.md)
+            .padding(.bottom, NoctisSpacing.xl)
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: RecoveryScreen.contentMaxWidth)
-        .padding(.horizontal, NoctisSpacing.lg)
-        .padding(.top, NoctisSpacing.xs)
-        .padding(.bottom, NoctisSpacing.xl)
-        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
@@ -162,12 +179,12 @@ struct RecoveryHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
             // A space while loading keeps the caption's line, so the title doesn't drop when it arrives.
-            NoctisCaption(viewModel.screen?.dateCaption ?? " ", style: .noctisInk3)
+            NoctisCaption(viewModel.screen?.dateCaption ?? " ", style: .noctisFieldInk2)
             if presentation == .tab {
                 Text("Recovery")
                     .noctisFont(34, .bold, relativeTo: .largeTitle)
                     .tracking(-0.6)
-                    .foregroundStyle(NoctisAppColor.ink)
+                    .foregroundStyle(.noctisFieldInk)
                     .accessibilityAddTraits(.isHeader)
             }
             if viewModel.screen?.state == nil {

@@ -93,6 +93,18 @@ struct RootTabView: View {
         recovery.open(segment: destination.segment, factor: destination.factor, factorRange: destination.segment.factorRange)
     }
 
+    /// The selected glyph takes its section's ink (Sleep sage, Recovery
+    /// lavender, Insights butter); Home and Coach stay cocoa. Unselected
+    /// glyphs stay neutral.
+    private var tabTint: Color {
+        switch model.selectedTab {
+        case .sleep: NoctisSection.sleep.ink
+        case .recovery: NoctisSection.recovery.ink
+        case .insights: NoctisSection.insights.ink
+        case .home, .coach: NoctisAppColor.ink
+        }
+    }
+
     @ViewBuilder
     private var tabs: some View {
         // Pressing the tab that's showing is a re-tap, not a change.
@@ -114,7 +126,7 @@ struct RootTabView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .tint(NoctisAppColor.ink)
+        .tint(tabTint)
         // `tabViewBottomAccessory(isEnabled:)` is iOS 26.1; on 26.0 there's
         // no accessory rather than one that can't hide by day.
         if #available(iOS 26.1, *) {

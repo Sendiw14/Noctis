@@ -187,6 +187,28 @@ struct NoctisAppContrastTests {
         }
     }
 
+    /// Text on a section field: block ink, and the quieter ink, on all three
+    /// fields in both modes.
+    @Test(arguments: modes)
+    func fieldInkReadsOnEveryField(_ mode: String, _ palette: NoctisAppPalette) {
+        for (name, fill) in [("sage", palette.blockSage), ("lavender", palette.blockLavender), ("butter", palette.blockButter)] {
+            #expect(ratio(palette.blockInk, fill) >= 4.5, "\(mode): field ink on \(name)")
+            let quieter = blend(palette.blockInk, over: fill, alpha: NoctisFieldInkStyle.secondaryOpacity(dark: mode == "dark"))
+            #expect(ratio(quieter, fill) >= 4.5, "\(mode): the quieter field ink on \(name) \(ratio(quieter, fill))")
+        }
+    }
+
+    /// The field runs under the status bar only where the system's status-bar
+    /// text (black in Light, white in Dark) clears 3:1 over it.
+    @Test func theFieldRunsUnderTheStatusBarWhereItsTextStaysLegible() {
+        for section in NoctisSection.allCases {
+            #expect(section.extendsUnderStatusBar(dark: false), "Light \(section)")
+        }
+        #expect(NoctisSection.recovery.extendsUnderStatusBar(dark: true), "white on the dark lavender is 3.5:1")
+        #expect(!NoctisSection.sleep.extendsUnderStatusBar(dark: true), "white on the dark sage fails 3:1")
+        #expect(!NoctisSection.insights.extendsUnderStatusBar(dark: true), "white on the dark butter fails 3:1")
+    }
+
     @Test func theDarkCardIsTheApprovedValue() {
         #expect(NoctisAppPalette.dark.bg == "17110E")
         #expect(NoctisAppPalette.dark.surface == "251C16")

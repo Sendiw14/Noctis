@@ -43,6 +43,9 @@ struct RecoveryHeroView: View {
     static let narrowRingDiameter: CGFloat = 220
     static let narrowBelowWidth: CGFloat = 350
     static let ringLineWidth: CGFloat = 22
+    /// The paper disc the ring sits on reaches this far past it, so the ring
+    /// stands on paper where it rides up over the field.
+    static let discMargin: CGFloat = 8
 
     init(content: ScoredRecoveryContent, reveal: HomeRevealPhase, lowPower: Bool) {
         self.content = content
@@ -130,6 +133,7 @@ struct RecoveryHeroView: View {
                     .minimumScaleFactor(0.5)
             }
         }
+        .background { Circle().fill(NoctisAppColor.bg).padding(-Self.discMargin) }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(content.accessibilityLabel)
     }
