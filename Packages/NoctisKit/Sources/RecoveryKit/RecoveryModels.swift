@@ -1,7 +1,7 @@
 import Foundation
 import SleepKit
 
-public enum RecoveryFactorKind: String, Sendable, CaseIterable, Hashable {
+public enum RecoveryFactorKind: String, Sendable, CaseIterable, Hashable, Codable {
     case sleepDuration
     case sleepConsistency
     case hrv
@@ -124,7 +124,7 @@ public enum RecoveryModel: String, Sendable, CaseIterable {
     var scoresVariation: Bool { self != .v1 }
 }
 
-public enum RecoveryConfidence: String, Sendable, Comparable, CaseIterable {
+public enum RecoveryConfidence: String, Sendable, Comparable, CaseIterable, Codable {
     case low
     case moderate
     case high
@@ -142,7 +142,7 @@ public enum RecoveryConfidence: String, Sendable, Comparable, CaseIterable {
     }
 }
 
-public struct RecoveryFactor: Sendable, Equatable {
+public struct RecoveryFactor: Sendable, Equatable, Codable {
     public let kind: RecoveryFactorKind
     /// 0...100.
     public let score: Int
@@ -193,7 +193,7 @@ public struct RecoveryFactor: Sendable, Equatable {
 /// A value's place against the person's own variation: within ±1 SD of
 /// baseline (`RecoveryNormalRange`), or above or below it (by value, not
 /// by goodness).
-public enum RecoveryRange: String, Sendable, Equatable {
+public enum RecoveryRange: String, Sendable, Equatable, Codable {
     case within
     case above
     case below
@@ -203,10 +203,10 @@ public enum RecoveryRange: String, Sendable, Equatable {
 /// range, the one with the largest weighted deviation (its share of the
 /// score × how many standard deviations it is from usual). Nil when every
 /// factor is within its normal range.
-public struct RecoveryContributor: Sendable, Equatable {
+public struct RecoveryContributor: Sendable, Equatable, Codable {
     /// What was measured. Consistency reports whichever of bedtime and
     /// wake time was further from usual.
-    public enum Measure: String, Sendable, Equatable {
+    public enum Measure: String, Sendable, Equatable, Codable {
         case sleepDuration
         case hrv
         case restingHeartRate
@@ -238,7 +238,7 @@ public struct RecoveryContributor: Sendable, Equatable {
 
 /// One factor's last 14 nights against its normal range, for a sparkline.
 /// Consistency is shown as bedtime (minutes after noon).
-public struct RecoveryFactorHistory: Sendable, Equatable {
+public struct RecoveryFactorHistory: Sendable, Equatable, Codable {
     public let kind: RecoveryFactorKind
     /// The 14 calendar nights before last night, oldest first; nil where a
     /// night has no value.
@@ -269,7 +269,7 @@ public struct RecoveryFactorHistory: Sendable, Equatable {
 }
 
 /// Why a factor isn't in today's score.
-public enum RecoveryFactorGap: String, Sendable, Equatable {
+public enum RecoveryFactorGap: String, Sendable, Equatable, Codable {
     /// No value last night and none in the baseline window: the person's
     /// sources don't provide it.
     case unavailable
@@ -279,7 +279,7 @@ public enum RecoveryFactorGap: String, Sendable, Equatable {
     case buildingBaseline
 }
 
-public enum RecoveryTrend: String, Sendable, Equatable {
+public enum RecoveryTrend: String, Sendable, Equatable, Codable {
     case above
     case inLine
     case below
@@ -289,7 +289,7 @@ public enum RecoveryTrend: String, Sendable, Equatable {
 
 /// Today's score against the person's recent recovery: the mean score of
 /// the nights in the 14-night window, each scored the same way.
-public struct RecoveryComparison: Sendable, Equatable {
+public struct RecoveryComparison: Sendable, Equatable, Codable {
     /// Mean recovery score of the window's nights; nil under 5 nights.
     public let baseline: Double?
     /// Scored nights behind `baseline`.
@@ -324,7 +324,7 @@ public struct RecoveryComparison: Sendable, Equatable {
     }
 }
 
-public struct RecoveryResult: Sendable, Equatable {
+public struct RecoveryResult: Sendable, Equatable, Codable {
     public let night: SleepNightKey
     /// 0...100.
     public let score: Int
@@ -410,7 +410,7 @@ public struct RecoveryResult: Sendable, Equatable {
     }
 }
 
-public enum RecoveryState: Sendable, Equatable {
+public enum RecoveryState: Sendable, Equatable, Codable {
     /// Fewer than `RecoveryModelV1.learningNights` nights of history.
     case learning(nightsSoFar: Int)
     /// Enough history, but no main sleep ended in the last 24 hours.

@@ -63,7 +63,10 @@ struct HomeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollPosition = ScrollPosition(edge: .top)
     @State private var heroFrame: CGRect = .zero
-    @State private var visibleTop: Double = 0
+    /// The scroll offset, kept where writing it invalidates nothing: a
+    /// scroll writes no state, only the view model's collapse when a step
+    /// or a threshold is crossed.
+    @State private var scrollProbe = HomeScrollProbe()
     @State private var sharing = false
     /// The morning reveal's dusk over the paper (and the status bar scrim).
     @State private var dusk: Double
@@ -78,6 +81,9 @@ struct HomeView: View {
     }
 
     var body: some View {
+        #if DEBUG
+        let _ = HomeBodyProbe.hit("HomeView")
+        #endif
         // The compact bar is a sibling above the scroll view, not part of it.
         ZStack(alignment: .top) {
             scroll
@@ -96,6 +102,7 @@ struct HomeView: View {
         // Any touch or scroll during the morning reveal skips to its end.
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in skipReveal() }, including: revealRunning ? .all : .subviews)
         .task { await viewModel.onAppear() }
+        .onAppear { NoctisSignpost.end(.launchToFirstFrame) }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { viewModel.updateClock() }
         }
@@ -107,14 +114,14 @@ struct HomeView: View {
             }
             // Dusk lifts over 1.2s when the reveal plays; a reveal that
             // won't play (no score) just lets it go with the skeleton.
-            withAnimation(phase == .playing ? .easeInOut(duration: HomeReveal.backgroundDuration) : .easeOut(duration: 0.3)) {
+            withAnimation(phase == .playing ? NoctisMotion.draw(HomeReveal.backgroundDuration) : NoctisMotion.fade) {
                 dusk = target
             }
         }
         .onChange(of: viewModel.header.mode) { _, mode in
             // The paper crossfades with the mode morph (instantly under
             // Reduce Motion).
-            withAnimation(reduceMotion ? nil : .easeInOut(duration: HomeMorph.paperDuration)) {
+            withAnimation(reduceMotion ? nil : NoctisMotion.draw(HomeMorph.paperDuration)) {
                 evening = mode == .evening ? 1 : 0
             }
         }
@@ -125,6 +132,9 @@ struct HomeView: View {
         }
         .navigationTitle("Home")
         .toolbar(.hidden, for: .navigationBar)
+        #if DEBUG
+        .homeDebugProbe(lowPower: viewModel.isLowPower)
+        #endif
     }
 
     private var revealRunning: Bool { viewModel.reveal != .none }
@@ -145,15 +155,18 @@ struct HomeView: View {
             HomeContent(viewModel: viewModel, zoomNamespace: zoomNamespace, actions: actions) { heroFrame = $0 }
         }
         .scrollPosition($scrollPosition)
-        .onScrollPhaseChange { _, phase in
+        .onScrollPhaseChange { old, phase in
             if phase == .interacting { skipReveal() }
+            // The collapse budget covers a scroll, finger down to rest.
+            if phase == .interacting { NoctisSignpost.begin(.collapse) }
+            if phase == .idle { NoctisSignpost.end(.collapse) }
         }
         .onScrollGeometryChange(for: Double.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, top in
-            visibleTop = top
+            scrollProbe.top = top
             viewModel.scrolled(visibleTop: top, heroTop: heroFrame.minY, heroHeight: heroFrame.height)
         }
         .onChange(of: heroFrame) { _, frame in
-            viewModel.scrolled(visibleTop: visibleTop, heroTop: frame.minY, heroHeight: frame.height)
+            viewModel.scrolled(visibleTop: scrollProbe.top, heroTop: frame.minY, heroHeight: frame.height)
         }
         // R14: cards keep their shadows at the scroll view's edges.
         .scrollClipDisabled()
@@ -202,6 +215,12 @@ struct HomeView: View {
     }
 }
 
+/// The latest scroll offset. A plain class in `@State`: assigning to it
+/// never invalidates a view.
+final class HomeScrollProbe {
+    var top: Double = 0
+}
+
 /// iOS 27: Home is the container for the Insight block's swipe actions.
 private struct HomeSwipeActionsContainer: ViewModifier {
     func body(content: Content) -> some View {
@@ -244,16 +263,17 @@ struct HomeContent: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// The countdown's minute (nil outside the app: previews, render tests).
-    @Environment(\.homeMinute) private var minute
     @Namespace private var morph
     @Namespace private var rotor
 
     private var isRegular: Bool { sizeClass == .regular }
 
     var body: some View {
+        #if DEBUG
+        let _ = HomeBodyProbe.hit("HomeContent")
+        #endif
         VStack(alignment: .leading, spacing: 0) {
-            HomeHeaderView(header: viewModel.header, now: minute, openProfile: actions.openProfile)
+            HomeHeaderView(header: viewModel.header, openProfile: actions.openProfile)
             // R6: content starts 24pt below the title.
             Color.clear.frame(height: NoctisSpacing.xl)
             // The skeleton crossfades into the content in place.
@@ -269,7 +289,7 @@ struct HomeContent: View {
                         .transition(.opacity)
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: viewModel.screen == nil)
+            .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.screen == nil)
         }
         .frame(maxWidth: isRegular ? Self.regularMaxWidth : Self.compactMaxWidth)
         .padding(.horizontal, NoctisSpacing.lg)
@@ -279,6 +299,7 @@ struct HomeContent: View {
         .coordinateSpace(.named(HomeView.contentSpace))
         .environment(\.noctisEveningPaper, viewModel.header.mode == .evening)
         .environment(\.homeReveal, viewModel.reveal)
+        .environment(\.homeLowPower, viewModel.isLowPower)
         .environment(\.homeMorph, reduceMotion ? nil : morph)
         .task(id: revealReady) {
             guard revealReady else { return }
@@ -293,7 +314,7 @@ struct HomeContent: View {
         }
     }
 
-    private var revealReady: Bool { viewModel.reveal == .pending && viewModel.screen != nil }
+    private var revealReady: Bool { viewModel.reveal == .pending && viewModel.screen != nil && !viewModel.awaitsFreshData }
 
     private var presentSections: [HomeSection] {
         guard let screen = viewModel.screen else { return [] }
@@ -318,7 +339,7 @@ struct HomeContent: View {
                     .id(screen.mode)
                     .transition(.opacity)
             }
-            .animation(.easeInOut(duration: 0.2), value: screen.mode)
+            .animation(NoctisMotion.reduced, value: screen.mode)
         } else {
             column(screen)
                 .animation(NoctisMotion.settle, value: screen.mode)
@@ -358,7 +379,7 @@ struct HomeContent: View {
                     .accessibilityRotorEntry(id: HomeSection.recovery, in: rotor)
                     .transition(.opacity)
             case .evening:
-                EveningHeroView(content: screen.evening, viewModel: viewModel, now: minute ?? .now)
+                EveningHeroView(content: screen.evening, viewModel: viewModel)
                     .accessibilityRotorEntry(id: HomeSection.tonight, in: rotor)
                     .transition(.opacity.combined(with: .offset(y: 24)))
             }
@@ -390,7 +411,7 @@ struct HomeContent: View {
                 .transition(.asymmetric(
                     insertion: .opacity,
                     removal: AnyTransition.scale(scale: 0.94, anchor: .top)
-                        .combined(with: AnyTransition.opacity.animation(.easeOut(duration: 0.18)))
+                        .combined(with: AnyTransition.opacity.animation(NoctisMotion.select))
                 ))
         }
         if screen.mode == .day {
@@ -410,9 +431,7 @@ struct HomeContent: View {
 /// Date caption, greeting, one-sentence summary and the avatar.
 struct HomeHeaderView: View {
     let header: HomeHeader
-    let now: Date?
     let openProfile: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var emphasis: Color {
         header.mode == .evening ? NoctisAppColor.lavenderText : NoctisAppColor.orangeText
@@ -430,12 +449,7 @@ struct HomeHeaderView: View {
                     .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                Text(header.summary.text(at: now ?? .now))
-                    .noctisFont(17, relativeTo: .body)
-                    .foregroundStyle(.noctisInk2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : NoctisMotion.settle, value: header.summary.text(at: now ?? .now))
+                HomeSummaryLine(summary: header.summary)
                 if let updated = header.updated {
                     Text(updated)
                         .noctisFont(13, relativeTo: .footnote)
@@ -492,6 +506,7 @@ struct HomeSkeletonView: View {
     var columns = 1
     var mode: HomeMode = .day
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.homeLowPower) private var lowPower
     @State private var dimmed = false
 
     var body: some View {
@@ -520,8 +535,9 @@ struct HomeSkeletonView: View {
         }
         .opacity(dimmed ? 0.55 : 1)
         .onAppear {
-            guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { dimmed = true }
+            // The pulse is ambient: none under Reduce Motion or Low Power.
+            guard !reduceMotion, !lowPower else { return }
+            withAnimation(NoctisMotion.pulse) { dimmed = true }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Loading your sleep data")
@@ -573,6 +589,17 @@ extension RecoveryFactorKind {
         case .restingHeartRate: NoctisAppColor.orange
         case .sleepConsistency: NoctisAppColor.butter
         }
+    }
+}
+
+extension RingSegmentContent {
+    /// The ring's segment: its factor's color and the render model's
+    /// angles (nothing is laid out again).
+    var ringSegment: NoctisRingSegment {
+        NoctisRingSegment(
+            color: kind.tint, weight: weight, fraction: fraction, usual: usual,
+            arc: NoctisRingArc(startDegrees: arc.startDegrees, endDegrees: arc.endDegrees, tickDegrees: arc.tickDegrees)
+        )
     }
 }
 

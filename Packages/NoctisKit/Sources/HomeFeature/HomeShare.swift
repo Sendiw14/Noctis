@@ -156,7 +156,7 @@ struct ShareCardView: View {
                 HStack(spacing: NoctisSpacing.lg) {
                     NoctisRingLayout(maxDiameter: 112) {
                         NoctisRecoveryRing(
-                            segments: recovery.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) },
+                            segments: recovery.segments.map(\.ringSegment),
                             diameter: 112,
                             lineWidth: 11
                         )

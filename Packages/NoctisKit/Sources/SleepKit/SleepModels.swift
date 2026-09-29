@@ -24,7 +24,7 @@ public enum SleepSessionKind: Sendable, Equatable {
 /// Durations for one session, in seconds. `asleep` is core + deep + REM +
 /// unspecified: unspecified asleep time counts toward total sleep but
 /// toward no stage.
-public struct SleepTotals: Sendable, Equatable {
+public struct SleepTotals: Sendable, Equatable, Codable {
     public let asleep: TimeInterval
     public let inBed: TimeInterval
     public let awake: TimeInterval
@@ -45,7 +45,7 @@ public struct SleepTotals: Sendable, Equatable {
 }
 
 /// How much of a session the data actually covers.
-public struct SleepDataCompleteness: Sendable, Equatable {
+public struct SleepDataCompleteness: Sendable, Equatable, Codable {
     /// Share (0...1) of the session's span, first sample to last, that
     /// some stage sample covers. Below 1 means the source left gaps.
     public let coverage: Double

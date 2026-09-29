@@ -1,3 +1,4 @@
+import DesignSystem
 import Foundation
 import HealthProviding
 import HomeFeature
@@ -11,6 +12,9 @@ public struct AppContainer {
     public let modelContainer: ModelContainer
 
     public init() {
+        // The launch budgets start counting here.
+        NoctisSignpost.begin(.launchToFirstFrame)
+        NoctisSignpost.begin(.launchToPopulated)
         self.storeManager = StoreManager()
         let container: ModelContainer
         do {
@@ -74,8 +78,31 @@ public struct AppContainer {
         #else
         let modeOverride: HomeMode? = nil
         #endif
+
+        // What NOCTIS keeps that comes from Health, each registered so Data
+        // Management (ROADMAP.md) can erase it. The saved Home snapshot
+        // lets the next launch draw Home in its first frame; the mock
+        // provider (DEBUG) skips it unless `-noctisSnapshotCache` asks.
+        #if DEBUG
+        // Before the view model reads Low Power Mode for the first time.
+        if debug.lowPowerMode { HomeViewModel.debugForcesLowPower = true }
+        #endif
+        let insightHistory = InsightHistoryStore(defaults: .standard)
+        NoctisDataRegistry.shared.register(insightHistory)
+        #if DEBUG
+        let keepsSnapshot = debug.mockScenario == nil || debug.snapshotCache
+        let snapshotStore: HomeSnapshotStore? = keepsSnapshot ? HomeSnapshotStore() : nil
+        #else
+        let snapshotStore: HomeSnapshotStore? = HomeSnapshotStore()
+        #endif
+        if let snapshotStore { NoctisDataRegistry.shared.register(snapshotStore) }
+        #if DEBUG
+        // UI tests: a fresh install has no saved snapshot either. (Before
+        // the repository reads it.)
+        if debug.resetState { snapshotStore?.erase() }
+        #endif
         self.homeViewModel = HomeViewModel(
-            repository: HomeRepository(provider: provider, insightHistory: InsightHistoryStore(defaults: .standard)),
+            repository: HomeRepository(provider: provider, insightHistory: insightHistory, store: snapshotStore),
             profile: { model.profile },
             // "Connect Apple Health" reuses onboarding's authorization flow.
             connectHealth: { await model.requestHealthAuthorization() },
@@ -111,6 +138,13 @@ struct DebugLaunchOptions {
     /// `-homeModeFlipIn <seconds>`: flip Home day ↔ evening once, after
     /// that long (the mode morph on demand).
     let homeModeFlipIn: Double?
+    /// `-noctisSnapshotCache`: keep and restore the saved Home snapshot
+    /// with the mock provider too (it's off for mocks so UI tests don't
+    /// see each other's data).
+    let snapshotCache: Bool
+    /// `-noctisLowPowerMode`: Home behaves as under Low Power Mode, which
+    /// the simulator can't turn on.
+    let lowPowerMode: Bool
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -132,6 +166,8 @@ struct DebugLaunchOptions {
         mockLatency = .seconds(value(after: "-mockLatency").flatMap(Double.init) ?? 0)
         homeMode = value(after: "-homeMode").flatMap(HomeMode.init(rawValue:))
         homeModeFlipIn = value(after: "-homeModeFlipIn").flatMap(Double.init)
+        snapshotCache = arguments.contains("-noctisSnapshotCache")
+        lowPowerMode = arguments.contains("-noctisLowPowerMode")
     }
 }
 #endif

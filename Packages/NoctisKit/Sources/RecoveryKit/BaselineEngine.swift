@@ -3,7 +3,7 @@ import SleepKit
 
 /// A personal baseline: the mean over the valid nights in the window,
 /// and how much those nights vary.
-public struct Baseline: Sendable, Equatable {
+public struct Baseline: Sendable, Equatable, Codable {
     public let value: Double
     /// Valid nights the mean is built from (5...14).
     public let nights: Int
@@ -19,7 +19,7 @@ public struct Baseline: Sendable, Equatable {
 
 /// The five baselines for one night. Each is nil until its metric has
 /// `BaselineEngine.minimumNights` valid nights in the window.
-public struct Baselines: Sendable, Equatable {
+public struct Baselines: Sendable, Equatable, Codable {
     public let sleepDuration: Baseline?
     public let bedtime: Baseline?
     public let wakeTime: Baseline?

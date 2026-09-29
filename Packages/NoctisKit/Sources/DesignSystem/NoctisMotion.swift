@@ -24,9 +24,31 @@ public enum NoctisMotion {
     /// end rather than a settling motion.
     public static let drawIn = Animation.easeOut(duration: 1.2)
 
+    /// Selection, focus and dimming that follow a finger (a bar, a lane, a
+    /// scrub): critically damped and quick. Being a spring, it retargets
+    /// from wherever it is when the next change lands, so a fast drag never
+    /// waits for the last change to finish.
+    public static let select = Animation.spring(response: 0.2, dampingFraction: 1.0)
+    /// Content fading in or out where it stands (a pill, an overlay, the
+    /// skeleton into content): the same critically damped spring, calmer.
+    public static let fade = Animation.spring(response: 0.3, dampingFraction: 1.0)
+    /// A one-shot reveal with a literal start and end (a ring drawing, the
+    /// dusk lifting) as a spring with no bounce, taking about `duration`
+    /// to settle. Unlike an eased duration it can be interrupted and
+    /// retargeted mid-flight without a jump.
+    public static func draw(_ duration: Double) -> Animation {
+        .spring(duration: duration, bounce: 0)
+    }
+    /// The skeleton's slow pulse while data loads: ambient, and removed the
+    /// moment content arrives, so nothing needs to interrupt it.
+    public static let pulse = Animation.easeInOut(duration: 0.9).repeatForever(autoreverses: true)
+
     /// Every gesture-driven or hero transition should route through this so
     /// Reduce Motion swaps springs/slides for a plain cross-fade.
     public static func adaptive(_ animation: Animation, reduceMotion: Bool) -> Animation {
-        reduceMotion ? .easeInOut(duration: 0.2) : animation
+        reduceMotion ? reduced : animation
     }
+
+    /// What Reduce Motion gets in place of any movement: a 0.2s fade.
+    public static let reduced = Animation.easeInOut(duration: 0.2)
 }

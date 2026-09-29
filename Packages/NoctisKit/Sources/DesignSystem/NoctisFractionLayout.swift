@@ -43,3 +43,33 @@ extension View {
         layoutValue(key: NoctisFraction.self, value: fraction)
     }
 }
+
+/// Stretches its one subview across part of the width, from one fraction
+/// to another (0 = leading edge, 1 = trailing edge), at least `minimumWidth`
+/// wide and always inside the bounds: a bar that is a share of its track, a
+/// span on a time strip (R8: a system `Layout`, not absolute positioning).
+public struct NoctisSpanLayout: Layout {
+    public var from: Double
+    public var to: Double
+    public var minimumWidth: CGFloat
+
+    public init(from: Double = 0, to: Double, minimumWidth: CGFloat = 0) {
+        self.from = from
+        self.to = to
+        self.minimumWidth = minimumWidth
+    }
+
+    public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let height = subviews.first.map { $0.sizeThatFits(ProposedViewSize(width: nil, height: proposal.height)).height } ?? 0
+        return CGSize(width: proposal.width ?? 0, height: height)
+    }
+
+    public func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let subview = subviews.first else { return }
+        let start = min(max(from, 0), 1)
+        let end = min(max(to, start), 1)
+        let width = min(max((end - start) * bounds.width, minimumWidth), bounds.width)
+        let x = min(bounds.minX + start * bounds.width, bounds.maxX - width)
+        subview.place(at: CGPoint(x: x, y: bounds.midY), anchor: .leading, proposal: ProposedViewSize(width: width, height: bounds.height))
+    }
+}

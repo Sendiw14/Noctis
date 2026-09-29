@@ -7,94 +7,6 @@ import SleepKit
 // The night panel's content (and the share card's chart), built by
 // `HomeScreenBuilder` from last night's session and its heart rate.
 
-public nonisolated enum StripStage: String, Sendable, Equatable, CaseIterable {
-    case deep
-    case core
-    case rem
-    case awake
-    /// Asleep without a stage ("unspecified").
-    case asleep
-
-    public var name: String {
-        switch self {
-        case .deep: "Deep"
-        case .core: "Core"
-        case .rem: "REM"
-        case .awake: "Awake"
-        case .asleep: "Asleep"
-        }
-    }
-}
-
-/// One continuous run of a stage: consecutive samples of the same stage
-/// are one run, with no gaps inside it.
-public nonisolated struct StripSegment: Sendable, Equatable {
-    public let stage: StripStage
-    /// Position along the night, 0...1.
-    public let start: Double
-    public let end: Double
-    /// A run under `HomeScreenBuilder.notchMinutes`, of any stage: drawn
-    /// as a small rounded notch in its lane instead of a piece of the
-    /// ribbon, so a brief awakening is never a tall stick.
-    public let isNotch: Bool
-
-    public init(stage: StripStage, start: Double, end: Double, isNotch: Bool = false) {
-        self.stage = stage
-        self.start = start
-        self.end = end
-        self.isNotch = isNotch
-    }
-}
-
-/// The night panel's four lanes, top to bottom.
-public nonisolated enum NightLane: Int, Sendable, Equatable, CaseIterable {
-    case awake
-    case rem
-    case core
-    case deep
-
-    public var name: String {
-        switch self {
-        case .awake: "Awake"
-        case .rem: "REM"
-        case .core: "Core"
-        case .deep: "Deep"
-        }
-    }
-}
-
-nonisolated extension StripStage {
-    /// Unspecified sleep sits in the Core lane.
-    public var lane: NightLane {
-        switch self {
-        case .awake: .awake
-        case .rem: .rem
-        case .core, .asleep: .core
-        case .deep: .deep
-        }
-    }
-}
-
-/// Where the ribbon moves from one lane to another: a vertical capsule
-/// from the lane it leaves to the lane it enters, in the color of the
-/// stage entered. Only between runs that touch (a notch between them
-/// doesn't break the ribbon), never across missing data.
-public nonisolated struct NightConnector: Sendable, Equatable {
-    /// 0...1 along the night: where the two runs meet.
-    public let position: Double
-    public let from: NightLane
-    public let to: NightLane
-    /// The stage the ribbon enters (it colors the step).
-    public let entered: StripStage
-
-    public init(position: Double, from: NightLane, to: NightLane, entered: StripStage) {
-        self.position = position
-        self.from = from
-        self.to = to
-        self.entered = entered
-    }
-}
-
 /// The night panel's chart, drawn from SleepSessionEngine's timeline.
 public nonisolated struct NightChartContent: Sendable, Equatable {
     /// Stage runs, 0...1 along the night; empty without stage data.
@@ -111,13 +23,16 @@ public nonisolated struct NightChartContent: Sendable, Equatable {
     public let heart: NightHeartContent?
     /// The night's clock, for scrub readings; nil without stage data.
     let clock: NightClock?
+    /// The geometry the chart draws (positions along the night, lanes and
+    /// the heart line in the strip's own space), from the snapshot.
+    public let render: NightRender
 
     public var hasStages: Bool { caption == nil }
 
     /// The same chart without its heart-rate strip (the share card's
     /// default: heart rate shares only with "Include details").
     public func removingHeart() -> NightChartContent {
-        NightChartContent(spans: spans, connectors: connectors, timeLabels: timeLabels, caption: caption, laneTotals: laneTotals, heart: nil, clock: clock)
+        NightChartContent(spans: spans, connectors: connectors, timeLabels: timeLabels, caption: caption, laneTotals: laneTotals, heart: nil, clock: clock, render: render.removingHeart())
     }
 
     /// What the scrub pill says with the finger at `position` (0...1
@@ -209,6 +124,8 @@ public nonisolated struct NightHeartContent: Sendable, Equatable {
     public let accessibilityLabel: String
 
     let series: NightHeartSeries
+    /// The line in the strip's own space, for drawing.
+    public let line: NightHeartRender
 
     /// Rounded heart rate at `position`, or nil outside the recorded part.
     public func bpm(at position: Double) -> Int? {
@@ -242,16 +159,11 @@ public nonisolated struct LastNightCardContent: Sendable, Equatable {
 // MARK: - Builder
 
 nonisolated extension HomeScreenBuilder {
-    /// A run shorter than this (any stage) is a notch, not ribbon.
-    static let notchMinutes = 3.0
-    /// Runs this close together (minutes) join: no gaps inside the night.
-    static let joinGapMinutes = 2.0
-
-    static func lastNightCard(_ session: SleepSession, heart: NightHeartSeries?, format: HomeFormat) -> LastNightCardContent {
+    static func lastNightCard(_ session: SleepSession, heart: NightHeartSeries?, render: NightRender? = nil, format: HomeFormat) -> LastNightCardContent {
         let minutes = Int((session.totals.asleep / 60).rounded())
         let bedtime = format.clock(session.bedtime, in: session.timeZone)
         let wake = format.clock(session.wakeTime, in: session.timeZone)
-        let chart = nightChart(session, heart: heart, format: format)
+        let chart = nightChart(session, heart: heart, render: render, format: format)
         var spoken = "Last night, slept \(HomeFormat.spokenDuration(minutes)), \(bedtime) to \(wake)."
         if let caption = chart.caption {
             spoken += " " + caption
@@ -273,97 +185,47 @@ nonisolated extension HomeScreenBuilder {
         )
     }
 
-    /// The four-lane chart: one bar per run of a stage along the night
-    /// (0...1), a step wherever the night moves straight into another
-    /// lane, start, midpoint and end times, each lane's total, and the
-    /// heart-rate line.
-    static func nightChart(_ session: SleepSession, heart: NightHeartSeries?, format: HomeFormat) -> NightChartContent {
-        let start = session.timeline.first?.interval.start ?? session.bedtime
-        let end = session.timeline.map(\.interval.end).max() ?? session.wakeTime
-        let span = max(end.timeIntervalSince(start), 1)
-        let minutes = span / 60
-        let labels = [start, start.addingTimeInterval(span / 2), end].map { format.clock($0, in: session.timeZone) }
-        let heartContent = heart.map(heartContent)
-        guard session.completeness.hasStageDetail else {
+    /// The four-lane chart's words and readings: start, midpoint and end
+    /// times, each lane's total, the heart-rate label. Its geometry (runs,
+    /// steps, the heart line) comes from `render`, which the snapshot
+    /// carries; without one it's worked out here.
+    static func nightChart(_ session: SleepSession, heart: NightHeartSeries?, render: NightRender? = nil, format: HomeFormat) -> NightChartContent {
+        let render = render ?? NightRenderBuilder.build(session, heart: heart)
+        let labels = [render.start, render.start.addingTimeInterval(render.end.timeIntervalSince(render.start) / 2), render.end]
+            .map { format.clock($0, in: session.timeZone) }
+        let heartContent = heart.flatMap { series in render.heart.map { heartContent(series, line: $0) } }
+        guard render.hasStages else {
             return NightChartContent(
                 spans: [], connectors: [], timeLabels: labels, caption: "Stages aren't available from your current sources.",
-                laneTotals: [], heart: heartContent, clock: nil
+                laneTotals: [], heart: heartContent, clock: nil, render: render
             )
         }
-        // Consecutive samples of one stage become one run, whatever lies
-        // between them; runs a moment apart touch.
-        let join = joinGapMinutes / minutes
-        var runs: [(stage: StripStage, start: Double, end: Double)] = []
-        for segment in session.timeline.sorted(by: { $0.interval.start < $1.interval.start }) {
-            guard let stage = stripStage(segment.stage) else { continue }
-            let from = segment.interval.start.timeIntervalSince(start) / span
-            let to = segment.interval.end.timeIntervalSince(start) / span
-            if let last = runs.last, last.stage == stage {
-                runs[runs.count - 1].end = max(last.end, to)
-            } else {
-                if let last = runs.last, from - last.end <= join, from > last.end {
-                    runs[runs.count - 1].end = from
-                }
-                runs.append((stage, from, to))
-            }
-        }
-        let spans = runs.map { run in
-            StripSegment(
-                stage: run.stage, start: run.start, end: run.end,
-                // Whole seconds, so exactly 3 minutes is a run, not a notch.
-                isNotch: ((run.end - run.start) * span).rounded() < notchMinutes * 60
-            )
-        }
-        let connectors = ribbonSteps(spans)
         return NightChartContent(
-            spans: spans,
-            connectors: connectors,
+            spans: render.runs,
+            connectors: render.steps,
             timeLabels: labels,
             caption: nil,
             laneTotals: laneTotals(session.totals),
             heart: heartContent,
-            clock: NightClock(start: start, end: end, timeZone: session.timeZone, format: format)
+            clock: NightClock(start: render.start, end: render.end, timeZone: session.timeZone, format: format),
+            render: render
         )
     }
 
-    /// The ribbon's lane changes: between each pair of runs that touch
-    /// (any notches between them included) in different lanes, at the
-    /// middle of whatever notches sit between.
-    static func ribbonSteps(_ spans: [StripSegment]) -> [NightConnector] {
-        var steps: [NightConnector] = []
-        var previous: StripSegment?
-        var lastEnd = 0.0
-        var intact = false
-        for span in spans {
-            intact = intact && abs(span.start - lastEnd) < 1e-6
-            lastEnd = span.end
-            guard !span.isNotch else { continue }
-            if let previous, intact, previous.stage.lane != span.stage.lane {
-                steps.append(NightConnector(
-                    position: (previous.end + span.start) / 2, from: previous.stage.lane, to: span.stage.lane, entered: span.stage
-                ))
-            }
-            previous = span
-            intact = true
-        }
-        return steps
-    }
-
-    static func heartContent(_ series: NightHeartSeries) -> NightHeartContent {
+    static func heartContent(_ series: NightHeartSeries, line: NightHeartRender) -> NightHeartContent {
         let lowest = series.lowest
         let highest = series.highest
-        // A little headroom so the line never touches the strip's edges.
-        let pad = max((highest.bpm - lowest.bpm) * 0.15, 2)
         let low = Int(lowest.bpm.rounded())
         let high = Int(highest.bpm.rounded())
         return NightHeartContent(
             points: series.points,
-            low: lowest.bpm - pad,
-            high: highest.bpm + pad,
+            low: line.low,
+            high: line.high,
             lowest: lowest,
             lowestLabel: "min \(low) bpm",
             accessibilityLabel: "Heart rate from \(low) to \(high) beats per minute.",
-            series: series
+            series: series,
+            line: line
         )
     }
 
@@ -383,17 +245,6 @@ nonisolated extension HomeScreenBuilder {
                 text: "\(lane.name) · \(HomeFormat.compactDuration(minutes, minutesWord: true))",
                 duration: HomeFormat.durationMetric(minutes)
             )
-        }
-    }
-
-    static func stripStage(_ stage: SleepStageValue) -> StripStage? {
-        switch stage {
-        case .deep: .deep
-        case .core: .core
-        case .rem: .rem
-        case .awake: .awake
-        case .unspecified: .asleep
-        case .inBed: nil
         }
     }
 

@@ -7,13 +7,15 @@ import SwiftUI
 struct HomeTopOverlay: View {
     let viewModel: HomeViewModel
     let scrollToTop: () -> Void
-    @Environment(\.homeMinute) private var minute
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        #if DEBUG
+        let _ = HomeBodyProbe.hit("HomeTopOverlay")
+        #endif
         VStack(spacing: NoctisSpacing.xs) {
-            if viewModel.collapse.showsBar, let screen = viewModel.screen, HomeCollapsedBar.shows(for: screen) {
-                HomeCollapsedBar(screen: screen, now: minute ?? .now, action: scrollToTop)
+            if viewModel.showsCollapsedBar, let screen = viewModel.screen, HomeCollapsedBar.shows(for: screen) {
+                HomeCollapsedBar(screen: screen, action: scrollToTop)
                     .transition(.opacity)
             }
             if viewModel.showsNewNight {
@@ -21,8 +23,8 @@ struct HomeTopOverlay: View {
                     .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: viewModel.collapse.showsBar)
-        .animation(reduceMotion ? .easeInOut(duration: 0.2) : NoctisMotion.settle, value: viewModel.showsNewNight)
+        .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.showsCollapsedBar)
+        .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: viewModel.showsNewNight)
     }
 }
 
@@ -31,8 +33,9 @@ struct HomeTopOverlay: View {
 /// evening. Tapping it springs back to the top.
 struct HomeCollapsedBar: View {
     let screen: HomeScreen
-    let now: Date
     let action: () -> Void
+    @Environment(\.homeClock) private var clock
+    private var now: Date { clock?.minute ?? .now }
 
     static let ringDiameter: CGFloat = 28
 
@@ -84,7 +87,7 @@ struct HomeCollapsedBar: View {
         case .day:
             if case .scored(let scored) = screen.recovery {
                 NoctisRecoveryRing(
-                    segments: scored.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) },
+                    segments: scored.segments.map(\.ringSegment),
                     diameter: Self.ringDiameter,
                     lineWidth: 4
                 )
@@ -154,11 +157,12 @@ struct NewNightPill: View {
 struct BedtimeMoon: View {
     var size: CGFloat = 15
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.homeLowPower) private var lowPower
     @State private var shown = false
 
     var body: some View {
         ZStack {
-            if shown || reduceMotion {
+            if shown || reduceMotion || lowPower {
                 Image(systemName: "moon.fill")
                     .font(.system(size: size, weight: .semibold))
                     .foregroundStyle(NoctisAppColor.lavenderText)
@@ -168,7 +172,7 @@ struct BedtimeMoon: View {
         .frame(width: size + 6, height: size + 6)
         .accessibilityHidden(true)
         .task {
-            guard !shown, !reduceMotion else { return }
+            guard !shown, !reduceMotion, !lowPower else { return }
             try? await Task.sleep(for: .seconds(0.15))
             withAnimation { shown = true }
         }
@@ -179,12 +183,14 @@ struct BedtimeMoon: View {
 /// "Bedtime 11:00 PM · in 2h 14m". Tapping it goes to Home.
 public struct HomeBedtimeAccessory: View {
     private let viewModel: HomeViewModel
-    private let now: Date
+    private let clock: HomeClock
     private let openHome: () -> Void
 
-    public init(viewModel: HomeViewModel, now: Date, openHome: @escaping () -> Void) {
+    /// The accessory is built in the tab bar's own hierarchy, so it takes
+    /// the clock directly and reads the minute in its own `body`.
+    public init(viewModel: HomeViewModel, clock: HomeClock, openHome: @escaping () -> Void) {
         self.viewModel = viewModel
-        self.now = now
+        self.clock = clock
         self.openHome = openHome
     }
 
@@ -213,7 +219,7 @@ public struct HomeBedtimeAccessory: View {
 
     private var status: String {
         guard case .bedtime(let times) = viewModel.header.summary else { return "" }
-        return times.status(at: now)
+        return times.status(at: clock.minute)
     }
 
     /// Whether the accessory shows: evening only.

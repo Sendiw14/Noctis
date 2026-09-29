@@ -57,6 +57,7 @@ struct ScoredHeroView: View {
 
     @Environment(\.homeReveal) private var reveal
     @Environment(\.homeMorph) private var morph
+    @Environment(\.homeLowPower) private var lowPower
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var focused: RecoveryFactorKind?
     /// Between the reveal starting and the score landing: the score holds
@@ -68,12 +69,16 @@ struct ScoredHeroView: View {
     /// Offered less than this, the ring uses its narrow size (an SE).
     static let narrowBelowWidth: CGFloat = 350
     static let ringLineWidth: CGFloat = 22
-    /// `NoctisMotion.drawIn`'s curve, run over 0.9s.
-    static let introAnimation = NoctisMotion.drawIn.speed(1.2 / HomeReveal.ringDuration)
+    /// The ring's draw-in and the score's count-up: one spring with no
+    /// bounce, about 0.9s, so a tap or a skip can cut it mid-flight.
+    static let introAnimation = NoctisMotion.draw(HomeReveal.ringDuration)
     /// How long a capsule's segment stays highlighted before detail opens.
     static let focusDuration = 0.4
 
     var body: some View {
+        #if DEBUG
+        let _ = HomeBodyProbe.hit("ScoredHero")
+        #endif
         VStack(spacing: NoctisSpacing.md) {
             HomeCollapseEffect(viewModel: viewModel) { ring }
 
@@ -117,12 +122,18 @@ struct ScoredHeroView: View {
         // Cancelled with the view, so a skipped reveal never lands a haptic.
         .task(id: reveal) {
             guard reveal == .playing, !reduceMotion else { return }
-            awaitingCount = true
-            try? await Task.sleep(for: .seconds(HomeRevealPhase.contentDelay))
-            guard !Task.isCancelled else { return }
-            // The score counts up with the ring…
-            withAnimation(Self.introAnimation) { awaitingCount = false }
-            try? await Task.sleep(for: .seconds(HomeReveal.ringDuration))
+            if HomeReveal.countsUp(lowPower: lowPower) {
+                awaitingCount = true
+                try? await Task.sleep(for: .seconds(HomeRevealPhase.contentDelay))
+                guard !Task.isCancelled else { return }
+                // The score counts up with the ring…
+                withAnimation(Self.introAnimation) { awaitingCount = false }
+                try? await Task.sleep(for: .seconds(HomeReveal.ringDuration))
+            } else {
+                // Low Power Mode: the score is already there; only the
+                // landing's haptic waits for the ring.
+                try? await Task.sleep(for: .seconds(HomeRevealPhase.contentDelay + HomeReveal.ringDuration))
+            }
             guard !Task.isCancelled else { return }
             // …and lands.
             NoctisHaptics.medium()
@@ -145,8 +156,7 @@ struct ScoredHeroView: View {
                     diameter: Self.ringDiameter,
                     lineWidth: Self.ringLineWidth
                 )
-                .animation(reduceMotion ? nil : NoctisMotion.settle, value: content.segments)
-                .animation(.easeInOut(duration: reduceMotion ? 0.2 : Self.focusDuration), value: focused)
+                .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: focused)
                 .animation(reduceMotion ? nil : Self.introAnimation.delay(HomeRevealPhase.contentDelay), value: reveal)
                 VStack(spacing: 0) {
                     Text("\(shownScore)")
@@ -182,11 +192,12 @@ struct ScoredHeroView: View {
     }
 
     private var shownScore: Int {
-        reveal.holdsStart || awaitingCount ? 0 : content.score
+        guard HomeReveal.countsUp(lowPower: lowPower) else { return content.score }
+        return reveal.holdsStart || awaitingCount ? 0 : content.score
     }
 
     private var segments: [NoctisRingSegment] {
-        content.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction, usual: $0.usual) }
+        content.segments.map(\.ringSegment)
     }
 
     /// Highlight the capsule's segment, then open detail at it.
@@ -215,7 +226,7 @@ struct RecoveryPreviewCard: View {
             HStack(spacing: NoctisSpacing.md) {
                 NoctisRingLayout(maxDiameter: 96) {
                     NoctisRecoveryRing(
-                        segments: content.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) },
+                        segments: content.segments.map(\.ringSegment),
                         diameter: 96,
                         lineWidth: 10
                     )
@@ -291,6 +302,7 @@ struct FactorCapsulesView: View {
     let open: (RecoveryFactorKind) -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.homeReveal) private var reveal
+    @Environment(\.homeLowPower) private var lowPower
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
 
@@ -343,7 +355,7 @@ struct FactorCapsulesView: View {
         .opacity(reveal.holdsStart ? 0 : 1)
         .offset(y: reveal.holdsStart ? HomeReveal.rise : 0)
         .animation(
-            reduceMotion ? nil : NoctisMotion.settle.delay(HomeRevealPhase.contentDelay + HomeReveal.capsuleStagger * Double(index)),
+            reduceMotion ? nil : NoctisMotion.settle.delay(HomeRevealPhase.contentDelay + HomeReveal.capsuleDelay(index, lowPower: lowPower)),
             value: reveal
         )
         .accessibilityElement(children: .ignore)
@@ -510,8 +522,6 @@ struct FailedHeroView: View {
 struct EveningHeroView: View {
     let content: EveningHeroContent
     let viewModel: HomeViewModel
-    let now: Date
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HomeCollapseEffect(viewModel: viewModel, anchor: .topLeading) {
@@ -520,21 +530,7 @@ struct EveningHeroView: View {
                 NoctisMetric(content.time, size: 88)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                if let minutes = content.times.minutesLeft(at: now), let countdown = content.times.countdownMetric(at: now) {
-                    HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Text("in")
-                            .noctisFont(22, .semibold, relativeTo: .title3)
-                            .foregroundStyle(NoctisAppColor.orangeText)
-                        NoctisMetric(countdown, size: 22, relativeTo: .title3, tone: .accent)
-                            .monospacedDigit()
-                            .contentTransition(.numericText(countsDown: true))
-                            .animation(reduceMotion ? nil : NoctisMotion.settle, value: minutes)
-                    }
-                } else {
-                    Text(content.times.passedText)
-                        .noctisFont(22, .semibold, relativeTo: .title3)
-                        .foregroundStyle(.noctisInk2)
-                }
+                EveningCountdownView(times: content.times)
                 NightStripView(content: content)
                     .padding(.vertical, NoctisSpacing.xs)
                 Text(content.detail)
@@ -544,38 +540,67 @@ struct EveningHeroView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(summary)
+        .modifier(HomeClockLabel { summary(at: $0) })
         .accessibilityIdentifier("home.eveningHero")
     }
 
     /// "Bedtime 11:00 PM, in 2h 14m. Tonight's sleep window, 11:00 PM to
     /// 7:00 AM. Wake 7:00 AM · 8h need."
-    private var summary: String {
+    private func summary(at now: Date) -> String {
         let lead = content.times.countdownMetric(at: now).map { "Bedtime \(content.times.bedtimeText), in \($0.spoken)." } ?? "\(content.times.passedText)."
         return [lead, content.stripAccessibilityLabel, content.detail].joined(separator: " ")
     }
 }
 
+/// "in 2h 14m", counting down: the one line of the evening hero that reads
+/// the minute clock.
+struct EveningCountdownView: View {
+    let times: TonightTimes
+    @Environment(\.homeClock) private var clock
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        #if DEBUG
+        let _ = HomeBodyProbe.hit("EveningCountdown")
+        #endif
+        let now = clock?.minute ?? .now
+        if let minutes = times.minutesLeft(at: now), let countdown = times.countdownMetric(at: now) {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text("in")
+                    .noctisFont(22, .semibold, relativeTo: .title3)
+                    .foregroundStyle(NoctisAppColor.orangeText)
+                NoctisMetric(countdown, size: 22, relativeTo: .title3, tone: .accent)
+                    .monospacedDigit()
+                    .contentTransition(.numericText(countsDown: true))
+                    .animation(reduceMotion ? nil : NoctisMotion.settle, value: minutes)
+            }
+        } else {
+            Text(times.passedText)
+                .noctisFont(22, .semibold, relativeTo: .title3)
+                .foregroundStyle(.noctisInk2)
+        }
+    }
+}
+
 /// 6 PM to 10 AM: a lavender span from bedtime to wake, and a cocoa "now"
-/// marker that moves with the minute (Home's second and last
-/// `TimelineView`).
+/// marker that moves with the minute. Only the marker is inside the
+/// minute's `TimelineView`; the track and the span are drawn once.
 struct NightStripView: View {
     let content: EveningHeroContent
 
     var body: some View {
         VStack(spacing: 6) {
-            TimelineView(.everyMinute) { timeline in
-                Canvas { context, size in
-                    let barHeight: CGFloat = 10
-                    let track = CGRect(x: 0, y: (size.height - barHeight) / 2, width: size.width, height: barHeight)
-                    context.fill(Path(roundedRect: track, cornerRadius: barHeight / 2), with: .color(NoctisAppColor.ringTrack))
-                    let start = content.times.bedtimeFraction * size.width
-                    let end = content.times.wakeFraction * size.width
-                    let span = CGRect(x: start, y: track.minY, width: max(end - start, barHeight), height: barHeight)
-                    context.fill(Path(roundedRect: span, cornerRadius: barHeight / 2), with: .color(NoctisAppColor.lavender))
-                    if let fraction = content.times.nowFraction(at: timeline.date) {
-                        let marker = CGRect(x: fraction * size.width - 2, y: 0, width: 4, height: size.height)
-                        context.fill(Path(roundedRect: marker, cornerRadius: 2), with: .color(NoctisAppColor.cocoa))
+            ZStack {
+                NoctisSpanLayout(to: 1) { Capsule().fill(NoctisAppColor.ringTrack).frame(height: 10) }
+                NoctisSpanLayout(from: content.times.bedtimeFraction, to: content.times.wakeFraction, minimumWidth: 10) {
+                    Capsule().fill(NoctisAppColor.lavender).frame(height: 10)
+                }
+                TimelineView(.everyMinute) { timeline in
+                    NoctisFractionLayout {
+                        if let fraction = content.times.nowFraction(at: timeline.date) {
+                            Capsule().fill(NoctisAppColor.cocoa).frame(width: 4, height: 22)
+                                .noctisFraction(fraction)
+                        }
                     }
                 }
             }
@@ -613,11 +638,10 @@ struct CompactRecoveryCard: View {
                     HStack(spacing: NoctisSpacing.md) {
                         NoctisRingLayout(maxDiameter: 72) {
                             NoctisRecoveryRing(
-                                segments: scored.segments.map { NoctisRingSegment(color: $0.kind.tint, weight: $0.weight, fraction: $0.fraction) },
+                                segments: scored.segments.map(\.ringSegment),
                                 diameter: 72,
                                 lineWidth: 9
                             )
-                            .animation(reduceMotion ? nil : NoctisMotion.settle, value: scored.segments)
                         }
                         .frame(width: 72)
                         // The day ring shrinks into this one in the mode morph.

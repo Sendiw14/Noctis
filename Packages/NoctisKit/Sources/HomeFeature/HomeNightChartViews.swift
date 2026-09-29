@@ -76,21 +76,121 @@ nonisolated struct NightPlot: Equatable {
     }
 }
 
-nonisolated extension NightChartContent {
-    /// The lane the ribbon is in at `position` (the run there, or the
-    /// nearest before it), for the reveal's head dot.
-    func ribbonLane(at position: Double) -> NightLane? {
-        let runs = spans.filter { !$0.isNotch }
-        guard let first = runs.first else { return nil }
-        if position <= first.start { return first.stage.lane }
-        return (runs.last { $0.start <= position } ?? first).stage.lane
+/// The ribbon's color for a stage.
+extension StripStage {
+    var ribbonColor: Color {
+        self == .asleep ? NoctisAppColor.sage : lane.tint
     }
 }
 
-/// The ribbon's color for a run.
 extension StripSegment {
-    var ribbonColor: Color {
-        stage == .asleep ? NoctisAppColor.sage : stage.lane.tint
+    var ribbonColor: Color { stage.ribbonColor }
+}
+
+// MARK: - Resolved paths
+
+/// A path and the stage whose color fills it.
+struct StagePath {
+    let path: Path
+    let stage: StripStage
+}
+
+/// Everything the night chart's Canvas layers draw, built once per
+/// (render model, plot) and never inside a `body` or a `Canvas` closure.
+struct NightPaths: Equatable {
+    let key: NightPathsKey
+    /// The four lane guides, full width.
+    let guides: Path
+    /// The stepped area under each run.
+    let area: [StagePath]
+    /// The steps between lanes, then the runs, then the notches: the
+    /// order they're painted in.
+    let steps: [StagePath]
+    let runs: [StagePath]
+    let notches: [StagePath]
+    /// Without stages: one sage bar in the Core lane.
+    let stageless: Path?
+    /// The heart strip, in the strip's own coordinates.
+    let heartLine: Path?
+    let heartLowest: CGPoint?
+    /// The 5pt dot on the lowest point.
+    let heartLowestDot: Path?
+
+    static func == (lhs: NightPaths, rhs: NightPaths) -> Bool { lhs.key == rhs.key }
+}
+
+/// What a set of paths was built for.
+struct NightPathsKey: Equatable {
+    let plot: NightPlot
+    let heartHeight: CGFloat
+    let render: NightRender
+}
+
+enum NightPathBuilder {
+    static func build(_ key: NightPathsKey) -> NightPaths {
+        let plot = key.plot
+        let render = key.render
+        let radius = plot.thickness / 2
+        var guides = Path()
+        for lane in NightLane.allCases {
+            guides.addRect(CGRect(x: 0, y: plot.y(lane) - 0.5, width: plot.width, height: 1))
+        }
+        var stageless: Path?
+        var area: [StagePath] = []
+        var steps: [StagePath] = []
+        var runs: [StagePath] = []
+        var notches: [StagePath] = []
+        if render.hasStages {
+            // The stepped area: from each ribbon run down to the Deep line.
+            for run in render.runs where !run.isNotch {
+                let rect = plot.areaRect(run)
+                guard rect.height > 0 else { continue }
+                area.append(StagePath(path: Path(rect), stage: run.stage))
+            }
+            // The steps, in the color entered, under the runs they join.
+            for step in render.steps {
+                steps.append(StagePath(path: Path(roundedRect: plot.stepRect(step), cornerRadius: radius), stage: step.entered))
+            }
+            for run in render.runs {
+                if run.isNotch {
+                    notches.append(StagePath(path: Path(roundedRect: plot.notchRect(run), cornerRadius: NightPlot.notchSize / 2), stage: run.stage))
+                } else {
+                    runs.append(StagePath(path: Path(roundedRect: plot.runRect(run), cornerRadius: radius), stage: run.stage))
+                }
+            }
+        } else {
+            let rect = CGRect(x: plot.inset, y: plot.y(.core) - radius, width: max(plot.width - 2 * plot.inset, 0), height: plot.thickness)
+            stageless = Path(roundedRect: rect, cornerRadius: radius)
+        }
+        var heartLine: Path?
+        var heartLowest: CGPoint?
+        var heartLowestDot: Path?
+        if let heart = render.heart {
+            let points = heart.points.map { CGPoint(x: plot.x($0.x), y: key.heartHeight - CGFloat($0.y) * key.heartHeight) }
+            if let first = points.first {
+                var line = Path()
+                line.move(to: first)
+                // Catmull-Rom through the points: smooth, and it passes
+                // through every real value.
+                for index in 1..<max(points.count, 1) {
+                    let p0 = points[max(index - 2, 0)]
+                    let p1 = points[index - 1]
+                    let p2 = points[index]
+                    let p3 = points[min(index + 1, points.count - 1)]
+                    let c1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6)
+                    let c2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6)
+                    line.addCurve(to: p2, control1: c1, control2: c2)
+                }
+                heartLine = line
+                let lowest = CGPoint(x: plot.x(heart.lowest.x), y: key.heartHeight - CGFloat(heart.lowest.y) * key.heartHeight)
+                heartLowest = lowest
+                heartLowestDot = Path(ellipseIn: CGRect(x: lowest.x - 2.5, y: lowest.y - 2.5, width: 5, height: 5))
+            }
+        }
+        return NightPaths(
+            key: key, guides: guides, area: area, steps: steps, runs: runs, notches: notches,
+            stageless: stageless, heartLine: heartLine, heartLowest: heartLowest, heartLowestDot: heartLowestDot
+        )
     }
 }
 
@@ -128,6 +228,9 @@ struct NightChartView: View {
     @NoctisScaledLength(relativeTo: .caption2) private var scaledLaneHeight: CGFloat = 28
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var width: CGFloat = 0
+    /// The ribbon's and heart line's paths, resolved when the width, the
+    /// lane height or the night changes.
+    @State private var paths: NightPaths?
 
     static let heartHeight: CGFloat = 28
     static let heartGap: CGFloat = 8
@@ -137,6 +240,7 @@ struct NightChartView: View {
     private var laneHeight: CGFloat { laneHeightOverride ?? scaledLaneHeight }
     private var plot: NightPlot { NightPlot(width: width, laneHeight: laneHeight) }
     private var heartBlock: CGFloat { chart.heart == nil ? 0 : Self.heartGap + Self.heartHeight }
+    private var pathsKey: NightPathsKey { NightPathsKey(plot: plot, heartHeight: Self.heartHeight, render: chart.render) }
     private var targetOutset: CGFloat { max(Self.minimumTarget - laneHeight, 0) / 2 }
 
     var body: some View {
@@ -166,25 +270,29 @@ struct NightChartView: View {
 
     /// The heart strip and totals fade in as the ribbon finishes.
     private var fade: Animation? {
-        reduceMotion ? .easeInOut(duration: 0.2) : .easeOut(duration: 0.3).delay(HomeRevealPhase.contentDelay + HomeReveal.nightDuration - 0.2)
+        reduceMotion ? NoctisMotion.reduced : NoctisMotion.fade.delay(HomeRevealPhase.contentDelay + HomeReveal.nightDuration - 0.2)
     }
 
     private var layers: some View {
         ZStack(alignment: .topLeading) {
-            NightRibbonLayer(chart: chart, plot: plot)
-                .frame(height: plot.lanesHeight)
-                // Revealed left to right; the mask is a scaled rectangle,
-                // so the animation costs no redraw of the ribbon.
-                .mask(alignment: .leading) {
-                    Rectangle().scaleEffect(x: max(drawn, 0.0001), y: 1, anchor: .leading)
-                }
+            if let paths {
+                NightRibbonLayer(paths: paths)
+                    .equatable()
+                    .frame(height: plot.lanesHeight)
+                    // Revealed left to right; the mask is a scaled rectangle,
+                    // so the animation costs no redraw of the ribbon.
+                    .mask(alignment: .leading) {
+                        Rectangle().scaleEffect(x: max(drawn, 0.0001), y: 1, anchor: .leading)
+                    }
+            }
             if chart.hasStages {
-                NightRevealHead(chart: chart, plot: plot, drawn: drawn)
+                NightRevealHead(render: chart.render, plot: plot, drawn: drawn)
                     .frame(height: plot.lanesHeight)
                     .allowsHitTesting(false)
             }
-            if let heart = chart.heart {
-                NightHeartLayer(heart: heart, plot: plot)
+            if let heart = chart.heart, let paths {
+                NightHeartLayer(paths: paths, label: heart.lowestLabel)
+                    .equatable()
                     .frame(height: Self.heartHeight)
                     .offset(y: plot.lanesHeight + Self.heartGap)
                     .opacity(details)
@@ -201,6 +309,10 @@ struct NightChartView: View {
         .frame(height: plot.lanesHeight + heartBlock, alignment: .top)
         .overlay(alignment: .top) { pill }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .onChange(of: pathsKey, initial: true) { _, key in
+            guard key.plot.width > 0 else { return }
+            paths = NightPathBuilder.build(key)
+        }
         .gesture(HorizontalScrubGesture(isEnabled: onScrub != nil) { x in
             onScrub?(x.map { plot.fraction(x: $0) })
         })
@@ -251,62 +363,39 @@ struct NightChartView: View {
 
 // MARK: - Layers
 
-/// The static ribbon layer: guides, the stepped area, the steps, the
-/// runs and the notches, in one `.drawingGroup` layer.
-struct NightRibbonLayer: View {
-    let chart: NightChartContent
-    let plot: NightPlot
+/// The static ribbon layer: guides, the stepped area, the steps, the runs
+/// and the notches, in one `.drawingGroup` layer. It draws paths that were
+/// built ahead of time, and is `Equatable`, so nothing above it (a scrub,
+/// a lane focus, a pill) makes it draw again.
+struct NightRibbonLayer: View, Equatable {
+    let paths: NightPaths
+    @Environment(\.colorScheme) private var colorScheme
+
+    static func == (lhs: NightRibbonLayer, rhs: NightRibbonLayer) -> Bool { lhs.paths == rhs.paths }
 
     var body: some View {
-        Canvas { context, size in
-            NightRibbonPainter.draw(in: context, size: size, chart: chart, plot: plot)
+        // The adaptive colors resolve when this draws: a change of
+        // appearance draws it again.
+        let _ = colorScheme
+        Canvas { context, _ in
+            context.fill(paths.guides, with: .color(NoctisAppColor.nightInk.opacity(0.08)))
+            if let bar = paths.stageless {
+                context.fill(bar, with: .color(NoctisAppColor.sage))
+                return
+            }
+            for item in paths.area { context.fill(item.path, with: .color(item.stage.ribbonColor.opacity(0.10))) }
+            for item in paths.steps { context.fill(item.path, with: .color(item.stage.ribbonColor)) }
+            for item in paths.runs { context.fill(item.path, with: .color(item.stage.ribbonColor)) }
+            for item in paths.notches { context.fill(item.path, with: .color(item.stage.ribbonColor)) }
         }
         .drawingGroup()
     }
 }
 
-/// Draws the ribbon from `NightPlot`'s rectangles: no path building beyond
-/// the shapes themselves.
-enum NightRibbonPainter {
-    static func draw(in context: GraphicsContext, size: CGSize, chart: NightChartContent, plot: NightPlot) {
-        let ink = NoctisAppColor.nightInk
-        // Faint lane guides, full width, under everything.
-        for lane in NightLane.allCases {
-            context.fill(Path(CGRect(x: 0, y: plot.y(lane) - 0.5, width: size.width, height: 1)), with: .color(ink.opacity(0.08)))
-        }
-        let radius = plot.thickness / 2
-        guard chart.hasStages else {
-            let rect = CGRect(x: plot.inset, y: plot.y(.core) - radius, width: max(size.width - 2 * plot.inset, 0), height: plot.thickness)
-            context.fill(Path(roundedRect: rect, cornerRadius: radius), with: .color(NoctisAppColor.sage))
-            return
-        }
-        // The stepped area: each run's color at 10%, flat, from the
-        // ribbon down to the Deep line.
-        for run in chart.spans where !run.isNotch {
-            let rect = plot.areaRect(run)
-            guard rect.height > 0 else { continue }
-            context.fill(Path(rect), with: .color(run.ribbonColor.opacity(0.10)))
-        }
-        // The steps, in the color entered, under the runs they join.
-        for step in chart.connectors {
-            let rect = plot.stepRect(step)
-            let color = step.entered == .asleep ? NoctisAppColor.sage : step.entered.lane.tint
-            context.fill(Path(roundedRect: rect, cornerRadius: radius), with: .color(color))
-        }
-        // The runs: capsules that overlap where they meet.
-        for run in chart.spans where !run.isNotch {
-            context.fill(Path(roundedRect: plot.runRect(run), cornerRadius: radius), with: .color(run.ribbonColor))
-        }
-        // A 6pt notch for anything under 3 minutes.
-        for run in chart.spans where run.isNotch {
-            context.fill(Path(roundedRect: plot.notchRect(run), cornerRadius: NightPlot.notchSize / 2), with: .color(run.ribbonColor))
-        }
-    }
-}
-
 /// The ivory head dot that travels with the reveal and fades at the end.
+/// A plain view, not a canvas: its position is a lookup and an offset.
 struct NightRevealHead: View, Animatable {
-    let chart: NightChartContent
+    let render: NightRender
     let plot: NightPlot
     var drawn: Double
 
@@ -316,74 +405,61 @@ struct NightRevealHead: View, Animatable {
     }
 
     var body: some View {
-        Canvas { context, _ in
-            // Only while the ribbon is being drawn, fading over the last 6%.
-            let visibility = min(max((0.94 - drawn) / 0.06 + 1, 0), 1)
-            guard drawn > 0.002, drawn < 1, visibility > 0, let lane = chart.ribbonLane(at: drawn) else { return }
-            let size = NightPlot.headSize
-            let rect = CGRect(x: plot.x(drawn) - size / 2, y: plot.y(lane) - size / 2, width: size, height: size)
-            context.fill(Path(ellipseIn: rect), with: .color(NoctisAppColor.nightInk.opacity(visibility)))
+        // Only while the ribbon is being drawn, fading over the last 6%.
+        let visibility = min(max((0.94 - drawn) / 0.06 + 1, 0), 1)
+        let lane = render.lane(at: drawn)
+        ZStack(alignment: .topLeading) {
+            if drawn > 0.002, drawn < 1, visibility > 0, let lane {
+                Circle()
+                    .fill(NoctisAppColor.nightInk.opacity(visibility))
+                    .frame(width: NightPlot.headSize, height: NightPlot.headSize)
+                    .offset(x: plot.x(drawn) - NightPlot.headSize / 2, y: plot.y(lane) - NightPlot.headSize / 2)
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
 /// The heart-rate strip: a smoothed line through the night's heart rate
-/// with its lowest point marked and labeled.
-struct NightHeartLayer: View {
-    let heart: NightHeartContent
-    let plot: NightPlot
+/// with its lowest point marked and labeled. The line is a resolved path;
+/// only the label is laid out here.
+struct NightHeartLayer: View, Equatable {
+    let paths: NightPaths
+    let label: String
+    @Environment(\.colorScheme) private var colorScheme
 
-    var body: some View {
-        Canvas { context, size in
-            draw(in: context, size: size)
-        }
-        .drawingGroup()
+    static func == (lhs: NightHeartLayer, rhs: NightHeartLayer) -> Bool {
+        lhs.paths == rhs.paths && lhs.label == rhs.label
     }
 
-    private func draw(in context: GraphicsContext, size: CGSize) {
-        let height = size.height
-        let range = max(heart.high - heart.low, 1)
-        func point(_ sample: NightHeartSeries.Point) -> CGPoint {
-            CGPoint(x: plot.x(sample.position), y: height - CGFloat((sample.bpm - heart.low) / range) * height)
+    var body: some View {
+        let _ = colorScheme
+        Canvas { context, size in
+            guard let line = paths.heartLine, let lowest = paths.heartLowest, let dot = paths.heartLowestDot else { return }
+            let height = size.height
+            let ink = NoctisAppColor.nightInk
+            context.stroke(line, with: .color(ink.opacity(0.6)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+            context.fill(dot, with: .color(ink))
+            let text = context.resolve(
+                Text(label).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(ink.opacity(0.8))
+            )
+            let labelSize = text.measure(in: CGSize(width: size.width, height: height))
+            // Beside the point, on whichever side has room.
+            let rightSide = lowest.x + 6 + labelSize.width <= size.width
+            let x = max(rightSide ? lowest.x + 6 : lowest.x - 6 - labelSize.width, 0)
+            let y = min(max(lowest.y - labelSize.height / 2, 0), height - labelSize.height)
+            let rect = CGRect(x: x, y: y, width: labelSize.width, height: labelSize.height)
+            // A halo in the panel's color, so the line steps aside for the
+            // glyphs without a box cut out of it.
+            let halo = context.resolve(
+                Text(label).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(NoctisAppColor.nightPanel)
+            )
+            for offset in [(-1.5, 0), (1.5, 0), (0, -1.5), (0, 1.5), (-1.1, -1.1), (1.1, -1.1), (-1.1, 1.1), (1.1, 1.1)] as [(CGFloat, CGFloat)] {
+                context.draw(halo, in: rect.offsetBy(dx: offset.0, dy: offset.1))
+            }
+            context.draw(text, in: rect)
         }
-        let points = heart.points.map(point)
-        guard let first = points.first else { return }
-        var path = Path()
-        path.move(to: first)
-        // Catmull-Rom through the points: smooth, and it passes through
-        // every real value.
-        for index in 1..<points.count {
-            let p0 = points[max(index - 2, 0)]
-            let p1 = points[index - 1]
-            let p2 = points[index]
-            let p3 = points[min(index + 1, points.count - 1)]
-            let c1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6)
-            let c2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6)
-            path.addCurve(to: p2, control1: c1, control2: c2)
-        }
-        let ink = NoctisAppColor.nightInk
-        context.stroke(path, with: .color(ink.opacity(0.6)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
-
-        let lowest = point(heart.lowest)
-        context.fill(Path(ellipseIn: CGRect(x: lowest.x - 2.5, y: lowest.y - 2.5, width: 5, height: 5)), with: .color(ink))
-        let label = context.resolve(
-            Text(heart.lowestLabel).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(ink.opacity(0.8))
-        )
-        let labelSize = label.measure(in: CGSize(width: size.width, height: height))
-        // Beside the point, on whichever side has room.
-        let rightSide = lowest.x + 6 + labelSize.width <= size.width
-        let x = max(rightSide ? lowest.x + 6 : lowest.x - 6 - labelSize.width, 0)
-        let y = min(max(lowest.y - labelSize.height / 2, 0), height - labelSize.height)
-        let rect = CGRect(x: x, y: y, width: labelSize.width, height: labelSize.height)
-        // A halo in the panel's color, so the line steps aside for the
-        // glyphs without a box cut out of it.
-        let halo = context.resolve(
-            Text(heart.lowestLabel).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(NoctisAppColor.nightPanel)
-        )
-        for offset in [(-1.5, 0), (1.5, 0), (0, -1.5), (0, 1.5), (-1.1, -1.1), (1.1, -1.1), (-1.1, 1.1), (1.1, 1.1)] as [(CGFloat, CGFloat)] {
-            context.draw(halo, in: rect.offsetBy(dx: offset.0, dy: offset.1))
-        }
-        context.draw(label, in: rect)
+        .drawingGroup()
     }
 }
 
@@ -405,25 +481,33 @@ struct NightDimOverlay: View {
                     .frame(height: laneHeight)
             }
         }
-        .animation(.easeOut(duration: 0.2), value: active)
-        .animation(.easeOut(duration: 0.2), value: focus)
+        .animation(NoctisMotion.select, value: active)
+        .animation(NoctisMotion.select, value: focus)
     }
 }
 
-/// The scrub's 1pt ivory line and the dot on its lane.
+/// The scrub's 1pt ivory line and the dot on its lane: two plain views, so
+/// a finger moving redraws these and never the ribbon.
 struct NightScrubLine: View {
     let plot: NightPlot
     let reading: NightReading?
     let height: CGFloat
 
     var body: some View {
-        Canvas { context, size in
-            guard let reading else { return }
-            let x = plot.x(reading.position)
-            context.fill(Path(CGRect(x: x - 0.5, y: 0, width: 1, height: size.height)), with: .color(NoctisAppColor.nightInk))
-            let y = plot.y(reading.lane)
-            context.fill(Path(ellipseIn: CGRect(x: x - 4, y: y - 4, width: 8, height: 8)), with: .color(NoctisAppColor.nightInk))
+        ZStack(alignment: .topLeading) {
+            if let reading {
+                let x = plot.x(reading.position)
+                Rectangle()
+                    .fill(NoctisAppColor.nightInk)
+                    .frame(width: 1, height: height)
+                    .offset(x: x - 0.5)
+                Circle()
+                    .fill(NoctisAppColor.nightInk)
+                    .frame(width: 8, height: 8)
+                    .offset(x: x - 4, y: plot.y(reading.lane) - 4)
+            }
         }
-        .animation(.easeOut(duration: 0.2), value: reading != nil)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .animation(NoctisMotion.fade, value: reading != nil)
     }
 }

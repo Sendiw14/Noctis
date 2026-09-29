@@ -488,13 +488,18 @@ struct HomeViewModelIntroTests {
         #expect(later.reveal == .none)
     }
 
-    @Test func noRevealWithoutAScore() async {
+    @Test func noRevealWithoutAScoreAndTheDayWaitsForOne() async {
         let store = defaults()
         let learning = viewModel(scenario: .learning, at: Fixture.date(2026, 9, 24, 10), defaults: store)
         await learning.refresh()
         #expect(learning.reveal == .none)
-        // The first day-mode Home still used the day.
-        #expect(HomeIntroGate(defaults: store).isClaimed(now: Fixture.date(2026, 9, 24, 10), calendar: Fixture.calendar()))
+        // A screen with no score to reveal doesn't spend the day's reveal…
+        #expect(!HomeIntroGate(defaults: store).isClaimed(now: Fixture.date(2026, 9, 24, 10), calendar: Fixture.calendar()))
+        // …so the first Home with one still gets it.
+        let scored = viewModel(scenario: .full, at: Fixture.date(2026, 9, 24, 11), defaults: store)
+        await scored.refresh()
+        #expect(scored.reveal == .pending)
+        #expect(HomeIntroGate(defaults: store).isClaimed(now: Fixture.date(2026, 9, 24, 11), calendar: Fixture.calendar()))
     }
 
     @Test func aFlipToDayWhileOpenWaitsForTheNextAppearance() async throws {

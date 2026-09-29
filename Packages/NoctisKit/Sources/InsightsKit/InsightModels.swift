@@ -13,7 +13,7 @@ public enum InsightKind: String, Sendable, CaseIterable, Codable {
 }
 
 /// The numbers an insight rests on, all in minutes.
-public struct InsightEvidence: Sendable, Equatable {
+public struct InsightEvidence: Sendable, Equatable, Codable {
     public let night: SleepNightKey
     /// Last night's value: minutes asleep, or bedtime as minutes after
     /// noon (11:00 PM = 660).
@@ -53,7 +53,7 @@ public struct InsightEvidence: Sendable, Equatable {
 /// One observation about last night against the person's own baseline:
 /// what kind it is and the numbers it rests on. No sentences — Home words
 /// it (and draws its evidence). Descriptive only: it never claims a cause.
-public struct Insight: Sendable, Equatable {
+public struct Insight: Sendable, Equatable, Codable {
     public let kind: InsightKind
     public let evidence: InsightEvidence
 

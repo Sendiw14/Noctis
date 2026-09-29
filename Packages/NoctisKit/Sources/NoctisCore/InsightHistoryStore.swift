@@ -4,7 +4,7 @@ import InsightsKit
 /// Keeps `InsightHistory` (insight fatigue) across launches in
 /// UserDefaults under `noctis.`, so `-noctisResetState` clears it. With no
 /// defaults it lives in memory only (tests, previews).
-public nonisolated final class InsightHistoryStore: @unchecked Sendable {
+public nonisolated final class InsightHistoryStore: NoctisErasable, @unchecked Sendable {
     public static let defaultsKey = "noctis.insights.history"
 
     private let defaults: UserDefaults?
@@ -19,6 +19,16 @@ public nonisolated final class InsightHistoryStore: @unchecked Sendable {
 
     public var history: InsightHistory {
         lock.withLock { cached }
+    }
+
+    public var erasableName: String { "Insight history" }
+
+    /// Forgets which insights were shown, dismissed or hidden.
+    public func erase() {
+        lock.withLock {
+            cached = InsightHistory()
+            defaults?.removeObject(forKey: Self.defaultsKey)
+        }
     }
 
     public func update(_ change: (inout InsightHistory) -> Void) {

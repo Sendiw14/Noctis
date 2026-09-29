@@ -91,19 +91,21 @@ struct NightPlotTests {
     }
 
     @Test func theHeadDotFollowsTheRibbonsLane() {
-        let chart = NightChartContent(
-            spans: [
-                StripSegment(stage: .core, start: 0, end: 0.4),
-                StripSegment(stage: .awake, start: 0.4, end: 0.401, isNotch: true),
-                StripSegment(stage: .deep, start: 0.401, end: 1),
-            ],
-            connectors: [], timeLabels: [], caption: nil, laneTotals: [], heart: nil, clock: nil
+        let runs = [
+            StripSegment(stage: .core, start: 0, end: 0.4),
+            StripSegment(stage: .awake, start: 0.4, end: 0.401, isNotch: true),
+            StripSegment(stage: .deep, start: 0.401, end: 1),
+        ]
+        let render = NightRender(
+            runs: runs, steps: [],
+            ribbon: runs.filter { !$0.isNotch }.map { RibbonLane(start: $0.start, lane: $0.stage.lane) },
+            heart: nil, hasStages: true, start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 3600)
         )
-        #expect(chart.ribbonLane(at: 0) == .core)
-        #expect(chart.ribbonLane(at: 0.2) == .core)
+        #expect(render.lane(at: 0) == .core)
+        #expect(render.lane(at: 0.2) == .core)
         // The notch is not ribbon: the head stays in the run before it.
-        #expect(chart.ribbonLane(at: 0.4005) == .core)
-        #expect(chart.ribbonLane(at: 0.9) == .deep)
+        #expect(render.lane(at: 0.4005) == .core)
+        #expect(render.lane(at: 0.9) == .deep)
     }
 }
 

@@ -5,7 +5,7 @@ import SleepKit
 
 /// What Home's data looks like right now, in the order a screen should
 /// check it.
-public nonisolated enum HomeDataState: Sendable, Equatable {
+public nonisolated enum HomeDataState: Sendable, Equatable, Codable {
     /// This device has no Health data store.
     case healthDataUnavailable
     /// Health access hasn't been granted.
@@ -25,7 +25,7 @@ public nonisolated enum HomeDataState: Sendable, Equatable {
 
 /// One of the last seven nights; `asleepMinutes` is nil when no main
 /// sleep was recorded, `stages` when its sources gave no stages.
-public nonisolated struct NightDuration: Sendable, Equatable {
+public nonisolated struct NightDuration: Sendable, Equatable, Codable {
     public let night: SleepNightKey
     public let asleepMinutes: Double?
     public let stages: NightStageMinutes?
@@ -39,7 +39,7 @@ public nonisolated struct NightDuration: Sendable, Equatable {
 
 /// Minutes asleep by stage (awake excluded). Unspecified sleep in a staged
 /// night counts as Core, where the night panel draws it.
-public nonisolated struct NightStageMinutes: Sendable, Equatable {
+public nonisolated struct NightStageMinutes: Sendable, Equatable, Codable {
     public let deep: Double
     public let core: Double
     public let rem: Double
@@ -57,7 +57,7 @@ public nonisolated struct NightStageMinutes: Sendable, Equatable {
 
 /// Tonight's plan from the profile: bedtime = wake time − sleep need, as
 /// minutes since midnight.
-public nonisolated struct TonightPlan: Sendable, Equatable {
+public nonisolated struct TonightPlan: Sendable, Equatable, Codable {
     public let bedtimeMinutes: Int
     public let wakeMinutes: Int
     public let needMinutes: Int
@@ -93,6 +93,9 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
     /// The newest Health sample of any type; nil with no data at all.
     public let newestSample: Date?
     public let lastUpdated: Date
+    /// The geometry every chart and ring draws, worked out once here (on
+    /// the repository's actor) so no view ever does.
+    public let render: HomeRenderModel
 
     public init(
         dataState: HomeDataState,
@@ -105,7 +108,8 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         topInsight: Insight?,
         lastNightHeart: NightHeartSeries? = nil,
         newestSample: Date?,
-        lastUpdated: Date
+        lastUpdated: Date,
+        render: HomeRenderModel? = nil
     ) {
         self.dataState = dataState
         self.recovery = recovery
@@ -118,6 +122,13 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         self.lastNightHeart = lastNightHeart
         self.newestSample = newestSample
         self.lastUpdated = lastUpdated
+        self.render = render ?? HomeRenderModelBuilder.build(
+            recovery: recovery,
+            lastNight: lastNight,
+            heart: lastNightHeart,
+            recentNights: recentNights,
+            needMinutes: tonight.needMinutes
+        )
     }
 }
 
@@ -135,7 +146,8 @@ nonisolated extension HomeSnapshot {
             topInsight: insight,
             lastNightHeart: lastNightHeart,
             newestSample: newestSample,
-            lastUpdated: lastUpdated
+            lastUpdated: lastUpdated,
+            render: render
         )
     }
 }

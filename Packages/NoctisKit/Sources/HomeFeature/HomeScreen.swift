@@ -108,14 +108,18 @@ public nonisolated struct HomeHeader: Sendable, Equatable {
     public var greeting: String { greetingLead + greetingEmphasis + greetingTrail }
 }
 
+/// One ring segment: the factor's arc from the render model (its angles,
+/// fill and the tick at your usual).
 public nonisolated struct RingSegmentContent: Sendable, Equatable {
-    public let kind: RecoveryFactorKind
+    public let arc: RingArc
+
+    public var kind: RecoveryFactorKind { arc.kind }
     /// Renormalized weight (0...1): the segment's share of the ring.
-    public let weight: Double
+    public var weight: Double { arc.weight }
     /// Factor score / 100.
-    public let fraction: Double
+    public var fraction: Double { arc.fraction }
     /// Your usual score for this factor / 100; nil without a baseline.
-    public let usual: Double?
+    public var usual: Double? { arc.usual }
 }
 
 public nonisolated enum DeltaTone: Sendable, Equatable {
@@ -275,12 +279,6 @@ public nonisolated struct WeekBar: Sendable, Equatable {
     public let detail: String
 }
 
-public nonisolated struct WeekBarStages: Sendable, Equatable {
-    public let deep: Double
-    public let core: Double
-    public let rem: Double
-}
-
 public nonisolated struct WeekCardContent: Sendable, Equatable {
     public let bars: [WeekBar]
     /// Height of the dashed need line, as a share of the chart.
@@ -381,11 +379,11 @@ public nonisolated struct HomeScreen: Sendable, Equatable {
 
 public nonisolated enum HomeScreenBuilder {
     /// Ring and factor-row order.
-    public static let factorOrder: [RecoveryFactorKind] = [.sleepDuration, .hrv, .restingHeartRate, .sleepConsistency]
+    public static let factorOrder = RingRenderBuilder.factorOrder
     /// "Updated … ago" appears once the newest data is older than this.
     public static let updatedCaptionAfter: TimeInterval = 3600
     /// Headroom above the tallest bar or the need line in This week.
-    public static let weekHeadroom = 1.12
+    public static let weekHeadroom = WeekRenderBuilder.headroom
 
     public static func build(_ snapshot: HomeSnapshot, now: Date, calendar: Calendar, locale: Locale, modeOverride: HomeMode? = nil) -> HomeScreen {
         let format = HomeFormat(calendar: calendar, locale: locale)
@@ -399,14 +397,14 @@ public nonisolated enum HomeScreenBuilder {
         }
         var detail: RecoveryDetailContent?
         if case .scored(let content) = recovery, case .scored(let result)? = snapshot.recovery {
-            detail = recoveryDetail(result, content: content, needMinutes: snapshot.tonight.needMinutes, format: format)
+            detail = recoveryDetail(result, content: content, needMinutes: snapshot.tonight.needMinutes, render: snapshot.render, format: format)
         }
         return HomeScreen(
             header: header(now: now, newestSample: snapshot.newestSample, mode: mode, summary: summary, format: format),
             mode: mode,
             nextModeChange: nextModeChange(after: now, plan: snapshot.tonight, calendar: calendar),
             recovery: recovery,
-            lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, heart: snapshot.lastNightHeart, format: format) } : nil,
+            lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, heart: snapshot.lastNightHeart, render: snapshot.render.night, format: format) } : nil,
             insight: showsDataCards ? snapshot.topInsight.map { insightCard($0, format: format) } : nil,
             tonight: tonightCard(snapshot.tonight, format: format),
             evening: eveningHero(times, plan: snapshot.tonight, format: format),
@@ -577,13 +575,13 @@ public nonisolated enum HomeScreenBuilder {
             let detail = snapshot.latestSleep.map { "Last recorded night ended \(format.shortDate($0.wakeTime, in: $0.timeZone))." }
             return .noSleep(title: "No sleep recorded last night.", detail: detail)
         case .scored(let result)?:
-            return .scored(scoredContent(result))
+            return .scored(scoredContent(result, ring: snapshot.render.ring))
         case nil:
             return .connect(title: title, message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true)
         }
     }
 
-    static func scoredContent(_ result: RecoveryResult) -> ScoredRecoveryContent {
+    static func scoredContent(_ result: RecoveryResult, ring: [RingArc]? = nil) -> ScoredRecoveryContent {
         let factors = factorOrder.compactMap { result.factor($0) }
         let chip = result.comparison.delta.map { delta in
             DeltaChip(text: signed(delta), tone: tone(result.comparison.trend))
@@ -597,7 +595,7 @@ public nonisolated enum HomeScreenBuilder {
         }
         return ScoredRecoveryContent(
             score: result.score,
-            segments: factors.map { RingSegmentContent(kind: $0.kind, weight: $0.weight, fraction: Double($0.score) / 100, usual: $0.usual.map { $0 / 100 }) },
+            segments: (ring ?? RingRenderBuilder.build(result)).map(RingSegmentContent.init(arc:)),
             chip: chip,
             comparisonPhrase: phrase,
             why: why,
@@ -730,8 +728,8 @@ public nonisolated enum HomeScreenBuilder {
 
     // MARK: Recovery detail
 
-    static func recoveryDetail(_ result: RecoveryResult, content: ScoredRecoveryContent, needMinutes: Int, format: HomeFormat) -> RecoveryDetailContent {
-        let rows = factorOrder.compactMap { result.factor($0) }.map { detailRow($0, result: result, needMinutes: needMinutes, format: format) }
+    static func recoveryDetail(_ result: RecoveryResult, content: ScoredRecoveryContent, needMinutes: Int, render: HomeRenderModel? = nil, format: HomeFormat) -> RecoveryDetailContent {
+        let rows = factorOrder.compactMap { result.factor($0) }.map { detailRow($0, result: result, needMinutes: needMinutes, render: render, format: format) }
         return RecoveryDetailContent(
             recovery: content,
             rows: rows,
@@ -740,7 +738,7 @@ public nonisolated enum HomeScreenBuilder {
         )
     }
 
-    static func detailRow(_ factor: RecoveryFactor, result: RecoveryResult, needMinutes: Int, format: HomeFormat) -> FactorDetailRow {
+    static func detailRow(_ factor: RecoveryFactor, result: RecoveryResult, needMinutes: Int, render: HomeRenderModel? = nil, format: HomeFormat) -> FactorDetailRow {
         let name = shortName(factor.kind)
         let value: NoctisMetricValue
         var suffix: String?
@@ -784,7 +782,7 @@ public nonisolated enum HomeScreenBuilder {
                 ? "Right on your usual bedtime and wake time."
                 : "Bedtime and wake time were \(HomeFormat.compactDuration(minutes, minutesWord: true)) from your usual, on average."
         }
-        let sparkline = result.history(factor.kind).map { sparklineContent($0) }
+        let sparkline = result.history(factor.kind).map { sparklineContent($0, render: render?.sparkline(factor.kind)) }
         let spokenValue = value.spoken + (suffix.map { " \($0)" } ?? "")
         let label = "\(name) \(spokenValue), \(baseline), score \(factor.score). \(sentence)" + (sparkline.map { " \($0.accessibilityLabel)" } ?? "")
         return FactorDetailRow(
@@ -793,16 +791,10 @@ public nonisolated enum HomeScreenBuilder {
         )
     }
 
-    /// The 14 nights, the normal range and today, scaled to one chart
-    /// (0...1 up); consistency is drawn as bedtime.
-    static func sparklineContent(_ history: RecoveryFactorHistory) -> SparklineContent {
-        let range = history.normalRange
-        let all = history.values.compactMap { $0 } + [history.today, range.lowerBound, range.upperBound]
-        let low = all.min() ?? 0
-        let high = all.max() ?? 1
-        let pad = max((high - low) * 0.1, 0.5)
-        let (bottom, top) = (low - pad, high + pad)
-        func scaled(_ value: Double) -> Double { (value - bottom) / (top - bottom) }
+    /// The 14 nights, the normal range and today as the render model
+    /// scaled them (0...1 up); consistency is drawn as bedtime.
+    static func sparklineContent(_ history: RecoveryFactorHistory, render: SparklineRender? = nil) -> SparklineContent {
+        let render = render ?? SparklineRenderBuilder.build(history)
         let subject = switch history.kind {
         case .sleepDuration: "Sleep"
         case .hrv: "HRV"
@@ -810,9 +802,9 @@ public nonisolated enum HomeScreenBuilder {
         case .sleepConsistency: "Bedtime"
         }
         return SparklineContent(
-            nights: history.values.map { $0.map(scaled) },
-            today: scaled(history.today),
-            band: scaled(range.lowerBound)...scaled(range.upperBound),
+            nights: render.nights,
+            today: render.today,
+            band: render.bandLow...render.bandHigh,
             accessibilityLabel: "\(subject) has been within your normal range on \(history.nightsWithin) of \(history.nightsRecorded) nights."
         )
     }
@@ -879,10 +871,10 @@ public nonisolated enum HomeScreenBuilder {
     // MARK: This week
 
     static func weekCard(_ snapshot: HomeSnapshot, format: HomeFormat) -> WeekCardContent {
-        let need = Double(snapshot.tonight.needMinutes)
-        let longest = snapshot.recentNights.compactMap(\.asleepMinutes).max() ?? 0
-        let top = max(need, longest) * weekHeadroom
-        let bars = snapshot.recentNights.map { night -> WeekBar in
+        let render = snapshot.render.week.bars.count == snapshot.recentNights.count
+            ? snapshot.render.week
+            : WeekRenderBuilder.build(snapshot.recentNights, needMinutes: snapshot.tonight.needMinutes, lastNight: snapshot.lastNight?.night)
+        let bars = snapshot.recentNights.enumerated().map { index, night -> WeekBar in
             let wakeDay = night.night.adding(days: 1)
             let dayName = format.weekday(wakeDay, width: .wide)
             let minutes = night.asleepMinutes.map { Int($0.rounded()) }
@@ -892,16 +884,11 @@ public nonisolated enum HomeScreenBuilder {
                 + stageParts.map { "\($0.0) \(HomeFormat.compactDuration($0.1))" }
             let spoken = [dayName, minutes.map { HomeFormat.spokenDuration($0) } ?? "no data"]
                 + stageParts.map { "\($0.0 == "Deep" ? "deep" : $0.0) \(HomeFormat.spokenDuration($0.1))" }
-            var stages: WeekBarStages?
-            if let split = night.stages, split.deep + split.core + split.rem > 0 {
-                let total = split.deep + split.core + split.rem
-                stages = WeekBarStages(deep: split.deep / total, core: split.core / total, rem: split.rem / total)
-            }
             return WeekBar(
                 label: format.weekday(wakeDay, width: .narrow),
-                fraction: night.asleepMinutes.map { top > 0 ? $0 / top : 0 },
-                stages: stages,
-                isLastNight: night.night == snapshot.lastNight?.night,
+                fraction: render.bars[index].fraction,
+                stages: render.bars[index].stages,
+                isLastNight: render.bars[index].isLastNight,
                 accessibilityLabel: spoken.joined(separator: ", "),
                 detail: pill.joined(separator: " · ")
             )
@@ -912,7 +899,7 @@ public nonisolated enum HomeScreenBuilder {
         let spokenNeed = "\(HomeFormat.spokenDuration(snapshot.tonight.needMinutes)) need"
         return WeekCardContent(
             bars: bars,
-            needFraction: top > 0 ? need / top : 0,
+            needFraction: render.needFraction,
             needLabel: needLabel,
             average: average,
             accessibilityLabel: "This week\(spokenAverage), \(spokenNeed). " + bars.map(\.accessibilityLabel).joined(separator: "; ") + "."
@@ -940,7 +927,7 @@ nonisolated extension HomeScreenBuilder {
         return ShareCardContent(
             recovery: shareRecovery,
             lastNight: session.map { HomeFormat.durationMetric(Int(($0.totals.asleep / 60).rounded())) },
-            chart: session.map { nightChart($0, heart: snapshot.lastNightHeart, format: format) },
+            chart: session.map { nightChart($0, heart: snapshot.lastNightHeart, render: snapshot.render.night, format: format) },
             date: date,
             details: details,
             title: "NOCTIS · \(date)",

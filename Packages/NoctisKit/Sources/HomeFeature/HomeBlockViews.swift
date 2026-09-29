@@ -32,6 +32,9 @@ struct NightPanelView: View {
     private var chart: NightChartContent { content.chart }
 
     var body: some View {
+        #if DEBUG
+        let _ = HomeBodyProbe.hit("NightPanel")
+        #endif
         panel
             .contentShape(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous))
             .onTapGesture(perform: open)
@@ -95,7 +98,7 @@ struct NightPanelView: View {
     }
 
     private var chartView: some View {
-        let drawIn: Animation? = reduceMotion ? nil : .easeOut(duration: HomeReveal.nightDuration).delay(HomeRevealPhase.contentDelay)
+        let drawIn: Animation? = reduceMotion ? nil : NoctisMotion.draw(HomeReveal.nightDuration).delay(HomeRevealPhase.contentDelay)
         let focusLane: NightLane? = scrubbing ? scrub?.lane : (laneFocus ?? scrub?.lane)
         let laneTotal: String? = laneFocus.flatMap { total($0) }
         let pillText: String? = scrubbing ? scrub?.text : (laneTotal ?? scrub?.text)
@@ -116,8 +119,8 @@ struct NightPanelView: View {
             onLaneTap: onLaneTap
         )
         .animation(drawIn, value: reveal)
-        .animation(.easeOut(duration: 0.2), value: scrubbing)
-        .animation(.easeOut(duration: 0.2), value: laneFocus)
+        .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: scrubbing)
+        .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: laneFocus)
     }
 
     private func total(_ lane: NightLane) -> String? {
@@ -128,8 +131,10 @@ struct NightPanelView: View {
     private func scrubbed(_ position: Double?) {
         guard let position else {
             scrubbing = false
+            NoctisSignpost.end(.scrub)
             return
         }
+        NoctisSignpost.begin(.scrub)
         let reading = chart.reading(at: position)
         if scrubbing, let reading, reading.stage != scrub?.stage {
             NoctisHaptics.snapLight()
@@ -333,7 +338,7 @@ struct TonightBlockView: View {
             ZStack(alignment: .bottomTrailing) {
                 NoctisAppColor.blockLavender
                 if !dynamicTypeSize.isAccessibilitySize {
-                    TonightCrescent().frame(width: 132, height: 96)
+                    TonightCrescent()
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous))
@@ -355,19 +360,27 @@ struct TonightBlockView: View {
 /// A cocoa .12 crescent sitting just above a 1pt horizon line. Drawn past
 /// the right edge so the block's corner cuts it.
 struct TonightCrescent: View {
+    static let size = CGSize(width: 132, height: 96)
+
+    /// The horizon and the moon, worked out once for the fixed size.
+    private static let paths: (horizon: Path, moon: Path) = {
+        // Low in the bottom-right corner, so the corner's curve cuts both
+        // the horizon and the moon.
+        let horizonY = size.height - 14
+        let radius: CGFloat = 22
+        let center = CGPoint(x: size.width - 14, y: horizonY - radius - 3)
+        let moon = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
+        let bite = Path(ellipseIn: CGRect(x: center.x - radius * 0.45, y: center.y - radius * 1.25, width: radius * 1.9, height: radius * 1.9))
+        return (Path(CGRect(x: 0, y: horizonY, width: size.width, height: 1)), moon.subtracting(bite))
+    }()
+
     var body: some View {
-        Canvas { context, size in
+        Canvas { context, _ in
             let ink = NoctisAppColor.blockCocoa.opacity(0.12)
-            // Low in the bottom-right corner, so the corner's curve cuts
-            // both the horizon and the moon.
-            let horizonY = size.height - 14
-            context.fill(Path(CGRect(x: 0, y: horizonY, width: size.width, height: 1)), with: .color(ink))
-            let radius: CGFloat = 22
-            let center = CGPoint(x: size.width - 14, y: horizonY - radius - 3)
-            let moon = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
-            let bite = Path(ellipseIn: CGRect(x: center.x - radius * 0.45, y: center.y - radius * 1.25, width: radius * 1.9, height: radius * 1.9))
-            context.fill(moon.subtracting(bite), with: .color(ink))
+            context.fill(Self.paths.horizon, with: .color(ink))
+            context.fill(Self.paths.moon, with: .color(ink))
         }
+        .frame(width: Self.size.width, height: Self.size.height)
         .accessibilityHidden(true)
     }
 }
@@ -382,6 +395,7 @@ struct InsightBlockView: View {
     let hide: () -> Void
 
     @Environment(\.homeReveal) private var reveal
+    @Environment(\.homeLowPower) private var lowPower
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var glyphShown = false
 
@@ -392,7 +406,7 @@ struct InsightBlockView: View {
                     .fill(NoctisAppColor.blockInk)
                     .frame(width: 32, height: 32)
                     .overlay {
-                        if glyphShown || reduceMotion {
+                        if glyphShown || reduceMotion || lowPower {
                             Image(systemName: "lightbulb.fill")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(NoctisAppColor.blockButter)
@@ -422,7 +436,7 @@ struct InsightBlockView: View {
         .accessibilityAction(named: "Not useful", dismiss)
         .accessibilityAction(named: "Hide insights like this", hide)
         .task {
-            guard !reduceMotion, !glyphShown else { return }
+            guard !reduceMotion, !lowPower, !glyphShown else { return }
             // With the morning reveal, the glyph draws on as the content does.
             try? await Task.sleep(for: .seconds(reveal.holdsStart ? HomeRevealPhase.contentDelay : 0.15))
             withAnimation { glyphShown = true }
@@ -448,14 +462,13 @@ struct InsightEvidenceChart: View {
                 NoctisFractionLayout {
                     tickLabel(lastNight, emphasized: true).noctisFraction(lastNight.position)
                 }
-                Canvas { context, size in
-                    let y = size.height / 2
-                    context.fill(Path(CGRect(x: 0, y: y - 0.5, width: size.width, height: 1)), with: .color(cocoa.opacity(0.3)))
-                    for (tick, strong) in [(usual, false), (lastNight, true)] {
-                        let x = min(max(tick.position * size.width, 1.5), size.width - 1.5)
-                        let tickHeight: CGFloat = strong ? 16 : 12
-                        let rect = CGRect(x: x - 1.5, y: y - tickHeight / 2, width: 3, height: tickHeight)
-                        context.fill(Path(roundedRect: rect, cornerRadius: 1.5), with: .color(strong ? cocoa : cocoa.opacity(0.3)))
+                ZStack {
+                    Rectangle().fill(cocoa.opacity(0.3)).frame(height: 1)
+                    NoctisFractionLayout {
+                        RoundedRectangle(cornerRadius: 1.5).fill(cocoa.opacity(0.3)).frame(width: 3, height: 12)
+                            .noctisFraction(usual.position)
+                        RoundedRectangle(cornerRadius: 1.5).fill(cocoa).frame(width: 3, height: 16)
+                            .noctisFraction(lastNight.position)
                     }
                 }
                 .frame(height: 16)
@@ -494,9 +507,8 @@ struct InsightEvidenceChart: View {
                 Spacer(minLength: NoctisSpacing.xs)
                 NoctisMetric(bar.value, size: 15, relativeTo: .subheadline, tone: .block)
             }
-            Canvas { context, size in
-                let width = max(size.width * min(max(bar.fraction, 0), 1), size.height)
-                context.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: width, height: size.height), cornerRadius: size.height / 2), with: .color(fill))
+            NoctisSpanLayout(to: bar.fraction, minimumWidth: 8) {
+                Capsule().fill(fill)
             }
             .frame(height: 8)
         }
@@ -551,6 +563,7 @@ struct WeekCardView: View {
     let open: () -> Void
 
     @Environment(\.homeReveal) private var reveal
+    @Environment(\.homeLowPower) private var lowPower
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selected: Int?
     @State private var tapWidth: CGFloat = 0
@@ -567,6 +580,9 @@ struct WeekCardView: View {
     private var barWidth: CGFloat { WeekColumns.barWidth(barsWidth: barsWidth, count: content.bars.count) }
 
     var body: some View {
+        #if DEBUG
+        let _ = HomeBodyProbe.hit("WeekCard")
+        #endif
         NoctisAppCard {
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                 HStack(alignment: .firstTextBaseline) {
@@ -661,7 +677,10 @@ struct WeekCardView: View {
     private var scrub: some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: .local)
             .onChanged { value in
-                if touchStart == nil { touchStart = .some(selected) }
+                if touchStart == nil {
+                    touchStart = .some(selected)
+                    NoctisSignpost.begin(.scrub)
+                }
                 let vertical = abs(value.translation.height)
                 // A mostly vertical drag is the page scrolling: put the
                 // selection back to what it was.
@@ -672,14 +691,17 @@ struct WeekCardView: View {
                 let column = column(at: value.location.x)
                 guard column != selected else { return }
                 NoctisHaptics.snapLight()
-                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.15)) { selected = column }
+                withAnimation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion)) { selected = column }
             }
             .onEnded { value in
-                defer { touchStart = nil }
+                defer {
+                    touchStart = nil
+                    NoctisSignpost.end(.scrub)
+                }
                 guard let start = touchStart else { return }
                 let moved = hypot(value.translation.width, value.translation.height)
                 if moved < WeekColumns.tapSlop, column(at: value.location.x) == start {
-                    withAnimation(.easeOut(duration: 0.2)) { selected = nil }
+                    withAnimation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion)) { selected = nil }
                 }
             }
     }
@@ -702,13 +724,13 @@ struct WeekCardView: View {
                     // Grows from the baseline in the morning reveal.
                     .scaleEffect(x: 1, y: reveal.holdsStart ? 0.001 : 1, anchor: .bottom)
                     .animation(
-                        reduceMotion ? nil : NoctisMotion.settle.delay(HomeRevealPhase.contentDelay + HomeReveal.weekStagger * Double(index)),
+                        reduceMotion ? nil : NoctisMotion.settle.delay(HomeRevealPhase.contentDelay + HomeReveal.weekDelay(index, lowPower: lowPower)),
                         value: reveal
                     )
             }
         }
         .frame(width: width, height: Self.chartHeight)
-        .animation(.easeOut(duration: 0.2), value: selected)
+        .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: selected)
     }
 
     /// Deep, Core, REM from the bottom; one sage bar without stages.

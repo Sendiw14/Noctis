@@ -141,23 +141,35 @@ public actor HomeRepository {
     private let timeZone: TimeZone
     private let clock: @Sendable () -> Date
     private let insightHistory: InsightHistoryStore
+    private let store: HomeSnapshotStore?
     private var inFlight: Task<HomeSnapshot, Never>?
 
-    /// The last snapshot built, if any.
+    /// The last snapshot built (or restored), if any.
     public private(set) var cachedSnapshot: HomeSnapshot?
+    /// The snapshot the last launch saved, read once when the repository
+    /// was made: Home draws it in its first frame, then revalidates. Nil
+    /// without a store, or when the saved file was missing, unreadable,
+    /// from another schema or too old.
+    public nonisolated let restoredSnapshot: HomeSnapshot?
 
     /// `insightHistory` defaults to one kept in memory; the app passes
-    /// the persisted store.
+    /// the persisted store. With a `store`, every snapshot built is saved
+    /// (`HomeSnapshotStore`) and the last one is restored at launch.
     public init(
         provider: any HealthDataProviding,
         timeZone: TimeZone = .autoupdatingCurrent,
         clock: @escaping @Sendable () -> Date = { Date() },
-        insightHistory: InsightHistoryStore = InsightHistoryStore()
+        insightHistory: InsightHistoryStore = InsightHistoryStore(),
+        store: HomeSnapshotStore? = nil
     ) {
         self.provider = provider
         self.timeZone = timeZone
         self.clock = clock
         self.insightHistory = insightHistory
+        self.store = store
+        let restored = store?.load()
+        restoredSnapshot = restored
+        cachedSnapshot = restored
     }
 
     public func refresh(profile: UserProfileSnapshot) async -> HomeSnapshot {
@@ -170,6 +182,7 @@ public actor HomeRepository {
             insightHistory.update { $0.recordShown(insight) }
         }
         cachedSnapshot = snapshot
+        store?.save(snapshot)
         return snapshot
     }
 
@@ -189,6 +202,8 @@ public actor HomeRepository {
     /// before the next refresh (which agrees).
     private func dropInsight() -> HomeSnapshot? {
         cachedSnapshot = cachedSnapshot?.replacingInsight(nil)
+        // Saved too, so the dismissed insight isn't restored next launch.
+        if let cachedSnapshot { store?.save(cachedSnapshot) }
         return cachedSnapshot
     }
 

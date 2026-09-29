@@ -43,21 +43,37 @@ public struct RootView: View {
 /// scrolls down; in the evening a bedtime accessory sits on it on every
 /// tab.
 ///
-/// The app's one countdown `TimelineView` (every minute) wraps it, so the
-/// accessory, Home's header and the evening countdown all tick together.
+/// The minute clock (`HomeClock`) is in the environment: the accessory,
+/// Home's header summary and the evening countdown each read it in their
+/// own body, and nothing above them does, so a minute passing re-evaluates
+/// those and no more.
 struct RootTabView: View {
     @Environment(AppModel.self) private var model
     @Environment(HomeViewModel.self) private var home
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var clock = HomeClock()
 
     var body: some View {
-        TimelineView(.everyMinute) { timeline in
-            tabs(now: timeline.date)
-                .environment(\.homeMinute, timeline.date)
-        }
+        tabs
+            .environment(\.homeClock, clock)
+            .task { clock.start() }
+            .onChange(of: scenePhase) { _, phase in
+                // Ticks only while the app is up; catches up on return.
+                if phase == .active { clock.start() } else { clock.stop() }
+            }
+            .onChange(of: model.selectedTab) {
+                // A tab switch runs until the first frame after the new
+                // tab's content appears (or a second, if it never does).
+                NoctisSignpost.begin(.tabSwitch)
+                Task {
+                    try? await Task.sleep(for: .seconds(1))
+                    NoctisSignpost.end(.tabSwitch)
+                }
+            }
     }
 
     @ViewBuilder
-    private func tabs(now: Date) -> some View {
+    private var tabs: some View {
         @Bindable var model = model
         let tabView = TabView(selection: $model.selectedTab) {
             ForEach(AppTab.allCases) { tab in
@@ -72,7 +88,7 @@ struct RootTabView: View {
         // no accessory rather than one that can't hide by day.
         if #available(iOS 26.1, *) {
             tabView.tabViewBottomAccessory(isEnabled: HomeBedtimeAccessory.isShown(for: home)) {
-                HomeBedtimeAccessory(viewModel: home, now: now) { model.open(.home) }
+                HomeBedtimeAccessory(viewModel: home, clock: clock) { model.open(.home) }
             }
         } else {
             tabView
@@ -84,9 +100,11 @@ struct RootTabView: View {
         switch tab {
         case .home:
             HomeTabView(viewModel: home)
+                .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .sleep, .recovery, .insights, .coach:
             // R19: unbuilt tabs, listed in ROADMAP.md.
             NoctisComingSoonView(title: tab.title, systemImage: tab.systemImage)
+                .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         }
     }
 }

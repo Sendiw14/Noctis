@@ -5,8 +5,8 @@ import HealthProviding
 /// the real samples recorded between the session's start and end, placed
 /// along the night (0...1) and downsampled to at most `maxPoints` by
 /// averaging equal slices of time. Nil with no samples in the night.
-public struct NightHeartSeries: Sendable, Equatable {
-    public struct Point: Sendable, Equatable {
+public struct NightHeartSeries: Sendable, Equatable, Codable {
+    public struct Point: Sendable, Equatable, Codable {
         /// 0...1 along the night.
         public let position: Double
         public let bpm: Double

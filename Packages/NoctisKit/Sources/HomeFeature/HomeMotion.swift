@@ -5,12 +5,11 @@ import UIKit
 extension EnvironmentValues {
     /// The morning reveal's phase, for every view that takes part in it.
     @Entry var homeReveal: HomeRevealPhase = .none
-    /// The current minute, from the app's one countdown `TimelineView`
-    /// (the evening countdown, the header and the tab bar accessory). Nil
-    /// outside the app (previews, render tests).
-    @Entry public var homeMinute: Date? = nil
     /// Matched geometry for the mode morph; nil under Reduce Motion.
     @Entry var homeMorph: Namespace.ID? = nil
+    /// Low Power Mode: no count-up, no secondary staggers, no ambient
+    /// animation.
+    @Entry var homeLowPower: Bool = false
 }
 
 extension HomeRevealPhase {
@@ -48,10 +47,10 @@ struct HomeCollapseEffect<Content: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let collapse = viewModel.collapse
+        let progress = viewModel.collapseProgress
         content
-            .scaleEffect(reduceMotion ? 1 : collapse.heroScale, anchor: anchor)
-            .opacity(collapse.heroOpacity)
+            .scaleEffect(reduceMotion ? 1 : HomeCollapse.scale(at: progress), anchor: anchor)
+            .opacity(HomeCollapse.opacity(at: progress))
     }
 }
 

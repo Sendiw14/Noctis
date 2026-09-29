@@ -1,6 +1,8 @@
+import DesignSystem
 import Foundation
 import NoctisCore
 import Observation
+import SwiftUI
 import SleepKit
 #if canImport(UIKit)
 import UIKit
@@ -26,27 +28,51 @@ public final class HomeViewModel {
     public private(set) var reveal: HomeRevealPhase = .none
     /// Whether the reveal played during this launch (read by UI tests).
     public private(set) var revealPlayed = false
+    /// Low Power Mode is on: Home skips the score's count-up, the
+    /// capsules' and bars' staggers and its ambient animations, and keeps
+    /// every end state. (Reduce Motion is separate and unchanged.)
+    public private(set) var isLowPower: Bool
     /// Bumped each time a touch or scroll skips the reveal; Home rebuilds
     /// its content at the end state.
     public private(set) var revealSkips = 0
-    /// How far the hero has scrolled away (`HomeCollapse`).
-    public private(set) var collapse = HomeCollapse.expanded
+    /// How far the hero has scrolled away, 0...1 in steps of 1%
+    /// (`HomeCollapse`). Only the hero's own effect reads this.
+    public private(set) var collapseProgress = 0.0
+    /// Whether the compact bar shows. Kept apart from the progress, so the
+    /// overlay that reads it isn't re-evaluated at every step of a scroll.
+    public private(set) var showsCollapsedBar = false
+    public var collapse: HomeCollapse { HomeCollapse(progress: collapseProgress, showsBar: showsCollapsedBar) }
     /// "New night added": true for `HomeLiveUpdate.bannerSeconds` after a
     /// Health change brings in a night Home didn't have.
     public private(set) var showsNewNight = false
     /// When the scheduled task will flip Home between day and evening.
     public private(set) var scheduledModeChange: Date?
+    /// A screen drawn from the last launch's saved snapshot is up and
+    /// Health hasn't answered yet: the morning reveal waits, so it never
+    /// plays yesterday's numbers. Clears when fresh data arrives, or after
+    /// `restoreGrace`.
+    public private(set) var awaitsFreshData = false
+    /// How long the reveal waits for fresh data before playing with the
+    /// restored screen.
+    public static let restoreGrace = 1.5
 
     private let repository: HomeRepository
     private let profile: () -> UserProfileSnapshot
     private let connectHealth: () async -> Void
     private let introGate: HomeIntroGate
     private let reduceMotion: () -> Bool
+    private let lowPower: () -> Bool
     private let clock: () -> Date
     private let calendar: Calendar
     private let locale: Locale
     private var modeOverride: HomeMode?
+    /// Whether the day's reveal has been decided (played, skipped, or
+    /// already used up) by a screen with a score.
+    private var revealDecided = false
+    /// The first fresh snapshot after a restored one cross-fades in.
+    private var revalidatingRestored = false
     private var observation: Task<Void, Never>?
+    private var powerObservation: Task<Void, Never>?
     private var modeFlip: Task<Void, Never>?
     private var bannerTask: Task<Void, Never>?
     private var revealEnd: Task<Void, Never>?
@@ -62,6 +88,7 @@ public final class HomeViewModel {
         connectHealth: @escaping () async -> Void = {},
         introGate: HomeIntroGate = HomeIntroGate(),
         reduceMotion: @escaping () -> Bool = { HomeViewModel.systemReduceMotion() },
+        lowPower: @escaping () -> Bool = { HomeViewModel.systemLowPower() },
         clock: @escaping () -> Date = { Date() },
         calendar: Calendar = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
@@ -72,6 +99,8 @@ public final class HomeViewModel {
         self.connectHealth = connectHealth
         self.introGate = introGate
         self.reduceMotion = reduceMotion
+        self.lowPower = lowPower
+        isLowPower = lowPower()
         self.clock = clock
         self.calendar = calendar
         self.locale = locale
@@ -83,6 +112,19 @@ public final class HomeViewModel {
         // to come, so the first frame doesn't flash paper.
         if header.mode == .day, !reduceMotion(), !introGate.isClaimed(now: clock(), calendar: calendar) {
             reveal = .pending
+        }
+        // The last launch's snapshot, before the first frame: Home opens
+        // with content, then revalidates in the background.
+        if let restored = repository.restoredSnapshot {
+            apply(restored)
+            revalidatingRestored = true
+            if reveal == .pending {
+                awaitsFreshData = true
+                Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(Self.restoreGrace))
+                    self?.awaitsFreshData = false
+                }
+            }
         }
     }
 
@@ -101,8 +143,19 @@ public final class HomeViewModel {
     /// Pull-to-refresh, "Try again", and every Health change.
     public func refresh() async {
         isRefreshing = true
-        apply(await repository.refresh(profile: profile()))
+        let fresh = await repository.refresh(profile: profile())
+        if revalidatingRestored {
+            // What changed since the saved snapshot fades in; what
+            // didn't stays put.
+            revalidatingRestored = false
+            awaitsFreshData = false
+            withAnimation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion())) { apply(fresh) }
+        } else {
+            apply(fresh)
+        }
         isRefreshing = false
+        // The first fresh answer is when launch counts as populated.
+        NoctisSignpost.end(.launchToPopulated)
         #if DEBUG
         if debugLogsSnapshots, let snapshot { print(snapshot.debugSummary) }
         #endif
@@ -136,15 +189,17 @@ public final class HomeViewModel {
 
     /// Home's content is on screen in its start state: run the reveal.
     public func beginReveal() {
-        guard reveal == .pending, screen != nil else { return }
+        guard reveal == .pending, screen != nil, !awaitsFreshData else { return }
         reveal = .playing
         revealPlayed = true
+        NoctisSignpost.begin(.reveal)
         revealEnd?.cancel()
         revealEnd = Task { [weak self] in
             try? await Task.sleep(for: .seconds(HomeReveal.totalDuration))
             guard !Task.isCancelled, let self, self.reveal == .playing else { return }
             // Played out: the end state and `.none` look the same.
             self.reveal = .none
+            NoctisSignpost.end(.reveal)
         }
     }
 
@@ -154,13 +209,17 @@ public final class HomeViewModel {
         revealEnd?.cancel()
         reveal = .none
         revealSkips += 1
+        NoctisSignpost.end(.reveal)
     }
 
     /// Scroll collapse: the hero's top and height in the scroll content,
     /// and the top of the visible region (both in points).
     public func scrolled(visibleTop: Double, heroTop: Double, heroHeight: Double) {
         let next = HomeCollapse.state(visibleTop: visibleTop, heroTop: heroTop, heroHeight: heroHeight, previous: collapse)
-        if next != collapse { collapse = next }
+        // Written only when a derived value changes: a 1% step, or the
+        // bar crossing its threshold.
+        if next.progress != collapseProgress { collapseProgress = next.progress }
+        if next.showsBar != showsCollapsedBar { showsCollapsedBar = next.showsBar }
     }
 
     /// "Not useful": the insight collapses now and stays away for the
@@ -196,6 +255,19 @@ public final class HomeViewModel {
     }
     #endif
 
+    #if DEBUG
+    /// DEBUG `-noctisLowPowerMode`: the simulator can't switch Low Power
+    /// Mode on, so this pretends it is.
+    public nonisolated(unsafe) static var debugForcesLowPower = false
+    #endif
+
+    public static func systemLowPower() -> Bool {
+        #if DEBUG
+        if debugForcesLowPower { return true }
+        #endif
+        return ProcessInfo.processInfo.isLowPowerModeEnabled
+    }
+
     public static func systemReduceMotion() -> Bool {
         #if canImport(UIKit)
         UIAccessibility.isReduceMotionEnabled
@@ -208,6 +280,8 @@ public final class HomeViewModel {
     public func stopObserving() {
         observation?.cancel()
         observation = nil
+        powerObservation?.cancel()
+        powerObservation = nil
         modeFlip?.cancel()
         modeFlip = nil
         bannerTask?.cancel()
@@ -215,24 +289,48 @@ public final class HomeViewModel {
     }
 
     private func apply(_ snapshot: HomeSnapshot, canReveal: Bool = true) {
-        self.snapshot = snapshot
+        if self.snapshot != snapshot { self.snapshot = snapshot }
         let screen = HomeScreenBuilder.build(snapshot, now: clock(), calendar: calendar, locale: locale, modeOverride: modeOverride)
         updateReveal(for: screen, canReveal: canReveal)
-        self.screen = screen
-        header = screen.header
+        // Equal values aren't republished: a rebuild that changes nothing
+        // (returning to the foreground, a refresh with the same data)
+        // re-evaluates no view.
+        if let before = self.screen?.mode, before != screen.mode {
+            // The day ↔ evening morph runs until the paper has crossfaded.
+            NoctisSignpost.begin(.morph)
+            Task {
+                try? await Task.sleep(for: .seconds(HomeMorph.paperDuration + 0.2))
+                NoctisSignpost.end(.morph)
+            }
+        }
+        if self.screen != screen { self.screen = screen }
+        if header != screen.header { header = screen.header }
         scheduleModeFlip(at: screen.nextModeChange)
     }
 
-    /// The first day-mode Home of each calendar day uses up the day's
-    /// reveal; it plays only with a score to reveal and without Reduce
-    /// Motion.
+    /// The first day-mode Home with a score each calendar day uses up the
+    /// day's reveal; it plays without Reduce Motion (which never sees it,
+    /// but still uses the day up). A screen with no score to reveal (still
+    /// learning, no data yet) decides nothing: the reveal waits for the
+    /// score, so cached or partial data never spends it.
     private func updateReveal(for screen: HomeScreen, canReveal: Bool) {
-        guard canReveal, screen.mode == .day, introGate.claim(now: clock(), calendar: calendar) else {
+        guard canReveal, screen.mode == .day else {
             if reveal == .pending { reveal = .none }
             return
         }
-        let scored = if case .scored = screen.recovery { true } else { false }
-        reveal = scored && !reduceMotion() ? .pending : .none
+        guard !revealDecided else { return }
+        guard case .scored = screen.recovery else {
+            // Nothing to reveal yet. A restored screen keeps waiting for
+            // fresh data; a fresh one has none coming.
+            if reveal == .pending, !awaitsFreshData { reveal = .none }
+            return
+        }
+        revealDecided = true
+        guard introGate.claim(now: clock(), calendar: calendar) else {
+            if reveal == .pending { reveal = .none }
+            return
+        }
+        reveal = reduceMotion() ? .none : .pending
     }
 
     /// A Health change that brings a night Home didn't have shows "New
@@ -264,6 +362,16 @@ public final class HomeViewModel {
     }
 
     private func startObserving() {
+        if powerObservation == nil {
+            // Low Power Mode comes and goes while the app is open.
+            powerObservation = Task { [weak self] in
+                for await _ in NotificationCenter.default.notifications(named: .NSProcessInfoPowerStateDidChange) {
+                    guard let self else { return }
+                    let now = self.lowPower()
+                    if now != self.isLowPower { self.isLowPower = now }
+                }
+            }
+        }
         guard observation == nil else { return }
         observation = Task { [weak self, repository] in
             for await _ in await repository.changes() {
@@ -328,6 +436,21 @@ public nonisolated enum HomeReveal {
     public static let weekStagger = 0.04
     /// The capsules' rise, in points (R9).
     public static let rise: Double = 12
+    /// Where a factor capsule starts in the reveal, after the content's
+    /// delay. Low Power Mode drops the stagger: they rise together.
+    public static func capsuleDelay(_ index: Int, lowPower: Bool) -> Double {
+        lowPower ? 0 : capsuleStagger * Double(index)
+    }
+
+    /// Where a week bar starts growing. Low Power Mode: all at once.
+    public static func weekDelay(_ index: Int, lowPower: Bool) -> Double {
+        lowPower ? 0 : weekStagger * Double(index)
+    }
+
+    /// Whether the score counts up with the ring. Low Power Mode shows the
+    /// score (its end state) from the start.
+    public static func countsUp(lowPower: Bool) -> Bool { !lowPower }
+
     /// From the dusk starting to lift to the last bar landing (and the
     /// score's haptic), with a little room.
     public static var totalDuration: Double {
@@ -349,8 +472,11 @@ public nonisolated struct HomeCollapse: Sendable, Equatable {
     public static let barShowsAt = 0.7
     public static let barHidesBelow = 0.65
 
-    public var heroScale: Double { 1 - (1 - Self.minimumScale) * progress }
-    public var heroOpacity: Double { 1 - progress }
+    public var heroScale: Double { Self.scale(at: progress) }
+    public var heroOpacity: Double { Self.opacity(at: progress) }
+
+    public static func scale(at progress: Double) -> Double { 1 - (1 - minimumScale) * progress }
+    public static func opacity(at progress: Double) -> Double { 1 - progress }
 
     public static func state(visibleTop: Double, heroTop: Double, heroHeight: Double, previous: HomeCollapse) -> HomeCollapse {
         guard heroHeight > 0 else { return .expanded }
