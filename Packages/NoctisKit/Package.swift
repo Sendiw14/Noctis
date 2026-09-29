@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "SleepKit", targets: ["SleepKit"]),
         .library(name: "RecoveryKit", targets: ["RecoveryKit"]),
         .library(name: "InsightsKit", targets: ["InsightsKit"]),
+        .library(name: "SleepAnalysisKit", targets: ["SleepAnalysisKit"]),
         .library(name: "NoctisCore", targets: ["NoctisCore"]),
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
         .library(name: "HomeFeature", targets: ["HomeFeature"]),
@@ -32,9 +33,10 @@ let package = Package(
         .target(name: "SleepKit", dependencies: ["HealthProviding"], swiftSettings: engineSwiftSettings),
         .target(name: "RecoveryKit", dependencies: ["HealthProviding", "SleepKit"], swiftSettings: engineSwiftSettings),
         .target(name: "InsightsKit", dependencies: ["SleepKit", "RecoveryKit"], swiftSettings: engineSwiftSettings),
+        .target(name: "SleepAnalysisKit", dependencies: ["HealthProviding", "SleepKit", "RecoveryKit"], swiftSettings: engineSwiftSettings),
         .target(
             name: "NoctisCore",
-            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "DesignSystem"],
+            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "DesignSystem"],
             swiftSettings: noctisSwiftSettings
         ),
         .target(name: "OnboardingFeature", dependencies: ["DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
@@ -51,7 +53,7 @@ let package = Package(
         .testTarget(
             name: "NoctisKitTests",
             dependencies: [
-                "SleepKit", "RecoveryKit", "InsightsKit", "HealthProviding", "DesignSystem",
+                "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "AppRoot",
             ],
             swiftSettings: noctisSwiftSettings

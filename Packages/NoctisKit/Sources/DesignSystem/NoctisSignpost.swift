@@ -15,7 +15,7 @@ import os
 ///   collapses into the compact bar.
 /// - `Scrub`: a finger scrubbing the night panel or the week.
 /// - `TabSwitch`: a tab being chosen to its content appearing.
-public enum NoctisSignpost {
+public nonisolated enum NoctisSignpost {
     public static let subsystem = "com.noctis.app"
     public static let category = "Performance"
 
@@ -27,6 +27,10 @@ public enum NoctisSignpost {
         case collapse = "Collapse"
         case scrub = "Scrub"
         case tabSwitch = "TabSwitch"
+        /// The Sleep repository reading Health and deriving every night.
+        case sleepLoad = "SleepLoad"
+        /// Building the render model for one Sleep selection.
+        case sleepModel = "SleepModel"
     }
 
     private static let signposter = OSSignposter(subsystem: subsystem, category: category)
@@ -44,6 +48,8 @@ public enum NoctisSignpost {
             case .collapse: signposter.beginInterval("Collapse")
             case .scrub: signposter.beginInterval("Scrub")
             case .tabSwitch: signposter.beginInterval("TabSwitch")
+            case .sleepLoad: signposter.beginInterval("SleepLoad")
+            case .sleepModel: signposter.beginInterval("SleepModel")
             }
         }
     }
@@ -59,6 +65,8 @@ public enum NoctisSignpost {
             case .collapse: signposter.endInterval("Collapse", state)
             case .scrub: signposter.endInterval("Scrub", state)
             case .tabSwitch: signposter.endInterval("TabSwitch", state)
+            case .sleepLoad: signposter.endInterval("SleepLoad", state)
+            case .sleepModel: signposter.endInterval("SleepModel", state)
             }
         }
     }
