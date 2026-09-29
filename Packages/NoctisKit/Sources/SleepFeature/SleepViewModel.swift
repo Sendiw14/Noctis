@@ -34,6 +34,10 @@ public final class SleepViewModel {
     public private(set) var isLowPower: Bool
     /// A detail sheet (Balance, Consistency, Timing) is open.
     public var detail: SleepDetail?
+    /// The bar picked in a week's or a month's chart (by the scrub, a tap or
+    /// the summary strip's longest and shortest); another range or night
+    /// clears it.
+    public var selectedBar: Int?
 
     private let repository: SleepRepository
     private let profile: () -> UserProfileSnapshot
@@ -147,6 +151,7 @@ public final class SleepViewModel {
 
     private func move(to next: SleepSelection) {
         selection = next
+        selectedBar = nil
         followsLatest = next.night == snapshot?.defaultNight
         skipReveal()
         Task { await rebuild(for: next, animated: true) }

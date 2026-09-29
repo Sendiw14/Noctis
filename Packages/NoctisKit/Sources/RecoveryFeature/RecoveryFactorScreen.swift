@@ -59,36 +59,38 @@ struct RecoveryFactorScreen: View {
     }
 }
 
-/// Today's value, the baseline, the sentence, and the range toggle.
+/// Today's value, the baseline and the sentence, in a solid block in the
+/// factor's own color; under it, the range toggle.
 struct RecoveryFactorHeader: View {
     let content: RecoveryFactorContent
     let viewModel: RecoveryViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
-            VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-                NoctisCaption("TODAY", style: .noctisInk3)
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    NoctisMetric(content.value, size: 56, relativeTo: .title)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                    if let suffix = content.valueSuffix {
-                        Text(suffix)
-                            .noctisFont(22, .semibold, relativeTo: .body)
-                            .foregroundStyle(.noctisInk2)
+            NoctisColorBlock(fill: content.kind.blockFill) {
+                VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
+                    NoctisCaption("TODAY", style: .noctisFieldInk2)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        NoctisMetric(content.value, size: 56, relativeTo: .title, tone: .block)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        if let suffix = content.valueSuffix {
+                            Text(suffix)
+                                .noctisFont(22, .semibold, relativeTo: .body)
+                                .foregroundStyle(.noctisFieldInk)
+                        }
                     }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(content.name) \(content.value.spoken)\(content.valueSuffix.map { " \($0)" } ?? "")")
+                    Text(content.baseline)
+                        .noctisFont(15, .medium, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisFieldInk)
+                    Text(content.sentence)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisFieldInk2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(content.name) \(content.value.spoken)\(content.valueSuffix.map { " \($0)" } ?? "")")
-                Text(content.baseline)
-                    .noctisFont(15, .medium, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisAppColor.ink)
-                Text(content.sentence)
-                    .noctisFont(15, relativeTo: .subheadline)
-                    .foregroundStyle(.noctisInk2)
-                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, NoctisSpacing.xxs)
             Picker("Range", selection: rangeBinding) {
                 ForEach(RecoveryFactorRange.allCases, id: \.self) { range in
                     Text(RecoveryFactorContent.rangeTitles[range] ?? "\(range.nights)").tag(range)
@@ -312,5 +314,19 @@ struct RecoveryExplanationCard: View {
             }
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+extension RecoveryFactorKind {
+    /// The factor page's header block: sage, lavender, orange or butter.
+    /// Text on it is block ink in all four: ivory on the orange is only
+    /// 2.7:1 (Light) and 2.4:1 (Dark).
+    var blockFill: Color {
+        switch self {
+        case .sleepDuration: NoctisAppColor.blockSage
+        case .hrv: NoctisAppColor.blockLavender
+        case .restingHeartRate: NoctisAppColor.orange
+        case .sleepConsistency: NoctisAppColor.blockButter
+        }
     }
 }

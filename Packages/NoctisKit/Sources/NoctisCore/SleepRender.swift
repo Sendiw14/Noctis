@@ -160,6 +160,10 @@ public nonisolated struct QualityDotRender: Sendable, Equatable {
 public nonisolated struct SleepWeekRender: Sendable, Equatable {
     public let bars: SleepBarsRender
     public let consistency: TimingDotsRender
+    /// Indices of the longest and the shortest recorded night; nil under
+    /// two recorded nights.
+    public let longest: Int?
+    public let shortest: Int?
 }
 
 public nonisolated struct SleepMonthRender: Sendable, Equatable {
@@ -279,7 +283,23 @@ public nonisolated enum SleepRenderModelBuilder {
     }
 
     static func week(_ snapshot: SleepSnapshot, night: SleepNightKey) -> SleepWeekRender {
-        SleepWeekRender(bars: bars(snapshot, night: night, count: 7), consistency: timingDots(snapshot, night: night, count: 7))
+        let nights = snapshot.nights(endingAt: night, count: 7)
+        let (longest, shortest) = extremes(nights)
+        return SleepWeekRender(
+            bars: bars(snapshot, night: night, count: 7),
+            consistency: timingDots(snapshot, night: night, count: 7),
+            longest: longest,
+            shortest: shortest
+        )
+    }
+
+    /// The longest and the shortest recorded night among `nights` (indices);
+    /// nil under two recorded nights, and no shortest when it is the longest.
+    static func extremes(_ nights: [(night: SleepNightKey, record: SleepNightRecord?)]) -> (longest: Int?, shortest: Int?) {
+        let recorded = nights.enumerated().compactMap { index, entry in entry.record.map { (index, $0.metrics.asleepMinutes) } }
+        let longest = recorded.count >= 2 ? recorded.max { $0.1 < $1.1 }?.0 : nil
+        let shortest = recorded.count >= 2 ? recorded.min { $0.1 < $1.1 }?.0 : nil
+        return (longest, shortest == longest ? nil : shortest)
     }
 
     static func month(_ snapshot: SleepSnapshot, night: SleepNightKey) -> SleepMonthRender {
@@ -302,14 +322,12 @@ public nonisolated enum SleepRenderModelBuilder {
             )
             end = start
         }
-        let recorded = nights.enumerated().compactMap { index, entry in entry.record.map { (index, $0.metrics.asleepMinutes) } }
-        let longest = recorded.count >= 2 ? recorded.max { $0.1 < $1.1 }?.0 : nil
-        let shortest = recorded.count >= 2 ? recorded.min { $0.1 < $1.1 }?.0 : nil
+        let (longest, shortest) = extremes(nights)
         return SleepMonthRender(
             bars: bars,
             blocks: blocks,
             longest: longest,
-            shortest: shortest == longest ? nil : shortest,
+            shortest: shortest,
             rhythm: rhythm(snapshot, night: night),
             quality: nights.map { entry in
                 QualityDotRender(night: entry.night, score: entry.record?.quality.score, band: entry.record.map { QualityDotRender.band(for: $0.quality.score) })

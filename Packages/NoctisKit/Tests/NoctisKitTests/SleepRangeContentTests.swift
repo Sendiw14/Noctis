@@ -332,6 +332,34 @@ struct SleepMonthContentTests {
         #expect(month.longest == nil && month.shortest == nil)
     }
 
+    @Test func theSummaryStripHasTheAverageAndTheLongestAndShortestNightOfTheRange() throws {
+        // Each night 3 minutes longer than the one before.
+        let asleep: (Int) -> Double = { 400 + Double($0) * 3 }
+        let month = screen(snapshot(count: 30, asleep: asleep), range: .month)
+        let summary = try #require(month.summary)
+        #expect(summary.average == month.bars?.average)
+        #expect(summary.longest?.index == 29 && summary.shortest?.index == 0)
+        #expect(summary.accessibilityLabel == "Average \(summary.average.spoken)")
+        // A week names its own extremes, among its seven bars.
+        let week = screen(snapshot(count: 30, asleep: asleep), range: .week)
+        let weekSummary = try #require(week.summary)
+        let weekLongest = try #require(weekSummary.longest)
+        let weekShortest = try #require(weekSummary.shortest)
+        #expect(weekLongest.index == 6 && weekShortest.index == 0)
+        #expect(weekLongest.title == "Longest" && weekShortest.title == "Shortest")
+        #expect(weekLongest.value.spoken == "8 hours 7 minutes")
+        #expect(weekShortest.value.spoken == "7 hours 49 minutes")
+        #expect(week.week?.bars.accessibilityLabel.contains("Longest night") == true)
+    }
+
+    @Test func aRangeWithNothingRecordedHasNoSummary() {
+        let empty = screen(snapshot(count: 0), range: .week)
+        #expect(empty.summary == nil)
+        // One recorded night has an average and no extremes to name.
+        let one = screen(snapshot(count: 1), range: .week)
+        #expect(one.summary?.longest == nil && one.summary?.shortest == nil)
+    }
+
     @Test func theQualityStripHasANightPerDotAndTheNumberInEveryPill() throws {
         let snap = snapshot(count: 30, skipping: [12])
         let month = try #require(screen(snap, range: .month).month)

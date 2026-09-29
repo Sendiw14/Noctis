@@ -135,6 +135,9 @@ struct SleepFieldView: View {
                         SleepHeroView(day: day, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
                             .transition(.opacity)
                     }
+                } else if let screen = viewModel.screen, screen.state == nil, let summary = screen.summary {
+                    SleepSummaryStrip(summary: summary) { viewModel.selectedBar = $0 }
+                        .transition(.opacity)
                 } else if viewModel.screen == nil {
                     SleepFieldSkeleton()
                 }

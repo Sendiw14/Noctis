@@ -607,6 +607,27 @@ struct HomeSkeletonView: View {
 // MARK: - Colors
 
 extension RecoveryFactorKind {
+    /// The factor's glyph in an icon tile.
+    public var symbol: String {
+        switch self {
+        case .sleepDuration: "moon.zzz.fill"
+        case .hrv: "waveform.path.ecg"
+        case .restingHeartRate: "heart.fill"
+        case .sleepConsistency: "clock.fill"
+        }
+    }
+
+    /// The factor's color as a line: the fill's own hue, deep enough to read
+    /// on a card (butter as a line on white would be 1.6:1).
+    public var lineTint: Color {
+        switch self {
+        case .sleepDuration: NoctisAppColor.sectionSage
+        case .hrv: NoctisAppColor.sectionLavender
+        case .restingHeartRate: NoctisAppColor.orangeText
+        case .sleepConsistency: NoctisAppColor.sectionButter
+        }
+    }
+
     /// Sleep sage, HRV lavender, resting HR orange, consistency butter.
     public var tint: Color {
         switch self {
@@ -630,6 +651,16 @@ extension RingSegmentContent {
 }
 
 extension NightLane {
+    /// The stage's glyph in an icon tile.
+    public var symbol: String {
+        switch self {
+        case .awake: "eye.fill"
+        case .rem: "sparkles"
+        case .core: "moon.fill"
+        case .deep: "zzz"
+        }
+    }
+
     /// On the night panel (and the stacked week bars): Awake butter, REM
     /// sage, Core the lighter core tint, Deep night lavender (cocoa would
     /// vanish on the cocoa panel).

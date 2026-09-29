@@ -11,9 +11,10 @@ struct SleepRangeView: View {
     let viewModel: SleepViewModel
 
     var body: some View {
+        @Bindable var model = viewModel
         VStack(spacing: NoctisSpacing.md) {
             if let bars = screen.bars {
-                SleepBarsCard(content: bars, range: screen.selection.range, month: screen.month)
+                SleepBarsCard(content: bars, range: screen.selection.range, month: screen.month, selected: $model.selectedBar)
             }
             if screen.selection.range == .week, let insights = screen.insights {
                 if let consistency = insights.consistency {
@@ -47,8 +48,8 @@ struct SleepBarsCard: View {
     let range: SleepRange
     let month: SleepMonthContent?
 
+    @Binding var selected: Int?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var selected: Int?
     @State private var chartWidth: CGFloat = 0
     @NoctisScaledLength(relativeTo: .footnote) private var labelRowHeight: CGFloat = 24
 
@@ -81,25 +82,12 @@ struct SleepBarsCard: View {
                     }
                 }
                 chart
-                if let average = content.average {
-                    HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Text("Avg")
-                            .noctisFont(15, .semibold, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink)
-                        NoctisMetric(average, size: 17, relativeTo: .body)
-                            .contentTransition(.numericText())
-                            .animation(reduceMotion ? nil : NoctisMotion.settle, value: average)
-                    }
-                }
                 legend
                 if let note = content.stagesNote {
                     Text(note)
                         .noctisFont(12, relativeTo: .caption)
                         .foregroundStyle(.noctisInk3)
                         .fixedSize(horizontal: false, vertical: true)
-                }
-                if let month, month.longest != nil || month.shortest != nil {
-                    markers(month)
                 }
             }
         }
@@ -339,45 +327,6 @@ struct SleepBarsCard: View {
                 .foregroundStyle(.noctisInk3)
         }
     }
-
-    /// The month's longest and shortest nights, named: pressing one selects
-    /// its bar.
-    private func markers(_ month: SleepMonthContent) -> some View {
-        HStack(alignment: .top, spacing: NoctisSpacing.sm) {
-            ForEach([month.longest, month.shortest].compactMap { $0 }, id: \.index) { marker in
-                Button {
-                    NoctisHaptics.snapLight()
-                    withAnimation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion)) { selected = marker.index }
-                } label: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 6) {
-                            markerGlyph(marker.kind)
-                            Text(marker.title)
-                                .noctisFont(13, .medium, relativeTo: .footnote)
-                                .foregroundStyle(.noctisInk3)
-                        }
-                        NoctisMetric(marker.value, size: 22, relativeTo: .title3)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                        Text(marker.date)
-                            .noctisFont(12, relativeTo: .caption)
-                            .foregroundStyle(.noctisInk3)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                    .padding(NoctisSpacing.sm)
-                    .background(
-                        RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous)
-                            .fill(NoctisAppColor.bg)
-                            .overlay(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
-                    )
-                    .contentShape(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(marker.accessibilityLabel)
-                .accessibilityHint("Selects this night on the chart.")
-            }
-        }
-    }
 }
 
 // MARK: - Quality strip
@@ -479,6 +428,94 @@ extension QualityDotRender.Band {
         case .high: NoctisAppColor.sage
         case .middle: NoctisAppColor.butter
         case .low: NoctisAppColor.orange
+        }
+    }
+}
+
+// MARK: - Summary strip
+
+/// On the sage field of Week and Month: the average, and the longest and the
+/// shortest night, in three tiles with cocoa .12 dividers. Pressing the
+/// longest or the shortest picks its bar in the chart.
+struct SleepSummaryStrip: View {
+    let summary: SleepSummaryContent
+    let select: (Int) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 0) { tiles }
+            VStack(alignment: .leading, spacing: NoctisSpacing.sm) { tiles }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("sleep.summary")
+    }
+
+    @ViewBuilder
+    private var tiles: some View {
+        tile(title: "Average", glyph: nil, value: summary.average, caption: nil, marker: nil)
+        if let longest = summary.longest {
+            divider
+            tile(title: longest.title, glyph: .longest, value: longest.value, caption: longest.date, marker: longest)
+        }
+        if let shortest = summary.shortest {
+            divider
+            tile(title: shortest.title, glyph: .shortest, value: shortest.value, caption: shortest.date, marker: shortest)
+        }
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(NoctisAppColor.blockInk.opacity(0.12))
+            .frame(width: 1)
+            .padding(.vertical, 2)
+    }
+
+    @ViewBuilder
+    private func tile(title: String, glyph: SleepBarMarker.Kind?, value: NoctisMetricValue, caption: String?, marker: SleepBarMarker?) -> some View {
+        let content = VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                if let glyph { glyphView(glyph) }
+                Text(title)
+                    .noctisFont(13, .medium, relativeTo: .footnote)
+                    .foregroundStyle(.noctisFieldInk2)
+            }
+            NoctisMetric(value, size: 28, relativeTo: .title, tone: .block)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            if let caption {
+                Text(caption)
+                    .noctisFont(12, relativeTo: .caption)
+                    .foregroundStyle(.noctisFieldInk2)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .topLeading)
+        .padding(.horizontal, NoctisSpacing.sm)
+        if let marker {
+            Button {
+                NoctisHaptics.snapLight()
+                withAnimation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion)) { select(marker.index) }
+            } label: { content.contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+                .accessibilityLabel(marker.accessibilityLabel)
+                .accessibilityHint("Selects this night on the chart.")
+        } else {
+            content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(summary.accessibilityLabel)
+        }
+    }
+
+    /// A filled dot for the longest night, a ring for the shortest: the same
+    /// marks the chart draws over its bars.
+    @ViewBuilder
+    private func glyphView(_ kind: SleepBarMarker.Kind) -> some View {
+        switch kind {
+        case .longest: Circle().fill(NoctisAppColor.blockInk).frame(width: 6, height: 6)
+        case .shortest: Circle().strokeBorder(NoctisAppColor.blockInk, lineWidth: 1.5).frame(width: 6, height: 6)
         }
     }
 }

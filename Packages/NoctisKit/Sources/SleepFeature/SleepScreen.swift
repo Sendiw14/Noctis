@@ -158,6 +158,16 @@ public nonisolated struct SleepScreen: Sendable, Equatable {
     public let insights: SleepInsightsContent?
     /// The bars of the selected week or month.
     public var bars: SleepBarsContent? { week?.bars ?? month?.bars }
+    /// The average, longest and shortest night of the selected week or month.
+    public var summary: SleepSummaryContent? {
+        guard let bars, let average = bars.average else { return nil }
+        return SleepSummaryContent(
+            average: average,
+            accessibilityLabel: "Average \(average.spoken)",
+            longest: week?.longest ?? month?.longest,
+            shortest: week?.shortest ?? month?.shortest
+        )
+    }
     /// The selected range's title for VoiceOver ("Day", "Week", "Month").
     public var rangeTitle: String { selection.range.title }
 }

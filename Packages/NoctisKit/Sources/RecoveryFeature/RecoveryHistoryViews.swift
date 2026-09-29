@@ -264,17 +264,35 @@ struct RecoveryHistoryChartCard: View {
 struct RecoveryHistoryTiles: View {
     let tiles: [RecoveryHistoryTile]
 
+    /// Two to a row.
+    private var rows: [[RecoveryHistoryTile]] {
+        stride(from: 0, to: tiles.count, by: 2).map { Array(tiles[$0..<min($0 + 2, tiles.count)]) }
+    }
+
+    /// One lavender block, the six tiles separated by cocoa .12 lines. The
+    /// tiles carry 12pt of padding of their own, so the stack reaches that
+    /// far into the block's padding and their text lines up with the
+    /// block's other content.
     var body: some View {
-        LazyVGrid(
-            columns: [
-                GridItem(.flexible(), spacing: NoctisSpacing.sm, alignment: .top),
-                GridItem(.flexible(), spacing: NoctisSpacing.sm, alignment: .top),
-            ],
-            spacing: NoctisSpacing.sm
-        ) {
-            ForEach(tiles) { tile in
-                RecoveryHistoryTileView(tile: tile)
+        NoctisColorBlock(fill: NoctisAppColor.blockLavender) {
+            VStack(spacing: 0) {
+                ForEach(Array(rows.enumerated()), id: \.offset) { index, pair in
+                    if index > 0 {
+                        NoctisBlockRule(.horizontal)
+                    }
+                    HStack(alignment: .top, spacing: 0) {
+                        RecoveryHistoryTileView(tile: pair[0])
+                        NoctisBlockRule(.vertical)
+                        if pair.count > 1 {
+                            RecoveryHistoryTileView(tile: pair[1])
+                        } else {
+                            Color.clear.frame(maxWidth: .infinity)
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                }
             }
+            .padding(.horizontal, -NoctisSpacing.sm)
         }
         .accessibilityIdentifier("recovery.stats")
     }
@@ -282,38 +300,34 @@ struct RecoveryHistoryTiles: View {
 
 struct RecoveryHistoryTileView: View {
     let tile: RecoveryHistoryTile
-    @NoctisScaledLength(relativeTo: .body) private var minHeight: CGFloat = 92
+    @NoctisScaledLength(relativeTo: .body) private var minHeight: CGFloat = 84
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(tile.title)
                 .noctisFont(13, .medium, relativeTo: .footnote)
-                .foregroundStyle(.noctisInk3)
+                .foregroundStyle(.noctisFieldInk2)
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                NoctisMetric(tile.value, size: 32)
+                NoctisMetric(tile.value, size: 32, tone: .block)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                 if let symbol = tile.symbol {
                     // Never a warning color: the arrow is ink like the number.
                     Image(systemName: symbol)
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(NoctisAppColor.ink)
+                        .foregroundStyle(.noctisFieldInk)
                         .accessibilityHidden(true)
                 }
             }
             if let note = tile.note {
                 Text(note)
                     .noctisFont(12, relativeTo: .caption)
-                    .foregroundStyle(.noctisInk3)
+                    .foregroundStyle(.noctisFieldInk2)
             }
         }
-        .padding(NoctisSpacing.md)
+        .padding(.horizontal, NoctisSpacing.sm)
+        .padding(.vertical, NoctisSpacing.sm)
         .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous)
-                .fill(NoctisAppColor.surface)
-                .overlay(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
-        )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(tile.accessibilityLabel + (tile.note.map { ", \($0)" } ?? ""))
         .accessibilityIdentifier("recovery.stat.\(tile.id)")
@@ -338,9 +352,8 @@ struct RecoveryHistoryFactorRowView: View {
         } label: {
             NoctisAppCard {
                 VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                    HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
-                        Circle().fill(row.kind.tint).frame(width: 10, height: 10)
-                            .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
+                    HStack(alignment: .center, spacing: NoctisSpacing.sm) {
+                        NoctisIconTile(systemImage: row.kind.symbol, fill: row.kind.tint, foreground: NoctisAppColor.onFill, size: 40)
                         Text(row.name)
                             .noctisFont(15, .semibold, relativeTo: .subheadline)
                             .foregroundStyle(NoctisAppColor.ink)

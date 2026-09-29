@@ -151,6 +151,18 @@ public nonisolated struct SleepInsightsContent: Sendable, Equatable {
 
 public nonisolated struct SleepWeekContent: Sendable, Equatable {
     public let bars: SleepBarsContent
+    public let longest: SleepBarMarker?
+    public let shortest: SleepBarMarker?
+}
+
+/// The strip at the top of Week and Month: the average, and the longest
+/// and the shortest night of the range.
+public nonisolated struct SleepSummaryContent: Sendable, Equatable {
+    public let average: NoctisMetricValue
+    /// "Average" and how many nights it is over, for VoiceOver.
+    public let accessibilityLabel: String
+    public let longest: SleepBarMarker?
+    public let shortest: SleepBarMarker?
 }
 
 // MARK: - Month
@@ -231,7 +243,17 @@ nonisolated extension SleepScreenBuilder {
     // MARK: Week and month
 
     static func weekContent(_ snapshot: SleepSnapshot, model: SleepRenderModel, render: SleepWeekRender, format: HomeFormat) -> SleepWeekContent {
-        SleepWeekContent(bars: barsContent(render.bars, snapshot: snapshot, night: model.selection.night, range: .week, format: format))
+        let nights = snapshot.nights(endingAt: model.selection.night, count: SleepRange.week.nights).map { $0.night }
+        let longest = render.longest.map { marker(.longest, index: $0, night: nights[$0], snapshot: snapshot, format: format) }
+        let shortest = render.shortest.map { marker(.shortest, index: $0, night: nights[$0], snapshot: snapshot, format: format) }
+        return SleepWeekContent(
+            bars: barsContent(
+                render.bars, snapshot: snapshot, night: model.selection.night, range: .week, format: format,
+                notes: [longest, shortest].compactMap { $0?.accessibilityLabel }
+            ),
+            longest: longest,
+            shortest: shortest
+        )
     }
 
     static func monthContent(_ snapshot: SleepSnapshot, model: SleepRenderModel, render: SleepMonthRender, format: HomeFormat) -> SleepMonthContent {
@@ -467,7 +489,6 @@ nonisolated extension SleepScreenBuilder {
 
     static func balanceContent(_ model: SleepRenderModel, need: Int, format: HomeFormat) -> SleepBalanceContent {
         let needText = HomeFormat.compactDuration(need)
-        let recorded = model.balance?.recordedNights ?? 0
         let series = model.balance?.series ?? []
         let firstLabel = series.first.map { format.monthDay($0.night.adding(days: 1)) } ?? ""
         let lastLabel = series.last.map { format.monthDay($0.night.adding(days: 1)) } ?? ""

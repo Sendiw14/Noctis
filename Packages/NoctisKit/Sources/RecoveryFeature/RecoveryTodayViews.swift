@@ -151,15 +151,15 @@ struct RecoveryBuildCard: View {
     static let barHeight: CGFloat = 20
 
     var body: some View {
-        NoctisAppCard {
+        NoctisColorBlock(fill: NoctisAppColor.blockLavender) {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-                NoctisCaption("HOW TODAY'S SCORE WAS BUILT", style: .noctisInk3)
+                NoctisCaption("HOW TODAY'S SCORE WAS BUILT", style: .noctisFieldInk2)
                 HStack(spacing: NoctisSpacing.sm) {
                     bar
                     Text(build.totalText)
                         .noctisFont(17, .semibold, relativeTo: .body)
                         .monospacedDigit()
-                        .foregroundStyle(NoctisAppColor.ink)
+                        .foregroundStyle(.noctisFieldInk)
                         .fixedSize()
                 }
                 VStack(spacing: NoctisSpacing.sm) {
@@ -170,11 +170,11 @@ struct RecoveryBuildCard: View {
                 if let note = build.capNote {
                     Text(note)
                         .noctisFont(15, .semibold, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.ink)
+                        .foregroundStyle(.noctisFieldInk)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(NoctisSpacing.sm)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(NoctisAppColor.track, in: RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
+                        .background(NoctisAppColor.blockInk.opacity(0.12), in: RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
                         .accessibilityIdentifier("recovery.cap")
                 }
             }
@@ -184,15 +184,18 @@ struct RecoveryBuildCard: View {
         .accessibilityIdentifier("recovery.build")
     }
 
+    /// The segments keep their ring colors; a 2pt cocoa outline keeps the
+    /// lavender one from vanishing into the block.
     private var bar: some View {
         ZStack {
             NoctisSpanLayout(to: 1) {
-                Capsule().fill(NoctisAppColor.track).frame(height: Self.barHeight)
+                Capsule().fill(NoctisAppColor.blockInk.opacity(0.12)).frame(height: Self.barHeight)
             }
             ForEach(build.rows) { row in
                 NoctisSpanLayout(from: row.start, to: row.start + row.width, minimumWidth: 4) {
                     RoundedRectangle(cornerRadius: 5, style: .continuous)
                         .fill(row.kind.tint)
+                        .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).strokeBorder(NoctisAppColor.blockCocoa, lineWidth: 2))
                         .frame(height: Self.barHeight)
                         .padding(.horizontal, 1)
                 }
@@ -204,20 +207,21 @@ struct RecoveryBuildCard: View {
     private func rowView(_ row: RecoveryBuildRow) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
             Circle().fill(row.kind.tint).frame(width: 10, height: 10)
+                .overlay(Circle().strokeBorder(NoctisAppColor.blockCocoa, lineWidth: 1.5))
                 .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
             Text(row.name)
                 .noctisFont(15, .semibold, relativeTo: .subheadline)
-                .foregroundStyle(NoctisAppColor.ink)
+                .foregroundStyle(.noctisFieldInk)
             Spacer(minLength: NoctisSpacing.xs)
             if let usual = row.usualText {
                 Text(usual)
                     .noctisFont(13, relativeTo: .footnote)
-                    .foregroundStyle(.noctisInk2)
+                    .foregroundStyle(.noctisFieldInk2)
             }
             Text(row.pointsText)
                 .noctisFont(17, .semibold, relativeTo: .body)
                 .monospacedDigit()
-                .foregroundStyle(NoctisAppColor.ink)
+                .foregroundStyle(.noctisFieldInk)
                 .frame(minWidth: 40, alignment: .trailing)
         }
     }
@@ -240,10 +244,7 @@ struct RecoveryFactorCard: View {
             NoctisAppCard {
                 VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                     HStack(alignment: .top, spacing: NoctisSpacing.sm) {
-                        Circle()
-                            .fill(row.kind.tint)
-                            .frame(width: 12, height: 12)
-                            .padding(.top, 6)
+                        NoctisIconTile(systemImage: row.kind.symbol, fill: row.kind.tint, foreground: NoctisAppColor.onFill, size: 40)
                         VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 Text(row.name)
@@ -319,12 +320,14 @@ struct RecoveryConfidenceCard: View {
                 .fixedSize(horizontal: false, vertical: true)
                 VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
                     ForEach(content.checklist) { item in
-                        HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
-                            Image(systemName: item.isUsed ? "checkmark.circle.fill" : "circle.dashed")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(item.isUsed ? NoctisAppColor.ink : NoctisAppColor.ink3)
-                                .frame(width: 20)
-                                .accessibilityHidden(true)
+                        HStack(alignment: .center, spacing: NoctisSpacing.sm) {
+                            // Counted: the factor's own color. Not counted: the track, muted.
+                            NoctisIconTile(
+                                systemImage: item.kind.symbol,
+                                fill: item.isUsed ? item.kind.tint : NoctisAppColor.track,
+                                foreground: item.isUsed ? NoctisAppColor.onFill : NoctisAppColor.ink3,
+                                size: 40
+                            )
                             VStack(alignment: .leading, spacing: 0) {
                                 Text(item.name)
                                     .noctisFont(15, .medium, relativeTo: .subheadline)

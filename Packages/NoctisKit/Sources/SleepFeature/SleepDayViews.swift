@@ -353,7 +353,7 @@ struct SleepStageCard: View {
     }
 }
 
-/// A dot, the stage's name, its duration and share, and a bar of the
+/// The stage's icon tile, its name, duration and share, and a bar of the
 /// share with a tick where your usual is ("usual 22%").
 struct SleepStageRow: View {
     let row: SleepStageRowContent
@@ -363,43 +363,40 @@ struct SleepStageRow: View {
     @NoctisScaledLength(relativeTo: .caption) private var usualWidth: CGFloat = 76
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
-                Text(row.name)
-                    .noctisFont(15, .semibold, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisAppColor.ink)
-                    .padding(.leading, 16)
-                    // The stage's dot, centered on the name's line.
-                    .overlay(alignment: .leading) {
-                        Circle().fill(row.stage.lane.tint).frame(width: 8, height: 8)
-                            .accessibilityHidden(true)
-                    }
-                Spacer(minLength: NoctisSpacing.xs)
-                NoctisMetric(row.duration, size: 17, relativeTo: .body)
-                Text(row.shareText)
-                    .noctisFont(15, .medium, relativeTo: .subheadline)
-                    .monospacedDigit()
-                    .foregroundStyle(.noctisInk2)
-                    .frame(minWidth: 44, alignment: .trailing)
-            }
-            HStack(spacing: NoctisSpacing.xs) {
-                ZStack {
-                    NoctisSpanLayout(to: 1) { Capsule().fill(NoctisAppColor.track).frame(height: 8) }
-                    NoctisSpanLayout(to: row.share, minimumWidth: 8) { Capsule().fill(row.stage.lane.tint).frame(height: 8) }
-                    if let usual = row.usual {
-                        NoctisFractionLayout {
-                            RoundedRectangle(cornerRadius: 1).fill(NoctisAppColor.ink).frame(width: 2, height: 14)
-                                .noctisFraction(usual)
+        HStack(alignment: .center, spacing: NoctisSpacing.sm) {
+            NoctisIconTile(systemImage: row.stage.lane.symbol, fill: row.stage.lane.tint, foreground: NoctisAppColor.onFill, size: 40)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
+                    Text(row.name)
+                        .noctisFont(15, .semibold, relativeTo: .subheadline)
+                        .foregroundStyle(NoctisAppColor.ink)
+                    Spacer(minLength: NoctisSpacing.xs)
+                    NoctisMetric(row.duration, size: 17, relativeTo: .body)
+                    Text(row.shareText)
+                        .noctisFont(15, .medium, relativeTo: .subheadline)
+                        .monospacedDigit()
+                        .foregroundStyle(.noctisInk2)
+                        .frame(minWidth: 44, alignment: .trailing)
+                }
+                HStack(spacing: NoctisSpacing.xs) {
+                    ZStack {
+                        NoctisSpanLayout(to: 1) { Capsule().fill(NoctisAppColor.track).frame(height: 8) }
+                        NoctisSpanLayout(to: row.share, minimumWidth: 8) { Capsule().fill(row.stage.lane.tint).frame(height: 8) }
+                        if let usual = row.usual {
+                            NoctisFractionLayout {
+                                RoundedRectangle(cornerRadius: 1).fill(NoctisAppColor.ink).frame(width: 2, height: 14)
+                                    .noctisFraction(usual)
+                            }
                         }
                     }
-                }
-                .frame(height: 14)
-                if reservesUsual {
-                    Text(row.usualText ?? "")
-                        .noctisFont(12, relativeTo: .caption)
-                        .foregroundStyle(.noctisInk3)
-                        .lineLimit(1)
-                        .frame(width: usualWidth, alignment: .trailing)
+                    .frame(height: 14)
+                    if reservesUsual {
+                        Text(row.usualText ?? "")
+                            .noctisFont(12, relativeTo: .caption)
+                            .foregroundStyle(.noctisInk3)
+                            .lineLimit(1)
+                            .frame(width: usualWidth, alignment: .trailing)
+                    }
                 }
             }
         }
@@ -473,6 +470,15 @@ struct SleepQualityCard: View {
 }
 
 extension SleepQualityFactorKind {
+    var symbol: String {
+        switch self {
+        case .duration: "moon.zzz.fill"
+        case .continuity: "waveform"
+        case .consistency: "clock.fill"
+        case .stages: "square.stack.3d.up.fill"
+        }
+    }
+
     var tint: Color {
         switch self {
         case .duration: NoctisAppColor.sage
@@ -487,26 +493,29 @@ struct SleepFactorRow: View {
     let factor: SleepFactorRowContent
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(factor.name)
-                    .noctisFont(15, .semibold, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisAppColor.ink)
-                Spacer(minLength: NoctisSpacing.xs)
-                Text("\(factor.score)")
-                    .noctisFont(17, .semibold, relativeTo: .body)
-                    .monospacedDigit()
-                    .foregroundStyle(NoctisAppColor.ink)
+        HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+            NoctisIconTile(systemImage: factor.kind.symbol, fill: factor.kind.tint, foreground: NoctisAppColor.onFill, size: 40)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(factor.name)
+                        .noctisFont(15, .semibold, relativeTo: .subheadline)
+                        .foregroundStyle(NoctisAppColor.ink)
+                    Spacer(minLength: NoctisSpacing.xs)
+                    Text("\(factor.score)")
+                        .noctisFont(17, .semibold, relativeTo: .body)
+                        .monospacedDigit()
+                        .foregroundStyle(NoctisAppColor.ink)
+                }
+                ZStack {
+                    NoctisSpanLayout(to: 1) { Capsule().fill(NoctisAppColor.track).frame(height: 8) }
+                    NoctisSpanLayout(to: factor.fraction, minimumWidth: 8) { Capsule().fill(factor.kind.tint).frame(height: 8) }
+                }
+                .frame(height: 8)
+                Text(factor.sentence)
+                    .noctisFont(15, relativeTo: .subheadline)
+                    .foregroundStyle(.noctisInk2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            ZStack {
-                NoctisSpanLayout(to: 1) { Capsule().fill(NoctisAppColor.track).frame(height: 8) }
-                NoctisSpanLayout(to: factor.fraction, minimumWidth: 8) { Capsule().fill(factor.kind.tint).frame(height: 8) }
-            }
-            .frame(height: 8)
-            Text(factor.sentence)
-                .noctisFont(15, relativeTo: .subheadline)
-                .foregroundStyle(.noctisInk2)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(factor.name) \(factor.score). \(factor.sentence)")
@@ -542,10 +551,12 @@ struct SleepDetailsGrid: View {
 struct SleepDetailTileView: View {
     let tile: SleepDetailTile
     /// Room for a value and a caption, so tiles in a row are one height.
-    @NoctisScaledLength(relativeTo: .body) private var minHeight: CGFloat = 104
+    @NoctisScaledLength(relativeTo: .body) private var minHeight: CGFloat = 148
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
+            NoctisIconTile(systemImage: Self.symbol(tile.id), fill: Self.fill(tile.id), foreground: NoctisAppColor.onFill, size: 40)
+                .padding(.bottom, NoctisSpacing.xxs)
             Text(tile.title)
                 .noctisFont(13, .medium, relativeTo: .footnote)
                 .foregroundStyle(.noctisInk3)
@@ -567,5 +578,27 @@ struct SleepDetailTileView: View {
         )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(tile.title) \(tile.value.spoken)" + (tile.note.map { ", \($0)" } ?? ""))
+    }
+
+    static func symbol(_ id: String) -> String {
+        switch id {
+        case "inBed": "bed.double.fill"
+        case "efficiency": "percent"
+        case "bedtime": "moon.fill"
+        case "wake": "sun.max.fill"
+        case "awakenings": "eye.fill"
+        case "awake": "timer"
+        default: "moon.stars.fill"
+        }
+    }
+
+    static func fill(_ id: String) -> Color {
+        switch id {
+        case "inBed", "bedtime": NoctisAppColor.nightDeep
+        case "efficiency": NoctisAppColor.sage
+        case "wake", "awake": NoctisAppColor.butter
+        case "awakenings": NoctisAppColor.coreTint
+        default: NoctisAppColor.lavender
+        }
     }
 }
