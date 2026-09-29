@@ -184,7 +184,7 @@ struct SleepBarsCard: View {
         if isWeek, let stages = bar.stages {
             VStack(spacing: 0) {
                 NoctisAppColor.sage.frame(height: height * stages.rem)
-                NoctisAppColor.orange.frame(height: height * stages.core)
+                NoctisAppColor.coreTint.frame(height: height * stages.core)
                 NoctisAppColor.nightDeep.frame(height: height * stages.deep)
             }
         } else {
@@ -308,7 +308,7 @@ struct SleepBarsCard: View {
         SleepLegend {
             if isWeek && content.hasStages {
                 key(NoctisAppColor.nightDeep, "Deep")
-                key(NoctisAppColor.orange, "Core")
+                key(NoctisAppColor.coreTint, "Core")
                 key(NoctisAppColor.sage, "REM")
                 lineKey("Average")
             } else if isWeek {

@@ -630,14 +630,14 @@ extension RingSegmentContent {
 }
 
 extension NightLane {
-    /// On the night panel (and This week's stacked bars): Awake butter,
-    /// REM sage, Core orange, Deep night lavender (cocoa would vanish on
-    /// the cocoa panel).
+    /// On the night panel (and the stacked week bars): Awake butter, REM
+    /// sage, Core the lighter core tint, Deep night lavender (cocoa would
+    /// vanish on the cocoa panel).
     public var tint: Color {
         switch self {
         case .awake: NoctisAppColor.butter
         case .rem: NoctisAppColor.sage
-        case .core: NoctisAppColor.orange
+        case .core: NoctisAppColor.coreTint
         case .deep: NoctisAppColor.nightDeep
         }
     }

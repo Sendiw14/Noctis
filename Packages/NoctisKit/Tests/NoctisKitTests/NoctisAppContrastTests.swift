@@ -140,6 +140,59 @@ struct NoctisAppContrastTests {
         }
     }
 
+    // MARK: - Color pass
+
+    /// Block ink on all three blocks, and on the core tint.
+    @Test(arguments: modes)
+    func blockInkReadsOnEveryBlockAndTheCoreTint(_ mode: String, _ palette: NoctisAppPalette) {
+        for (name, fill) in [("sage", palette.blockSage), ("lavender", palette.blockLavender), ("butter", palette.blockButter), ("coreTint", palette.coreTint)] {
+            let value = ratio(palette.blockInk, fill)
+            #expect(value >= 4.5, "\(mode): block ink on \(name) \(value) < 4.5:1")
+        }
+        // The factor header in orange takes ivory ink (part C): in Light that's the paper, in Dark the ink.
+        #expect(ratio(palette.onFill, palette.orange) >= 4.5, "\(mode): ink on the orange fill")
+    }
+
+    /// The tab glyphs' section inks: 3:1 as graphics on the paper and the
+    /// card, in both modes.
+    @Test(arguments: modes)
+    func sectionInksStandOutAsGraphics(_ mode: String, _ palette: NoctisAppPalette) {
+        for (name, ink) in [("sage", palette.sectionSage), ("lavender", palette.sectionLavender), ("butter", palette.sectionButter)] {
+            #expect(ratio(ink, palette.bg) >= 3, "\(mode): section \(name) on the paper \(ratio(ink, palette.bg))")
+            #expect(ratio(ink, palette.surface) >= 3, "\(mode): section \(name) on the card \(ratio(ink, palette.surface))")
+        }
+    }
+
+    /// The core tint on the night panel (the ribbon) is a graphic: 3:1.
+    @Test(arguments: modes)
+    func theCoreTintReadsOnTheNightPanel(_ mode: String, _ palette: NoctisAppPalette) {
+        #expect(ratio(palette.coreTint, palette.nightPanel) >= 3, "\(mode): core tint on the night panel")
+    }
+
+    /// Dark: the six most-used neighboring pairs, at least 1.25:1 (plain
+    /// luminance ratio).
+    @Test func darkMostUsedNeighborsStayAtLeast125Apart() {
+        let dark = NoctisAppPalette.dark
+        let pairs: [(String, String, String)] = [
+            ("paper / card", dark.bg, dark.surface),
+            ("paper / night panel", dark.bg, dark.nightPanel),
+            ("card / track", dark.surface, dark.track),
+            ("paper / sage block", dark.bg, dark.blockSage),
+            ("paper / lavender block", dark.bg, dark.blockLavender),
+            ("paper / butter block", dark.bg, dark.blockButter),
+        ]
+        for (name, a, b) in pairs {
+            let la = luminance(a), lb = luminance(b)
+            #expect(max(la, lb) / min(la, lb) >= 1.25, "\(name)")
+        }
+    }
+
+    @Test func theDarkCardIsTheApprovedValue() {
+        #expect(NoctisAppPalette.dark.bg == "17110E")
+        #expect(NoctisAppPalette.dark.surface == "251C16")
+        #expect(NoctisAppPalette.dark.nightPanel == "0E0A08")
+    }
+
     private func luminance(_ hex: String) -> Double {
         let (r, g, b) = noctisHexComponents(hex)
         func linear(_ c: Double) -> Double { c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }

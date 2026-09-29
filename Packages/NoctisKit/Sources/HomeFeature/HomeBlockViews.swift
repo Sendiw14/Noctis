@@ -695,7 +695,7 @@ struct WeekCardView: View {
         if let stages {
             VStack(spacing: 0) {
                 NoctisAppColor.sage.frame(height: height * stages.rem)
-                NoctisAppColor.orange.frame(height: height * stages.core)
+                NoctisAppColor.coreTint.frame(height: height * stages.core)
                 NoctisAppColor.nightDeep.frame(height: height * stages.deep)
             }
         } else {

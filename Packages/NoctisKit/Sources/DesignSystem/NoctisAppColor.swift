@@ -56,6 +56,18 @@ public nonisolated struct NoctisAppPalette: Sendable {
     public let blockCocoa: String
     /// A recorded night in the learning dots: cocoa, lavender in Dark.
     public let progressDot: String
+    /// Color pass: the sage block (Sleep's field, its summary strips); the
+    /// lavender and butter blocks are `blockLavender` and `blockButter`.
+    /// Block ink is `blockInk` (#2B1D14) on all three.
+    public let blockSage: String
+    /// The Core stage everywhere (ring, legends, totals, ribbon, bars): a
+    /// lighter orange than the fill, so Deep and REM keep their weight.
+    public let coreTint: String
+    /// Tab glyphs (Sleep sage, Recovery lavender, Insights butter) on the
+    /// paper and the tab bar: 3:1, so deeper than the blocks in Light.
+    public let sectionSage: String
+    public let sectionLavender: String
+    public let sectionButter: String
 
     public static let light = NoctisAppPalette(
         bg: "F8F5EE", surface: "FFFFFF", hairline: "E9E3D8", track: "ECE6DA",
@@ -65,11 +77,12 @@ public nonisolated struct NoctisAppPalette: Sendable {
         nightPanel: "4A2F22", nightInk: "F8F5EE", nightBorder: "4A2F22",
         blockLavender: "A08CEB", blockButter: "F2CE6B", blockInk: "2B1D14",
         ringTrack: "ECE6DA", weekHighlight: "4A2F22", lavenderText: "7B63D6",
-        dusk: "E6E0EE", eveningPaper: "F2EDEF", eveningInk3: "78695C", nightDeep: "8C7AE6", blockCocoa: "4A2F22", progressDot: "4A2F22"
+        dusk: "E6E0EE", eveningPaper: "F2EDEF", eveningInk3: "78695C", nightDeep: "8C7AE6", blockCocoa: "4A2F22", progressDot: "4A2F22",
+        blockSage: "A9BC84", coreTint: "EDA877", sectionSage: "6B8A3E", sectionLavender: "6B55C4", sectionButter: "8A6A1F"
     )
 
     public static let dark = NoctisAppPalette(
-        bg: "17110E", surface: "221A15", hairline: "33281F", track: "2E241D",
+        bg: "17110E", surface: "251C16", hairline: "33281F", track: "2E241D",
         ink: "F4EDE3", ink2: "C9BBAA", ink3: "9C8C7B", orangeText: "F08A4B",
         // Cocoa lifts to #9A6A50 in Dark: #4A2F22 is 1.5:1 on the dark
         // surface, too faint for the Deep stage and last night's bar.
@@ -80,7 +93,8 @@ public nonisolated struct NoctisAppPalette: Sendable {
         nightPanel: "0E0A08", nightInk: "F4EDE3", nightBorder: "33281F",
         blockLavender: "8E7BDC", blockButter: "E0B955", blockInk: "2B1D14",
         ringTrack: "2A211B", weekHighlight: "9A87E6", lavenderText: "A897F0",
-        dusk: "120E17", eveningPaper: "150F13", eveningInk3: "9C8C7B", nightDeep: "9A87E6", blockCocoa: "4A2F22", progressDot: "9A87E6"
+        dusk: "120E17", eveningPaper: "150F13", eveningInk3: "9C8C7B", nightDeep: "9A87E6", blockCocoa: "4A2F22", progressDot: "9A87E6",
+        blockSage: "8FA366", coreTint: "D08850", sectionSage: "8FA366", sectionLavender: "8E7BDC", sectionButter: "E0B955"
     )
 }
 
@@ -134,10 +148,18 @@ public nonisolated enum NoctisAppColor {
     public static let blockCocoa = adaptive(\.blockCocoa)
     public static let progressDot = adaptive(\.progressDot)
 
+    // MARK: Color pass
+
+    public static let blockSage = adaptive(\.blockSage)
+    public static let coreTint = adaptive(\.coreTint)
+    public static let sectionSage = adaptive(\.sectionSage)
+    public static let sectionLavender = adaptive(\.sectionLavender)
+    public static let sectionButter = adaptive(\.sectionButter)
+
     // MARK: Sleep stages
 
     public static let stageDeep = cocoa
-    public static let stageCore = orange
+    public static let stageCore = coreTint
     public static let stageREM = sage
     public static let stageAwake = butter
 
