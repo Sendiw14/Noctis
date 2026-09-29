@@ -166,8 +166,15 @@ public struct RecoveryFactor: Sendable, Equatable, Codable {
     /// baseline window, each night scored as its own morning was. Nil
     /// under 5 scored nights (`BaselineEngine.minimumNights`).
     public let usual: Double?
+    /// The score before rounding, so the factors' weighted scores add up
+    /// to the overall score exactly (`RecoveryContributionEngine`). Nil in
+    /// results saved before it existed.
+    public let unroundedScore: Double?
 
-    public init(kind: RecoveryFactorKind, score: Int, weight: Double, value: Double, baseline: Double?, delta: Double?, standardScore: Double? = nil, usual: Double? = nil) {
+    public init(
+        kind: RecoveryFactorKind, score: Int, weight: Double, value: Double, baseline: Double?, delta: Double?,
+        standardScore: Double? = nil, usual: Double? = nil, unroundedScore: Double? = nil
+    ) {
         self.kind = kind
         self.score = score
         self.weight = weight
@@ -176,10 +183,14 @@ public struct RecoveryFactor: Sendable, Equatable, Codable {
         self.delta = delta
         self.standardScore = standardScore
         self.usual = usual
+        self.unroundedScore = unroundedScore
     }
 
     func with(usual: Double?) -> RecoveryFactor {
-        RecoveryFactor(kind: kind, score: score, weight: weight, value: value, baseline: baseline, delta: delta, standardScore: standardScore, usual: usual)
+        RecoveryFactor(
+            kind: kind, score: score, weight: weight, value: value, baseline: baseline, delta: delta,
+            standardScore: standardScore, usual: usual, unroundedScore: unroundedScore
+        )
     }
 
     /// Where the value sits against the person's normal range (V2 only).

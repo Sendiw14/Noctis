@@ -60,7 +60,14 @@ enum MockNightGenerator {
     /// `count` nights ending with last night. Last night is the night of
     /// yesterday's evening once it's 9 AM (so it has surely ended), or the
     /// evening before that earlier in the morning.
-    static func generate(seed: UInt64, count: Int, referenceDate: Date, calendar: Calendar, lastNight: MockLastNight = .laterAndShorter) -> [NightProfile] {
+    /// How deep the recovery dip is on each of its four nights (0 = none),
+    /// counted from the night `dipStartNightsBack` before the last.
+    static let dipDepths: [Double] = [0.6, 1.0, 1.0, 0.7]
+    static let dipStartNightsBack = 9
+
+    static func generate(
+        seed: UInt64, count: Int, referenceDate: Date, calendar: Calendar, lastNight: MockLastNight = .laterAndShorter, dip: Bool = false
+    ) -> [NightProfile] {
         guard count > 0 else { return [] }
         let hour = calendar.component(.hour, from: referenceDate)
         let today = calendar.startOfDay(for: referenceDate)
@@ -90,7 +97,10 @@ enum MockNightGenerator {
                     LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours, quality: 0.45, messy: true)
                 }
             }
-            nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady))
+            // The dip: four nights, a week or so before the last.
+            let dipIndex = i - (count - dipStartNightsBack)
+            let depth = dip && dipDepths.indices.contains(dipIndex) ? dipDepths[dipIndex] : 0
+            nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady, dip: depth))
         }
         return nights
     }
@@ -127,7 +137,9 @@ enum MockNightGenerator {
         return samples
     }
 
-    private static func generateNight(index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?, steady: Bool = false) -> NightProfile {
+    private static func generateNight(
+        index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?, steady: Bool = false, dip: Double = 0
+    ) -> NightProfile {
         var rng = SeededGenerator(seed: seed &+ UInt64(index) &* 0x9E3779B1)
 
         let weekday = calendar.component(.weekday, from: day)
@@ -136,12 +148,13 @@ enum MockNightGenerator {
         let progress = Double(index) / Double(max(total - 1, 1))
         let trend = 0.42 + 0.28 * progress
         let noise = Double.random(in: -0.16...0.16, using: &rng)
-        let quality = override?.quality ?? min(max(trend + noise, 0.12), 0.97)
+        let naturalQuality = min(max(trend + noise, 0.12), 0.97)
+        let quality = override?.quality ?? (dip > 0 ? naturalQuality * (1 - 0.8 * dip) : naturalQuality)
 
         // A steady sleeper keeps weekends and weeknights within minutes.
         let bedtimeHourBase = isWeekend && !steady ? 23.6 : 23.0
         let bedtimeJitter = Double.random(in: -35...35, using: &rng) * (steady ? 0.25 : 1)
-        let bedtimeHour = override?.bedtimeHour ?? bedtimeHourBase + bedtimeJitter / 60
+        let bedtimeHour = override?.bedtimeHour ?? bedtimeHourBase + bedtimeJitter / 60 + dip * 50 / 60
         let bedtime = day.addingTimeInterval(bedtimeHour * 3600)
 
         let naturalSleepHours = 6.4 + quality * 2.1 + Double.random(in: -0.25...0.25, using: &rng)
@@ -206,7 +219,7 @@ enum MockNightGenerator {
         sleepSamples.append(RawSleepSample(start: inBedStart, end: inBedEnd, stage: .inBed, sourceName: phoneSource, sourceBundleID: phoneBundleID))
 
         let restingBaseline = 61.0 - 7.0 * progress
-        let restingHR = restingBaseline - quality * 3.0 + Double.random(in: -1.5...1.5, using: &rng)
+        let restingHR = restingBaseline - quality * 3.0 + Double.random(in: -1.5...1.5, using: &rng) + dip * 5
         let restingSample = HeartRateSample(date: wakeTime.addingTimeInterval(25 * 60), bpm: restingHR.rounded(), sourceName: watchSource)
 
         var heartRateSamples: [HeartRateSample] = []
@@ -225,7 +238,7 @@ enum MockNightGenerator {
         }
 
         let hrvBaseline = 44.0 + 22.0 * progress
-        let hrv = hrvBaseline + quality * 9.0 + Double.random(in: -5...5, using: &rng)
+        let hrv = hrvBaseline + quality * 9.0 + Double.random(in: -5...5, using: &rng) - dip * 14
         let span = wakeTime.timeIntervalSince(sleepOnset)
         let hrvSamples = [0.2, 0.45, 0.7, 0.95].map { fraction in
             HRVSample(

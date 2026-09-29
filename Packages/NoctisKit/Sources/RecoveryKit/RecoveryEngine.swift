@@ -116,7 +116,8 @@ public enum RecoveryEngine {
                 value: factor.value,
                 baseline: factor.baseline,
                 delta: factor.delta,
-                standardScore: factor.standardScore
+                standardScore: factor.standardScore,
+                unroundedScore: factor.score
             )
         }
         let weighted = raw.reduce(0) { $0 + $1.score * (weights[$1.kind] ?? 0) }

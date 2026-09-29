@@ -689,7 +689,7 @@ struct NoctisSignpostTests {
     @Test func everyIntervalHasItsOwnNameForInstrumentsAndTheMetrics() {
         let names = NoctisSignpost.Interval.allCases.map(\.rawValue)
         #expect(Set(names).count == names.count)
-        #expect(Set(names) == ["LaunchToFirstFrame", "LaunchToPopulated", "Reveal", "Morph", "Collapse", "Scrub", "TabSwitch", "SleepLoad", "SleepModel"])
+        #expect(Set(names) == ["LaunchToFirstFrame", "LaunchToPopulated", "Reveal", "Morph", "Collapse", "Scrub", "TabSwitch", "SleepLoad", "SleepModel", "RecoveryLoad", "RecoveryModel"])
         #expect(NoctisSignpost.subsystem == "com.noctis.app" && NoctisSignpost.category == "Performance")
     }
 

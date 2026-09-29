@@ -31,6 +31,10 @@ public nonisolated enum NoctisSignpost {
         case sleepLoad = "SleepLoad"
         /// Building the render model for one Sleep selection.
         case sleepModel = "SleepModel"
+        /// The Recovery repository reading Health and deriving every night.
+        case recoveryLoad = "RecoveryLoad"
+        /// Building the render model for one Recovery selection.
+        case recoveryModel = "RecoveryModel"
     }
 
     private static let signposter = OSSignposter(subsystem: subsystem, category: category)
@@ -50,6 +54,8 @@ public nonisolated enum NoctisSignpost {
             case .tabSwitch: signposter.beginInterval("TabSwitch")
             case .sleepLoad: signposter.beginInterval("SleepLoad")
             case .sleepModel: signposter.beginInterval("SleepModel")
+            case .recoveryLoad: signposter.beginInterval("RecoveryLoad")
+            case .recoveryModel: signposter.beginInterval("RecoveryModel")
             }
         }
     }
@@ -67,6 +73,8 @@ public nonisolated enum NoctisSignpost {
             case .tabSwitch: signposter.endInterval("TabSwitch", state)
             case .sleepLoad: signposter.endInterval("SleepLoad", state)
             case .sleepModel: signposter.endInterval("SleepModel", state)
+            case .recoveryLoad: signposter.endInterval("RecoveryLoad", state)
+            case .recoveryModel: signposter.endInterval("RecoveryModel", state)
             }
         }
     }
