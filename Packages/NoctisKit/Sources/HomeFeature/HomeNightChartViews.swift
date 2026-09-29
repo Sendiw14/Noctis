@@ -7,15 +7,21 @@ import SwiftUI
 // timeline, in four lanes. The night panel and the share card use it.
 
 /// The chart's plot space: how positions along the night (0...1) and lanes
-/// become points. The ribbon is 12pt thick (60% of a lane if that's
-/// smaller), and the plot is inset by half of that at both ends so the
-/// first and last caps stay inside.
+/// become points. A run is 8pt thick (60% of a lane if that's smaller) and a
+/// connector between lanes is 3pt wide at 70%; the plot is inset by half a
+/// run's thickness at both ends so the first and last caps stay inside.
 nonisolated struct NightPlot: Equatable {
     let width: CGFloat
     let laneHeight: CGFloat
 
-    static let maximumThickness: CGFloat = 12
+    static let maximumThickness: CGFloat = 8
     static let thicknessShare: CGFloat = 0.6
+    /// A connector between two lanes: thin, and a little quieter than a run.
+    static let connectorWidth: CGFloat = 3
+    static let connectorOpacity = 0.7
+    /// Where a connector crosses another run, that run keeps this much of
+    /// the panel's color around it.
+    static let crossingGap: CGFloat = 2
     /// A run is drawn at least this wide (before its half-thickness caps).
     static let minimumRunWidth: CGFloat = 4
     /// The notch that stands for a run under 3 minutes.
@@ -54,12 +60,12 @@ nonisolated struct NightPlot: Equatable {
         return CGRect(x: center - length / 2, y: y(run.stage.lane) - thickness / 2, width: length, height: thickness)
     }
 
-    /// The vertical capsule for a step: the ribbon's thickness wide, from
-    /// the lane it leaves to the lane it enters, overlapping both runs.
+    /// The vertical capsule for a step: 3pt wide, from the lane it leaves to
+    /// the lane it enters, overlapping both runs.
     func stepRect(_ step: NightConnector) -> CGRect {
         let top = min(y(step.from), y(step.to)) - thickness / 2
         let bottom = max(y(step.from), y(step.to)) + thickness / 2
-        return CGRect(x: x(step.position) - thickness / 2, y: top, width: thickness, height: bottom - top)
+        return CGRect(x: x(step.position) - Self.connectorWidth / 2, y: top, width: Self.connectorWidth, height: bottom - top)
     }
 
     /// The 6pt notch for a run under 3 minutes.
@@ -103,9 +109,11 @@ struct NightPaths: Equatable {
     let guides: Path
     /// The stepped area under each run.
     let area: [StagePath]
-    /// The steps between lanes, then the runs, then the notches: the
-    /// order they're painted in.
+    /// The steps between lanes, then the panel-colored gaps around any run a
+    /// step crosses, then the runs, then the notches: the order they're
+    /// painted in.
     let steps: [StagePath]
+    let knockouts: [Path]
     let runs: [StagePath]
     let notches: [StagePath]
     /// Without stages: one sage bar in the Core lane.
@@ -138,6 +146,7 @@ enum NightPathBuilder {
         var stageless: Path?
         var area: [StagePath] = []
         var steps: [StagePath] = []
+        var knockouts: [Path] = []
         var runs: [StagePath] = []
         var notches: [StagePath] = []
         if render.hasStages {
@@ -149,7 +158,18 @@ enum NightPathBuilder {
             }
             // The steps, in the color entered, under the runs they join.
             for step in render.steps {
-                steps.append(StagePath(path: Path(roundedRect: plot.stepRect(step), cornerRadius: radius), stage: step.entered))
+                let rect = plot.stepRect(step)
+                steps.append(StagePath(path: Path(roundedRect: rect, cornerRadius: NightPlot.connectorWidth / 2), stage: step.entered))
+                // A run in a lane the step passes through (not the two it joins)
+                // keeps a 2pt gap of the panel's color, so the step reads as
+                // passing behind it.
+                let low = min(step.from.rawValue, step.to.rawValue), high = max(step.from.rawValue, step.to.rawValue)
+                for run in render.runs where run.stage.lane.rawValue > low && run.stage.lane.rawValue < high {
+                    let runRect = run.isNotch ? plot.notchRect(run) : plot.runRect(run)
+                    guard runRect.intersects(rect) else { continue }
+                    let gap = NightPlot.crossingGap
+                    knockouts.append(Path(roundedRect: runRect.insetBy(dx: -gap, dy: -gap), cornerRadius: runRect.height / 2 + gap))
+                }
             }
             for run in render.runs {
                 if run.isNotch {
@@ -188,7 +208,7 @@ enum NightPathBuilder {
             }
         }
         return NightPaths(
-            key: key, guides: guides, area: area, steps: steps, runs: runs, notches: notches,
+            key: key, guides: guides, area: area, steps: steps, knockouts: knockouts, runs: runs, notches: notches,
             stageless: stageless, heartLine: heartLine, heartLowest: heartLowest, heartLowestDot: heartLowestDot
         )
     }
@@ -231,7 +251,7 @@ struct NightChartView: View {
     /// of the chart.
     var reservesPillRow = false
 
-    @NoctisScaledLength(relativeTo: .caption2) private var scaledLaneHeight: CGFloat = 28
+    @NoctisScaledLength(relativeTo: .caption2) private var scaledLaneHeight: CGFloat = 34
     @NoctisScaledLength(relativeTo: .footnote) private var pillRowHeight: CGFloat = 28
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var width: CGFloat = 0
@@ -408,7 +428,8 @@ struct NightRibbonLayer: View, Equatable {
                 return
             }
             for item in paths.area { context.fill(item.path, with: .color(item.stage.ribbonColor.opacity(0.10))) }
-            for item in paths.steps { context.fill(item.path, with: .color(item.stage.ribbonColor)) }
+            for item in paths.steps { context.fill(item.path, with: .color(item.stage.ribbonColor.opacity(NightPlot.connectorOpacity))) }
+            for gap in paths.knockouts { context.fill(gap, with: .color(NoctisAppColor.nightPanel)) }
             for item in paths.runs { context.fill(item.path, with: .color(item.stage.ribbonColor)) }
             for item in paths.notches { context.fill(item.path, with: .color(item.stage.ribbonColor)) }
         }

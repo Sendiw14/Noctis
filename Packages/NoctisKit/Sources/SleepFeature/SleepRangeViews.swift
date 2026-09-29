@@ -153,7 +153,6 @@ struct SleepBarsCard: View {
                 let height = max(Self.chartHeight * fraction, radius * 2)
                 fill(bar, height: height)
                     .frame(height: height)
-                    .clipShape(shape)
                     .opacity(opacity(index))
                 if let kind = markerKind(index) {
                     markerGlyph(kind)
@@ -165,18 +164,16 @@ struct SleepBarsCard: View {
         .frame(width: barWidth, height: Self.chartHeight)
     }
 
-    /// Deep, Core, REM from the bottom in a week; one sage bar without
-    /// stages, and always in a month.
+    /// A week: Deep, Core and REM as three rounded segments with 2pt gaps
+    /// (one sage bar without stages). A month: sage for a night that reached
+    /// the sleep need, butter for one under it.
     @ViewBuilder
     private func fill(_ bar: SleepBarContent, height: CGFloat) -> some View {
-        if isWeek, let stages = bar.stages {
-            VStack(spacing: 0) {
-                NoctisAppColor.sage.frame(height: height * stages.rem)
-                NoctisAppColor.coreTint.frame(height: height * stages.core)
-                NoctisAppColor.nightDeep.frame(height: height * stages.deep)
-            }
+        if isWeek {
+            WeekBarStack(stages: bar.stages, height: height, fill: NoctisAppColor.sage)
         } else {
-            NoctisAppColor.sage
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .fill(bar.reachedNeed == false ? NoctisAppColor.butter : NoctisAppColor.sage)
         }
     }
 
@@ -303,7 +300,8 @@ struct SleepBarsCard: View {
                 key(NoctisAppColor.sage, "Slept")
                 lineKey("Average")
             } else {
-                key(NoctisAppColor.sage, "Slept")
+                key(NoctisAppColor.sage, "Reached your need")
+                key(NoctisAppColor.butter, "Under your need")
                 lineKey("Weekly average")
             }
         }

@@ -151,7 +151,7 @@ struct RecoveryFactorChartCard: View {
                 }
                 if let band = content.bandCaption {
                     HStack(spacing: 6) {
-                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NoctisAppColor.track).frame(width: 14, height: 10)
+                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(.noctisUsualBand).frame(width: 14, height: 10)
                         Text(band)
                             .noctisFont(12, relativeTo: .caption)
                             .foregroundStyle(.noctisInk3)
@@ -222,7 +222,7 @@ struct RecoveryFactorChartCard: View {
                 }
                 if let low = line.bandLow, let high = line.bandHigh {
                     NoctisVerticalSpanLayout(from: 1 - high, to: 1 - low, minimumLength: 4) {
-                        RoundedRectangle(cornerRadius: 4, style: .continuous).fill(NoctisAppColor.track)
+                        RoundedRectangle(cornerRadius: 4, style: .continuous).fill(.noctisUsualBand)
                     }
                 }
                 ColumnRule(count: count, index: current)

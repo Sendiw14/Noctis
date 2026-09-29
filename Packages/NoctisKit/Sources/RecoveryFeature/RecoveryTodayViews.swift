@@ -282,7 +282,7 @@ struct RecoveryFactorCard: View {
                             .accessibilityHidden(true)
                     }
                     if let sparkline = row.sparkline {
-                        FactorSparkline(content: sparkline, tint: row.kind.tint)
+                        FactorSparkline(content: sparkline, tint: row.kind.tint, lineTint: row.kind.lineTint)
                             .frame(height: FactorSparkline.height)
                     }
                 }

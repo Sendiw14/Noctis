@@ -55,30 +55,32 @@ struct SparklinePaths: Equatable {
     }
 }
 
-/// 14 nights, full row width: your normal range as a track-colored band, a
-/// 1pt ink3 line through the nights, and today as a 6pt dot in the
-/// factor's color. Drawn from paths resolved when the width or the values
-/// change.
+/// 14 nights, full row width: your normal range as a band in the factor's
+/// color at 16%, a 2.5pt line through the nights in that color's line ink,
+/// and today as a 6pt dot in the factor's color. Drawn from paths resolved
+/// when the width or the values change.
 public struct FactorSparkline: View {
     let content: SparklineContent
     let tint: Color
+    let lineTint: Color
 
     public static let height: CGFloat = 36
     @State private var size: CGSize = .zero
     @State private var paths: SparklinePaths?
 
-    public init(content: SparklineContent, tint: Color) {
+    public init(content: SparklineContent, tint: Color, lineTint: Color? = nil) {
         self.content = content
         self.tint = tint
+        self.lineTint = lineTint ?? tint
     }
 
     public var body: some View {
         Group {
             if let paths {
                 Canvas { context, _ in
-                    context.fill(paths.band, with: .color(NoctisAppColor.track))
-                    context.fill(paths.dots, with: .color(NoctisAppColor.ink3))
-                    context.stroke(paths.line, with: .color(NoctisAppColor.ink3), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+                    context.fill(paths.band, with: .color(tint.opacity(0.16)))
+                    context.stroke(paths.line, with: .color(lineTint), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                    context.fill(paths.dots, with: .color(lineTint))
                     context.fill(paths.today, with: .color(tint))
                 }
             } else {

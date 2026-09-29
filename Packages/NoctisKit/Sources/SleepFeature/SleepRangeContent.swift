@@ -29,6 +29,9 @@ public nonisolated struct SleepBarContent: Sendable, Equatable {
     /// Height as a share of the chart; nil for a night with nothing recorded.
     public let fraction: Double?
     public let stages: WeekBarStages?
+    /// Whether the night reached the sleep need; nil for a night with
+    /// nothing recorded. A month's bars are sage when it did, butter under.
+    public let reachedNeed: Bool?
     /// The newest night of the range.
     public let isNewest: Bool
     public let accessibilityLabel: String
@@ -304,6 +307,7 @@ nonisolated extension SleepScreenBuilder {
                 label: range == .week ? format.weekday(wake, width: .narrow) : "",
                 fraction: bar.fraction,
                 stages: bar.stages,
+                reachedNeed: entry.record.map { $0.metrics.asleepMinutes >= Double(snapshot.needMinutes) },
                 isNewest: index == count - 1,
                 accessibilityLabel: spoken.joined(separator: ", "),
                 detail: pill.joined(separator: " · ")

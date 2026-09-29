@@ -324,3 +324,21 @@ extension EnvironmentValues {
         set { self[NoctisRingTrackKey.self] = newValue }
     }
 }
+
+// MARK: - The usual band
+
+/// The shaded band for "your usual" on a chart: butter at 25% in Light and
+/// 18% in Dark (the track color it replaces was nearly invisible).
+public struct NoctisUsualBandStyle: ShapeStyle {
+    public static func opacity(dark: Bool) -> Double { dark ? 0.18 : 0.25 }
+
+    public init() {}
+
+    public func resolve(in environment: EnvironmentValues) -> Color {
+        NoctisAppColor.butter.opacity(Self.opacity(dark: environment.colorScheme == .dark))
+    }
+}
+
+extension ShapeStyle where Self == NoctisUsualBandStyle {
+    public static var noctisUsualBand: NoctisUsualBandStyle { NoctisUsualBandStyle() }
+}

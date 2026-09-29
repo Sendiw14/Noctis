@@ -327,6 +327,15 @@ struct SleepMonthContentTests {
         #expect(month.bars.accessibilityLabel.contains("Shortest night"))
     }
 
+    @Test func aNightThatReachedTheNeedIsMarkedSoAndOneUnderItIsNot() throws {
+        // Nights of 6h40 up to 8h07 against the default 8h need: the last few reach it.
+        let bars = try #require(screen(snapshot(count: 30, asleep: { 400 + Double($0) * 3 }), range: .month).month?.bars)
+        for bar in bars.bars {
+            #expect((bar.reachedNeed ?? false) == ((bar.fraction ?? 0) >= bars.needFraction), "\(bar.night)")
+        }
+        #expect(bars.bars.first?.reachedNeed == false && bars.bars.last?.reachedNeed == true)
+    }
+
     @Test func fewerThanTwoRecordedNightsNamesNoBestOrWorst() throws {
         let month = try #require(screen(snapshot(count: 1), range: .month).month)
         #expect(month.longest == nil && month.shortest == nil)

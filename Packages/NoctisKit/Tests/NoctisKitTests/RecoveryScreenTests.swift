@@ -417,6 +417,21 @@ struct RecoveryHistoryContentTests {
         }
     }
 
+    @Test func eachScoreDotSaysWhereItSitsAgainstTheUsualRange() async throws {
+        let usual = 82.0...94.0
+        #expect(RecoveryUsualPosition(score: 96, usual: usual) == .above)
+        #expect(RecoveryUsualPosition(score: 94, usual: usual) == .within, "the edge is within")
+        #expect(RecoveryUsualPosition(score: 82, usual: usual) == .within)
+        #expect(RecoveryUsualPosition(score: 81, usual: usual) == .below)
+        #expect([RecoveryUsualPosition.above, .within, .below].map(\.word) == ["Above", "Within", "Below"])
+        // In the history, a day agrees with the count of days "in your usual range".
+        let history = screen(await snapshot(.full), segment: .month).history
+        let content = try #require(history)
+        let within = content.points.filter { $0.position == .within }.count
+        #expect(content.usualLine == "In your usual range on \(within) of \(content.points.filter { $0.position != nil }.count) days.")
+        #expect(content.points.allSatisfy { $0.position != nil })
+    }
+
     @Test func aGapNightStillHasItsHistoryThoughNoScoreToday() async throws {
         let gap = screen(await snapshot(.gap), segment: .week)
         #expect(gap.history != nil && gap.noSleep == nil && gap.today == nil)

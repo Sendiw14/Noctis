@@ -294,7 +294,7 @@ struct SleepNightPanel: View {
     let reveal: HomeRevealPhase
     @Binding var laneFocus: NightLane?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @NoctisScaledLength(relativeTo: .caption2) private var laneHeight: CGFloat = 34
+    @NoctisScaledLength(relativeTo: .caption2) private var laneHeight: CGFloat = 41
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.md) {

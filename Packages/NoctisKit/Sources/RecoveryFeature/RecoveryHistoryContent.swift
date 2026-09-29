@@ -11,8 +11,32 @@ import SleepKit
 // add nothing (APP_RULES.md R18, R20). A trend is a direction, never a
 // judgment: nothing is colored as a warning.
 
+/// Where a day's score sits against the person's usual range: the score
+/// dots' color (sage above, butter within, orange below), always with the
+/// number in the pill.
+public nonisolated enum RecoveryUsualPosition: Sendable, Equatable, Hashable {
+    case above
+    case within
+    case below
+
+    public init(score: Int, usual: ClosedRange<Double>) {
+        let value = Double(score)
+        self = value > usual.upperBound ? .above : value < usual.lowerBound ? .below : .within
+    }
+
+    public var word: String {
+        switch self {
+        case .above: "Above"
+        case .within: "Within"
+        case .below: "Below"
+        }
+    }
+}
+
 public nonisolated struct RecoveryHistoryPointContent: Sendable, Equatable {
     public let night: SleepNightKey
+    /// Against the usual range; nil for a day with no score or no baseline.
+    public let position: RecoveryUsualPosition?
     /// The pill: "Tue · Recovery 76 · Sleep 7h 12m", or "Tue · No score".
     public let detail: String
     public let accessibilityLabel: String
@@ -82,11 +106,13 @@ nonisolated extension RecoveryScreenBuilder {
             let wake = day.night.adding(days: 1)
             let name = range == .week ? format.weekday(wake, width: .abbreviated) : format.weekdayMonthDay(wake)
             guard let score = day.score else {
-                return RecoveryHistoryPointContent(night: day.night, detail: "\(name) · No score", accessibilityLabel: "\(format.wideDate(wake)), no score")
+                return RecoveryHistoryPointContent(night: day.night, position: nil, detail: "\(name) · No score", accessibilityLabel: "\(format.wideDate(wake)), no score")
             }
             let sleep = HomeFormat.compactDuration(Int(score.asleepMinutes.rounded()))
+            let position = history.stats.usualRange.map { RecoveryUsualPosition(score: score.score, usual: $0) }
             return RecoveryHistoryPointContent(
                 night: day.night,
+                position: position,
                 detail: "\(name) · Recovery \(score.score) · Sleep \(sleep)",
                 accessibilityLabel: "\(format.wideDate(wake)), recovery \(score.score), slept \(HomeFormat.spokenDuration(Int(score.asleepMinutes.rounded())))"
             )

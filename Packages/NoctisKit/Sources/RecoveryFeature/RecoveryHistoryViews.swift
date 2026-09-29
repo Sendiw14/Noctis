@@ -39,9 +39,10 @@ struct RecoveryHistoryView: View {
 
 // MARK: - Chart
 
-/// The recovery line on a card: a flat .10 area under a cocoa (ivory in
-/// Dark) line, your baseline dashed, your usual range shaded, today a
-/// filled dot. 7D dots every day; 30D is the line; 90D is a 7-day smoothed
+/// The recovery line on a card: a flat lavender .35 area under a cocoa
+/// (ivory in Dark) line, your baseline dashed, your usual range a butter
+/// band, and score dots colored by where they sit against it (sage above,
+/// butter within, orange below; the number is always in the pill). 7D dots every day; 30D is the line; 90D is a 7-day smoothed
 /// line with each week's average. Dragging sideways (or a tap) picks a day
 /// and the pill says what it was; the line draws in on the day's first
 /// visit.
@@ -146,7 +147,7 @@ struct RecoveryHistoryChartCard: View {
                 grid
                 if let low = chart.bandLow, let high = chart.bandHigh {
                     NoctisVerticalSpanLayout(from: 1 - high, to: 1 - low, minimumLength: 4) {
-                        RoundedRectangle(cornerRadius: 4, style: .continuous).fill(NoctisAppColor.track)
+                        RoundedRectangle(cornerRadius: 4, style: .continuous).fill(.noctisUsualBand)
                     }
                     .frame(height: Self.height)
                 }
@@ -160,7 +161,7 @@ struct RecoveryHistoryChartCard: View {
                     .stroke(NoctisAppColor.ink3.opacity(0.6), lineWidth: 1)
                     .frame(height: Self.height)
                 SeriesLine(values: line, area: true)
-                    .fill(NoctisAppColor.ink.opacity(0.10))
+                    .fill(NoctisAppColor.lavender.opacity(0.35))
                     .frame(height: Self.height)
                     // The area appears with the line, left to right.
                     .mask(alignment: .leading) {
@@ -186,11 +187,11 @@ struct RecoveryHistoryChartCard: View {
                     }
                 }
                 if content.showsDots {
-                    FactorDots(values: chart.line, radius: 3)
-                        .fill(NoctisAppColor.ink)
-                        .frame(height: Self.height)
-                        .opacity(drawn)
-                        .animation(land, value: reveal)
+                    ForEach([RecoveryUsualPosition?.some(.above), .some(.within), .some(.below), nil], id: \.self) { position in
+                        scoreDots(chart.line, position: position, radius: 3.5)
+                            .opacity(drawn)
+                            .animation(land, value: reveal)
+                    }
                 }
                 if content.isSmoothed, let today = chart.todayIndex {
                     ColumnSpan(count: count, index: today, from: chart.smoothed[today], to: chart.line[today])
@@ -199,9 +200,7 @@ struct RecoveryHistoryChartCard: View {
                         .opacity(drawn)
                         .animation(land, value: reveal)
                 }
-                FactorMarker(values: chart.line, index: chart.todayIndex, radius: 5.5)
-                    .fill(NoctisAppColor.ink)
-                    .frame(height: Self.height)
+                todayDot(chart)
                     .opacity(drawn)
                     .animation(land, value: reveal)
                 FactorMarker(values: chart.line, index: current, radius: 6.5)
@@ -217,6 +216,35 @@ struct RecoveryHistoryChartCard: View {
         }
     }
 
+    /// The score color for where a day sits against the usual range.
+    private func tint(_ position: RecoveryUsualPosition?) -> Color {
+        switch position {
+        case .above: NoctisAppColor.sage
+        case .within: NoctisAppColor.butter
+        case .below: NoctisAppColor.orange
+        case nil: NoctisAppColor.ink3
+        }
+    }
+
+    /// The days at one position, as dots with a thin ink edge so a butter or
+    /// sage dot holds on the lavender area.
+    private func scoreDots(_ line: [Double?], position: RecoveryUsualPosition?, radius: CGFloat) -> some View {
+        let values: [Double?] = zip(line, content.points).map { $1.position == position ? $0 : nil }
+        return FactorDots(values: values, radius: radius)
+            .fill(tint(position))
+            .overlay(FactorDots(values: values, radius: radius).stroke(NoctisAppColor.ink, lineWidth: 1.25))
+            .frame(height: Self.height)
+    }
+
+    /// Today's dot, larger, in its own position's color.
+    private func todayDot(_ chart: RecoveryChartRender) -> some View {
+        let position = chart.todayIndex.flatMap { content.points.indices.contains($0) ? content.points[$0].position : nil }
+        return FactorMarker(values: chart.line, index: chart.todayIndex, radius: 5.5)
+            .fill(tint(position))
+            .overlay(FactorMarker(values: chart.line, index: chart.todayIndex, radius: 5.5).stroke(NoctisAppColor.ink, lineWidth: 2))
+            .frame(height: Self.height)
+    }
+
     private var grid: some View {
         ZStack {
             ForEach(content.yLabels, id: \.position) { label in
@@ -229,29 +257,43 @@ struct RecoveryHistoryChartCard: View {
     }
 
     private var legend: some View {
-        RecoveryLegend {
-            if content.bandCaption != nil {
-                HStack(spacing: 6) {
-                    RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NoctisAppColor.track).frame(width: 14, height: 10)
-                    Text("Your usual range")
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(.noctisInk3)
+        VStack(alignment: .leading, spacing: 6) {
+            RecoveryLegend {
+                if content.bandCaption != nil {
+                    HStack(spacing: 6) {
+                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(.noctisUsualBand).frame(width: 14, height: 10)
+                        Text("Your usual range")
+                            .noctisFont(13, relativeTo: .footnote)
+                            .foregroundStyle(.noctisInk3)
+                    }
+                    HStack(spacing: 6) {
+                        RecoveryDashedRule()
+                            .stroke(NoctisAppColor.ink3, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
+                            .frame(width: 16, height: 1.5)
+                        Text("Baseline")
+                            .noctisFont(13, relativeTo: .footnote)
+                            .foregroundStyle(.noctisInk3)
+                    }
                 }
-                HStack(spacing: 6) {
-                    RecoveryDashedRule()
-                        .stroke(NoctisAppColor.ink3, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
-                        .frame(width: 16, height: 1.5)
-                    Text("Baseline")
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(.noctisInk3)
+                if content.isSmoothed {
+                    HStack(spacing: 6) {
+                        Capsule().fill(NoctisAppColor.ink.opacity(0.75)).frame(width: 12, height: 2)
+                        Text("Weekly average")
+                            .noctisFont(13, relativeTo: .footnote)
+                            .foregroundStyle(.noctisInk3)
+                    }
                 }
             }
-            if content.isSmoothed {
-                HStack(spacing: 6) {
-                    Capsule().fill(NoctisAppColor.ink.opacity(0.75)).frame(width: 12, height: 2)
-                    Text("Weekly average")
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(.noctisInk3)
+            if content.bandCaption != nil {
+                RecoveryLegend {
+                    ForEach([RecoveryUsualPosition.above, .within, .below], id: \.self) { position in
+                        HStack(spacing: 6) {
+                            Circle().fill(tint(position)).overlay(Circle().strokeBorder(NoctisAppColor.ink, lineWidth: 1.25)).frame(width: 10, height: 10)
+                            Text(position.word)
+                                .noctisFont(13, relativeTo: .footnote)
+                                .foregroundStyle(.noctisInk3)
+                        }
+                    }
                 }
             }
         }
@@ -373,11 +415,11 @@ struct RecoveryHistoryFactorRowView: View {
                         ZStack {
                             if let low = line.bandLow, let high = line.bandHigh {
                                 NoctisVerticalSpanLayout(from: 1 - high, to: 1 - low, minimumLength: 3) {
-                                    RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NoctisAppColor.track)
+                                    RoundedRectangle(cornerRadius: 3, style: .continuous).fill(row.kind.tint.opacity(0.16))
                                 }
                             }
                             FactorCurve(samples: line.curve, nights: line.values.count)
-                                .stroke(NoctisAppColor.ink3, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+                                .stroke(row.kind.lineTint, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
                             FactorMarker(values: line.values, index: line.todayIndex, radius: 3.5)
                                 .fill(row.kind.tint)
                         }

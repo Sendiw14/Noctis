@@ -673,9 +673,8 @@ struct WeekCardView: View {
             shape.fill(NoctisAppColor.track)
             if let fraction = bar.fraction {
                 let height = max(Self.chartHeight * fraction, WeekColumns.cornerRadius * 2)
-                stack(bar.stages, height: height)
+                WeekBarStack(stages: bar.stages, height: height, fill: NoctisAppColor.sage)
                     .frame(height: height)
-                    .clipShape(shape)
                     .opacity(opacity(index))
                     // Grows from the baseline in the morning reveal.
                     .scaleEffect(x: 1, y: reveal.holdsStart ? 0.001 : 1, anchor: .bottom)
@@ -687,20 +686,6 @@ struct WeekCardView: View {
         }
         .frame(width: width, height: Self.chartHeight)
         .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: selected)
-    }
-
-    /// Deep, Core, REM from the bottom; one sage bar without stages.
-    @ViewBuilder
-    private func stack(_ stages: WeekBarStages?, height: CGFloat) -> some View {
-        if let stages {
-            VStack(spacing: 0) {
-                NoctisAppColor.sage.frame(height: height * stages.rem)
-                NoctisAppColor.coreTint.frame(height: height * stages.core)
-                NoctisAppColor.nightDeep.frame(height: height * stages.deep)
-            }
-        } else {
-            NoctisAppColor.sage
-        }
     }
 
     /// Fully saturated until one is selected; then the others dim.
@@ -745,10 +730,10 @@ public nonisolated enum WeekColumns {
         count > 0 ? barsWidth / CGFloat(count) : 0
     }
 
-    /// A bar is its column less 10pt, at most 26pt wide.
+    /// A bar is its column less 12pt, at most 24pt wide.
     public static func barWidth(barsWidth: CGFloat, count: Int) -> CGFloat {
         let column = width(barsWidth: barsWidth, count: count)
-        return column > 0 ? min(column - 10, 26) : 24
+        return column > 0 ? min(column - 12, 24) : 24
     }
 
     public static let cornerRadius: CGFloat = 6
@@ -758,6 +743,47 @@ public nonisolated enum WeekColumns {
     public static let tapSlop: CGFloat = 10
     /// A drag more vertical than horizontal past this is the page scrolling.
     public static let scrollThreshold: CGFloat = 12
+}
+
+/// A week bar's stages, bottom to top Deep, Core, REM, as three rounded
+/// segments (6pt corners each) with 2pt gaps of the card between them; one
+/// sage bar without stages. Shared by Home's This week and Sleep's Week.
+public struct WeekBarStack: View {
+    public static let gap: CGFloat = 2
+
+    private let stages: WeekBarStages?
+    private let height: CGFloat
+    private let fill: Color
+
+    public init(stages: WeekBarStages?, height: CGFloat, fill: Color) {
+        self.stages = stages
+        self.height = height
+        self.fill = fill
+    }
+
+    public var body: some View {
+        if let stages {
+            let parts: [(Color, Double)] = [
+                (NoctisAppColor.sage, stages.rem),
+                (NoctisAppColor.coreTint, stages.core),
+                (NoctisAppColor.nightDeep, stages.deep),
+            ].filter { $0.1 > 0 }
+            let usable = max(height - Self.gap * CGFloat(max(parts.count - 1, 0)), 0)
+            VStack(spacing: Self.gap) {
+                ForEach(Array(parts.enumerated()), id: \.offset) { _, part in
+                    let segment = usable * part.1
+                    RoundedRectangle(cornerRadius: min(WeekColumns.cornerRadius, segment / 2), style: .continuous)
+                        .fill(part.0)
+                        .frame(height: segment)
+                }
+            }
+            .frame(height: height, alignment: .bottom)
+            // The gaps are the card, not the bar's track behind.
+            .background { RoundedRectangle(cornerRadius: WeekColumns.cornerRadius, style: .continuous).fill(NoctisAppColor.surface) }
+        } else {
+            RoundedRectangle(cornerRadius: WeekColumns.cornerRadius, style: .continuous).fill(fill)
+        }
+    }
 }
 
 nonisolated struct DashedLine: Shape {

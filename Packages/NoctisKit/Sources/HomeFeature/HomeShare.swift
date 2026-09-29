@@ -190,7 +190,7 @@ struct ShareCardView: View {
             }
             if let chart = content.chart(includeDetails: includeDetails) {
                 // The night panel's chart, lanes a little shorter to fit.
-                NightChartView(chart: chart, laneHeightOverride: 20)
+                NightChartView(chart: chart, laneHeightOverride: 24)
                     .padding(NoctisSpacing.md)
                     .background(NoctisAppColor.nightPanel, in: RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
             }

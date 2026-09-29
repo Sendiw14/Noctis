@@ -16,19 +16,19 @@ struct NightPlotTests {
         StripSegment(stage: stage, start: start, end: end, isNotch: notch)
     }
 
-    @Test func theRibbonIs12ptOr60PercentOfALaneIfThatIsSmaller() {
-        #expect(NightPlot(width: 300, laneHeight: 28).thickness == 12)
-        #expect(NightPlot(width: 300, laneHeight: 20).thickness == 12)
-        #expect(abs(NightPlot(width: 300, laneHeight: 15).thickness - 9) < 1e-9)
-        // At large text the lane grows and the ribbon stays 12.
-        #expect(NightPlot(width: 300, laneHeight: 44).thickness == 12)
+    @Test func aRunIs8ptOr60PercentOfALaneIfThatIsSmaller() {
+        #expect(NightPlot(width: 300, laneHeight: 34).thickness == 8)
+        #expect(NightPlot(width: 300, laneHeight: 24).thickness == 8)
+        #expect(abs(NightPlot(width: 300, laneHeight: 10).thickness - 6) < 1e-9)
+        // At large text the lane grows and the run stays 8.
+        #expect(NightPlot(width: 300, laneHeight: 52).thickness == 8)
     }
 
     @Test func theCapsStayInsideThePlot() {
-        let plot = NightPlot(width: 300, laneHeight: 28)
-        #expect(plot.inset == 6)
-        #expect(plot.x(0) == 6)
-        #expect(plot.x(1) == 294)
+        let plot = NightPlot(width: 300, laneHeight: 34)
+        #expect(plot.inset == 4)
+        #expect(plot.x(0) == 4)
+        #expect(plot.x(1) == 296)
         for fraction in [0.0, 0.13, 0.5, 0.87, 1.0] {
             #expect(abs(plot.fraction(x: plot.x(fraction)) - fraction) < 1e-9)
         }
@@ -38,39 +38,74 @@ struct NightPlotTests {
     }
 
     @Test func aRunIsACapsuleExtendedByHalfTheThicknessAtBothEnds() {
-        let plot = NightPlot(width: 300, laneHeight: 28)
+        let plot = NightPlot(width: 300, laneHeight: 34)
         let rect = plot.runRect(run(.core, 0.2, 0.4))
-        #expect(abs(rect.minX - (plot.x(0.2) - 6)) < 1e-9)
-        #expect(abs(rect.maxX - (plot.x(0.4) + 6)) < 1e-9)
-        #expect(rect.height == 12)
+        #expect(abs(rect.minX - (plot.x(0.2) - 4)) < 1e-9)
+        #expect(abs(rect.maxX - (plot.x(0.4) + 4)) < 1e-9)
+        #expect(rect.height == 8)
         #expect(abs(rect.midY - plot.y(.core)) < 1e-9)
         // Neighbors touching at 0.4 overlap by a full thickness.
         let next = plot.runRect(run(.core, 0.4, 0.6))
-        #expect(abs((rect.maxX - next.minX) - 12) < 1e-9)
+        #expect(abs((rect.maxX - next.minX) - 8) < 1e-9)
     }
 
     @Test func aRunIsAtLeast4ptWideBeforeItsCaps() {
-        let plot = NightPlot(width: 300, laneHeight: 28)
+        let plot = NightPlot(width: 300, laneHeight: 34)
         let tiny = plot.runRect(run(.deep, 0.5, 0.501))
-        #expect(abs(tiny.width - (NightPlot.minimumRunWidth + 12)) < 1e-9)
+        #expect(abs(tiny.width - (NightPlot.minimumRunWidth + 8)) < 1e-9)
         #expect(abs(tiny.midX - plot.x(0.5005)) < 1e-9)
     }
 
-    @Test func aStepIsAVerticalCapsuleOverlappingBothRuns() {
-        let plot = NightPlot(width: 300, laneHeight: 28)
+    @Test func aConnectorIsA3ptCapsuleOverlappingBothRuns() {
+        let plot = NightPlot(width: 300, laneHeight: 34)
         let from = run(.core, 0.2, 0.4)
         let to = run(.deep, 0.4, 0.6)
         let step = plot.stepRect(NightConnector(position: 0.4, from: .core, to: .deep, entered: .deep))
-        #expect(step.width == 12)
+        #expect(step.width == 3 && NightPlot.connectorWidth == 3)
+        #expect(NightPlot.connectorOpacity == 0.7)
         #expect(abs(step.midX - plot.x(0.4)) < 1e-9)
-        // Lane centers 28 apart, plus half a thickness above and below.
-        #expect(abs(step.height - 40) < 1e-9)
+        // Lane centers 34 apart, plus half a thickness above and below.
+        #expect(abs(step.height - 42) < 1e-9)
         #expect(step.minY <= plot.runRect(from).minY)
         #expect(step.maxY >= plot.runRect(to).maxY)
         #expect(step.intersects(plot.runRect(from)) && step.intersects(plot.runRect(to)))
         // Going up is the same capsule.
         let up = plot.stepRect(NightConnector(position: 0.4, from: .deep, to: .rem, entered: .rem))
-        #expect(abs(up.height - 68) < 1e-9)
+        #expect(abs(up.height - 76) < 1e-9)
+    }
+
+    @Test func theLanesArePitchedTwentyPercentWiderThanTheyWere() {
+        // 28pt lanes became 34 (rounded), Sleep's 34 became 41, the share card's 20 became 24.
+        #expect(abs(28 * 1.2 - 34) < 0.5 && abs(34 * 1.2 - 41) < 0.5 && 20 * 1.2 == 24)
+    }
+
+    @Test func aConnectorKeepsA2ptGapOfThePanelAroundARunItCrosses() throws {
+        let plot = NightPlot(width: 300, laneHeight: 34)
+        // Awake → Deep at 0.5 passes through the REM and Core lanes; a short run sits in Core there.
+        let runs = [
+            StripSegment(stage: .awake, start: 0, end: 0.5),
+            StripSegment(stage: .core, start: 0.49, end: 0.51),
+            StripSegment(stage: .deep, start: 0.5, end: 1),
+        ]
+        let steps = [NightConnector(position: 0.5, from: .awake, to: .deep, entered: .deep)]
+        let render = NightRender(
+            runs: runs, steps: steps,
+            ribbon: runs.map { RibbonLane(start: $0.start, lane: $0.stage.lane) },
+            heart: nil, hasStages: true, start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 3600)
+        )
+        let paths = NightPathBuilder.build(NightPathsKey(plot: plot, heartHeight: 28, render: render))
+        // Only the Core run is crossed: the joined Awake and Deep runs are not.
+        #expect(paths.knockouts.count == 1)
+        let core = plot.runRect(runs[1])
+        let gap = try #require(paths.knockouts.first).boundingRect
+        #expect(abs(gap.minX - (core.minX - 2)) < 1e-6 && abs(gap.maxY - (core.maxY + 2)) < 1e-6)
+        // A step between neighboring lanes crosses nothing.
+        let adjacent = NightRender(
+            runs: runs, steps: [NightConnector(position: 0.5, from: .core, to: .deep, entered: .deep)],
+            ribbon: runs.map { RibbonLane(start: $0.start, lane: $0.stage.lane) },
+            heart: nil, hasStages: true, start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 3600)
+        )
+        #expect(NightPathBuilder.build(NightPathsKey(plot: plot, heartHeight: 28, render: adjacent)).knockouts.isEmpty)
     }
 
     @Test func aNotchIs6ptInItsLaneAndNeverATallStick() {
@@ -317,10 +352,10 @@ struct RecoveryUsualTests {
 
 struct WeekScrubTests {
     @Test func barsAreTheirColumnLessTenAtMost26() {
-        // 375pt screen: 42pt columns → 26 (capped); 320pt: 34pt → 24.
-        #expect(WeekColumns.barWidth(barsWidth: 295, count: 7) == 26)
-        #expect(abs(WeekColumns.barWidth(barsWidth: 240, count: 7) - (240.0 / 7 - 10)) < 1e-9)
-        #expect(WeekColumns.barWidth(barsWidth: 700, count: 7) == 26)
+        // 375pt screen: 42pt columns → 24 (capped); 320pt: 34pt → 22.
+        #expect(WeekColumns.barWidth(barsWidth: 295, count: 7) == 24)
+        #expect(abs(WeekColumns.barWidth(barsWidth: 240, count: 7) - (240.0 / 7 - 12)) < 1e-9)
+        #expect(WeekColumns.barWidth(barsWidth: 700, count: 7) == 24)
         // Before the chart is measured.
         #expect(WeekColumns.barWidth(barsWidth: 0, count: 7) == 24)
         #expect(WeekColumns.cornerRadius == 6)
