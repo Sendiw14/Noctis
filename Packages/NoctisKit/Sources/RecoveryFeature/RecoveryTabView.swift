@@ -53,19 +53,6 @@ private struct RecoveryTabRoot: View {
     }
 }
 
-/// A factor's detail: arrives with its own commit.
-struct RecoveryFactorScreen: View {
-    let viewModel: RecoveryViewModel
-    let kind: RecoveryFactorKind
-    let range: RecoveryFactorRange
-
-    var body: some View {
-        DormantTextView(title: "\(HomeScreenBuilder.shortName(kind)) detail is on its way", detail: nil)
-            .navigationTitle(HomeScreenBuilder.shortName(kind))
-            .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 /// The Recovery screen pushed over Home when the ring is tapped (with the
 /// zoom), and a factor's detail pushed over Home from a capsule: the same
 /// components as the tab, in Home's stack.

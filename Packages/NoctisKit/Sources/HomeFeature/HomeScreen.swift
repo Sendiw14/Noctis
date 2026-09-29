@@ -1060,3 +1060,26 @@ public nonisolated struct HomeFormat: Sendable, Equatable {
         return remainder == 0 ? "\(hours)h" : "\(hours)h \(remainder)m"
     }
 }
+
+nonisolated extension HomeFormat {
+    /// Noon of a night's calendar day, on this calendar.
+    public func date(_ day: SleepNightKey) -> Date? {
+        calendar.date(from: DateComponents(year: day.year, month: day.month, day: day.day, hour: 12))
+    }
+
+    /// "Sep 12".
+    public func monthDay(_ day: SleepNightKey) -> String {
+        guard let date = date(day) else { return "" }
+        return date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).month(.abbreviated).day())
+    }
+
+    /// "Sat, Sep 12".
+    public func weekdayMonthDay(_ day: SleepNightKey) -> String {
+        date(day).map { shortDate($0) } ?? ""
+    }
+
+    /// "Saturday, September 12".
+    public func wideDate(_ day: SleepNightKey) -> String {
+        date(day).map { longDate($0) } ?? ""
+    }
+}

@@ -98,4 +98,60 @@ final class RecoveryQATests: XCTestCase {
         XCTAssertEqual(points.count, 4, label)
         XCTAssertEqual(points.reduce(0, +), total, label)
     }
+
+    // MARK: - Factor detail
+
+    private func openFactor(_ identifier: String, in app: XCUIApplication) {
+        let card = element(app, identifier)
+        reveal(card, in: app)
+        card.tap()
+        XCTAssertTrue(element(app, "recovery.factorScreen").waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, "recovery.factorChart").waitForExistence(timeout: 5))
+        QA.pause(1.2)
+    }
+
+    func testTheFactorPageAndItsRanges() {
+        let app = launchRecovery()
+        settled(app, waitFor: "recovery.hero")
+        openFactor("recovery.factor.hrv", in: app)
+        QA.capturePages(app, "recovery-factor-14", maxPages: 4)
+        let ranges = app.segmentedControls["recovery.factorRange"]
+        // Scrolled away with the page; scroll back to the top.
+        for _ in 0..<4 where !ranges.isHittable { app.swipeDown() }
+        QA.pause(0.6)
+        for name in ["30 nights", "90 nights", "14 nights"] {
+            ranges.buttons[name].tap()
+            QA.pause(1.4)
+            XCTAssertTrue(ranges.buttons[name].isSelected, name)
+            QA.shot("recovery-factor-\(name.prefix(2))")
+        }
+    }
+
+    /// A tap on the chart picks a night and the pill says what it was; a tap
+    /// on the same night clears it.
+    func testTappingTheFactorChartSelectsANight() {
+        let app = launchRecovery()
+        settled(app, waitFor: "recovery.hero")
+        openFactor("recovery.factor.restingHeartRate", in: app)
+        let chart = element(app, "recovery.factorChart")
+        let spot = chart.coordinate(withNormalizedOffset: CGVector(dx: 0.6, dy: 0.45))
+        spot.tap()
+        QA.pause(0.6)
+        let value = (chart.value as? String) ?? ""
+        XCTAssertTrue(value.contains("resting heart rate"), value)
+        QA.shot("recovery-factor-selected")
+        spot.tap()
+        QA.pause(0.6)
+        XCTAssertEqual((chart.value as? String) ?? "", "")
+    }
+
+    func testEveryFactorHasAPage() {
+        for identifier in ["recovery.factor.sleepDuration", "recovery.factor.sleepConsistency"] {
+            let app = launchRecovery()
+            settled(app, waitFor: "recovery.hero")
+            openFactor(identifier, in: app)
+            QA.shot("recovery-\(identifier.split(separator: ".").last ?? "factor")")
+            app.terminate()
+        }
+    }
 }

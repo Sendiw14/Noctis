@@ -427,29 +427,29 @@ struct SleepRhythmChart: View {
     var body: some View {
         let ticks = content.ticks.enumerated().filter { !typeSize.isAccessibilitySize || $0.offset.isMultiple(of: 2) }.map(\.element)
         HStack(alignment: .top, spacing: 6) {
-            SleepVerticalFractionLayout {
+            NoctisVerticalFractionLayout {
                 ForEach(ticks, id: \.position) { tick in
                     Text(tick.text)
                         .noctisFont(12, relativeTo: .caption)
                         .foregroundStyle(.noctisInk3)
                         .frame(width: tickWidth, alignment: .trailing)
-                        .sleepVerticalFraction(tick.position)
+                        .noctisVerticalFraction(tick.position)
                 }
             }
             .frame(width: tickWidth, height: Self.height)
             ZStack {
                 ForEach(ticks, id: \.position) { tick in
-                    SleepVerticalSpanLayout(from: tick.position, to: tick.position, minimumLength: 1) {
+                    NoctisVerticalSpanLayout(from: tick.position, to: tick.position, minimumLength: 1) {
                         Rectangle().fill(NoctisAppColor.hairline)
                     }
                 }
                 if let band = content.chart.bedtimeBand {
-                    SleepVerticalSpanLayout(from: band.lowerBound, to: band.upperBound, minimumLength: 4) {
+                    NoctisVerticalSpanLayout(from: band.lowerBound, to: band.upperBound, minimumLength: 4) {
                         RoundedRectangle(cornerRadius: 4, style: .continuous).fill(SleepTimingDots.bedtimeTint.opacity(0.14))
                     }
                 }
                 if let band = content.chart.wakeBand {
-                    SleepVerticalSpanLayout(from: band.lowerBound, to: band.upperBound, minimumLength: 4) {
+                    NoctisVerticalSpanLayout(from: band.lowerBound, to: band.upperBound, minimumLength: 4) {
                         RoundedRectangle(cornerRadius: 4, style: .continuous).fill(SleepTimingDots.wakeTint.opacity(0.14))
                     }
                 }

@@ -50,6 +50,8 @@ struct HomeActions {
     var openProfile: () -> Void = {}
     /// Recovery detail, optionally scrolled to one factor.
     var openRecoveryDetail: (RecoveryFactorKind?) -> Void = { _ in }
+    /// One factor's page, from its capsule on the ring.
+    var openRecoveryFactor: (RecoveryFactorKind) -> Void = { _ in }
     /// Sleep on Day, on the night the Last night card shows.
     var openLastNight: () -> Void = {}
     /// Sleep on Week.
@@ -209,6 +211,7 @@ struct HomeView: View {
         HomeActions(
             openProfile: { model.homePath.append(.profile) },
             openRecoveryDetail: { model.homePath.append(.recoveryDetail(focus: $0)) },
+            openRecoveryFactor: { model.homePath.append(.recoveryFactor($0, range: .fortnight)) },
             openLastNight: { model.open(.sleep(night: viewModel.lastNightMoment, range: .day)) },
             openWeek: { model.open(.sleep(night: nil, range: .week)) },
             share: { sharing = true },

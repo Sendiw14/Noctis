@@ -40,13 +40,13 @@ final class HomeQATests: XCTestCase {
         XCTAssertTrue(capsule.waitForExistence(timeout: 10))
         QA.pause(1)
         capsule.tap()
-        XCTAssertTrue(app.navigationBars["Recovery"].waitForExistence(timeout: 5))
+        // A capsule opens that factor's page, not the Recovery screen.
+        XCTAssertTrue(app.descendants(matching: .any)["recovery.factorScreen"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Consistency"].exists)
         QA.pause(1)
-        QA.shot("recovery-detail-focus-consistency")
-        // The detail row (one element, its value in words) scrolled into view.
-        let row = QA.element(app, labelBeginsWith: "Consistency ")
-        XCTAssertTrue(row.waitForExistence(timeout: 3))
-        XCTAssertTrue(row.isHittable)
+        QA.shot("recovery-factor-from-capsule")
+        // Its chart and tiles are on it.
+        XCTAssertTrue(app.descendants(matching: .any)["recovery.factorChart"].waitForExistence(timeout: 5))
     }
 
     func testRecoveryDetailZoom() {

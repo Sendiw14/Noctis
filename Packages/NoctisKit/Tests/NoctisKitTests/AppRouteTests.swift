@@ -13,7 +13,7 @@ struct AppRouteTests {
             #expect(AppRoute(url: route.url) == route)
             #expect(AppRoute(name: route.name) == route)
         }
-        #expect(AppRoute.destinations == [.home, .sleep(), .recovery, .insights, .coach, .profile])
+        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights, .coach, .profile])
         #expect(AppRoute.destinations.map(\.name) == ["home", "sleep", "recovery", "insights", "coach", "profile"])
     }
 
@@ -40,7 +40,39 @@ struct AppRouteTests {
         let parts = Calendar.current.dateComponents([.year, .month, .day, .hour], from: night)
         #expect((parts.year, parts.month, parts.day, parts.hour) == (2026, 9, 28, 12))
         // Other routes ignore a query.
-        #expect(try route("noctis://recovery?range=week") == .recovery)
+        #expect(try route("noctis://insights?range=week") == .insights)
+    }
+
+    @Test func recoveryCarriesARangeAndAFactorThroughItsURL() throws {
+        let route = AppRoute.recovery(range: .month, factor: .hrv)
+        #expect(route.url.absoluteString == "noctis://recovery?range=30d&factor=hrv")
+        #expect(AppRoute(url: route.url) == route)
+        #expect(AppRoute.recovery(range: .quarter, factor: nil).url.absoluteString == "noctis://recovery?range=90d")
+        #expect(AppRoute.recovery(range: .today, factor: .sleepConsistency).url.absoluteString == "noctis://recovery?factor=sleepConsistency")
+        #expect(AppRoute(url: try #require(URL(string: "noctis://recovery?range=7D&factor=RESTINGHEARTRATE"))) == .recovery(range: .week, factor: .restingHeartRate))
+        // What can't be read is left out: Today, no factor.
+        #expect(AppRoute(url: try #require(URL(string: "noctis://recovery?range=year&factor=mood"))) == .recovery())
+        #expect(AppRoute(name: "recovery:30d") == .recovery(range: .month, factor: nil))
+        #expect(AppRoute(name: "recovery:decade") == .recovery())
+        for segment in RecoverySegment.allCases { #expect(RecoverySegment(token: segment.token) == segment) }
+    }
+
+    @Test func openingRecoveryHandsTheTabItsDestinationAndPushesAFactorsPage() throws {
+        let container = try ModelContainer(for: Schema([UserProfileRecord.self]), configurations: [ModelConfiguration(isStoredInMemoryOnly: true)])
+        let model = AppModel(healthProvider: MockHealthKitProvider(scenario: .empty), profileStore: ProfileStore(context: ModelContext(container)))
+        model.open(.recovery(range: .month, factor: .hrv))
+        #expect(model.selectedTab == .recovery)
+        #expect(model.recoveryPath == [.factor(.hrv, range: .month)])
+        let destination = try #require(model.takeRecoveryDestination())
+        #expect(destination.segment == .month && destination.factor == .hrv)
+        #expect(model.takeRecoveryDestination() == nil, "it's handed over once")
+        // 7D and Today go with the 14-night chart.
+        model.open(.recovery(range: .week, factor: .restingHeartRate))
+        #expect(model.recoveryPath == [.factor(.restingHeartRate, range: .fortnight)])
+        // Without a factor the stack goes back to the root.
+        model.open(.recovery(range: .quarter, factor: nil))
+        #expect(model.recoveryPath.isEmpty)
+        #expect(model.takeRecoveryDestination()?.segment == .quarter)
     }
 
     @Test func aLaunchNameCanCarryASleepRange() {
@@ -54,14 +86,15 @@ struct AppRouteTests {
     @Test func foreignOrUnknownURLsAreNotRoutes() throws {
         #expect(AppRoute(url: try #require(URL(string: "noctis://settings"))) == nil)
         #expect(AppRoute(url: try #require(URL(string: "https://example.com/home"))) == nil)
-        #expect(AppRoute(url: try #require(URL(string: "NOCTIS://Recovery"))) == .recovery)
+        #expect(AppRoute(url: try #require(URL(string: "NOCTIS://Recovery"))) == .recovery())
     }
 
     @Test func routesMapToTabsAndProfileLandsOnHome() {
         #expect(AppRoute.home.tab == .home)
         #expect(AppRoute.sleep().tab == .sleep)
         #expect(AppRoute.sleep(night: Date(), range: .month).tab == .sleep)
-        #expect(AppRoute.recovery.tab == .recovery)
+        #expect(AppRoute.recovery().tab == .recovery)
+        #expect(AppRoute.recovery(range: .month, factor: .hrv).tab == .recovery)
         #expect(AppRoute.insights.tab == .insights)
         #expect(AppRoute.coach.tab == .coach)
         #expect(AppRoute.profile.tab == .home)
@@ -76,7 +109,7 @@ struct AppRouteTests {
         let container = try ModelContainer(for: Schema([UserProfileRecord.self]), configurations: [ModelConfiguration(isStoredInMemoryOnly: true)])
         let model = AppModel(healthProvider: MockHealthKitProvider(scenario: .empty), profileStore: ProfileStore(context: ModelContext(container)))
         #expect(model.selectedTab == .home)
-        model.open(.recovery)
+        model.open(.recovery())
         #expect(model.selectedTab == .recovery)
         model.open(.profile)
         #expect(model.selectedTab == .home)
@@ -102,7 +135,7 @@ struct AppRouteTests {
         #expect(model.sleepDestination != first)
         // Other routes carry nothing for Sleep.
         _ = model.takeSleepDestination()
-        model.open(.recovery)
+        model.open(.recovery())
         #expect(model.sleepDestination == nil)
         model.retap(.sleep)
         let one = model.tabRetap

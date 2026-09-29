@@ -73,3 +73,74 @@ public struct NoctisSpanLayout: Layout {
         subview.place(at: CGPoint(x: x, y: bounds.midY), anchor: .leading, proposal: ProposedViewSize(width: width, height: bounds.height))
     }
 }
+
+/// Places each subview down the height at a fraction (0 = top, 1 = bottom),
+/// leading-aligned and centered on its fraction, kept inside the bounds:
+/// the hour labels beside a clock axis, the values beside a chart (R8: a
+/// system `Layout`).
+public struct NoctisVerticalFractionLayout: Layout {
+    public init() {}
+
+    public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        return CGSize(width: width, height: proposal.height ?? 0)
+    }
+
+    public func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            let centerY = bounds.minY + bounds.height * subview[NoctisVerticalFraction.self]
+            let y = min(max(centerY - size.height / 2, bounds.minY), bounds.maxY - size.height)
+            subview.place(at: CGPoint(x: bounds.minX, y: y), anchor: .topLeading, proposal: ProposedViewSize(size))
+        }
+    }
+}
+
+private nonisolated struct NoctisVerticalFraction: LayoutValueKey {
+    static let defaultValue: Double = 0
+}
+
+extension View {
+    /// Where this view sits in a `NoctisVerticalFractionLayout` (0 = top, 1 = bottom).
+    public func noctisVerticalFraction(_ fraction: Double) -> some View {
+        layoutValue(key: NoctisVerticalFraction.self, value: fraction)
+    }
+}
+
+/// Stretches its one subview across the full width and part of the height,
+/// from one fraction to another (0 = top, 1 = bottom), at least
+/// `minimumLength` tall and always inside the bounds: a usual band, a grid
+/// line on an axis. Its two ends animate, so a band follows a chart that
+/// rescales.
+public struct NoctisVerticalSpanLayout: Layout {
+    public var from: Double
+    public var to: Double
+    public var minimumLength: CGFloat
+
+    public init(from: Double, to: Double, minimumLength: CGFloat = 0) {
+        self.from = from
+        self.to = to
+        self.minimumLength = minimumLength
+    }
+
+    public var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(from, to) }
+        set {
+            from = newValue.first
+            to = newValue.second
+        }
+    }
+
+    public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        CGSize(width: proposal.width ?? 0, height: proposal.height ?? 0)
+    }
+
+    public func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let subview = subviews.first else { return }
+        let start = min(max(from, 0), 1)
+        let end = min(max(to, start), 1)
+        let length = min(max((end - start) * bounds.height, minimumLength), bounds.height)
+        let y = min(bounds.minY + start * bounds.height, bounds.maxY - length)
+        subview.place(at: CGPoint(x: bounds.minX, y: y), anchor: .topLeading, proposal: ProposedViewSize(width: bounds.width, height: length))
+    }
+}

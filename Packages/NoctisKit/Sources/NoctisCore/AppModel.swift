@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Observation
+import RecoveryKit
 
 /// App-wide state: the profile, Health authorization and navigation.
 /// Health data for the main app flows through `HomeRepository` instead.
@@ -15,6 +16,8 @@ public final class AppModel {
     public var recoveryPath: [RecoveryRoute] = []
     /// Where the Sleep tab should land, until it takes it (`takeSleepDestination`).
     public private(set) var sleepDestination: SleepDestination?
+    /// Where the Recovery tab should land, until it takes it.
+    public private(set) var recoveryDestination: RecoveryDestination?
     /// The tab whose button was pressed while it was already showing.
     public private(set) var tabRetap: TabRetap?
     private var serial = 0
@@ -60,8 +63,19 @@ public final class AppModel {
         case .sleep(let night, let range):
             serial += 1
             sleepDestination = SleepDestination(night: night, range: range, serial: serial)
-        case .recovery, .insights, .coach: break
+        case .recovery(let range, let factor):
+            serial += 1
+            recoveryDestination = RecoveryDestination(segment: range, factor: factor, serial: serial)
+            // A factor's page is pushed over the tab's root.
+            recoveryPath = factor.map { [.factor($0, range: range.factorRange)] } ?? []
+        case .insights, .coach: break
         }
+    }
+
+    /// The Recovery destination waiting for the tab, once.
+    public func takeRecoveryDestination() -> RecoveryDestination? {
+        defer { recoveryDestination = nil }
+        return recoveryDestination
     }
 
     /// The Sleep destination waiting for the tab, once.
@@ -89,5 +103,12 @@ public nonisolated struct SleepDestination: Sendable, Equatable {
 /// A press on the tab that was already showing.
 public nonisolated struct TabRetap: Sendable, Equatable {
     public let tab: AppTab
+    let serial: Int
+}
+
+/// Where in Recovery to land: a segment, and a factor's page when given.
+public nonisolated struct RecoveryDestination: Sendable, Equatable {
+    public let segment: RecoverySegment
+    public let factor: RecoveryFactorKind?
     let serial: Int
 }

@@ -19,6 +19,8 @@ public final class RecoveryViewModel {
     /// Nil until the first snapshot arrives (the tab shows its skeleton).
     public private(set) var screen: RecoveryScreenContent?
     public private(set) var model: RecoveryRenderModel?
+    /// A factor's page, while one is open.
+    public private(set) var factor: RecoveryFactorContent?
     /// The segment and factor chosen; moves at once, before the content
     /// follows.
     public private(set) var selection = RecoverySelection()
@@ -155,9 +157,13 @@ public final class RecoveryViewModel {
         segmentSelection.factor = nil
         let segmentModel = target.factor == nil ? built : await repository.model(for: segmentSelection, in: snapshot)
         let content = RecoveryScreenBuilder.build(snapshot, model: segmentModel, selection: segmentSelection, now: clock(), calendar: calendar, locale: locale)
+        let factor = target.factor == nil
+            ? nil
+            : RecoveryScreenBuilder.factorContent(snapshot, model: built, selection: target, calendar: calendar, locale: locale)
         let publish = {
             self.model = built
             if self.screen != content { self.screen = content }
+            if self.factor != factor { self.factor = factor }
         }
         if animated {
             withAnimation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion()), publish)

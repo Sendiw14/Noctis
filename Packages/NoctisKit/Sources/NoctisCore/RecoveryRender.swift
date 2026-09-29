@@ -83,6 +83,12 @@ public nonisolated struct FactorLineRender: Sendable, Equatable {
     public let axisHigh: Double
     /// Round values to label, inside the axis.
     public let ticks: [Tick]
+    /// The line as `curveSamples` evenly spaced values (0...1 up), gaps
+    /// bridged, so ranges of any length can morph into one another.
+    public let curve: [Double]
+
+    /// How many values `curve` holds.
+    public static let curveSamples = 120
 }
 
 public nonisolated struct RecoveryRenderModel: Sendable, Equatable {
@@ -207,16 +213,40 @@ public nonisolated enum RecoveryRenderModelBuilder {
             ticks.append(FactorLineRender.Tick(position: scaled(tick), value: tick))
             tick += step
         }
+        let unit = values.map { $0.map(scaled) }
         return FactorLineRender(
             kind: series.kind,
-            values: values.map { $0.map(scaled) },
+            values: unit,
             bandLow: band.map { scaled($0.lowerBound) },
             bandHigh: band.map { scaled($0.upperBound) },
             todayIndex: values.last.flatMap { $0 } != nil ? values.count - 1 : nil,
             axisLow: bottom,
             axisHigh: top,
-            ticks: ticks
+            ticks: ticks,
+            curve: curve(unit)
         )
+    }
+
+    /// `values` resampled to `FactorLineRender.curveSamples` evenly spaced
+    /// points along the run: straight between recorded nights, held flat
+    /// before the first and after the last.
+    static func curve(_ values: [Double?]) -> [Double] {
+        let recorded = values.enumerated().compactMap { index, value in value.map { (index: index, value: $0) } }
+        let count = FactorLineRender.curveSamples
+        guard let first = recorded.first, let last = recorded.last else { return Array(repeating: 0.5, count: count) }
+        let span = Double(max(values.count - 1, 0))
+        var next = 0
+        return (0..<count).map { sample in
+            let position = count > 1 ? Double(sample) / Double(count - 1) * span : 0
+            if position <= Double(first.index) { return first.value }
+            if position >= Double(last.index) { return last.value }
+            while next + 1 < recorded.count, Double(recorded[next + 1].index) < position { next += 1 }
+            let low = recorded[next]
+            let high = recorded[min(next + 1, recorded.count - 1)]
+            guard high.index > low.index else { return low.value }
+            let t = (position - Double(low.index)) / Double(high.index - low.index)
+            return low.value + (high.value - low.value) * min(max(t, 0), 1)
+        }
     }
 
     /// A round step for the labels: whole hours for minutes, 1, 2, 5, 10…

@@ -200,13 +200,13 @@ struct ScoredHeroView: View {
         content.segments.map(\.ringSegment)
     }
 
-    /// Highlight the capsule's segment, then open detail at it.
+    /// Highlight the capsule's segment, then open that factor's page.
     private func focus(_ kind: RecoveryFactorKind) {
         focused = kind
         let hold = reduceMotion ? 0.2 : Self.focusDuration
         Task {
             try? await Task.sleep(for: .seconds(hold))
-            actions.openRecoveryDetail(kind)
+            actions.openRecoveryFactor(kind)
             // Back to normal under the zoom, before it returns.
             try? await Task.sleep(for: .seconds(0.6))
             var reset = Transaction()

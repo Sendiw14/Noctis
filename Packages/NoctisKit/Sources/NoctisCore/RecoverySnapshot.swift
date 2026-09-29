@@ -30,6 +30,30 @@ public nonisolated enum RecoverySegment: String, Sendable, CaseIterable, Hashabl
         }
     }
 
+    /// The URL's word for it: "today", "7d", "30d", "90d".
+    public var token: String {
+        switch self {
+        case .today: "today"
+        case .week: "7d"
+        case .month: "30d"
+        case .quarter: "90d"
+        }
+    }
+
+    public init?(token: String) {
+        guard let segment = Self.allCases.first(where: { $0.token == token.lowercased() }) else { return nil }
+        self = segment
+    }
+
+    /// The factor chart's range that goes with it.
+    public var factorRange: RecoveryFactorRange {
+        switch self {
+        case .today, .week: .fortnight
+        case .month: .month
+        case .quarter: .quarter
+        }
+    }
+
     public init(range: RecoveryHistoryRange) {
         switch range {
         case .week: self = .week

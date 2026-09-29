@@ -64,10 +64,15 @@ struct RootTabView: View {
                 clock.start()
                 // A deep link that arrived before this view existed.
                 if let destination = model.takeSleepDestination() { sleep.open(destination) }
+                if let destination = model.takeRecoveryDestination() { open(destination) }
             }
             .onChange(of: model.sleepDestination) { _, destination in
                 guard destination != nil, let taken = model.takeSleepDestination() else { return }
                 sleep.open(taken)
+            }
+            .onChange(of: model.recoveryDestination) { _, destination in
+                guard destination != nil, let taken = model.takeRecoveryDestination() else { return }
+                open(taken)
             }
             .onChange(of: scenePhase) { _, phase in
                 // Ticks only while the app is up; catches up on return.
@@ -82,6 +87,10 @@ struct RootTabView: View {
                     NoctisSignpost.end(.tabSwitch)
                 }
             }
+    }
+
+    private func open(_ destination: RecoveryDestination) {
+        recovery.open(segment: destination.segment, factor: destination.factor, factorRange: destination.segment.factorRange)
     }
 
     @ViewBuilder

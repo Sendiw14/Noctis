@@ -1,16 +1,21 @@
 import Foundation
+import RecoveryKit
 
 /// Every main-app destination, so widgets and notifications can deep-link
 /// (`noctis://recovery`) and the app can open one in code.
 ///
 /// Sleep carries where in Sleep to land: `noctis://sleep?range=week&night=2026-09-28T23:04:00Z`.
+/// Recovery carries a range and a factor: `noctis://recovery?range=30d&factor=hrv`.
 public nonisolated enum AppRoute: Sendable, Hashable {
     case home
     /// Sleep on `range`, ending on the night that contains `night` (any
     /// moment of it: its bedtime, its waking, or noon of its evening); the
     /// newest night when nil.
     case sleep(night: Date? = nil, range: SleepRange = .day)
-    case recovery
+    /// Recovery on `range` (Today, 7D, 30D or 90D); with a `factor`, that
+    /// factor's page over the matching number of nights (14 for Today and
+    /// 7D, then 30 and 90).
+    case recovery(range: RecoverySegment = .today, factor: RecoveryFactorKind? = nil)
     case insights
     case coach
     case profile
@@ -18,7 +23,7 @@ public nonisolated enum AppRoute: Sendable, Hashable {
     public static let urlScheme = "noctis"
 
     /// Every destination, Sleep on its newest night.
-    public static let destinations: [AppRoute] = [.home, .sleep(), .recovery, .insights, .coach, .profile]
+    public static let destinations: [AppRoute] = [.home, .sleep(), .recovery(), .insights, .coach, .profile]
 
     /// "home", "sleep", "recovery"…: the URL's host.
     public var name: String {
@@ -32,14 +37,14 @@ public nonisolated enum AppRoute: Sendable, Hashable {
         }
     }
 
-    /// A route by its name. Sleep also takes its range after a colon
-    /// ("sleep:week"), for launch arguments.
+    /// A route by its name. Sleep and Recovery also take their range after
+    /// a colon ("sleep:week", "recovery:30d"), for launch arguments.
     public init?(name: String) {
         let parts = name.lowercased().split(separator: ":", maxSplits: 1).map(String.init)
         switch parts.first {
         case "home": self = .home
         case "sleep": self = .sleep(night: nil, range: parts.dropFirst().first.flatMap(SleepRange.init(rawValue:)) ?? .day)
-        case "recovery": self = .recovery
+        case "recovery": self = .recovery(range: parts.dropFirst().first.flatMap(RecoverySegment.init(token:)) ?? .today, factor: nil)
         case "insights": self = .insights
         case "coach": self = .coach
         case "profile": self = .profile
@@ -56,26 +61,37 @@ public nonisolated enum AppRoute: Sendable, Hashable {
         guard url.scheme?.lowercased() == Self.urlScheme,
               let host = url.host()?.lowercased(),
               let route = AppRoute(name: host) else { return nil }
-        guard case .sleep = route else {
-            self = route
-            return
-        }
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
-        let range = items.first { $0.name == "range" }?.value.flatMap { SleepRange(rawValue: $0.lowercased()) } ?? .day
-        let night = items.first { $0.name == "night" }?.value.flatMap(Self.parseNight)
-        self = .sleep(night: night, range: range)
+        func value(_ name: String) -> String? { items.first { $0.name == name }?.value }
+        switch route {
+        case .sleep:
+            let range = value("range").flatMap { SleepRange(rawValue: $0.lowercased()) } ?? .day
+            self = .sleep(night: value("night").flatMap(Self.parseNight), range: range)
+        case .recovery:
+            let range = value("range").flatMap(RecoverySegment.init(token:)) ?? .today
+            let factor = value("factor").flatMap { text in RecoveryFactorKind.allCases.first { $0.rawValue.lowercased() == text.lowercased() } }
+            self = .recovery(range: range, factor: factor)
+        default:
+            self = route
+        }
     }
 
     public var url: URL {
         var components = URLComponents()
         components.scheme = Self.urlScheme
         components.host = name
-        if case .sleep(let night, let range) = self {
-            var items: [URLQueryItem] = []
+        var items: [URLQueryItem] = []
+        switch self {
+        case .sleep(let night, let range):
             if range != .day { items.append(URLQueryItem(name: "range", value: range.rawValue)) }
             if let night { items.append(URLQueryItem(name: "night", value: night.formatted(.iso8601))) }
-            if !items.isEmpty { components.queryItems = items }
+        case .recovery(let range, let factor):
+            if range != .today { items.append(URLQueryItem(name: "range", value: range.token)) }
+            if let factor { items.append(URLQueryItem(name: "factor", value: factor.rawValue)) }
+        default:
+            break
         }
+        if !items.isEmpty { components.queryItems = items }
         return components.url ?? URL(fileURLWithPath: "/")
     }
 

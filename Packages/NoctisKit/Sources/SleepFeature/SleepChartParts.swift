@@ -9,61 +9,6 @@ import SwiftUI
 // selection pill's row and the scrub gesture. Nothing here computes what a
 // chart means; it places and draws what the render model says (R23).
 
-// MARK: - Vertical layouts
-
-/// Places each subview down the height at a fraction (0 = top, 1 = bottom),
-/// leading-aligned and centered on its fraction, kept inside the bounds:
-/// the hour labels beside a clock axis (R8: a system `Layout`).
-struct SleepVerticalFractionLayout: Layout {
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
-        return CGSize(width: width, height: proposal.height ?? 0)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            let centerY = bounds.minY + bounds.height * subview[SleepVerticalFraction.self]
-            let y = min(max(centerY - size.height / 2, bounds.minY), bounds.maxY - size.height)
-            subview.place(at: CGPoint(x: bounds.minX, y: y), anchor: .topLeading, proposal: ProposedViewSize(size))
-        }
-    }
-}
-
-private nonisolated struct SleepVerticalFraction: LayoutValueKey {
-    static let defaultValue: Double = 0
-}
-
-extension View {
-    /// Where this view sits in a `SleepVerticalFractionLayout` (0 = top, 1 = bottom).
-    func sleepVerticalFraction(_ fraction: Double) -> some View {
-        layoutValue(key: SleepVerticalFraction.self, value: fraction)
-    }
-}
-
-/// Stretches its one subview across the full width and part of the height,
-/// from one fraction to another (0 = top, 1 = bottom), at least
-/// `minimumLength` tall and always inside the bounds: a usual band, a grid
-/// line on a clock axis.
-struct SleepVerticalSpanLayout: Layout {
-    var from: Double
-    var to: Double
-    var minimumLength: CGFloat = 0
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        CGSize(width: proposal.width ?? 0, height: proposal.height ?? 0)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        guard let subview = subviews.first else { return }
-        let start = min(max(from, 0), 1)
-        let end = min(max(to, start), 1)
-        let length = min(max((end - start) * bounds.height, minimumLength), bounds.height)
-        let y = min(bounds.minY + start * bounds.height, bounds.maxY - length)
-        subview.place(at: CGPoint(x: bounds.minX, y: y), anchor: .topLeading, proposal: ProposedViewSize(width: bounds.width, height: length))
-    }
-}
-
 // MARK: - Shapes
 
 /// A smooth line through unit-space points: one per night, centered in its
