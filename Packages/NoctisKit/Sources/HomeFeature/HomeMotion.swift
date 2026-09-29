@@ -57,26 +57,31 @@ struct HomeCollapseEffect<Content: View>: View {
 /// A horizontal pan that only begins when the finger moves more sideways
 /// than up or down, so vertical drags still scroll Home. Reports the
 /// finger's x in the view, then nil when it lifts.
-struct HorizontalScrubGesture: UIGestureRecognizerRepresentable {
+public struct HorizontalScrubGesture: UIGestureRecognizerRepresentable {
     var isEnabled = true
     let onChange: (CGFloat?) -> Void
 
-    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
+    public init(isEnabled: Bool = true, onChange: @escaping (CGFloat?) -> Void) {
+        self.isEnabled = isEnabled
+        self.onChange = onChange
+    }
+
+    public func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
         Coordinator()
     }
 
-    func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
+    public func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let pan = UIPanGestureRecognizer()
         pan.delegate = context.coordinator
         pan.maximumNumberOfTouches = 1
         return pan
     }
 
-    func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
+    public func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
         recognizer.isEnabled = isEnabled
     }
 
-    func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
+    public func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
         switch recognizer.state {
         case .began, .changed:
             onChange(context.converter.localLocation.x)
@@ -85,8 +90,8 @@ struct HorizontalScrubGesture: UIGestureRecognizerRepresentable {
         }
     }
 
-    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
-        func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
+    public final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        public func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
             guard let pan = recognizer as? UIPanGestureRecognizer else { return true }
             let velocity = pan.velocity(in: pan.view)
             return abs(velocity.x) > abs(velocity.y)
@@ -118,5 +123,69 @@ public struct HomePill: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(onNightPanel ? NoctisAppColor.nightInk : NoctisAppColor.ink, in: Capsule(style: .continuous))
+    }
+}
+
+// MARK: - Column scrub
+
+extension View {
+    /// Picks a column of a chart: a horizontal drag follows the finger with
+    /// a snap haptic at each column, and a tap picks the column under it (a
+    /// tap on the column already picked clears it). A drag that starts more
+    /// up and down than sideways is the page scrolling, so it does.
+    ///
+    /// The touch area runs `outset` out past the chart on each side (the
+    /// card's padding and the screen margin) for the two outer columns; the
+    /// chart itself (`chartWidth` wide) is what the columns split.
+    public func columnScrub(count: Int, chartWidth: CGFloat, outset: CGFloat, selected: Binding<Int?>) -> some View {
+        modifier(ColumnScrub(count: count, chartWidth: chartWidth, outset: outset, selected: selected))
+    }
+}
+
+struct ColumnScrub: ViewModifier {
+    let count: Int
+    let chartWidth: CGFloat
+    let outset: CGFloat
+    @Binding var selected: Int?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var scrubbing = false
+
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, outset)
+            .contentShape(Rectangle())
+            .onTapGesture(coordinateSpace: .local) { location in
+                let column = column(at: location.x)
+                if column == selected {
+                    withAnimation(animation) { selected = nil }
+                } else {
+                    pick(column)
+                }
+            }
+            .gesture(HorizontalScrubGesture { x in
+                guard let x else {
+                    if scrubbing { NoctisSignpost.end(.scrub) }
+                    scrubbing = false
+                    return
+                }
+                if !scrubbing {
+                    scrubbing = true
+                    NoctisSignpost.begin(.scrub)
+                }
+                pick(column(at: x))
+            })
+            .padding(.horizontal, -outset)
+    }
+
+    private var animation: Animation { NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion) }
+
+    private func pick(_ column: Int) {
+        guard column != selected else { return }
+        NoctisHaptics.snapLight()
+        withAnimation(animation) { selected = column }
+    }
+
+    private func column(at x: CGFloat) -> Int {
+        WeekColumns.index(x: x, barsWidth: chartWidth, outset: outset, count: count)
     }
 }

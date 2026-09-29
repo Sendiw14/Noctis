@@ -68,6 +68,8 @@ public nonisolated struct SleepBarsRender: Sendable, Equatable {
     /// The average over the recorded nights, as a share of the chart; nil
     /// with none.
     public let averageFraction: Double?
+    /// The average in minutes asleep; nil with none.
+    public let averageMinutes: Double?
 }
 
 /// Bedtimes and wake times on one clock axis, a row per night.
@@ -122,6 +124,20 @@ public nonisolated struct RhythmRender: Sendable, Equatable {
     public let axisEnd: Double
 }
 
+/// Your typical night on one clock axis: bedtime to waking, the midpoint,
+/// and (with 14 nights) the middle half of your own bedtimes and wake times.
+public nonisolated struct TimingWindowRender: Sendable, Equatable {
+    /// Positions along the axis, 0...1.
+    public let bedtime: Double
+    public let wake: Double
+    public let midpoint: Double
+    public let bedtimeRange: ClosedRange<Double>?
+    public let wakeRange: ClosedRange<Double>?
+    /// The axis in minutes after noon, on whole hours.
+    public let axisStart: Double
+    public let axisEnd: Double
+}
+
 public nonisolated struct QualityDotRender: Sendable, Equatable {
     public enum Band: String, Sendable, Equatable {
         /// 80 and up.
@@ -169,6 +185,7 @@ public nonisolated struct SleepRenderModel: Sendable, Equatable {
     public let balanceRender: BalanceRender?
     public let consistency: ConsistencyResult?
     public let timing: SleepTimingResult?
+    public let timingRender: TimingWindowRender?
 }
 
 public nonisolated enum SleepRenderModelBuilder {
@@ -189,7 +206,8 @@ public nonisolated enum SleepRenderModelBuilder {
             balance: balance,
             balanceRender: balance.map(balanceRender),
             consistency: consistency,
-            timing: timing
+            timing: timing,
+            timingRender: timing.flatMap(timingWindow)
         )
     }
 
@@ -254,7 +272,10 @@ public nonisolated enum SleepRenderModelBuilder {
             )
         }
         let average = asleep.isEmpty ? nil : asleep.reduce(0, +) / Double(asleep.count)
-        return SleepBarsRender(bars: bars, topMinutes: top, needFraction: top > 0 ? need / top : 0, averageFraction: average.map { top > 0 ? $0 / top : 0 })
+        return SleepBarsRender(
+            bars: bars, topMinutes: top, needFraction: top > 0 ? need / top : 0,
+            averageFraction: average.map { top > 0 ? $0 / top : 0 }, averageMinutes: average
+        )
     }
 
     static func week(_ snapshot: SleepSnapshot, night: SleepNightKey) -> SleepWeekRender {
@@ -357,6 +378,22 @@ public nonisolated enum SleepRenderModelBuilder {
             bedtime: nights.map { $0.record.map { position($0.metrics.bedtimeMinutes) } },
             wake: nights.map { $0.record.map { position($0.metrics.wakeMinutes) } },
             bedtimeBand: band(bedBand), wakeBand: band(wakeBand), axisStart: bounds.start, axisEnd: bounds.end
+        )
+    }
+
+    static func timingWindow(_ timing: SleepTimingResult) -> TimingWindowRender? {
+        guard let bedtime = timing.typicalBedtime, let wake = timing.typicalWake, let midpoint = timing.typicalMidpoint else { return nil }
+        let ranges = [timing.suggested?.bedtime, timing.suggested?.wake].compactMap { $0 }
+        let bounds = axis([bedtime, wake] + ranges.flatMap { [$0.lowerBound, $0.upperBound] })
+        let span = max(bounds.end - bounds.start, 1)
+        func position(_ minutes: Double) -> Double { min(max((minutes - bounds.start) / span, 0), 1) }
+        func band(_ range: ClosedRange<Double>?) -> ClosedRange<Double>? {
+            range.map { position($0.lowerBound)...position($0.upperBound) }
+        }
+        return TimingWindowRender(
+            bedtime: position(bedtime), wake: position(wake), midpoint: position(midpoint),
+            bedtimeRange: band(timing.suggested?.bedtime), wakeRange: band(timing.suggested?.wake),
+            axisStart: bounds.start, axisEnd: bounds.end
         )
     }
 

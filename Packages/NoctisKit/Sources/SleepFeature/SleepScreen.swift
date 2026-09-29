@@ -154,6 +154,10 @@ public nonisolated struct SleepScreen: Sendable, Equatable {
     public let noNight: SleepNoNightContent?
     public let week: SleepWeekContent?
     public let month: SleepMonthContent?
+    /// Consistency, balance and timing, for Week and Month (and their sheets).
+    public let insights: SleepInsightsContent?
+    /// The bars of the selected week or month.
+    public var bars: SleepBarsContent? { week?.bars ?? month?.bars }
     /// The selected range's title for VoiceOver ("Day", "Week", "Month").
     public var rangeTitle: String { selection.range.title }
 }
@@ -180,6 +184,7 @@ public nonisolated enum SleepScreenBuilder {
         var noNight: SleepNoNightContent?
         var week: SleepWeekContent?
         var month: SleepMonthContent?
+        var insights: SleepInsightsContent?
         if showsNights {
             switch selection.range {
             case .day:
@@ -189,12 +194,14 @@ public nonisolated enum SleepScreenBuilder {
                     noNight = noNightContent(selection.night, snapshot: snapshot, format: format)
                 }
             case .week:
-                if let model, model.selection == selection, model.week != nil {
-                    week = weekContent(snapshot, model: model, format: format)
+                if let model, model.selection == selection, let render = model.week {
+                    week = weekContent(snapshot, model: model, render: render, format: format)
+                    insights = insightsContent(snapshot, model: model, format: format)
                 }
             case .month:
-                if let model, model.selection == selection, model.month != nil {
-                    month = monthContent(snapshot, model: model, format: format)
+                if let model, model.selection == selection, let render = model.month {
+                    month = monthContent(snapshot, model: model, render: render, format: format)
+                    insights = insightsContent(snapshot, model: model, format: format)
                 }
             }
         }
@@ -207,7 +214,8 @@ public nonisolated enum SleepScreenBuilder {
             day: day,
             noNight: noNight,
             week: week,
-            month: month
+            month: month,
+            insights: insights
         )
     }
 

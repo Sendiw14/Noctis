@@ -215,3 +215,22 @@ struct SleepRepositoryActorTests {
         #expect(NoctisSignpost.Interval.allCases.map(\.rawValue).contains("SleepModel"))
     }
 }
+
+struct SleepBarsAverageTests {
+    @Test func theAverageIsTheMeanOfTheRecordedNightsAndItsFractionSharesTheBarsScale() async throws {
+        let snap = await snapshot(.full)
+        let model = SleepRenderModelBuilder.build(snap, selection: SleepSelection(night: snap.defaultNight, range: .week))
+        let bars = try #require(model.week?.bars)
+        let recorded = snap.nights(endingAt: snap.defaultNight, count: 7).compactMap { $0.record?.metrics.asleepMinutes }
+        let mean = recorded.reduce(0, +) / Double(recorded.count)
+        #expect(abs(try #require(bars.averageMinutes) - mean) < 1e-9)
+        #expect(abs(try #require(bars.averageFraction) - mean / bars.topMinutes) < 1e-12)
+    }
+
+    @Test func aRangeWithNoNightsHasNoAverage() async throws {
+        let snap = await snapshot(.empty)
+        let bars = SleepRenderModelBuilder.bars(snap, night: snap.anchorNight, count: 7)
+        #expect(bars.averageMinutes == nil && bars.averageFraction == nil)
+        #expect(bars.bars.allSatisfy { $0.fraction == nil })
+    }
+}

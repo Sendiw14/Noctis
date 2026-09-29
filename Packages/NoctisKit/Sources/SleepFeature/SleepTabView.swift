@@ -89,7 +89,7 @@ struct SleepContent: View {
                 case .day:
                     SleepDayView(screen: screen, viewModel: viewModel)
                 case .week, .month:
-                    SleepRangePlaceholder(range: screen.selection.range)
+                    SleepRangeView(screen: screen, viewModel: viewModel)
                 }
             }
         }
@@ -238,26 +238,5 @@ struct SleepSkeletonView: View {
         RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous)
             .fill(NoctisAppColor.track)
             .frame(height: height)
-    }
-}
-
-/// Week and Month arrive with their views.
-struct SleepRangePlaceholder: View {
-    let range: SleepRange
-
-    var body: some View {
-        DormantTextView(title: "\(range.title) is on its way", detail: nil)
-            .frame(maxWidth: .infinity)
-            .padding(.top, NoctisSpacing.xl)
-    }
-}
-
-/// The detail sheets arrive with Week and Month.
-struct SleepDetailSheet: View {
-    let detail: SleepDetail
-    let screen: SleepScreen
-
-    var body: some View {
-        Text(detail.rawValue)
     }
 }

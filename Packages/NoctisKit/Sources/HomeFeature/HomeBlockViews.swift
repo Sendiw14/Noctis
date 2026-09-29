@@ -551,16 +551,13 @@ struct WeekCardView: View {
     /// whether or not a night is selected, so nothing moves and the pill
     /// never covers a bar.
     @NoctisScaledLength(relativeTo: .footnote) private var pillRowHeight: CGFloat = 28
-    /// The selection when the current touch began, and where.
-    @State private var touchStart: Int??
-
     static let chartHeight: CGFloat = 110
     /// The tap area runs this far out past the bars on each side: through
     /// the card's padding and the screen margin. Only the two outer
     /// columns use it.
     static let tapOutset = NoctisSpacing.lg + NoctisSpacing.lg
 
-    private var barsWidth: CGFloat { max(tapWidth - 2 * Self.tapOutset, 0) }
+    private var barsWidth: CGFloat { tapWidth }
     private var barWidth: CGFloat { WeekColumns.barWidth(barsWidth: barsWidth, count: content.bars.count) }
 
     var body: some View {
@@ -646,52 +643,11 @@ struct WeekCardView: View {
         }
         // One gesture over the whole chart — the bars' columns, top to
         // bottom, and out past the card's padding into the screen margin
-        // for the two outer ones. The tap gesture keeps a tap on the chart
-        // from opening Sleep; the drag runs beside the page's own scroll.
-        .padding(.horizontal, Self.tapOutset)
-        .contentShape(Rectangle())
+        // for the two outer ones. A tap on the chart picks a night rather
+        // than opening Sleep; a sideways drag scrubs; an up-and-down drag
+        // is the page's own scroll.
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { tapWidth = $0 }
-        .onTapGesture {}
-        .simultaneousGesture(scrub)
-        .padding(.horizontal, -Self.tapOutset)
-    }
-
-    /// The night nearest the finger, following it; a tap on the night that
-    /// was already selected clears it.
-    private var scrub: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .local)
-            .onChanged { value in
-                if touchStart == nil {
-                    touchStart = .some(selected)
-                    NoctisSignpost.begin(.scrub)
-                }
-                let vertical = abs(value.translation.height)
-                // A mostly vertical drag is the page scrolling: put the
-                // selection back to what it was.
-                if vertical > WeekColumns.scrollThreshold, vertical > abs(value.translation.width) {
-                    if selected != touchStart.flatMap({ $0 }) { selected = touchStart.flatMap { $0 } }
-                    return
-                }
-                let column = column(at: value.location.x)
-                guard column != selected else { return }
-                NoctisHaptics.snapLight()
-                withAnimation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion)) { selected = column }
-            }
-            .onEnded { value in
-                defer {
-                    touchStart = nil
-                    NoctisSignpost.end(.scrub)
-                }
-                guard let start = touchStart else { return }
-                let moved = hypot(value.translation.width, value.translation.height)
-                if moved < WeekColumns.tapSlop, column(at: value.location.x) == start {
-                    withAnimation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion)) { selected = nil }
-                }
-            }
-    }
-
-    private func column(at x: CGFloat) -> Int {
-        WeekColumns.index(x: x, barsWidth: barsWidth, outset: Self.tapOutset, count: content.bars.count)
+        .columnScrub(count: content.bars.count, chartWidth: barsWidth, outset: Self.tapOutset, selected: $selected)
     }
 
     private func barView(_ bar: WeekBar, index: Int) -> some View {

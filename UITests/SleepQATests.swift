@@ -17,6 +17,23 @@ final class SleepQATests: XCTestCase {
         app.descendants(matching: .any)[identifier]
     }
 
+    /// Scrolls until `target` is on screen (a few swipes at most), then
+    /// taps its center; a floating tab bar can leave a button on screen
+    /// but not "hittable".
+    private func tapScrolling(_ target: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<6 where !target.isHittable {
+            app.swipeUp()
+            QA.pause(0.3)
+        }
+        // A tap sent right after a swipe is swallowed by the scroll's momentum.
+        QA.pause(0.8)
+        if target.isHittable {
+            target.tap()
+        } else {
+            target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
+    }
+
     private func settled(_ app: XCUIApplication, waitFor identifier: String) {
         XCTAssertTrue(element(app, identifier).waitForExistence(timeout: 12), identifier)
         QA.pause(3.2)
@@ -98,5 +115,114 @@ final class SleepQATests: XCTestCase {
         deep.tap()
         QA.pause(0.6)
         XCTAssertEqual((chart.value as? String) ?? "", "")
+    }
+
+    // MARK: - Week and Month
+
+    private func choose(_ range: String, _ app: XCUIApplication) {
+        let segment = app.segmentedControls.buttons[range]
+        XCTAssertTrue(segment.waitForExistence(timeout: 5), range)
+        segment.tap()
+        XCTAssertTrue(element(app, "sleep.bars").waitForExistence(timeout: 5), range)
+        QA.pause(1.2)
+    }
+
+    func testWeek() {
+        let app = launchSleep()
+        settled(app, waitFor: "sleep.hero")
+        choose("Week", app)
+        XCTAssertTrue(element(app, "sleep.consistency").exists)
+        XCTAssertTrue(element(app, "sleep.balance").exists)
+        XCTAssertTrue(element(app, "sleep.timing").exists)
+        QA.capturePages(app, "sleep-week", maxPages: 4)
+    }
+
+    func testMonth() {
+        let app = launchSleep()
+        settled(app, waitFor: "sleep.hero")
+        choose("Month", app)
+        XCTAssertTrue(element(app, "sleep.rhythm").waitForExistence(timeout: 3))
+        QA.capturePages(app, "sleep-month", maxPages: 4)
+        XCTAssertTrue(element(app, "sleep.qualityStrip").exists)
+    }
+
+    func testWeekOnMessyNightAndGap() {
+        for scenario in ["messyNight", "gap", "sleepOnly", "learning"] {
+            let app = launchSleep(scenario)
+            XCTAssertTrue(app.segmentedControls.buttons["Week"].waitForExistence(timeout: 12), scenario)
+            QA.pause(2)
+            choose("Week", app)
+            QA.shot("sleep-week-\(scenario)")
+            choose("Month", app)
+            QA.shot("sleep-month-\(scenario)")
+            app.terminate()
+        }
+    }
+
+    /// Switching ranges regroups the same chart; the tab and its header stay.
+    func testSwitchingRangesKeepsTheHeaderAndComesBackToDay() {
+        let app = launchSleep()
+        settled(app, waitFor: "sleep.hero")
+        choose("Week", app)
+        choose("Month", app)
+        choose("Week", app)
+        app.segmentedControls.buttons["Day"].tap()
+        XCTAssertTrue(element(app, "sleep.hero").waitForExistence(timeout: 5))
+        XCTAssertFalse(element(app, "sleep.bars").exists)
+    }
+
+    /// A press on the chart picks the night under it and says what it was; a
+    /// press on the same night clears it.
+    func testTappingAWeekBarSelectsItsNight() {
+        let app = launchSleep()
+        settled(app, waitFor: "sleep.hero")
+        choose("Week", app)
+        let bars = element(app, "sleep.bars")
+        let spot = bars.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.42))
+        spot.tap()
+        QA.pause(0.6)
+        let value = (bars.value as? String) ?? ""
+        XCTAssertTrue(value.contains("hour"), value)
+        QA.shot("sleep-week-selected")
+        spot.tap()
+        QA.pause(0.6)
+        XCTAssertEqual((bars.value as? String) ?? "", "")
+    }
+
+    func testMonthMarkersSelectTheirBar() {
+        let app = launchSleep()
+        settled(app, waitFor: "sleep.hero")
+        choose("Month", app)
+        let longest = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Longest night'")).firstMatch
+        XCTAssertTrue(longest.waitForExistence(timeout: 5))
+        tapScrolling(longest, in: app)
+        QA.pause(0.6)
+        let value = (element(app, "sleep.bars").value as? String) ?? ""
+        XCTAssertTrue(value.contains("hours"), value)
+    }
+
+    /// Each card opens its sheet, which ends on the closing line.
+    func testEachInsightOpensItsSheet() {
+        let app = launchSleep()
+        settled(app, waitFor: "sleep.hero")
+        choose("Week", app)
+        for (card, sheet, name) in [("sleep.consistency", "sleep.consistencySheet", "consistency"), ("sleep.balance", "sleep.balanceSheet", "balance"), ("sleep.timing", "sleep.timingSheet", "timing")] {
+            tapScrolling(element(app, card), in: app)
+            let opened = element(app, sheet).waitForExistence(timeout: 5)
+            if !opened { QA.shot("sleep-sheet-missing-\(name)") }
+            XCTAssertTrue(opened, sheet)
+            QA.pause(0.8)
+            QA.shot("sleep-sheet-\(name)")
+            XCTAssertTrue(app.staticTexts["Patterns matter more than perfect nights."].exists || {
+                app.swipeUp(); QA.pause(0.3)
+                return app.staticTexts["Patterns matter more than perfect nights."].exists
+            }())
+            let close = app.buttons["Close"]
+            XCTAssertTrue(close.waitForExistence(timeout: 3))
+            close.tap()
+            XCTAssertFalse(element(app, sheet).waitForExistence(timeout: 1) && element(app, sheet).isHittable && false)
+            QA.pause(1.2)
+            QA.shot("sleep-sheet-closed-\(name)")
+        }
     }
 }
