@@ -2,6 +2,7 @@ import DesignSystem
 import HomeFeature
 import NoctisCore
 import OnboardingFeature
+import RecoveryFeature
 import SleepFeature
 import SwiftUI
 
@@ -52,6 +53,7 @@ struct RootTabView: View {
     @Environment(AppModel.self) private var model
     @Environment(HomeViewModel.self) private var home
     @Environment(SleepViewModel.self) private var sleep
+    @Environment(RecoveryViewModel.self) private var recovery
     @Environment(\.scenePhase) private var scenePhase
     @State private var clock = HomeClock()
 
@@ -119,12 +121,19 @@ struct RootTabView: View {
     private func destination(for tab: AppTab) -> some View {
         switch tab {
         case .home:
-            HomeTabView(viewModel: home)
-                .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
+            HomeTabView(
+                viewModel: home,
+                recoveryScreen: { focus in AnyView(RecoveryPushedScreen(viewModel: recovery, focus: focus)) },
+                recoveryFactor: { kind, range in AnyView(RecoveryPushedFactorScreen(viewModel: recovery, kind: kind, range: range)) }
+            )
+            .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .sleep:
             SleepTabView(viewModel: sleep)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
-        case .recovery, .insights, .coach:
+        case .recovery:
+            RecoveryTabView(viewModel: recovery)
+                .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
+        case .insights, .coach:
             // R19: unbuilt tabs, listed in ROADMAP.md.
             NoctisComingSoonView(title: tab.title, systemImage: tab.systemImage)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }

@@ -1,0 +1,391 @@
+import DesignSystem
+import HomeFeature
+import NoctisCore
+import RecoveryKit
+import SwiftUI
+
+/// Today: the ring, how the score was built, a card per factor, how far to
+/// trust it, and how it's calculated.
+struct RecoveryTodayView: View {
+    let today: RecoveryTodayContent
+    let viewModel: RecoveryViewModel
+    let openFactor: (RecoveryFactorKind) -> Void
+
+    var body: some View {
+        VStack(spacing: NoctisSpacing.md) {
+            RecoveryHeroView(content: today.scored, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
+            RecoveryBuildCard(build: today.build)
+            ForEach(today.factors, id: \.kind) { row in
+                RecoveryFactorCard(row: row) { openFactor(row.kind) }
+                    .id(row.kind)
+            }
+            RecoveryConfidenceCard(content: today.confidence)
+            RecoveryCalculationCard(paragraphs: today.calculation, modelVersion: today.modelVersion)
+        }
+    }
+}
+
+// MARK: - Hero
+
+/// The scored ring on the paper: 260pt (220 in narrow spaces), a tick at
+/// each factor's usual, then exactly one line under it (the delta chip and
+/// how it compares), why when a factor is outside its normal range, and a
+/// confidence caption when it isn't high.
+struct RecoveryHeroView: View {
+    let content: ScoredRecoveryContent
+    let reveal: HomeRevealPhase
+    let lowPower: Bool
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shownScore: Int
+
+    static let ringDiameter: CGFloat = 260
+    static let narrowRingDiameter: CGFloat = 220
+    static let narrowBelowWidth: CGFloat = 350
+    static let ringLineWidth: CGFloat = 22
+
+    init(content: ScoredRecoveryContent, reveal: HomeRevealPhase, lowPower: Bool) {
+        self.content = content
+        self.reveal = reveal
+        self.lowPower = lowPower
+        _shownScore = State(initialValue: HomeReveal.countsUp(lowPower: lowPower) && reveal == .pending ? 0 : content.score)
+    }
+
+    var body: some View {
+        VStack(spacing: NoctisSpacing.md) {
+            ring
+            VStack(spacing: NoctisSpacing.xs) {
+                HStack(spacing: NoctisSpacing.xs) {
+                    if let chip = content.chip {
+                        DeltaChipView(chip: chip)
+                    }
+                    Text(content.comparisonPhrase)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisInk2)
+                }
+                if let why = content.why {
+                    Text(why)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisInk2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            if let caption = content.confidenceCaption {
+                Text(caption)
+                    .noctisFont(13, relativeTo: .footnote)
+                    .foregroundStyle(.noctisInk3)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let caption = content.usualCaption {
+                Text(caption)
+                    .noctisFont(12, relativeTo: .caption)
+                    .foregroundStyle(.noctisInk3)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("recovery.hero")
+        // The score counts up with the ring, and rolls to a new score.
+        .task(id: reveal) {
+            guard reveal == .playing, HomeReveal.countsUp(lowPower: lowPower), !reduceMotion else { return }
+            try? await Task.sleep(for: .seconds(0.1))
+            guard !Task.isCancelled else { return }
+            withAnimation(NoctisMotion.draw(HomeReveal.ringDuration)) { shownScore = content.score }
+            try? await Task.sleep(for: .seconds(HomeReveal.ringDuration))
+            guard !Task.isCancelled else { return }
+            NoctisHaptics.medium()
+        }
+        .onChange(of: reveal) { _, phase in
+            // A skipped reveal lands on the end state at once.
+            if phase == .none { shownScore = content.score }
+        }
+        .onChange(of: content.score) { _, _ in
+            withAnimation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion)) { shownScore = content.score }
+        }
+    }
+
+    private var ring: some View {
+        NoctisRingLayout(maxDiameter: Self.ringDiameter, narrowDiameter: Self.narrowRingDiameter, narrowBelowWidth: Self.narrowBelowWidth) {
+            NoctisRecoveryRing(
+                segments: content.segments.map(\.ringSegment),
+                reveal: reveal.holdsStart ? 0 : 1,
+                showsUsual: content.usualCaption != nil,
+                diameter: Self.ringDiameter,
+                lineWidth: Self.ringLineWidth
+            )
+            .animation(reduceMotion ? nil : NoctisMotion.draw(HomeReveal.ringDuration).delay(0.1), value: reveal)
+            VStack(spacing: 0) {
+                Text("\(shownScore)")
+                    .noctisNumeral(88, .heavy)
+                    .monospacedDigit()
+                    .contentTransition(.numericText(value: Double(shownScore)))
+                    .foregroundStyle(NoctisAppColor.ink)
+                Text("Recovery")
+                    .noctisFont(15, relativeTo: .subheadline)
+                    .foregroundStyle(.noctisInk2)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(content.accessibilityLabel)
+    }
+}
+
+// MARK: - How today's score was built
+
+/// One stacked bar, 20pt tall, on a 0-100 scale: a segment per factor in
+/// its ring color, as wide as its points; under it a row per factor (dot,
+/// name, points, and how far from usual), and the total at the bar's right
+/// end.
+struct RecoveryBuildCard: View {
+    let build: RecoveryBuildContent
+
+    static let barHeight: CGFloat = 20
+
+    var body: some View {
+        NoctisAppCard {
+            VStack(alignment: .leading, spacing: NoctisSpacing.md) {
+                NoctisCaption("HOW TODAY'S SCORE WAS BUILT", style: .noctisInk3)
+                HStack(spacing: NoctisSpacing.sm) {
+                    bar
+                    Text(build.totalText)
+                        .noctisFont(17, .semibold, relativeTo: .body)
+                        .monospacedDigit()
+                        .foregroundStyle(NoctisAppColor.ink)
+                        .fixedSize()
+                }
+                VStack(spacing: NoctisSpacing.sm) {
+                    ForEach(build.rows) { row in
+                        rowView(row)
+                    }
+                }
+                if let note = build.capNote {
+                    Text(note)
+                        .noctisFont(15, .semibold, relativeTo: .subheadline)
+                        .foregroundStyle(NoctisAppColor.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(NoctisSpacing.sm)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(NoctisAppColor.track, in: RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
+                        .accessibilityIdentifier("recovery.cap")
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(build.accessibilityLabel)
+        .accessibilityIdentifier("recovery.build")
+    }
+
+    private var bar: some View {
+        ZStack {
+            NoctisSpanLayout(to: 1) {
+                Capsule().fill(NoctisAppColor.track).frame(height: Self.barHeight)
+            }
+            ForEach(build.rows) { row in
+                NoctisSpanLayout(from: row.start, to: row.start + row.width, minimumWidth: 4) {
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(row.kind.tint)
+                        .frame(height: Self.barHeight)
+                        .padding(.horizontal, 1)
+                }
+            }
+        }
+        .frame(height: Self.barHeight)
+    }
+
+    private func rowView(_ row: RecoveryBuildRow) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
+            Circle().fill(row.kind.tint).frame(width: 10, height: 10)
+                .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
+            Text(row.name)
+                .noctisFont(15, .semibold, relativeTo: .subheadline)
+                .foregroundStyle(NoctisAppColor.ink)
+            Spacer(minLength: NoctisSpacing.xs)
+            if let usual = row.usualText {
+                Text(usual)
+                    .noctisFont(13, relativeTo: .footnote)
+                    .foregroundStyle(.noctisInk2)
+            }
+            Text(row.pointsText)
+                .noctisFont(17, .semibold, relativeTo: .body)
+                .monospacedDigit()
+                .foregroundStyle(NoctisAppColor.ink)
+                .frame(minWidth: 40, alignment: .trailing)
+        }
+    }
+}
+
+// MARK: - Factor cards
+
+/// A factor: its name, today's value, the baseline, the score, the last 14
+/// nights against the normal range, and one plain sentence. The whole card
+/// opens that factor's detail.
+struct RecoveryFactorCard: View {
+    let row: FactorDetailRow
+    let open: () -> Void
+
+    var body: some View {
+        Button {
+            NoctisHaptics.light()
+            open()
+        } label: {
+            NoctisAppCard {
+                VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+                    HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+                        Circle()
+                            .fill(row.kind.tint)
+                            .frame(width: 12, height: 12)
+                            .padding(.top, 6)
+                        VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Text(row.name)
+                                    .noctisFont(17, .semibold, relativeTo: .body)
+                                    .foregroundStyle(NoctisAppColor.ink)
+                                NoctisMetric(row.value, size: 17, relativeTo: .body)
+                                if let suffix = row.valueSuffix {
+                                    Text(suffix)
+                                        .noctisFont(17, .semibold, relativeTo: .body)
+                                        .foregroundStyle(NoctisAppColor.ink)
+                                }
+                            }
+                            Text(row.baseline)
+                                .noctisFont(13, relativeTo: .footnote)
+                                .foregroundStyle(.noctisInk3)
+                            Text(row.sentence)
+                                .noctisFont(15, relativeTo: .subheadline)
+                                .foregroundStyle(.noctisInk2)
+                                .padding(.top, 2)
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: NoctisSpacing.xs)
+                        VStack(alignment: .trailing, spacing: 0) {
+                            Text("\(row.score)")
+                                .noctisFont(22, .semibold, relativeTo: .title3)
+                                .foregroundStyle(NoctisAppColor.ink)
+                            Text("score")
+                                .noctisFont(13, relativeTo: .footnote)
+                                .foregroundStyle(.noctisInk3)
+                        }
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.noctisInk3)
+                            .padding(.top, 6)
+                            .accessibilityHidden(true)
+                    }
+                    if let sparkline = row.sparkline {
+                        FactorSparkline(content: sparkline, tint: row.kind.tint)
+                            .frame(height: FactorSparkline.height)
+                    }
+                }
+            }
+        }
+        .buttonStyle(NoctisCardButtonStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(row.accessibilityLabel)
+        .accessibilityHint("Opens the details.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("recovery.factor.\(row.kind.rawValue)")
+    }
+}
+
+// MARK: - Confidence
+
+/// The tier in plain words, which signals counted and which didn't and
+/// why, how many nights it's built on, and the one step that would firm it
+/// up. Calm and factual.
+struct RecoveryConfidenceCard: View {
+    let content: RecoveryConfidenceContent
+
+    var body: some View {
+        NoctisAppCard {
+            VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+                NoctisCaption("CONFIDENCE", style: .noctisInk3)
+                VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
+                    Text(content.tier)
+                        .noctisFont(17, .semibold, relativeTo: .body)
+                        .foregroundStyle(NoctisAppColor.ink)
+                    Text(content.sentence)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisInk2)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+                    ForEach(content.checklist) { item in
+                        HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
+                            Image(systemName: item.isUsed ? "checkmark.circle.fill" : "circle.dashed")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(item.isUsed ? NoctisAppColor.ink : NoctisAppColor.ink3)
+                                .frame(width: 20)
+                                .accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(item.name)
+                                    .noctisFont(15, .medium, relativeTo: .subheadline)
+                                    .foregroundStyle(item.isUsed ? NoctisAppColor.ink : NoctisAppColor.ink2)
+                                if let reason = item.reason {
+                                    Text(reason)
+                                        .noctisFont(13, relativeTo: .footnote)
+                                        .foregroundStyle(.noctisInk3)
+                                }
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                Text(content.basedOn)
+                    .noctisFont(13, .medium, relativeTo: .footnote)
+                    .foregroundStyle(.noctisInk3)
+                if let step = content.nextStep {
+                    Text(step)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(NoctisAppColor.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(NoctisSpacing.sm)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(NoctisAppColor.track, in: RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
+                        .accessibilityIdentifier("recovery.nextStep")
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(content.accessibilityLabel)
+        .accessibilityIdentifier("recovery.confidence")
+    }
+}
+
+// MARK: - How this is calculated
+
+struct RecoveryCalculationCard: View {
+    let paragraphs: [String]
+    let modelVersion: String
+    @State private var expanded = false
+
+    var body: some View {
+        NoctisAppCard {
+            DisclosureGroup(isExpanded: $expanded) {
+                VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+                    ForEach(paragraphs, id: \.self) { paragraph in
+                        Text(paragraph)
+                            .noctisFont(15, relativeTo: .subheadline)
+                            .foregroundStyle(NoctisAppColor.ink2)
+                    }
+                    Text(modelVersion)
+                        .noctisFont(13, relativeTo: .footnote)
+                        .foregroundStyle(NoctisAppColor.ink3)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, NoctisSpacing.sm)
+            } label: {
+                Text("How this is calculated")
+                    .noctisFont(17, .semibold, relativeTo: .body)
+                    .foregroundStyle(NoctisAppColor.ink)
+            }
+            .tint(NoctisAppColor.ink2)
+        }
+        .accessibilityIdentifier("recovery.calculation")
+    }
+}

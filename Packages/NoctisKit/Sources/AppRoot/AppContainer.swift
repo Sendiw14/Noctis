@@ -3,6 +3,7 @@ import Foundation
 import HealthProviding
 import HomeFeature
 import NoctisCore
+import RecoveryFeature
 import SleepFeature
 import SwiftData
 
@@ -10,6 +11,7 @@ public struct AppContainer {
     public let model: AppModel
     public let homeViewModel: HomeViewModel
     public let sleepViewModel: SleepViewModel
+    public let recoveryViewModel: RecoveryViewModel
     public let storeManager: StoreManager
     public let modelContainer: ModelContainer
 
@@ -112,6 +114,11 @@ public struct AppContainer {
         )
         self.sleepViewModel = SleepViewModel(
             repository: SleepRepository(provider: provider),
+            profile: { model.profile },
+            connectHealth: { await model.requestHealthAuthorization() }
+        )
+        self.recoveryViewModel = RecoveryViewModel(
+            repository: RecoveryRepository(provider: provider),
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() }
         )

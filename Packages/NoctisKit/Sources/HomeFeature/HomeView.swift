@@ -9,9 +9,20 @@ public struct HomeTabView: View {
     @Environment(AppModel.self) private var model
     @Namespace private var zoom
     private let viewModel: HomeViewModel
+    /// The Recovery screen the ring zooms into (built by the app, which
+    /// knows the Recovery feature), scrolled to `focus`'s card when given.
+    private let recoveryScreen: (RecoveryFactorKind?) -> AnyView
+    /// A factor's detail, pushed from a capsule.
+    private let recoveryFactor: (RecoveryFactorKind, RecoveryFactorRange) -> AnyView
 
-    public init(viewModel: HomeViewModel) {
+    public init(
+        viewModel: HomeViewModel,
+        recoveryScreen: @escaping (RecoveryFactorKind?) -> AnyView,
+        recoveryFactor: @escaping (RecoveryFactorKind, RecoveryFactorRange) -> AnyView
+    ) {
         self.viewModel = viewModel
+        self.recoveryScreen = recoveryScreen
+        self.recoveryFactor = recoveryFactor
     }
 
     public var body: some View {
@@ -21,8 +32,10 @@ public struct HomeTabView: View {
                 .navigationDestination(for: HomeRoute.self) { route in
                     switch route {
                     case .recoveryDetail(let focus):
-                        RecoveryDetailView(viewModel: viewModel, focus: focus)
+                        recoveryScreen(focus)
                             .navigationTransition(.zoom(sourceID: HomeView.recoveryZoomID, in: zoom))
+                    case .recoveryFactor(let kind, let range):
+                        recoveryFactor(kind, range)
                     case .profile:
                         // R19: Profile isn't built yet (ROADMAP.md).
                         NoctisComingSoonView(title: "Profile", systemImage: "person.crop.circle")
@@ -605,7 +618,7 @@ extension RecoveryFactorKind {
 extension RingSegmentContent {
     /// The ring's segment: its factor's color and the render model's
     /// angles (nothing is laid out again).
-    var ringSegment: NoctisRingSegment {
+    public var ringSegment: NoctisRingSegment {
         NoctisRingSegment(
             color: kind.tint, weight: weight, fraction: fraction, usual: usual,
             arc: NoctisRingArc(startDegrees: arc.startDegrees, endDegrees: arc.endDegrees, tickDegrees: arc.tickDegrees)

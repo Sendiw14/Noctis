@@ -26,7 +26,7 @@ enum HomePreview {
             introGate: HomeIntroGate(defaults: defaults),
             modeOverride: mode
         )
-        return HomeTabView(viewModel: viewModel).environment(model)
+        return HomeTabView(viewModel: viewModel, recoveryScreen: { _ in AnyView(EmptyView()) }, recoveryFactor: { _, _ in AnyView(EmptyView()) }).environment(model)
     }
 
     private static func makeModel(_ provider: MockHealthKitProvider) -> AppModel {

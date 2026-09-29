@@ -581,7 +581,7 @@ public nonisolated enum HomeScreenBuilder {
         }
     }
 
-    static func scoredContent(_ result: RecoveryResult, ring: [RingArc]? = nil) -> ScoredRecoveryContent {
+    public static func scoredContent(_ result: RecoveryResult, ring: [RingArc]? = nil) -> ScoredRecoveryContent {
         let factors = factorOrder.compactMap { result.factor($0) }
         let chip = result.comparison.delta.map { delta in
             DeltaChip(text: signed(delta), tone: tone(result.comparison.trend))
@@ -612,7 +612,7 @@ public nonisolated enum HomeScreenBuilder {
     /// "Mostly: sleep was 1h 10m shorter than usual", "Mostly: HRV above
     /// your normal range", "Mostly: bedtime 45 min later than usual"; with
     /// `spoken`, durations in words.
-    static func whyLine(_ contributor: RecoveryContributor?, spoken: Bool = false) -> String? {
+    public static func whyLine(_ contributor: RecoveryContributor?, spoken: Bool = false) -> String? {
         guard let contributor else { return nil }
         let above = contributor.direction == .above
         let minutes = Int(abs(contributor.difference).rounded())
@@ -641,7 +641,7 @@ public nonisolated enum HomeScreenBuilder {
     }
 
     /// "+6", "−4" (a real minus sign), "±0".
-    static func signed(_ value: Int) -> String {
+    public static func signed(_ value: Int) -> String {
         if value > 0 { return "+\(value)" }
         if value < 0 { return "\u{2212}\(-value)" }
         return "±0"
@@ -650,7 +650,7 @@ public nonisolated enum HomeScreenBuilder {
     /// "Moderate confidence · sleep, heart rate, consistency", or for sleep
     /// alone "Low confidence · sleep only. HRV and heart rate aren't
     /// available from your sources."
-    static func confidenceLine(_ result: RecoveryResult) -> String {
+    public static func confidenceLine(_ result: RecoveryResult) -> String {
         let tier = switch result.confidence {
         case .high: "High confidence"
         case .moderate: "Moderate confidence"
@@ -666,7 +666,7 @@ public nonisolated enum HomeScreenBuilder {
     }
 
     /// One sentence per kind of gap, naming the factors it covers.
-    static func gapSentences(_ gaps: [(RecoveryFactorKind, RecoveryFactorGap)]) -> [String] {
+    public static func gapSentences(_ gaps: [(RecoveryFactorKind, RecoveryFactorGap)]) -> [String] {
         let order: [RecoveryFactorGap] = [.unavailable, .notRecorded, .buildingBaseline]
         return order.compactMap { gap in
             let names = gaps.filter { $0.1 == gap }.map { listName($0.0) }
@@ -684,7 +684,7 @@ public nonisolated enum HomeScreenBuilder {
 
     /// "Recovery 82, 6 above your baseline, moderate confidence. Sleep 91,
     /// HRV 78, resting heart rate 85, consistency 74."
-    static func accessibilitySummary(_ result: RecoveryResult, factors: [RecoveryFactor]) -> String {
+    public static func accessibilitySummary(_ result: RecoveryResult, factors: [RecoveryFactor]) -> String {
         var lead = ["Recovery \(result.score)"]
         if let delta = result.comparison.delta {
             lead.append(delta == 0 ? "same as your usual" : "\(abs(delta)) \(delta > 0 ? "above" : "below") your usual")
@@ -699,7 +699,7 @@ public nonisolated enum HomeScreenBuilder {
         return lead.joined(separator: ", ") + "." + why + (parts.isEmpty ? "" : " " + parts.joined(separator: ", ") + ".")
     }
 
-    static func shortName(_ kind: RecoveryFactorKind) -> String {
+    public static func shortName(_ kind: RecoveryFactorKind) -> String {
         switch kind {
         case .sleepDuration: "Sleep"
         case .hrv: "HRV"
@@ -708,7 +708,7 @@ public nonisolated enum HomeScreenBuilder {
         }
     }
 
-    static func listName(_ kind: RecoveryFactorKind) -> String {
+    public static func listName(_ kind: RecoveryFactorKind) -> String {
         switch kind {
         case .sleepDuration: "sleep"
         case .hrv: "HRV"
@@ -717,7 +717,7 @@ public nonisolated enum HomeScreenBuilder {
         }
     }
 
-    static func spokenName(_ kind: RecoveryFactorKind) -> String {
+    public static func spokenName(_ kind: RecoveryFactorKind) -> String {
         switch kind {
         case .sleepDuration: "sleep"
         case .hrv: "HRV"
@@ -738,7 +738,7 @@ public nonisolated enum HomeScreenBuilder {
         )
     }
 
-    static func detailRow(_ factor: RecoveryFactor, result: RecoveryResult, needMinutes: Int, render: HomeRenderModel? = nil, format: HomeFormat) -> FactorDetailRow {
+    public static func detailRow(_ factor: RecoveryFactor, result: RecoveryResult, needMinutes: Int, render: HomeRenderModel? = nil, format: HomeFormat) -> FactorDetailRow {
         let name = shortName(factor.kind)
         let value: NoctisMetricValue
         var suffix: String?
@@ -793,7 +793,7 @@ public nonisolated enum HomeScreenBuilder {
 
     /// The 14 nights, the normal range and today as the render model
     /// scaled them (0...1 up); consistency is drawn as bedtime.
-    static func sparklineContent(_ history: RecoveryFactorHistory, render: SparklineRender? = nil) -> SparklineContent {
+    public static func sparklineContent(_ history: RecoveryFactorHistory, render: SparklineRender? = nil) -> SparklineContent {
         let render = render ?? SparklineRenderBuilder.build(history)
         let subject = switch history.kind {
         case .sleepDuration: "Sleep"
@@ -810,7 +810,7 @@ public nonisolated enum HomeScreenBuilder {
     }
 
     /// "Within your normal range: 48 ms vs your 50 ms baseline."
-    static func rangeSentence(_ range: RecoveryRange, value: String, baseline: String) -> String {
+    public static func rangeSentence(_ range: RecoveryRange, value: String, baseline: String) -> String {
         let place = switch range {
         case .within: "Within your normal range"
         case .above: "Above your normal range"
@@ -819,7 +819,7 @@ public nonisolated enum HomeScreenBuilder {
         return "\(place): \(value) vs your \(baseline) baseline."
     }
 
-    static func calculation(_ result: RecoveryResult, needMinutes: Int) -> [String] {
+    public static func calculation(_ result: RecoveryResult, needMinutes: Int) -> [String] {
         let model = RecoveryModel(rawValue: result.modelVersion) ?? .current
         func weight(_ kind: RecoveryFactorKind) -> String {
             "\(Int((model.weights[kind] ?? 0).rounded()))%"

@@ -11,6 +11,8 @@ public final class AppModel {
     public var selectedTab: AppTab = .home
     /// The Home tab's navigation stack.
     public var homePath: [HomeRoute] = []
+    /// The Recovery tab's navigation stack.
+    public var recoveryPath: [RecoveryRoute] = []
     /// Where the Sleep tab should land, until it takes it (`takeSleepDestination`).
     public private(set) var sleepDestination: SleepDestination?
     /// The tab whose button was pressed while it was already showing.

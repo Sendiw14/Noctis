@@ -602,7 +602,7 @@ struct HomePerformanceRulesTests {
     @Test func noCanvasClosureBuildsPathsFromGeometry() throws {
         // Paths are resolved when a size or a value changes, not inside a
         // Canvas: no arc, curve or shape is built in a draw closure.
-        for name in ["HomeNightChartViews.swift", "RecoveryDetailView.swift"] {
+        for name in ["HomeNightChartViews.swift", "FactorSparkline.swift"] {
             let text = try #require(try Self.sources("HomeFeature").first { $0.name == name }?.text)
             let lines = text.components(separatedBy: "\n")
             var canvases = 0

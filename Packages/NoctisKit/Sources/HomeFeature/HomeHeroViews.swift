@@ -272,10 +272,14 @@ struct RecoveryPreviewCard: View {
     }
 }
 
-struct DeltaChipView: View {
+public struct DeltaChipView: View {
     let chip: DeltaChip
 
-    var body: some View {
+    public init(chip: DeltaChip) {
+        self.chip = chip
+    }
+
+    public var body: some View {
         Text(chip.text)
             .noctisFont(13, .semibold, relativeTo: .footnote)
             .foregroundStyle(NoctisAppColor.ink)
