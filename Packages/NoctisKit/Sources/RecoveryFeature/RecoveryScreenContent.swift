@@ -118,6 +118,8 @@ public nonisolated struct RecoveryScreenContent: Sendable, Equatable {
     public let learning: RecoveryLearningContent?
     public let noSleep: RecoveryNoSleepContent?
     public let today: RecoveryTodayContent?
+    /// 7D, 30D or 90D.
+    public let history: RecoveryHistoryContent?
     public var rangeTitle: String { segment.title }
 }
 
@@ -140,7 +142,16 @@ public nonisolated enum RecoveryScreenBuilder {
         var learning: RecoveryLearningContent?
         var noSleep: RecoveryNoSleepContent?
         var today: RecoveryTodayContent?
-        if showsData {
+        var history: RecoveryHistoryContent?
+        if showsData, selection.segment != .today {
+            // A history needs 5 scored nights; before that, the learning dots.
+            history = historyContent(snapshot, segment: selection.segment, format: format)
+            if history == nil {
+                let nights = snapshot.history(selection.segment.historyRange ?? .week)?.stats.scoredDays ?? 0
+                let required = RecoveryModelV1.learningNights
+                learning = RecoveryLearningContent(nights: nights, required: required, text: "\(nights) of \(required) nights")
+            }
+        } else if showsData {
             switch snapshot.recovery {
             case .learning(let nights)?:
                 let required = RecoveryModelV1.learningNights
@@ -171,7 +182,8 @@ public nonisolated enum RecoveryScreenBuilder {
             banner: noSleep == nil ? banner(snapshot, format: format) : nil,
             learning: learning,
             noSleep: noSleep,
-            today: today
+            today: today,
+            history: history
         )
     }
 

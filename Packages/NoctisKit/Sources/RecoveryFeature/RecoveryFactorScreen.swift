@@ -34,7 +34,7 @@ struct RecoveryFactorScreen: View {
                         .foregroundStyle(NoctisAppColor.ink2)
                         .padding(NoctisSpacing.xl)
                 } else {
-                    RecoverySkeletonView()
+                    RecoverySkeletonView(charts: true)
                 }
             }
             .frame(maxWidth: RecoveryScreen.contentMaxWidth)

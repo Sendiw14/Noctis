@@ -105,6 +105,25 @@ nonisolated struct FactorMarker: Shape {
     }
 }
 
+/// A short vertical stub at a night's column between two values: today's dot
+/// joined to the smoothed line it sits against.
+nonisolated struct ColumnSpan: Shape {
+    let count: Int
+    let index: Int?
+    let from: Double?
+    let to: Double?
+
+    func path(in rect: CGRect) -> Path {
+        guard let index, let from, let to else { return Path() }
+        let x = rect.minX + rect.width * (Double(index) + 0.5) / Double(max(count, 1))
+        func y(_ value: Double) -> Double { rect.minY + rect.height * (1 - min(max(value, 0), 1)) }
+        var path = Path()
+        path.move(to: CGPoint(x: x, y: y(from)))
+        path.addLine(to: CGPoint(x: x, y: y(to)))
+        return path
+    }
+}
+
 /// A vertical hairline at a night's column.
 nonisolated struct ColumnRule: Shape {
     let count: Int
@@ -166,5 +185,73 @@ struct RecoveryLegend<Content: View>: View {
             HStack(spacing: NoctisSpacing.md) { content }
             VStack(alignment: .leading, spacing: 6) { content }
         }
+    }
+}
+
+// MARK: - The recovery line
+
+/// The recovery line through a window's days (0...1 up, `nil` where a day
+/// has no score, so the line breaks there): a Catmull-Rom curve through
+/// every real value, a night in the middle of its column. A lone day is a
+/// dot.
+nonisolated struct SeriesLine: Shape {
+    let values: [Double?]
+    /// Close each run down to the bottom instead: the flat area under the line.
+    var area = false
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        var run: [CGPoint] = []
+        let count = Double(max(values.count, 1))
+        func flush() {
+            Self.add(run, area: area, bottom: rect.maxY, to: &path)
+            run = []
+        }
+        for (index, value) in values.enumerated() {
+            guard let value else {
+                flush()
+                continue
+            }
+            run.append(CGPoint(
+                x: rect.minX + rect.width * (Double(index) + 0.5) / count,
+                y: rect.minY + rect.height * (1 - min(max(value, 0), 1))
+            ))
+        }
+        flush()
+        return path
+    }
+
+    private static func add(_ run: [CGPoint], area: Bool, bottom: CGFloat, to path: inout Path) {
+        guard let first = run.first, let last = run.last else { return }
+        if run.count == 1 {
+            if !area { path.addEllipse(in: CGRect(x: first.x - 2, y: first.y - 2, width: 4, height: 4)) }
+            return
+        }
+        path.move(to: area ? CGPoint(x: first.x, y: bottom) : first)
+        if area { path.addLine(to: first) }
+        for index in 1..<run.count {
+            let p0 = run[max(index - 2, 0)]
+            let p1 = run[index - 1]
+            let p2 = run[index]
+            let p3 = run[min(index + 1, run.count - 1)]
+            path.addCurve(
+                to: p2,
+                control1: CGPoint(x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6),
+                control2: CGPoint(x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6)
+            )
+        }
+        if area {
+            path.addLine(to: CGPoint(x: last.x, y: bottom))
+            path.closeSubpath()
+        }
+    }
+}
+
+nonisolated struct RecoveryDashedRule: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        return path
     }
 }

@@ -173,9 +173,11 @@ struct RecoveryLanguageTests {
     @Test func nothingOnTheScreenJudgesANightOrAdvisesRest() async {
         for scenario in [MockScenario.full, .sleepOnly, .recoveryDip, .learning, .gap, .stale, .lateBedtime, .messyNight] {
             let snap = await snapshot(scenario)
-            let text = String(describing: screen(snap)).lowercased()
-            for word in Self.forbidden {
-                #expect(!text.contains(word), "\(scenario): \"\(word)\"")
+            for segment in RecoverySegment.allCases {
+                let text = String(describing: screen(snap, segment: segment)).lowercased()
+                for word in Self.forbidden {
+                    #expect(!text.contains(word), "\(scenario) \(segment): \"\(word)\"")
+                }
             }
         }
     }
@@ -278,4 +280,138 @@ struct RecoveryViewModelTests {
     }
 }
 
+
 private struct TestFailure: Error {}
+
+struct RecoveryHistoryContentTests {
+    private func history(_ snap: RecoverySnapshot, _ segment: RecoverySegment) throws -> RecoveryHistoryContent {
+        try #require(screen(snap, segment: segment).history)
+    }
+
+    @Test func aRangeHasADayPerColumnAndAPillThatSaysWhatTheDayWas() async throws {
+        let snap = await snapshot(.full)
+        for (segment, days) in [(RecoverySegment.week, 7), (.month, 30), (.quarter, 90)] {
+            let content = try history(snap, segment)
+            #expect(content.points.count == days)
+            #expect(content.points.map(\.night) == snap.history(segment.historyRange ?? .week)?.days.map(\.night))
+        }
+        let week = try history(snap, .week)
+        let last = try #require(snap.scores.last)
+        let format = HomeFormat(calendar: Fixture.calendar(), locale: locale)
+        let weekday = format.weekday(last.night.adding(days: 1), width: .abbreviated)
+        #expect(week.points.last?.detail == "\(weekday) · Recovery \(last.score) · Sleep \(HomeFormat.compactDuration(Int(last.asleepMinutes.rounded())))")
+        #expect(week.points.last?.accessibilityLabel.hasPrefix(format.wideDate(last.night.adding(days: 1))) == true)
+        // A longer range names the date.
+        #expect(try history(snap, .month).points.last?.detail.hasPrefix("\(format.weekdayMonthDay(last.night.adding(days: 1))) · Recovery") == true)
+    }
+
+    @Test func theAxesAndTheLineStyleFollowTheRange() async throws {
+        let snap = await snapshot(.full)
+        let week = try history(snap, .week)
+        #expect(week.yLabels.map(\.text) == ["100", "75", "50", "25", "0"])
+        #expect(week.yLabels.map(\.position) == [0, 0.25, 0.5, 0.75, 1])
+        #expect(week.xLabels.count == 7, "a weekday initial under each day")
+        #expect(week.showsDots && !week.isSmoothed)
+        let month = try history(snap, .month)
+        #expect(month.xLabels.count == 3 && !month.showsDots && !month.isSmoothed)
+        let quarter = try history(snap, .quarter)
+        #expect(quarter.isSmoothed && !quarter.showsDots)
+        #expect(quarter.caption.contains(" – ") && quarter.caption == quarter.caption.uppercased())
+    }
+
+    @Test func aTileForEachStatWithTheEnginesNumbers() async throws {
+        let snap = await snapshot(.full)
+        let month = try #require(snap.history(.month))
+        let stats = month.stats
+        let content = try history(snap, .month)
+        #expect(content.tiles.map(\.id) == ["current", "average", "baseline", "high", "low", "trend"])
+        func tile(_ id: String) throws -> RecoveryHistoryTile { try #require(content.tiles.first { $0.id == id }) }
+        #expect(try tile("current").value.plain == "\(stats.current?.score ?? -1)")
+        #expect(try tile("average").value.plain == "\(Int((stats.average ?? 0).rounded()))")
+        #expect(try tile("baseline").value.plain == "\(Int((stats.baseline?.value ?? 0).rounded()))")
+        #expect(try tile("baseline").note == "last 14 nights")
+        #expect(try tile("high").value.plain == "\(stats.high?.score ?? -1)")
+        #expect(try tile("low").value.plain == "\(stats.low?.score ?? -1)")
+        let format = HomeFormat(calendar: Fixture.calendar(), locale: locale)
+        #expect(try tile("high").note == format.shortDate(try #require(stats.high?.date)))
+        #expect(try tile("average").note == "30 nights")
+    }
+
+    @Test func theTrendIsADirectionWithAnArrowAndANumberPerWeekNeverAWarning() {
+        let format = HomeFormat(calendar: Fixture.calendar(), locale: locale)
+        func trendTile(_ direction: RecoveryTrendDirection, _ slope: Double) -> RecoveryHistoryTile? {
+            var stats = RecoveryHistoryEngine.emptyStats
+            stats = RecoveryHistoryStats(
+                current: nil, average: nil, baseline: nil, usualRange: nil, daysInUsualRange: nil, high: nil, low: nil,
+                trend: RecoveryHistoryTrend(direction: direction, pointsPerWeek: slope), scoredDays: 7
+            )
+            return RecoveryScreenBuilder.historyTiles(stats, format: format).first { $0.id == "trend" }
+        }
+        let rising = trendTile(.rising, 2.14)
+        #expect(rising?.value.plain == "+2.1 / wk" && rising?.note == "Rising" && rising?.symbol == "arrow.up.right")
+        let steady = trendTile(.steady, -0.44)
+        #expect(steady?.value.plain == "\u{2212}0.4 / wk" && steady?.note == "Steady" && steady?.symbol == "arrow.right")
+        let lower = trendTile(.lower, -3.06)
+        #expect(lower?.value.plain == "\u{2212}3.1 / wk" && lower?.note == "Lower than earlier" && lower?.symbol == "arrow.down.right")
+        #expect(lower?.accessibilityLabel == "Trend: Lower than earlier, minus 3.1 points a week")
+        #expect(RecoveryScreenBuilder.signedSlope(0.04) == "0.0" && RecoveryScreenBuilder.signedSlope(-0.04) == "0.0")
+        #expect(RecoveryScreenBuilder.signedSlope(12) == "+12.0")
+    }
+
+    @Test func aStatWithNoValueIsNoTileNotADash() {
+        let format = HomeFormat(calendar: Fixture.calendar(), locale: locale)
+        let stats = RecoveryHistoryStats(current: nil, average: 80, baseline: nil, usualRange: nil, daysInUsualRange: nil, high: nil, low: nil, trend: nil, scoredDays: 3)
+        #expect(RecoveryScreenBuilder.historyTiles(stats, format: format).map(\.id) == ["average"])
+    }
+
+    @Test func daysInTheUsualRangeAreCountedAndWorded() async throws {
+        let snap = await snapshot(.full)
+        let stats = try #require(snap.history(.week)?.stats)
+        let content = try history(snap, .week)
+        #expect(content.usualLine == "In your usual range on \(stats.daysInUsualRange ?? -1) of 7 days.")
+        #expect(content.bandCaption?.hasPrefix("The shaded band is your usual range: ") == true)
+    }
+
+    @Test func aFactorRowPerFactorWithItsAverageOverTheRange() async throws {
+        let snap = await snapshot(.full)
+        let week = try history(snap, .week)
+        #expect(week.factorRows.map(\.name) == ["Sleep", "HRV", "Resting HR", "Consistency"])
+        #expect(week.factorRows.map(\.factorRange) == Array(repeating: .fortnight, count: 4), "7D opens the 14-night page")
+        let series = try #require(snap.series(.hrv, .fortnight))
+        let last7 = series.points.suffix(7).compactMap(\.value)
+        let mean = last7.reduce(0, +) / Double(last7.count)
+        #expect(week.factorRows[1].average?.plain == "\(Int(mean.rounded()))ms")
+        #expect(try history(snap, .month).factorRows.first?.factorRange == .month)
+        #expect(try history(snap, .quarter).factorRows.first?.factorRange == .quarter)
+        #expect(week.factorRows[1].accessibilityLabel.hasPrefix("HRV, average "))
+    }
+
+    @Test func aHistoryShorterThanTheRangeDrawsWhatExistsAndSaysHowMany() async throws {
+        let provider = MockHealthKitProvider(scenario: .full, historyDays: 12, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
+        let clock = now
+        let snap = await RecoveryRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
+        let month = try history(snap, .month)
+        #expect(month.points.count == 8 && month.partialNote == "Showing 8 nights")
+        #expect(try history(snap, .week).partialNote == nil)
+    }
+
+    @Test func underFiveScoredNightsIsTheLearningDotsNotAChart() async throws {
+        let provider = MockHealthKitProvider(scenario: .full, historyDays: 8, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
+        let clock = now
+        let snap = await RecoveryRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
+        let content = screen(snap, segment: .month)
+        #expect(content.history == nil)
+        #expect(content.learning == RecoveryLearningContent(nights: 4, required: 5, text: "4 of 5 nights"))
+    }
+
+    @Test func aGapNightStillHasItsHistoryThoughNoScoreToday() async throws {
+        let gap = screen(await snapshot(.gap), segment: .week)
+        #expect(gap.history != nil && gap.noSleep == nil && gap.today == nil)
+    }
+
+    @Test func aStaleSnapshotShowsItsHistoryUnderABanner() async throws {
+        let stale = screen(await snapshot(.stale), segment: .month)
+        #expect(stale.history != nil)
+        #expect(stale.banner?.detail == "Open Health or pull to refresh.")
+    }
+}

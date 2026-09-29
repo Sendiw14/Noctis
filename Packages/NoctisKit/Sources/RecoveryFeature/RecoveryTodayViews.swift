@@ -9,14 +9,14 @@ import SwiftUI
 struct RecoveryTodayView: View {
     let today: RecoveryTodayContent
     let viewModel: RecoveryViewModel
-    let openFactor: (RecoveryFactorKind) -> Void
+    let openFactor: (RecoveryFactorKind, RecoveryFactorRange) -> Void
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
             RecoveryHeroView(content: today.scored, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
             RecoveryBuildCard(build: today.build)
             ForEach(today.factors, id: \.kind) { row in
-                RecoveryFactorCard(row: row) { openFactor(row.kind) }
+                RecoveryFactorCard(row: row) { openFactor(row.kind, .fortnight) }
                     .id(row.kind)
             }
             RecoveryConfidenceCard(content: today.confidence)

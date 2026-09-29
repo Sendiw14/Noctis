@@ -179,7 +179,7 @@ public final class RecoveryViewModel {
     /// up this tab's reveal; it plays without Reduce Motion (which still
     /// uses the day up).
     private func updateReveal() {
-        guard isVisible, !revealDecided, screen?.today != nil else { return }
+        guard isVisible, !revealDecided, screen?.today != nil || screen?.history != nil else { return }
         revealDecided = true
         guard introGate.claim(now: clock(), calendar: calendar), !reduceMotion() else { return }
         reveal = .pending
@@ -187,7 +187,7 @@ public final class RecoveryViewModel {
 
     /// The content is on screen in its start state: run the reveal.
     public func beginReveal() {
-        guard reveal == .pending, screen?.today != nil else { return }
+        guard reveal == .pending, screen?.today != nil || screen?.history != nil else { return }
         reveal = .playing
         revealPlayed = true
         revealEnd?.cancel()

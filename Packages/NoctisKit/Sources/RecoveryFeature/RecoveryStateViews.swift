@@ -106,20 +106,32 @@ struct RecoveryNoSleepView: View {
     }
 }
 
-/// Track-colored blocks shaped like Today while the first snapshot
-/// loads; a slow pulse, none under Reduce Motion or Low Power Mode.
+/// Track-colored blocks shaped like what is loading (Today's ring, or a
+/// chart card and its stats) while the first snapshot loads; a slow
+/// pulse, none under Reduce Motion or Low Power Mode.
 struct RecoverySkeletonView: View {
+    /// Whether the blocks are a chart card and stats rather than the ring.
+    var charts = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dimmed = false
     var lowPower: Bool { HomeViewModel.systemLowPower() }
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            Circle().fill(NoctisAppColor.track).frame(width: 220, height: 220)
-            Capsule().fill(NoctisAppColor.track).frame(width: 160, height: 18)
-            block(height: 190)
-            block(height: 150)
-            block(height: 150)
+            if charts {
+                block(height: 400)
+                HStack(spacing: NoctisSpacing.sm) {
+                    block(height: 110)
+                    block(height: 110)
+                }
+                block(height: 110)
+            } else {
+                Circle().fill(NoctisAppColor.track).frame(width: 220, height: 220)
+                Capsule().fill(NoctisAppColor.track).frame(width: 160, height: 18)
+                block(height: 190)
+                block(height: 150)
+                block(height: 150)
+            }
         }
         .frame(maxWidth: .infinity)
         .opacity(dimmed ? 0.55 : 1)

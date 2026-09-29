@@ -18,7 +18,12 @@ final class RecoveryQATests: XCTestCase {
     }
 
     private func settled(_ app: XCUIApplication, waitFor identifier: String) {
-        XCTAssertTrue(element(app, identifier).waitForExistence(timeout: 12), identifier)
+        let found = element(app, identifier).waitForExistence(timeout: 12)
+        if !found {
+            QA.write(app.debugDescription, to: "missing-\(identifier).txt")
+            QA.shot("missing-\(identifier)")
+        }
+        XCTAssertTrue(found, identifier)
         QA.pause(3.2)
     }
 
@@ -153,5 +158,81 @@ final class RecoveryQATests: XCTestCase {
             QA.shot("recovery-\(identifier.split(separator: ".").last ?? "factor")")
             app.terminate()
         }
+    }
+
+    // MARK: - History
+
+    private func launchRange(_ token: String, scenario: String = "full") -> XCUIApplication {
+        QA.launch(extra: ["-useMockHealth", "-mockScenario", scenario, "-noctisSkipOnboarding", "-noctisInitialRoute", "recovery:\(token)"])
+    }
+
+    func testHistoryRanges() {
+        for (token, name) in [("7d", "7d"), ("30d", "30d"), ("90d", "90d")] {
+            let app = launchRange(token)
+            settled(app, waitFor: "recovery.historyChart")
+            XCTAssertTrue(element(app, "recovery.stats").exists, token)
+            XCTAssertTrue(element(app, "recovery.usualLine").exists, token)
+            QA.capturePages(app, "recovery-\(name)", maxPages: 4)
+            app.terminate()
+        }
+    }
+
+    func testTheDipShowsInTheWeek() {
+        let app = launchRange("30d", scenario: "recoveryDip")
+        settled(app, waitFor: "recovery.historyChart")
+        QA.capturePages(app, "recovery-dip-30d", maxPages: 2)
+    }
+
+    /// Switching segments keeps the tab, and comes back to Today.
+    func testSwitchingSegments() {
+        let app = launchRecovery()
+        settled(app, waitFor: "recovery.hero")
+        let range = app.segmentedControls["recovery.range"]
+        for name in ["7D", "30D", "90D", "Today"] {
+            range.buttons[name].tap()
+            XCTAssertTrue(element(app, name == "Today" ? "recovery.hero" : "recovery.historyChart").waitForExistence(timeout: 5), name)
+            QA.pause(0.8)
+        }
+        XCTAssertFalse(element(app, "recovery.historyChart").exists)
+    }
+
+    /// A tap on the chart picks a day and the pill says what it was.
+    func testTappingTheHistoryChartSelectsADay() {
+        let app = launchRange("30d")
+        settled(app, waitFor: "recovery.historyChart")
+        let chart = element(app, "recovery.historyChart")
+        let spot = chart.coordinate(withNormalizedOffset: CGVector(dx: 0.55, dy: 0.5))
+        spot.tap()
+        QA.pause(0.6)
+        let value = (chart.value as? String) ?? ""
+        XCTAssertTrue(value.contains("recovery"), value)
+        QA.shot("recovery-history-selected")
+        spot.tap()
+        QA.pause(0.6)
+        XCTAssertEqual((chart.value as? String) ?? "", "")
+    }
+
+    /// A factor row opens that factor's page on the same range.
+    func testAHistoryFactorRowOpensItsPageOnTheSameRange() {
+        let app = launchRange("30d")
+        settled(app, waitFor: "recovery.historyChart")
+        let row = element(app, "recovery.historyFactor.hrv")
+        reveal(row, in: app)
+        row.tap()
+        XCTAssertTrue(element(app, "recovery.factorScreen").waitForExistence(timeout: 5))
+        QA.pause(1)
+        XCTAssertTrue(app.segmentedControls["recovery.factorRange"].buttons["30 nights"].isSelected)
+        QA.shot("recovery-history-factor-30")
+    }
+
+    /// The draw-in itself is timing: frames of it come from `simctl io screenshot`
+    /// right after launch (an XCUITest screenshot lands after it has finished).
+    /// This checks the chart is fully there once it has.
+    func testTheHistoryChartIsDrawnOnceTheFirstVisitSettles() {
+        let app = QA.launch(extra: ["-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-noctisInitialRoute", "recovery:30d"], reset: true)
+        XCTAssertTrue(element(app, "recovery.historyChart").waitForExistence(timeout: 12))
+        QA.pause(2.5)
+        QA.shot("recovery-30d-settled")
+        XCTAssertTrue(element(app, "recovery.stats").exists)
     }
 }

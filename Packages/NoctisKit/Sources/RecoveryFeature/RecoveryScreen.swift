@@ -24,7 +24,7 @@ public struct RecoveryScreen: View {
     let presentation: RecoveryPresentation
     /// A factor whose card to scroll to (a capsule on Home was tapped).
     let focus: RecoveryFactorKind?
-    let openFactor: (RecoveryFactorKind) -> Void
+    let openFactor: (RecoveryFactorKind, RecoveryFactorRange) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollPosition = ScrollPosition(edge: .top)
@@ -33,7 +33,7 @@ public struct RecoveryScreen: View {
         viewModel: RecoveryViewModel,
         presentation: RecoveryPresentation,
         focus: RecoveryFactorKind? = nil,
-        openFactor: @escaping (RecoveryFactorKind) -> Void
+        openFactor: @escaping (RecoveryFactorKind, RecoveryFactorRange) -> Void
     ) {
         self.viewModel = viewModel
         self.presentation = presentation
@@ -64,8 +64,8 @@ public struct RecoveryScreen: View {
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
         .task { await viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
-        .task(id: viewModel.reveal == .pending && viewModel.screen?.today != nil) {
-            guard viewModel.reveal == .pending, viewModel.screen?.today != nil else { return }
+        .task(id: viewModel.reveal == .pending) {
+            guard viewModel.reveal == .pending else { return }
             // After the content has laid out in its start state.
             try? await Task.sleep(for: .seconds(0.15))
             viewModel.beginReveal()
@@ -105,7 +105,7 @@ private struct RecoveryChrome: ViewModifier {
 struct RecoveryContent: View {
     let viewModel: RecoveryViewModel
     let presentation: RecoveryPresentation
-    let openFactor: (RecoveryFactorKind) -> Void
+    let openFactor: (RecoveryFactorKind, RecoveryFactorRange) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -118,7 +118,7 @@ struct RecoveryContent: View {
                         .id(viewModel.revealSkips)
                         .transition(.opacity)
                 } else {
-                    RecoverySkeletonView()
+                    RecoverySkeletonView(charts: viewModel.selection.segment != .today)
                         .transition(.opacity)
                 }
             }
@@ -146,8 +146,8 @@ struct RecoveryContent: View {
                     RecoveryNoSleepView(content: none)
                 } else if let today = screen.today {
                     RecoveryTodayView(today: today, viewModel: viewModel, openFactor: openFactor)
-                } else if screen.segment != .today {
-                    RecoveryHistoryPlaceholder(segment: screen.segment)
+                } else if let history = screen.history {
+                    RecoveryHistoryView(history: history, viewModel: viewModel, openFactor: openFactor)
                 }
             }
         }
@@ -190,16 +190,5 @@ struct RecoveryHeaderView: View {
             NoctisHaptics.snapLight()
             viewModel.select(segment: segment)
         }
-    }
-}
-
-/// Until the history charts arrive.
-struct RecoveryHistoryPlaceholder: View {
-    let segment: RecoverySegment
-
-    var body: some View {
-        DormantTextView(title: "\(segment.title) is on its way", detail: nil)
-            .frame(maxWidth: .infinity)
-            .padding(.top, NoctisSpacing.xl)
     }
 }

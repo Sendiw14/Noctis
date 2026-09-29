@@ -17,8 +17,8 @@ public struct RecoveryTabView: View {
     public var body: some View {
         @Bindable var model = appModel
         NavigationStack(path: $model.recoveryPath) {
-            RecoveryTabRoot(viewModel: viewModel) { kind in
-                appModel.recoveryPath.append(.factor(kind, range: .fortnight))
+            RecoveryTabRoot(viewModel: viewModel) { kind, range in
+                appModel.recoveryPath.append(.factor(kind, range: range))
             }
             .navigationDestination(for: RecoveryRoute.self) { route in
                 switch route {
@@ -33,7 +33,7 @@ public struct RecoveryTabView: View {
 /// The root screen, scrolling to the top on a second press of the tab.
 private struct RecoveryTabRoot: View {
     let viewModel: RecoveryViewModel
-    let openFactor: (RecoveryFactorKind) -> Void
+    let openFactor: (RecoveryFactorKind, RecoveryFactorRange) -> Void
     @Environment(AppModel.self) private var appModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var retaps = 0
@@ -67,8 +67,8 @@ public struct RecoveryPushedScreen: View {
     }
 
     public var body: some View {
-        RecoveryScreen(viewModel: viewModel, presentation: .pushed, focus: focus) { kind in
-            appModel.homePath.append(.recoveryFactor(kind, range: .fortnight))
+        RecoveryScreen(viewModel: viewModel, presentation: .pushed, focus: focus) { kind, range in
+            appModel.homePath.append(.recoveryFactor(kind, range: range))
         }
         // Home's ring opens Today.
         .onAppear {
