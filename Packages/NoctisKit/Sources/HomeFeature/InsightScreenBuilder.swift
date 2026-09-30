@@ -14,6 +14,14 @@ public nonisolated struct InsightNumber: Sendable, Equatable {
     }
 }
 
+/// What sits between the two numbers of a comparison: an arrow for a change
+/// over time (usual to last night), "vs" for two groups side by side (which
+/// must not read as one leading to the other).
+public nonisolated enum InsightComparisonJoin: Sendable, Equatable {
+    case arrow
+    case versus
+}
+
 /// How an insight was found, in plain words: the rule, its thresholds and
 /// the nights behind it.
 public nonisolated struct InsightMethod: Sendable, Equatable {
@@ -54,8 +62,10 @@ public nonisolated struct InsightContent: Sendable, Equatable, Identifiable {
     /// Patterns only: "This is a pattern in your data, not proof of a cause."
     public let notProofLine: String?
     public let method: InsightMethod
-    /// The big two-number comparison (a milestone has one number, some none).
+    /// The big two-number comparison, from the reference to now (a
+    /// milestone has one number).
     public let comparison: [InsightNumber]
+    public let comparisonJoin: InsightComparisonJoin
     public let accessibilityLabel: String
 }
 
@@ -81,7 +91,7 @@ public nonisolated enum InsightScreenBuilder {
             context: words.context, interpretation: words.interpretation, whatToNotice: words.notice,
             whatYouCanTry: record.type.offersSomethingToTry ? words.attempt : nil,
             confidenceLine: confidence, notProofLine: record.type.isPattern ? notProofLine : nil, method: words.method,
-            comparison: words.comparison,
+            comparison: words.comparison, comparisonJoin: words.join,
             accessibilityLabel: [words.title + ".", spokenNumbers.isEmpty ? nil : spokenNumbers + ".", words.row].compactMap { $0 }.joined(separator: " ")
         )
     }
@@ -104,6 +114,7 @@ public nonisolated enum InsightScreenBuilder {
         var attempt: String
         var method: InsightMethod
         var comparison: [InsightNumber]
+        var join = InsightComparisonJoin.arrow
     }
 
     /// "45 min" under an hour, "1h 10m" from an hour.
@@ -170,7 +181,7 @@ public nonisolated enum InsightScreenBuilder {
                     thresholds: ["Shown when last night is \(Int(InsightModelV2.shiftMinutes)) minutes or more away from your usual."],
                     nights: "Your usual is built from \(nights(e.baselineNights))."
                 ),
-                comparison: [durationNumber("Last night", e.value), durationNumber("Usual", e.baseline)]
+                comparison: [durationNumber("Usual", e.baseline), durationNumber("Last night", e.value)]
             )
         case .bedtimeShift:
             let later = e.delta > 0
@@ -190,7 +201,7 @@ public nonisolated enum InsightScreenBuilder {
                     thresholds: ["Shown when last night is \(Int(InsightModelV2.shiftMinutes)) minutes or more away from your usual."],
                     nights: "Your usual is built from \(nights(e.baselineNights))."
                 ),
-                comparison: [clockNumber("Last night", e.value, format), clockNumber("Usual", e.baseline, format)]
+                comparison: [clockNumber("Usual", e.baseline, format), clockNumber("Last night", e.value, format)]
             )
         default:
             let streak = e.streakNights ?? 0
@@ -208,7 +219,7 @@ public nonisolated enum InsightScreenBuilder {
                     thresholds: ["Shown from \(InsightModelV2.streakNights) nights in a row, each within \(tolerance) minutes of your usual."],
                     nights: "Your usual is built from \(nights(e.baselineNights))."
                 ),
-                comparison: [clockNumber("Last night", e.value, format), clockNumber("Usual", e.baseline, format)]
+                comparison: [clockNumber("Usual", e.baseline, format), clockNumber("Last night", e.value, format)]
             )
         }
     }
@@ -245,7 +256,8 @@ public nonisolated enum InsightScreenBuilder {
             comparison: [
                 InsightNumber(label: "Earlier nights", value: HomeFormat.quantityMetric(early, unit: "pts", spokenUnit: "points")),
                 InsightNumber(label: "Later nights", value: HomeFormat.quantityMetric(late, unit: "pts", spokenUnit: "points")),
-            ]
+            ],
+            join: .versus
         )
     }
 
@@ -307,8 +319,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "Your normal range is built from \(nights(e.baselineNights))."
             ),
             comparison: [
-                number("Last night", e.value, unit: unit, spoken: spoken),
                 number("Usual", e.baseline, unit: unit, spoken: spoken),
+                number("Last night", e.value, unit: unit, spoken: spoken),
             ]
         )
     }
@@ -334,8 +346,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "\(e.recentNights) recent and \(e.previousNights) earlier bedtimes."
             ),
             comparison: [
-                number("Last 14 nights", e.recentSD, unit: "min", spoken: "minutes"),
                 number("The 14 before", e.previousSD, unit: "min", spoken: "minutes"),
+                number("Last 14 nights", e.recentSD, unit: "min", spoken: "minutes"),
             ]
         )
     }
@@ -358,7 +370,8 @@ public nonisolated enum InsightScreenBuilder {
                 thresholds: ["Shown when the total is \(Int(InsightModelV2.balanceMinutes / 60)) hours or more either way."],
                 nights: "Based on \(nights(e.recordedNights)) with sleep recorded."
             ),
-            comparison: [durationNumber("Average night", average), durationNumber("Your need", e.needMinutes)]
+            comparison: [durationNumber("Average night", average), durationNumber("Your need", e.needMinutes)],
+            join: .versus
         )
     }
 
@@ -382,7 +395,8 @@ public nonisolated enum InsightScreenBuilder {
                 thresholds: ["Needs \(InsightModelV2.weekendMinimumWeekendNights)+ weekend nights and \(InsightModelV2.weekendMinimumWeekdayNights)+ other nights.", "Shown when the medians differ by \(Int(InsightModelV2.weekendDeltaMinutes)) minutes or more."],
                 nights: "\(e.weekendNights) weekend and \(e.weekdayNights) other nights."
             ),
-            comparison: [clockNumber("Weekends", e.weekendMedian, format), clockNumber("Weekdays", e.weekdayMedian, format)]
+            comparison: [clockNumber("Weekdays", e.weekdayMedian, format), clockNumber("Weekends", e.weekendMedian, format)],
+            join: .versus
         )
     }
 
@@ -409,8 +423,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "Your usual is built from \(nights(e.usualNights))."
             ),
             comparison: [
-                number("Last night", Double(share), unit: "%", spoken: "percent"),
                 number("Usual", Double(usual), unit: "%", spoken: "percent"),
+                number("Last night", Double(share), unit: "%", spoken: "percent"),
             ]
         )
     }
@@ -460,8 +474,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "Compared with \(nights(e.nightsInWindow - 1))."
             ),
             comparison: [
-                InsightNumber(label: "Now", value: spoken(e.value)),
                 InsightNumber(label: "Previous best", value: spoken(e.previousBest)),
+                InsightNumber(label: "Now", value: spoken(e.value)),
             ]
         )
     }

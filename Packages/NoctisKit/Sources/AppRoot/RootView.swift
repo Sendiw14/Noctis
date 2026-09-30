@@ -1,5 +1,6 @@
 import DesignSystem
 import HomeFeature
+import InsightsFeature
 import NoctisCore
 import OnboardingFeature
 import RecoveryFeature
@@ -54,6 +55,7 @@ struct RootTabView: View {
     @Environment(HomeViewModel.self) private var home
     @Environment(SleepViewModel.self) private var sleep
     @Environment(RecoveryViewModel.self) private var recovery
+    @Environment(InsightsViewModel.self) private var insights
     @Environment(\.scenePhase) private var scenePhase
     @State private var clock = HomeClock()
 
@@ -156,8 +158,7 @@ struct RootTabView: View {
             RecoveryTabView(viewModel: recovery)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .insights:
-            // R19: unbuilt tabs, listed in ROADMAP.md.
-            NoctisTabPlaceholder(.insights, title: tab.title, dateCaption: home.header.dateCaption)
+            InsightsTabView(viewModel: insights)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .coach:
             NoctisTabPlaceholder(.coach, title: tab.title, dateCaption: home.header.dateCaption)

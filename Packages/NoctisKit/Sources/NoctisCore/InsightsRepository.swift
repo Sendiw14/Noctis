@@ -13,10 +13,13 @@ public nonisolated enum InsightsSnapshotBuilder {
             // Data, but nothing that ended in the last 24 hours: the library
             // is still worth showing (History, records), with no featured story.
             let night = inputs.complete.map(\.night).max()
+            let learning = recorded < InsightModelV2.learningNights
             return InsightsSnapshot(
-                dataState: recorded < InsightModelV2.learningNights ? .learning(nightsSoFar: recorded) : .noSleepLastNight,
-                night: night, nightsRecorded: recorded, featured: nil, recent: [], all: library.visible, newThisWeek: 0,
-                records: InsightEngineV2.standingRecords(inputs), lastUpdated: now
+                dataState: learning ? .learning(nightsSoFar: recorded) : .noSleepLastNight,
+                night: night, nightsRecorded: recorded, featured: nil,
+                recent: learning ? [] : night.map { library.recent(on: $0) } ?? [],
+                all: library.visible, newThisWeek: 0,
+                records: learning ? [] : InsightEngineV2.standingRecords(inputs), lastUpdated: now
             )
         }
         let learning = recorded < InsightModelV2.learningNights

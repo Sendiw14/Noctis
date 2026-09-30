@@ -2,6 +2,7 @@ import DesignSystem
 import Foundation
 import HealthProviding
 import HomeFeature
+import InsightsFeature
 import NoctisCore
 import RecoveryFeature
 import SleepFeature
@@ -12,6 +13,7 @@ public struct AppContainer {
     public let homeViewModel: HomeViewModel
     public let sleepViewModel: SleepViewModel
     public let recoveryViewModel: RecoveryViewModel
+    public let insightsViewModel: InsightsViewModel
     /// The insights kept on this device and the repository that fills them:
     /// Home and the Insights tab both read them.
     public let insightStore: InsightStore
@@ -138,6 +140,11 @@ public struct AppContainer {
         )
         self.recoveryViewModel = RecoveryViewModel(
             repository: RecoveryRepository(provider: provider),
+            profile: { model.profile },
+            connectHealth: { await model.requestHealthAuthorization() }
+        )
+        self.insightsViewModel = InsightsViewModel(
+            repository: insightsRepository,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() }
         )

@@ -130,14 +130,16 @@ struct InsightLanguageTests {
     @Test func numbersInTheWordsAreTheEvidenceRounded() {
         let duration = content(R.duration(delta: -70))
         #expect(duration.rowLine == "5h 50m last night, 1h 10m less than your usual 7h.")
-        #expect(duration.comparison.map(\.value.plain) == ["5h 50m", "7h"])
+        #expect(duration.comparison.map(\.value.plain) == ["7h", "5h 50m"], "from the usual to last night")
+        #expect(duration.comparisonJoin == .arrow)
         #expect(duration.context.contains("7h") && duration.context.contains("1h 10m shorter"))
         let bedtime = content(R.bedtime(delta: 55))
-        #expect(bedtime.comparison.map(\.value.plain) == ["11:55PM", "11:00PM"])
+        #expect(bedtime.comparison.map(\.value.plain) == ["11:00PM", "11:55PM"])
         #expect(bedtime.rowLine.contains("55 min later"))
         let balance = content(R.balance(behind: true))
         #expect(balance.rowLine == "2h 42m behind your sleep need over the last 7 nights.")
         let pattern = content(R.pattern())
+        #expect(pattern.comparisonJoin == .versus, "two groups side by side, never one leading to the other")
         #expect(pattern.rowLine.contains("averaged 92") && pattern.rowLine.contains("averaged 66"))
         #expect(pattern.method.nights.contains("16 earlier and 17 later"))
     }

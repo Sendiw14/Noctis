@@ -14,6 +14,8 @@ public final class AppModel {
     public var homePath: [HomeRoute] = []
     /// The Recovery tab's navigation stack.
     public var recoveryPath: [RecoveryRoute] = []
+    /// The Insights tab's navigation stack.
+    public var insightsPath: [InsightsRoute] = []
     /// Where the Sleep tab should land, until it takes it (`takeSleepDestination`).
     public private(set) var sleepDestination: SleepDestination?
     /// Where the Recovery tab should land, until it takes it.

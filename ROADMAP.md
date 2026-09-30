@@ -1,7 +1,7 @@
 # ROADMAP.md
 Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reachable until built. This file must be empty before release.
 
-- Insights tab. It shows the scaffold with its butter field and a "Coming soon" card (R27); the tab itself is not built.
+- Insight page and History (Insights tab). A card, a row or the History button pushes a "Coming soon" page until the detail page and History are built (the next part).
 - Coach tab. It shows the scaffold with its rose field and a "Coming soon" card (R27); the tab itself is not built.
 - Profile. The avatar button at the top right of Home, and `noctis://profile`, open a "Coming soon" screen.
 - Free vs Premium gating for Sleep: Month, the quality factors and the 14-night picker. All of Sleep is open until the paywall decides.
