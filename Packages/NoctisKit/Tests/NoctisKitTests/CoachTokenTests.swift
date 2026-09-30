@@ -96,7 +96,7 @@ struct CoachTokenTests {
         var draft = CoachAnswerDraft(summary: "s", whatChanged: "a", whatToNotice: "b", confidence: .high)
         draft.contributors = [CoachDraftContributor(label: "HRV", factID: "hrv.today")]
         let answer = try #require(CoachAnswerAssembler.assemble(draft, context: context, source: .appleIntelligence, locale: CoachFixture.locale))
-        #expect(answer.contributors == [CoachContributor(label: "HRV", value: "48 ms", factID: "hrv.today")])
+        #expect(answer.contributors == [CoachContributor(label: "HRV", value: "48 ms", spoken: "48 milliseconds", factID: "hrv.today")])
     }
 
     // MARK: - Held to what the data allows

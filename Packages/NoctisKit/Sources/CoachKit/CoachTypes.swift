@@ -280,12 +280,27 @@ public struct CoachContributor: Sendable, Equatable, Codable {
     public let label: String
     /// "1h 10m", the real value.
     public let value: String
+    /// The same, for VoiceOver: "1 hour 10 minutes".
+    public let spoken: String
     public let factID: String
 
-    public init(label: String, value: String, factID: String) {
+    public init(label: String, value: String, spoken: String? = nil, factID: String) {
         self.label = label
         self.value = value
+        self.spoken = spoken ?? value
         self.factID = factID
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case label, value, spoken, factID
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        label = try container.decode(String.self, forKey: .label)
+        value = try container.decode(String.self, forKey: .value)
+        spoken = try container.decodeIfPresent(String.self, forKey: .spoken) ?? value
+        factID = try container.decode(String.self, forKey: .factID)
     }
 }
 
@@ -305,6 +320,8 @@ public struct CoachAnswer: Sendable, Equatable, Codable {
     public let intent: CoachIntent
     public let summary: String
     public let contributors: [CoachContributor]
+    /// The one number the summary is about, when its sentence names it: shown large beside the summary.
+    public let keyNumber: CoachContributor?
     public let whatChanged: String
     public let whatToNotice: String
     public let tonightSuggestion: String?
@@ -324,7 +341,8 @@ public struct CoachAnswer: Sendable, Equatable, Codable {
     public let footer: String
 
     public init(
-        sourceKind: CoachSourceKind, intent: CoachIntent, summary: String, contributors: [CoachContributor] = [], whatChanged: String = "",
+        sourceKind: CoachSourceKind, intent: CoachIntent, summary: String, contributors: [CoachContributor] = [], keyNumber: CoachContributor? = nil,
+        whatChanged: String = "",
         whatToNotice: String = "", tonightSuggestion: String? = nil, pattern: String? = nil, patternNote: String? = nil,
         confidence: CoachConfidence, confidenceLine: String = "", caution: String? = nil, destinations: [AppRoute] = [],
         suggestions: [String] = [], helpLink: CoachHelpLink? = nil, footer: String
@@ -333,6 +351,7 @@ public struct CoachAnswer: Sendable, Equatable, Codable {
         self.intent = intent
         self.summary = summary
         self.contributors = contributors
+        self.keyNumber = keyNumber
         self.whatChanged = whatChanged
         self.whatToNotice = whatToNotice
         self.tonightSuggestion = tonightSuggestion

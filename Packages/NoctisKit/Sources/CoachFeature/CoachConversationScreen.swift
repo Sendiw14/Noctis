@@ -16,7 +16,7 @@ struct CoachConversationScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: NoctisSpacing.xl) {
                     ForEach(viewModel.turns) { turn in
-                        CoachTurnView(turn: turn, viewModel: viewModel)
+                        CoachTurnView(turn: turn, isLatest: turn.id == viewModel.turns.last?.id, viewModel: viewModel)
                             .id(turn.id)
                     }
                 }
@@ -37,7 +37,15 @@ struct CoachConversationScreen: View {
         }
         .background { PaperBackground(adaptive: true).ignoresSafeArea() }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            CoachInputBar(viewModel: viewModel, placeholder: "Ask a follow-up", identifier: "coach.conversation") { viewModel.followUp() }
+            VStack(spacing: NoctisSpacing.sm) {
+                if !viewModel.followUpQuestions.isEmpty {
+                    CoachFollowUpChips(questions: viewModel.followUpQuestions) { viewModel.followUp($0) }
+                        .transition(.opacity)
+                }
+                CoachInputBar(viewModel: viewModel, placeholder: "Ask a follow-up", identifier: "coach.conversation") { viewModel.followUp() }
+            }
+            .background(NoctisAppColor.bg)
+            .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.followUpQuestions)
         }
         .navigationTitle(viewModel.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -45,15 +53,20 @@ struct CoachConversationScreen: View {
     }
 }
 
-/// One question and its answer.
+/// One question and its answer. Earlier ones stay compact (their summary, and
+/// a tap opens them); the latest is in full.
 struct CoachTurnView: View {
     let turn: CoachTurn
+    let isLatest: Bool
     let viewModel: CoachViewModel
+    @State private var expanded = false
 
     var body: some View {
         VStack(alignment: .trailing, spacing: NoctisSpacing.md) {
             CoachQuestionChip(text: turn.question)
-            CoachAnswerSlot(turn: turn, viewModel: viewModel)
+            CoachAnswerSlot(turn: turn, viewModel: viewModel, showsFull: isLatest || expanded) {
+                withAnimation(NoctisMotion.flow) { expanded.toggle() }
+            }
         }
     }
 }
@@ -82,25 +95,55 @@ struct CoachQuestionChip: View {
 struct CoachAnswerSlot: View {
     let turn: CoachTurn
     let viewModel: CoachViewModel
+    let showsFull: Bool
+    let toggle: () -> Void
 
     var body: some View {
         Group {
             switch turn.phase {
             case .loading:
                 CoachLoadingBlock()
+            case .answered(let answer) where answer.sourceKind == .scripted:
+                CoachPlainCard(answer: answer, viewModel: viewModel)
             case .answered(let answer):
-                NoctisAppCard {
-                    Text(answer.summary)
-                        .noctisFont(17, relativeTo: .body)
-                        .foregroundStyle(NoctisAppColor.ink)
-                        .fixedSize(horizontal: false, vertical: true)
+                if showsFull {
+                    CoachAnswerCard(turn: turn, answer: answer, viewModel: viewModel)
+                } else {
+                    CoachCompactAnswer(answer: answer, open: toggle)
                 }
-                .accessibilityIdentifier("coach.answer")
             case .failed:
                 CoachErrorCard { viewModel.retry(turn.id) }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// An earlier answer, folded to its summary.
+struct CoachCompactAnswer: View {
+    let answer: CoachAnswer
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            NoctisAppCard {
+                HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+                    Text(answer.summary)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisInk2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "chevron.down")
+                        .noctisIcon(12, .semibold, relativeTo: .footnote)
+                        .foregroundStyle(.noctisInk3)
+                        .accessibilityHidden(true)
+                }
+            }
+        }
+        .buttonStyle(NoctisCardButtonStyle())
+        .accessibilityHint("Shows the whole answer.")
+        .accessibilityIdentifier("coach.compact")
     }
 }
 

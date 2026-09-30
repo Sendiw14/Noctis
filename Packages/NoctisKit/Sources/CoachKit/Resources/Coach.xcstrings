@@ -991,13 +991,24 @@
         }
       }
     },
-    "coach.tpl.contrib.balance": {
+    "coach.tpl.contrib.balance.ahead": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sleep against need"
+            "value": "Ahead of your sleep need by"
+          }
+        }
+      }
+    },
+    "coach.tpl.contrib.balance.behind": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behind your sleep need by"
           }
         }
       }

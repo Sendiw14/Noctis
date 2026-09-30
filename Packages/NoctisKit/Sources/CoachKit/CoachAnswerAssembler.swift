@@ -45,7 +45,12 @@ public enum CoachAnswerAssembler {
         var contributors: [CoachContributor] = []
         for item in draft.contributors {
             guard let label = resolve(item.label), let fact = facts[item.factID] else { return nil }
-            contributors.append(CoachContributor(label: label, value: fact.display, factID: fact.id))
+            contributors.append(CoachContributor(label: label, value: fact.display, spoken: fact.spoken, factID: fact.id))
+        }
+        // The number the summary is about: only when its sentence names it.
+        var keyNumber: CoachContributor?
+        if let keyID = keyFactID(for: context.intent), CoachTokens.ids(in: draft.summary).contains(keyID), let fact = facts[keyID] {
+            keyNumber = CoachContributor(label: fact.label, value: fact.display, spoken: fact.spoken, factID: fact.id)
         }
 
         // Never more confident than the data allows.
@@ -58,6 +63,7 @@ public enum CoachAnswerAssembler {
             intent: context.intent,
             summary: summary,
             contributors: contributors,
+            keyNumber: keyNumber,
             whatChanged: changed,
             whatToNotice: notice,
             tonightSuggestion: tonight,
@@ -69,6 +75,18 @@ public enum CoachAnswerAssembler {
             destinations: draft.destinations.compactMap { AppRoute(name: $0) },
             footer: copy("coach.footer")
         )
+    }
+
+    /// The fact an intent's answer is about, when it is about one number.
+    static func keyFactID(for intent: CoachIntent) -> String? {
+        switch intent {
+        case .recoveryChange, .todayFocus: "recovery.score"
+        case .sleepChange: "sleep.duration"
+        case .weekChange: "week.avgSleep"
+        case .bedtimeAdvice: "bedtime.suggested"
+        case .consistencyHelp: "consistency.bedtimeVarMin"
+        case .patterns, .medicalOutOfScope, .crisis, .unknown: nil
+        }
     }
 
     /// "Moderate confidence · based on 9 nights".

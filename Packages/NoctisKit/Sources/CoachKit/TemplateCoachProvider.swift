@@ -159,6 +159,12 @@ private struct Composer {
         return text(delta > 0 ? "clause.bedtime.later" : "clause.bedtime.earlier")
     }
 
+    /// "Behind your sleep need by 2h 42m": which way is in the words, the size in the value.
+    func balanceContributor() -> CoachDraftContributor? {
+        guard let balance = value("sleep.balance") else { return nil }
+        return contributor(balance < 0 ? "balance.behind" : "balance.ahead", "sleep.balance")
+    }
+
     func balanceClause() -> String? {
         guard let balance = value("sleep.balance"), abs(balance) >= minor else { return nil }
         return text(balance < 0 ? "clause.balance.behind" : "clause.balance.ahead")
@@ -232,7 +238,7 @@ private struct Composer {
             summary: summary,
             contributors: [
                 contributor("weekSleep", "week.avgSleep"), contributor("weekRecovery", "week.avgRecovery"),
-                contributor("balance", "sleep.balance"), contributor("spread", "consistency.bedtimeVarMin"),
+                balanceContributor(), contributor("spread", "consistency.bedtimeVarMin"),
             ],
             changed: changed(
                 [
@@ -291,7 +297,7 @@ private struct Composer {
             contributors = [contributor("rhrAbove", "insight.restingHeartRateAboveRange.value")]
         } else if balance == true, let text = text("tf.summary.balance") {
             summary = text
-            contributors = [contributor("balance", "sleep.balance")]
+            contributors = [balanceContributor()]
         } else if recoveryDirection == .lower, let text = text("tf.summary.recovery") {
             summary = text
             contributors = [contributor("recovery", "recovery.score")]

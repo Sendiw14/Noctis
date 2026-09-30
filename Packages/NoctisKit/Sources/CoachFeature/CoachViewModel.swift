@@ -230,6 +230,12 @@ public final class CoachViewModel {
     /// Whether the conversation's last answer has come (a follow-up can be sent).
     public var lastTurn: CoachTurn? { turns.last }
 
+    /// The questions offered above the input: what usually comes next after the latest answer (at most three), once it has come.
+    public var followUpQuestions: [CoachQuestion] {
+        guard !isSending, let answer = turns.last?.answer, answer.sourceKind != .scripted else { return [] }
+        return CoachFollowUps.questions(after: answer.intent)
+    }
+
     /// The conversation's page title: the question that began it.
     public var title: String { turns.first?.question ?? "Coach" }
 
