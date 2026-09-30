@@ -143,6 +143,23 @@ public nonisolated struct SleepBanner: Sendable, Equatable {
     public let detail: String
 }
 
+/// A small butter capsule for a night or week that stands out against the
+/// person's own history: calm words, never a streak or a rank.
+public nonisolated struct SleepHighlightContent: Sendable, Equatable, Identifiable {
+    public let highlight: SleepHighlight
+    public let text: String
+    /// Which night or week it is for: a haptic plays once per id.
+    public let id: String
+
+    static func text(_ highlight: SleepHighlight) -> String {
+        switch highlight {
+        case .longestNight: "Longest night this month"
+        case .bestDeepSleep: "Best deep sleep in 30 nights"
+        case .mostConsistentWeek: "Most consistent week yet"
+        }
+    }
+}
+
 public nonisolated struct SleepScreen: Sendable, Equatable {
     /// "TUESDAY, SEPTEMBER 29".
     public let dateCaption: String
@@ -156,6 +173,9 @@ public nonisolated struct SleepScreen: Sendable, Equatable {
     public let month: SleepMonthContent?
     /// Consistency, balance and timing, for Week and Month (and their sheets).
     public let insights: SleepInsightsContent?
+    /// Day: the night's longest-night and best-deep-sleep marks; Week: its
+    /// most-consistent-week mark. Never on Month.
+    public let highlights: [SleepHighlightContent]
     /// The bars of the selected week or month.
     public var bars: SleepBarsContent? { week?.bars ?? month?.bars }
     /// The average, longest and shortest night of the selected week or month.
@@ -225,8 +245,22 @@ public nonisolated enum SleepScreenBuilder {
             noNight: noNight,
             week: week,
             month: month,
-            insights: insights
+            insights: insights,
+            highlights: highlights(model, selection: selection, showing: showsNights && (day != nil || week != nil))
         )
+    }
+
+    static func highlights(_ model: SleepRenderModel?, selection: SleepSelection, showing: Bool) -> [SleepHighlightContent] {
+        guard showing, let model, model.selection == selection else { return [] }
+        let wanted: [SleepHighlight]
+        switch selection.range {
+        case .day: wanted = [.longestNight, .bestDeepSleep]
+        case .week: wanted = [.mostConsistentWeek]
+        case .month: wanted = []
+        }
+        return model.highlights.filter(wanted.contains).map {
+            SleepHighlightContent(highlight: $0, text: SleepHighlightContent.text($0), id: "\(selection.range.title)-\(selection.night)-\($0)")
+        }
     }
 
     // MARK: State

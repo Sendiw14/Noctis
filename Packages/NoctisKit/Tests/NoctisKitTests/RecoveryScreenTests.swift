@@ -432,6 +432,26 @@ struct RecoveryHistoryContentTests {
         #expect(content.points.allSatisfy { $0.position != nil })
     }
 
+    @Test func todayCarriesTheHighestInThirtyDaysMarkOnlyWhenTheEngineSaysSo() async throws {
+        let today = try #require(screen(await snapshot(.full)).today)
+        let snap = await snapshot(.full)
+        let days = try #require(snap.history(.month)).days
+        let engine = RecoveryHighlightEngine.highlight(days: days)
+        #expect((today.highlight == "Highest in 30 days") == (engine == .highestIn30Days))
+        // The mock's last night is a shorter one: not its highest.
+        #expect(today.highlight == nil)
+    }
+
+    @Test func theHighsScenarioEarnsTheHighestInThirtyDays() async throws {
+        let snap = await snapshot(.highs)
+        let today = try #require(screen(snap).today)
+        #expect(today.highlight == "Highest in 30 days")
+        // The month's history agrees: today is its high, and no other day has that score.
+        let history = try #require(snap.history(.month))
+        #expect(history.stats.high?.score == today.scored.score)
+        #expect(history.days.compactMap(\.score).filter { $0.score == today.scored.score }.count == 1)
+    }
+
     @Test func aGapNightStillHasItsHistoryThoughNoScoreToday() async throws {
         let gap = screen(await snapshot(.gap), segment: .week)
         #expect(gap.history != nil && gap.noSleep == nil && gap.today == nil)

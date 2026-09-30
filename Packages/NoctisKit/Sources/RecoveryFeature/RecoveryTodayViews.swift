@@ -13,7 +13,7 @@ struct RecoveryTodayView: View {
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            RecoveryHeroView(content: today.scored, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
+            RecoveryHeroView(content: today.scored, highlight: today.highlight, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
             RecoveryBuildCard(build: today.build)
             ForEach(today.factors, id: \.kind) { row in
                 RecoveryFactorCard(row: row) { openFactor(row.kind, .fortnight) }
@@ -33,6 +33,8 @@ struct RecoveryTodayView: View {
 /// confidence caption when it isn't high.
 struct RecoveryHeroView: View {
     let content: ScoredRecoveryContent
+    /// "Highest in 30 days", when today's score has earned it.
+    let highlight: String?
     let reveal: HomeRevealPhase
     let lowPower: Bool
 
@@ -47,8 +49,9 @@ struct RecoveryHeroView: View {
     /// stands on paper where it rides up over the field.
     static let discMargin: CGFloat = 8
 
-    init(content: ScoredRecoveryContent, reveal: HomeRevealPhase, lowPower: Bool) {
+    init(content: ScoredRecoveryContent, highlight: String? = nil, reveal: HomeRevealPhase, lowPower: Bool) {
         self.content = content
+        self.highlight = highlight
         self.reveal = reveal
         self.lowPower = lowPower
         _shownScore = State(initialValue: HomeReveal.countsUp(lowPower: lowPower) && reveal == .pending ? 0 : content.score)
@@ -75,6 +78,10 @@ struct RecoveryHeroView: View {
                 }
             }
             .accessibilityElement(children: .combine)
+            if let highlight {
+                NoctisHighlightCapsule(highlight)
+                    .transition(.opacity)
+            }
             if let caption = content.confidenceCaption {
                 Text(caption)
                     .noctisFont(13, relativeTo: .footnote)

@@ -27,6 +27,8 @@ public final class SleepViewModel {
     /// The day's reveal for this tab (`HomeRevealPhase`, shared): the
     /// ribbon draws left to right, the ring fills and the numbers count up.
     public private(set) var reveal: HomeRevealPhase = .none
+    /// How the tab's color field arrives the first time it's shown.
+    public private(set) var fieldEntrance: NoctisFieldEntrance = .none
     /// Bumped each time a touch or scroll skips the reveal.
     public private(set) var revealSkips = 0
     public private(set) var revealPlayed = false
@@ -43,6 +45,7 @@ public final class SleepViewModel {
     private let profile: () -> UserProfileSnapshot
     private let connectHealth: () async -> Void
     private let introGate: HomeIntroGate
+    private let washGate: HomeIntroGate
     private let reduceMotion: () -> Bool
     private let lowPower: () -> Bool
     private let clock: () -> Date
@@ -52,6 +55,7 @@ public final class SleepViewModel {
     private var revealEnd: Task<Void, Never>?
     private var isVisible = false
     private var revealDecided = false
+    private var announcedHighlights: Set<String> = []
     /// Whether the selection is on the newest night, and stays on it when
     /// a newer one arrives.
     private var followsLatest = true
@@ -60,6 +64,8 @@ public final class SleepViewModel {
 
     /// The key of this tab's once-a-day reveal.
     public static let introKey = "noctis.sleep.lastIntroDay"
+    /// The key of this tab's once-a-day field wash.
+    public static let washKey = "noctis.sleep.lastWashDay"
     /// How long the reveal takes, start to end.
     public static let revealDuration = 1.6
 
@@ -68,6 +74,7 @@ public final class SleepViewModel {
         profile: @escaping () -> UserProfileSnapshot,
         connectHealth: @escaping () async -> Void = {},
         introGate: HomeIntroGate = HomeIntroGate(key: SleepViewModel.introKey),
+        washGate: HomeIntroGate = HomeIntroGate(key: SleepViewModel.washKey),
         reduceMotion: @escaping () -> Bool = { HomeViewModel.systemReduceMotion() },
         lowPower: @escaping () -> Bool = { HomeViewModel.systemLowPower() },
         clock: @escaping () -> Date = { Date() },
@@ -78,12 +85,22 @@ public final class SleepViewModel {
         self.profile = profile
         self.connectHealth = connectHealth
         self.introGate = introGate
+        self.washGate = washGate
         self.reduceMotion = reduceMotion
         self.lowPower = lowPower
         isLowPower = lowPower()
         self.clock = clock
         self.calendar = calendar
         self.locale = locale
+        // The color wash plays once per tab per day (the first time the tab
+        // is shown); after that the field just fades in.
+        fieldEntrance = washGate.isClaimed(now: clock(), calendar: calendar) ? .fade : .wash
+    }
+
+    /// The field has arrived: today's wash is spent.
+    public func fieldEntered() {
+        _ = washGate.claim(now: clock(), calendar: calendar)
+        fieldEntrance = .none
     }
 
     // MARK: Lifecycle
@@ -191,6 +208,16 @@ public final class SleepViewModel {
             publish()
         }
         updateReveal()
+        announce(screen.highlights)
+    }
+
+    /// A personal highlight gets one soft haptic the first time it's shown
+    /// (per night or week), and only while the tab is on screen.
+    private func announce(_ highlights: [SleepHighlightContent]) {
+        let fresh = highlights.map(\.id).filter { !announcedHighlights.contains($0) }
+        guard isVisible, !fresh.isEmpty else { return }
+        announcedHighlights.formUnion(fresh)
+        NoctisHaptics.soft()
     }
 
     // MARK: Reveal

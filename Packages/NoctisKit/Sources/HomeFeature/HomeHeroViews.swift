@@ -374,15 +374,20 @@ struct FactorCapsulesView: View {
 public struct DormantRingView: View {
     var diameter: CGFloat = 160
     var glyphSize: CGFloat = 28
+    /// Sleep and Recovery draw it in cocoa at .2 under their color field;
+    /// Home keeps the paper's track.
+    var onField = false
 
-    public init(diameter: CGFloat = 160, glyphSize: CGFloat = 28) {
+    public init(diameter: CGFloat = 160, glyphSize: CGFloat = 28, onField: Bool = false) {
         self.diameter = diameter
         self.glyphSize = glyphSize
+        self.onField = onField
     }
 
     public var body: some View {
         NoctisRingLayout(maxDiameter: diameter) {
             NoctisRecoveryRing(segments: [], diameter: diameter, lineWidth: diameter * 18 / 160)
+                .environment(\.noctisRingTrack, onField ? NoctisAppColor.cocoa.opacity(0.2) : nil)
             Image(systemName: "moon.zzz")
                 .font(.system(size: glyphSize, weight: .medium))
                 .foregroundStyle(NoctisAppColor.ink3)

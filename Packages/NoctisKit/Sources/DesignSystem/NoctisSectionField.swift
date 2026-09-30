@@ -77,6 +77,40 @@ extension ShapeStyle where Self == NoctisFieldInkStyle {
     public static var noctisFieldInk2: NoctisFieldInkStyle { NoctisFieldInkStyle(.secondary) }
 }
 
+/// How a section field arrives the first time its tab is shown in a launch.
+public nonisolated enum NoctisFieldEntrance: Sendable, Equatable {
+    /// Already there.
+    case none
+    /// The color fills outward from the segmented control with a spring:
+    /// once per tab per day.
+    case wash
+    /// A plain fade (the wash was already spent today).
+    case fade
+}
+
+/// Where the segmented control sits in a field, so the wash can start there.
+private nonisolated struct NoctisWashOriginKey: PreferenceKey {
+    static let defaultValue: CGFloat? = nil
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
+        value = value ?? nextValue()
+    }
+}
+
+extension View {
+    /// Marks the segmented control a section field's wash grows from.
+    public func noctisWashOrigin() -> some View {
+        background {
+            GeometryReader { proxy in
+                Color.clear.preference(key: NoctisWashOriginKey.self, value: proxy.frame(in: .named(NoctisSectionFieldSpace.name)).midY)
+            }
+        }
+    }
+}
+
+nonisolated enum NoctisSectionFieldSpace {
+    static let name = "noctisSectionField"
+}
+
 /// A full-width solid color field behind a tab's date, title, segmented
 /// control and hero numbers. It runs under the status bar (where the
 /// status-bar text stays legible), has 28pt bottom corners and scrolls
@@ -93,10 +127,17 @@ public struct NoctisSectionField<Content: View, Motif: View>: View {
     private let bottomInset: CGFloat
     private let content: Content
     private let motif: Motif
+    private let entrance: NoctisFieldEntrance
+    private let onEntered: () -> Void
     @Binding private var height: CGFloat
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// 0...1: how much of the field has arrived.
+    @State private var arrival: Double
+    @State private var origin: CGFloat?
+    @State private var measured: CGFloat = 0
 
     /// `bottomInset` is the room under the content, inside the field, and
     /// includes the overlap. `height` reports the field's own height.
@@ -104,12 +145,17 @@ public struct NoctisSectionField<Content: View, Motif: View>: View {
         _ section: NoctisSection,
         bottomInset: CGFloat = 16 + NoctisSectionField.overlap,
         height: Binding<CGFloat> = .constant(0),
+        entrance: NoctisFieldEntrance = .none,
+        onEntered: @escaping () -> Void = {},
         @ViewBuilder content: () -> Content,
         @ViewBuilder motif: () -> Motif
     ) {
         self.section = section
         self.bottomInset = bottomInset
         self._height = height
+        self.entrance = entrance
+        self.onEntered = onEntered
+        self._arrival = State(initialValue: entrance == .none ? 1 : 0)
         self.content = content()
         self.motif = motif()
     }
@@ -122,6 +168,23 @@ public struct NoctisSectionField<Content: View, Motif: View>: View {
         !typeSize.isAccessibilitySize && contrast != .increased
     }
 
+    /// The wash grows from the control; without Reduce Motion only. Reduce
+    /// Motion (and a wash already spent today) is a plain fade.
+    private var washes: Bool { entrance == .wash && !reduceMotion }
+
+    /// The wash's spring: half a second, no bounce, so a second change (a
+    /// tab switch mid-wash) retargets from where it is.
+    private var arrivalAnimation: Animation {
+        washes ? NoctisMotion.draw(0.5) : NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion)
+    }
+
+    /// The mask's anchor: the control's height in the field, as a share of
+    /// it (the middle until measured).
+    private func anchor(inset: CGFloat) -> UnitPoint {
+        guard let origin, measured > 0 else { return .center }
+        return UnitPoint(x: 0.5, y: min(max((origin + inset) / (measured + inset), 0), 1))
+    }
+
     public var body: some View {
         content
             .frame(maxWidth: 680)
@@ -129,7 +192,15 @@ public struct NoctisSectionField<Content: View, Motif: View>: View {
             .padding(.top, NoctisSpacing.xs)
             .padding(.bottom, bottomInset)
             .frame(maxWidth: .infinity)
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+            // The text arrives with the color, not before it (ink on the
+            // paper would vanish in Dark).
+            .opacity(washes ? 0.2 + 0.8 * min(arrival * 1.6, 1) : 1)
+            .coordinateSpace(name: NoctisSectionFieldSpace.name)
+            .onPreferenceChange(NoctisWashOriginKey.self) { origin = $0 }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                height = $0
+                measured = $0
+            }
             .background(alignment: .top) {
                 let inset = extensionHeight
                 // The motif is an overlay, so it never sizes the field.
@@ -143,8 +214,32 @@ public struct NoctisSectionField<Content: View, Motif: View>: View {
                         }
                     }
                     .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: NoctisRadius.lg, bottomTrailingRadius: NoctisRadius.lg, style: .continuous))
+                    .modifier(FieldArrival(washes: washes, arrival: arrival, anchor: anchor(inset: inset)))
                     .padding(.top, -inset)
             }
+            .onAppear {
+                guard arrival < 1 else { return }
+                withAnimation(arrivalAnimation) { arrival = 1 }
+                onEntered()
+            }
+    }
+}
+
+/// The field's arrival: a mask that grows from the control (the wash), or an
+/// opacity fade.
+private struct FieldArrival: ViewModifier {
+    let washes: Bool
+    let arrival: Double
+    let anchor: UnitPoint
+
+    func body(content: Content) -> some View {
+        if washes {
+            content.mask {
+                Rectangle().scaleEffect(x: 1, y: max(arrival, 0.001), anchor: anchor)
+            }
+        } else {
+            content.opacity(arrival)
+        }
     }
 }
 
@@ -153,9 +248,11 @@ extension NoctisSectionField where Motif == EmptyView {
         _ section: NoctisSection,
         bottomInset: CGFloat = 16 + NoctisSectionField.overlap,
         height: Binding<CGFloat> = .constant(0),
+        entrance: NoctisFieldEntrance = .none,
+        onEntered: @escaping () -> Void = {},
         @ViewBuilder content: () -> Content
     ) {
-        self.init(section, bottomInset: bottomInset, height: height, content: content, motif: { EmptyView() })
+        self.init(section, bottomInset: bottomInset, height: height, entrance: entrance, onEntered: onEntered, content: content, motif: { EmptyView() })
     }
 }
 
@@ -341,4 +438,36 @@ public struct NoctisUsualBandStyle: ShapeStyle {
 
 extension ShapeStyle where Self == NoctisUsualBandStyle {
     public static var noctisUsualBand: NoctisUsualBandStyle { NoctisUsualBandStyle() }
+}
+
+// MARK: - Highlights
+
+/// A small butter capsule for something true about a night, a week or a
+/// day: a personal high. Block ink on the butter block; calm words.
+public struct NoctisHighlightCapsule: View {
+    private let text: String
+
+    public init(_ text: String) {
+        self.text = text
+    }
+
+    public var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "sparkle")
+                .font(.system(size: 12, weight: .bold))
+                .accessibilityHidden(true)
+            Text(text)
+                .noctisFont(13, .semibold, relativeTo: .footnote)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundStyle(NoctisAppColor.blockInk)
+        .padding(.horizontal, NoctisSpacing.sm)
+        .padding(.vertical, 6)
+        .frame(minHeight: 28)
+        .background(NoctisAppColor.blockButter, in: Capsule(style: .continuous))
+        .noctisContrastBorder(cornerRadius: 14)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(text)
+        .accessibilityIdentifier("highlight")
+    }
 }

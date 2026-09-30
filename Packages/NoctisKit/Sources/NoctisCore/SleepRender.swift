@@ -190,6 +190,8 @@ public nonisolated struct SleepRenderModel: Sendable, Equatable {
     public let consistency: ConsistencyResult?
     public let timing: SleepTimingResult?
     public let timingRender: TimingWindowRender?
+    /// What the selected night (or week) earns against your own history.
+    public let highlights: [SleepHighlight]
 }
 
 public nonisolated enum SleepRenderModelBuilder {
@@ -211,7 +213,8 @@ public nonisolated enum SleepRenderModelBuilder {
             balanceRender: balance.map(balanceRender),
             consistency: consistency,
             timing: timing,
-            timingRender: timing.flatMap(timingWindow)
+            timingRender: timing.flatMap(timingWindow),
+            highlights: SleepHighlightsEngine.highlights(metrics: snapshot.records.map(\.metrics), endingAt: selection.night)
         )
     }
 

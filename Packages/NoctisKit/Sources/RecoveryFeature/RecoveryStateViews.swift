@@ -38,7 +38,7 @@ struct RecoveryStateView: View {
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            DormantRingView()
+            DormantRingView(onField: true)
             switch state {
             case .connect(let title, let message, let showsButton):
                 DormantTextView(title: title, detail: message, titleSize: 22)
@@ -77,7 +77,7 @@ struct RecoveryLearningView: View {
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            DormantRingView()
+            DormantRingView(onField: true)
             LearningDots(nights: content.nights, required: content.required)
             DormantTextView(title: "Learning your baseline", detail: content.text, alignment: .center)
         }
@@ -96,7 +96,7 @@ struct RecoveryNoSleepView: View {
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            DormantRingView()
+            DormantRingView(onField: true)
             DormantTextView(title: content.title, detail: content.detail)
             if content.opensHealth, let health = URL(string: "x-apple-health://") {
                 NoctisTextButton("Open Health", adaptive: true) { openURL(health) }

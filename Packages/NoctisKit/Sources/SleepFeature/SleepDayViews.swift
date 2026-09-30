@@ -100,7 +100,7 @@ struct SleepNoNightView: View {
     var body: some View {
         NoctisAppCard {
             HStack(spacing: NoctisSpacing.md) {
-                DormantRingView(diameter: 72, glyphSize: 18)
+                DormantRingView(diameter: 72, glyphSize: 18, onField: true)
                     .frame(width: 72)
                 DormantTextView(title: content.title, detail: content.detail, alignment: .leading)
                 Spacer(minLength: 0)
@@ -268,7 +268,7 @@ struct SleepLearningCard: View {
     var body: some View {
         NoctisAppCard {
             HStack(spacing: NoctisSpacing.md) {
-                DormantRingView(diameter: 72, glyphSize: 18)
+                DormantRingView(diameter: 72, glyphSize: 18, onField: true)
                     .frame(width: 72)
                 VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
                     DormantTextView(title: "Learning your baseline", detail: content.text, alignment: .leading)

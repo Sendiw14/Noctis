@@ -437,3 +437,52 @@ struct SleepAxisTests {
         #expect(window.bedtime < window.midpoint && window.midpoint < window.wake)
     }
 }
+
+// MARK: - Highlights
+
+struct SleepHighlightContentTests {
+    @Test func theLongestNightOfThirtyIsNamedOnDayInCalmWords() throws {
+        let day = screen(snapshot(count: 30, asleep: { $0 == 29 ? 520 : 450 }), range: .day)
+        let texts = day.highlights.map(\.text)
+        #expect(texts.contains("Longest night this month"))
+        #expect(day.highlights.allSatisfy { $0.id.hasPrefix("Day-") })
+        // Words a person could read as a nudge or a streak are never used.
+        for text in texts {
+            for word in ["streak", "record", "best ever", "keep it up", "don't", "beat"] {
+                #expect(!text.lowercased().contains(word), Comment(rawValue: text))
+            }
+        }
+    }
+
+    @Test func aTiedOrOrdinaryNightGetsNoHighlight() {
+        #expect(screen(snapshot(count: 30), range: .day).highlights.isEmpty)
+        // An earlier night, with a longer one after it in its window.
+        let snap = snapshot(count: 30, asleep: { $0 == 29 ? 520 : 450 })
+        let earlier = snap.defaultNight.adding(days: -3)
+        #expect(screen(snap, night: earlier, range: .day).highlights.isEmpty)
+    }
+
+    @Test func aWeekNamesTheMostConsistentWeekYetAndAMonthNamesNothing() {
+        let steadyEnd: (Int) -> Double = { $0 >= 33 ? 23 : 23 + ($0 % 2 == 0 ? 0.5 : -0.5) }
+        let snap = snapshot(count: 40, bedtime: steadyEnd)
+        #expect(screen(snap, range: .week).highlights.map(\.text) == ["Most consistent week yet"])
+        #expect(screen(snap, range: .month).highlights.isEmpty)
+        // On Day, the week's mark isn't shown.
+        #expect(!screen(snap, range: .day).highlights.map(\.text).contains("Most consistent week yet"))
+    }
+
+    @Test func aStateOrAnEmptyNightShowsNone() {
+        #expect(screen(snapshot(count: 0), range: .day).highlights.isEmpty)
+    }
+}
+
+struct SleepHighsScenarioTests {
+    @Test func theHighsScenarioEarnsTheLongestNightAndTheBestDeepSleep() async throws {
+        let now = SleepFixture.now
+        let provider = MockHealthKitProvider(scenario: .highs, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
+        let snap = await SleepRepository(provider: provider, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot())
+        let selection = SleepSelection(night: snap.defaultNight, range: .day)
+        let model = SleepRenderModelBuilder.build(snap, selection: selection)
+        #expect(Set(model.highlights).isSuperset(of: [.longestNight, .bestDeepSleep]))
+    }
+}

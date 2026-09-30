@@ -124,7 +124,11 @@ struct RecoveryContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            NoctisSectionField(.recovery, bottomInset: NoctisSpacing.md + NoctisSectionField<EmptyView, EmptyView>.overlap, height: $fieldHeight) {
+            NoctisSectionField(
+                .recovery, bottomInset: NoctisSpacing.md + NoctisSectionField<EmptyView, EmptyView>.overlap, height: $fieldHeight,
+                entrance: presentation == .tab ? viewModel.fieldEntrance : .none,
+                onEntered: { viewModel.fieldEntered() }
+            ) {
                 RecoveryHeaderView(viewModel: viewModel, presentation: presentation)
             } motif: {
                 NoctisArcsMotif()
@@ -196,6 +200,7 @@ struct RecoveryHeaderView: View {
                 .pickerStyle(.segmented)
                 .padding(.top, NoctisSpacing.xs)
                 .disabled(viewModel.screen == nil)
+                .noctisWashOrigin()
                 .accessibilityIdentifier("recovery.range")
             }
         }

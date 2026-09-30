@@ -79,6 +79,9 @@ public nonisolated struct RecoveryTodayContent: Sendable, Equatable {
     public let calculation: [String]
     /// "Model recovery-v3".
     public let modelVersion: String
+    /// "Highest in 30 days" when today's score beats every other day of the
+    /// last 30 (strictly, with enough scored days to compare with).
+    public let highlight: String?
 }
 
 // MARK: - States
@@ -240,7 +243,8 @@ public nonisolated enum RecoveryScreenBuilder {
             factors: rows,
             confidence: confidence(report),
             calculation: HomeScreenBuilder.calculation(result, needMinutes: snapshot.needMinutes),
-            modelVersion: "Model \(result.modelVersion)"
+            modelVersion: "Model \(result.modelVersion)",
+            highlight: snapshot.history(.month).flatMap { RecoveryHighlightEngine.highlight(days: $0.days) }.map { _ in "Highest in 30 days" }
         )
     }
 

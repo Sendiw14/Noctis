@@ -123,7 +123,10 @@ struct SleepFieldView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        NoctisSectionField(.sleep, bottomInset: NoctisHillsMotif.height + NoctisSpacing.lg, height: $height) {
+        NoctisSectionField(
+            .sleep, bottomInset: NoctisHillsMotif.height + NoctisSpacing.lg, height: $height,
+            entrance: viewModel.fieldEntrance, onEntered: { viewModel.fieldEntered() }
+        ) {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
                 SleepHeaderView(viewModel: viewModel)
                 if let screen = viewModel.screen, screen.state == nil, screen.selection.range == .day {
@@ -135,9 +138,11 @@ struct SleepFieldView: View {
                         SleepHeroView(day: day, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
                             .transition(.opacity)
                     }
+                    SleepHighlightRow(highlights: screen.highlights)
                 } else if let screen = viewModel.screen, screen.state == nil, let summary = screen.summary {
                     SleepSummaryStrip(summary: summary) { viewModel.selectedBar = $0 }
                         .transition(.opacity)
+                    SleepHighlightRow(highlights: screen.highlights)
                 } else if viewModel.screen == nil {
                     SleepFieldSkeleton()
                 }
@@ -171,6 +176,7 @@ struct SleepHeaderView: View {
                 .pickerStyle(.segmented)
                 .padding(.top, NoctisSpacing.xs)
                 .disabled(viewModel.screen == nil)
+                .noctisWashOrigin()
                 .accessibilityIdentifier("sleep.range")
             }
         }
@@ -220,7 +226,7 @@ struct SleepStateView: View {
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
-            DormantRingView()
+            DormantRingView(onField: true)
             switch state {
             case .connect(let title, let message, let showsButton):
                 DormantTextView(title: title, detail: message, titleSize: 22)
@@ -249,6 +255,27 @@ struct SleepStateView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, NoctisSpacing.xl)
         .accessibilityIdentifier("sleep.state")
+    }
+}
+
+/// The night's or week's highlights, as small butter capsules under the
+/// hero; nothing (and no space) when there are none.
+struct SleepHighlightRow: View {
+    let highlights: [SleepHighlightContent]
+
+    var body: some View {
+        if !highlights.isEmpty {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: NoctisSpacing.xs) { capsules }
+                VStack(alignment: .leading, spacing: NoctisSpacing.xs) { capsules }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .transition(.opacity)
+        }
+    }
+
+    private var capsules: some View {
+        ForEach(highlights) { NoctisHighlightCapsule($0.text) }
     }
 }
 

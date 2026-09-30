@@ -41,6 +41,10 @@ enum MockLastNight {
     case later
     /// A steady sleeper whose last night is on the usual: a bedtime streak.
     case steady
+    /// A personal best: 1h 36m longer than usual, deep and restful, on the
+    /// usual bedtime: the longest night, the best deep sleep and the
+    /// highest recovery of the month.
+    case best
     /// A restless night, for the sleep landscape: 11 awakenings (six of
     /// them under 3 minutes), uneven runs and a single 40-minute REM.
     case messy
@@ -93,6 +97,8 @@ enum MockNightGenerator {
                     LastNightOverride(bedtimeHour: meanBedtimeHour + lastNightBedtimeShiftMinutes / 60, asleepHours: meanAsleepHours, quality: 0.55)
                 case .steady:
                     LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours, quality: 0.7)
+                case .best:
+                    LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours + 1.6, quality: 1.0)
                 case .messy:
                     LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours, quality: 0.45, messy: true)
                 }
@@ -100,7 +106,7 @@ enum MockNightGenerator {
             // The dip: four nights, a week or so before the last.
             let dipIndex = i - (count - dipStartNightsBack)
             let depth = dip && dipDepths.indices.contains(dipIndex) ? dipDepths[dipIndex] : 0
-            nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady, dip: depth))
+            nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady, dip: depth, qualityCap: lastNight == .best ? 0.3 : nil))
         }
         return nights
     }
@@ -138,7 +144,7 @@ enum MockNightGenerator {
     }
 
     private static func generateNight(
-        index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?, steady: Bool = false, dip: Double = 0
+        index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?, steady: Bool = false, dip: Double = 0, qualityCap: Double? = nil
     ) -> NightProfile {
         var rng = SeededGenerator(seed: seed &+ UInt64(index) &* 0x9E3779B1)
 
@@ -148,7 +154,7 @@ enum MockNightGenerator {
         let progress = Double(index) / Double(max(total - 1, 1))
         let trend = 0.42 + 0.28 * progress
         let noise = Double.random(in: -0.16...0.16, using: &rng)
-        let naturalQuality = min(max(trend + noise, 0.12), 0.97)
+        let naturalQuality = min(max(trend + noise, 0.12), qualityCap ?? 0.97)
         let quality = override?.quality ?? (dip > 0 ? naturalQuality * (1 - 0.8 * dip) : naturalQuality)
 
         // A steady sleeper keeps weekends and weeknights within minutes.

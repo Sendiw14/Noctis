@@ -28,6 +28,8 @@ public final class RecoveryViewModel {
     /// The day's reveal for this tab (`HomeRevealPhase`, shared): the ring
     /// fills and the numbers count up.
     public private(set) var reveal: HomeRevealPhase = .none
+    /// How the tab's color field arrives the first time it's shown.
+    public private(set) var fieldEntrance: NoctisFieldEntrance = .none
     /// Bumped each time a touch or scroll skips the reveal.
     public private(set) var revealSkips = 0
     public private(set) var revealPlayed = false
@@ -38,6 +40,7 @@ public final class RecoveryViewModel {
     private let profile: () -> UserProfileSnapshot
     private let connectHealth: () async -> Void
     private let introGate: HomeIntroGate
+    private let washGate: HomeIntroGate
     private let reduceMotion: () -> Bool
     private let lowPower: () -> Bool
     private let clock: () -> Date
@@ -46,10 +49,13 @@ public final class RecoveryViewModel {
     private var observation: Task<Void, Never>?
     private var revealEnd: Task<Void, Never>?
     private var isVisible = false
+    private var announcedHighlights: Set<String> = []
     private var revealDecided = false
 
     /// The key of this tab's once-a-day reveal.
     public static let introKey = "noctis.recovery.lastIntroDay"
+    /// The key of this tab's once-a-day field wash.
+    public static let washKey = "noctis.recovery.lastWashDay"
     /// How long the reveal takes, start to end.
     public static let revealDuration = 1.6
 
@@ -58,6 +64,7 @@ public final class RecoveryViewModel {
         profile: @escaping () -> UserProfileSnapshot,
         connectHealth: @escaping () async -> Void = {},
         introGate: HomeIntroGate = HomeIntroGate(key: RecoveryViewModel.introKey),
+        washGate: HomeIntroGate = HomeIntroGate(key: RecoveryViewModel.washKey),
         reduceMotion: @escaping () -> Bool = { HomeViewModel.systemReduceMotion() },
         lowPower: @escaping () -> Bool = { HomeViewModel.systemLowPower() },
         clock: @escaping () -> Date = { Date() },
@@ -68,12 +75,22 @@ public final class RecoveryViewModel {
         self.profile = profile
         self.connectHealth = connectHealth
         self.introGate = introGate
+        self.washGate = washGate
         self.reduceMotion = reduceMotion
         self.lowPower = lowPower
         isLowPower = lowPower()
         self.clock = clock
         self.calendar = calendar
         self.locale = locale
+        // The color wash plays once per tab per day (the first time the tab
+        // is shown); after that the field just fades in.
+        fieldEntrance = washGate.isClaimed(now: clock(), calendar: calendar) ? .fade : .wash
+    }
+
+    /// The field has arrived: today's wash is spent.
+    public func fieldEntered() {
+        _ = washGate.claim(now: clock(), calendar: calendar)
+        fieldEntrance = .none
     }
 
     // MARK: Lifecycle
@@ -171,6 +188,16 @@ public final class RecoveryViewModel {
             publish()
         }
         updateReveal()
+        announce(content.today)
+    }
+
+    /// The highlight gets one soft haptic the first time it's shown for a
+    /// given score, and only while the tab is on screen.
+    private func announce(_ today: RecoveryTodayContent?) {
+        guard let today, let highlight = today.highlight, isVisible else { return }
+        let id = "\(highlight)-\(today.scored.score)"
+        guard announcedHighlights.insert(id).inserted else { return }
+        NoctisHaptics.soft()
     }
 
     // MARK: Reveal

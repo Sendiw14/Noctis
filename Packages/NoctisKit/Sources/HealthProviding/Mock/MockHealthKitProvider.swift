@@ -27,6 +27,9 @@ public enum MockScenario: String, Sendable, CaseIterable {
     /// lower HRV, higher resting heart rate) and then back to usual: the
     /// Recovery charts' story.
     case recoveryDip
+    /// Like `full`, but last night is the month's best: the longest night,
+    /// the most deep sleep and the highest recovery (the highlights).
+    case highs
 }
 
 /// Development-only stand-in for a real HealthKit-backed provider. Clearly
@@ -76,6 +79,7 @@ public final class MockHealthKitProvider: HealthDataProviding {
         case .lateBedtime: .later
         case .steady, .recoveryDip: .steady
         case .messyNight: .messy
+        case .highs: .best
         default: .laterAndShorter
         }
         let generated = MockNightGenerator.generate(
@@ -83,7 +87,7 @@ public final class MockHealthKitProvider: HealthDataProviding {
             dip: scenario == .recoveryDip
         )
         let nights: [NightProfile] = switch scenario {
-        case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight, .recoveryDip: generated
+        case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight, .recoveryDip, .highs: generated
         case .learning: Array(generated.suffix(3))
         case .empty: []
         case .gap: Array(generated.dropLast())
