@@ -41,6 +41,9 @@ enum MockLastNight {
     case later
     /// A steady sleeper whose last night is on the usual: a bedtime streak.
     case steady
+    /// Last night on the usual bedtime and length, for a history that isn't
+    /// a steady sleeper's (so no baseline insight competes with its story).
+    case usual
     /// A personal best: 1h 36m longer than usual, deep and restful, on the
     /// usual bedtime: the longest night, the best deep sleep and the
     /// highest recovery of the month.
@@ -48,6 +51,23 @@ enum MockLastNight {
     /// A restless night, for the sleep landscape: 11 awakenings (six of
     /// them under 3 minutes), uneven runs and a single 40-minute REM.
     case messy
+}
+
+/// How a whole history is shaped, for the insight scenarios. `standard` is
+/// the original mock: nothing here may change it.
+enum MockShape {
+    case standard
+    /// 90 nights whose bedtime swings ±80 minutes, and the earlier ones are
+    /// the better ones: fewer awakenings and a higher HRV.
+    case earlyBird
+    /// Friday and Saturday evenings an hour later than the rest.
+    case weekendShift
+    /// HRV and resting heart rate off their usual for the last three nights.
+    case hrvDip
+    /// `full`: the standard history, and a last night with less deep and REM
+    /// sleep than usual (nothing else about any night changes), so the stage
+    /// insights have something to say beside the shifts.
+    case fullStory
 }
 
 enum MockNightGenerator {
@@ -68,9 +88,22 @@ enum MockNightGenerator {
     /// counted from the night `dipStartNightsBack` before the last.
     static let dipDepths: [Double] = [0.6, 1.0, 1.0, 0.7]
     static let dipStartNightsBack = 9
+    /// The HRV dip runs to the last night.
+    static let hrvDipDepths: [Double] = [1.0, 1.0, 1.0]
+    static let hrvDipStartNightsBack = 3
+    /// How much of its usual deep and REM sleep `full`'s last night keeps.
+    static let fullLastNightDeepKept: Double = 0.5
+    static let fullLastNightREMKept: Double = 0.7
+    /// The early bird's bedtime swing (minutes either side of 11 PM), the
+    /// difference in HRV a swing of one hour makes (ms) and the quality a
+    /// swing of one hour takes off.
+    static let earlyBirdSwingMinutes: Double = 80
+    static let earlyBirdHRVPerHour: Double = 8
+    static let earlyBirdQualityPerHour: Double = 0.30
 
     static func generate(
-        seed: UInt64, count: Int, referenceDate: Date, calendar: Calendar, lastNight: MockLastNight = .laterAndShorter, dip: Bool = false
+        seed: UInt64, count: Int, referenceDate: Date, calendar: Calendar, lastNight: MockLastNight = .laterAndShorter, dip: Bool = false,
+        shape: MockShape = .standard
     ) -> [NightProfile] {
         guard count > 0 else { return [] }
         let hour = calendar.component(.hour, from: referenceDate)
@@ -95,7 +128,7 @@ enum MockNightGenerator {
                     )
                 case .later:
                     LastNightOverride(bedtimeHour: meanBedtimeHour + lastNightBedtimeShiftMinutes / 60, asleepHours: meanAsleepHours, quality: 0.55)
-                case .steady:
+                case .steady, .usual:
                     LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours, quality: 0.7)
                 case .best:
                     LastNightOverride(bedtimeHour: meanBedtimeHour, asleepHours: meanAsleepHours + 1.6, quality: 1.0)
@@ -104,9 +137,13 @@ enum MockNightGenerator {
                 }
             }
             // The dip: four nights, a week or so before the last.
-            let dipIndex = i - (count - dipStartNightsBack)
-            let depth = dip && dipDepths.indices.contains(dipIndex) ? dipDepths[dipIndex] : 0
-            nights.append(generateNight(index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady, dip: depth, qualityCap: lastNight == .best ? 0.3 : nil))
+            let depths = shape == .hrvDip ? hrvDipDepths : dipDepths
+            let dipIndex = i - (count - (shape == .hrvDip ? hrvDipStartNightsBack : dipStartNightsBack))
+            let depth = (dip || shape == .hrvDip) && depths.indices.contains(dipIndex) ? depths[dipIndex] : 0
+            nights.append(generateNight(
+                index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady, dip: depth,
+                qualityCap: lastNight == .best ? 0.3 : nil, shape: shape
+            ))
         }
         return nights
     }
@@ -144,7 +181,8 @@ enum MockNightGenerator {
     }
 
     private static func generateNight(
-        index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?, steady: Bool = false, dip: Double = 0, qualityCap: Double? = nil
+        index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?, steady: Bool = false, dip: Double = 0, qualityCap: Double? = nil,
+        shape: MockShape = .standard
     ) -> NightProfile {
         var rng = SeededGenerator(seed: seed &+ UInt64(index) &* 0x9E3779B1)
 
@@ -155,12 +193,29 @@ enum MockNightGenerator {
         let trend = 0.42 + 0.28 * progress
         let noise = Double.random(in: -0.16...0.16, using: &rng)
         let naturalQuality = min(max(trend + noise, 0.12), qualityCap ?? 0.97)
-        let quality = override?.quality ?? (dip > 0 ? naturalQuality * (1 - 0.8 * dip) : naturalQuality)
 
         // A steady sleeper keeps weekends and weeknights within minutes.
-        let bedtimeHourBase = isWeekend && !steady ? 23.6 : 23.0
-        let bedtimeJitter = Double.random(in: -35...35, using: &rng) * (steady ? 0.25 : 1)
+        // Fridays and Saturdays are the weekend the weekend-shift scenario moves.
+        let isWeekendEvening = weekday == 6 || weekday == 7
+        var bedtimeHourBase = isWeekend && !steady ? 23.6 : 23.0
+        var bedtimeJitter = Double.random(in: -35...35, using: &rng) * (steady ? 0.25 : 1)
+        switch shape {
+        case .earlyBird:
+            bedtimeHourBase = 23.0
+            bedtimeJitter *= earlyBirdSwingMinutes / 35
+        case .weekendShift:
+            bedtimeHourBase = isWeekendEvening ? 24.0 : 23.0
+            bedtimeJitter *= 0.6
+        case .standard, .hrvDip, .fullStory:
+            break
+        }
         let bedtimeHour = override?.bedtimeHour ?? bedtimeHourBase + bedtimeJitter / 60 + dip * 50 / 60
+        // How many hours later than 11 PM the night began (the early bird's story).
+        let lateness = bedtimeHour - 23.0
+        var quality = override?.quality ?? (dip > 0 ? naturalQuality * (1 - 0.8 * dip) : naturalQuality)
+        if shape == .earlyBird, override == nil {
+            quality = min(max(0.62 - earlyBirdQualityPerHour * lateness + noise * 0.4, 0.15), 0.97)
+        }
         let bedtime = day.addingTimeInterval(bedtimeHour * 3600)
 
         let naturalSleepHours = 6.4 + quality * 2.1 + Double.random(in: -0.25...0.25, using: &rng)
@@ -184,8 +239,12 @@ enum MockNightGenerator {
                 ? max(totalSleepSeconds - cycleSegments.filter { $0.0.isAsleep }.reduce(0) { $0 + $1.1 }, 20 * 60)
                 : baseCycleLength * Double.random(in: 0.86...1.14, using: &rng)
 
-            let deepShare = max(0, 0.30 * earlyBias - 0.06) * (0.55 + 0.45 * quality)
-            let remShare = (0.12 + 0.24 * lateBias) * (0.65 + 0.35 * quality)
+            var deepShare = max(0, 0.30 * earlyBias - 0.06) * (0.55 + 0.45 * quality)
+            var remShare = (0.12 + 0.24 * lateBias) * (0.65 + 0.35 * quality)
+            if shape == .fullStory, override != nil {
+                deepShare *= fullLastNightDeepKept
+                remShare *= fullLastNightREMKept
+            }
             let coreShare = max(0.34, 1 - deepShare - remShare)
             let shareTotal = coreShare + deepShare + remShare
 
@@ -202,6 +261,16 @@ enum MockNightGenerator {
             let awakeChance = (1 - quality) * 0.45
             if cycle < cycleCount - 1, Double.random(in: 0...1, using: &rng) < awakeChance {
                 cycleSegments.append((.awake, Double.random(in: 60...240, using: &rng)))
+            }
+            // The early bird's late nights are broken ones: up to six more
+            // awakenings of a few minutes, each between stretches of sleep.
+            if shape == .earlyBird, override == nil, cycle < cycleCount - 1 {
+                let extra = Int((max(lateness, 0) * 6).rounded(.up))
+                let share = (extra + cycleCount - 2) / max(cycleCount - 1, 1)
+                for _ in 0..<share {
+                    cycleSegments.append((.awake, Double.random(in: 180...300, using: &rng)))
+                    cycleSegments.append((.core, 8 * 60))
+                }
             }
         }
 
@@ -244,7 +313,8 @@ enum MockNightGenerator {
         }
 
         let hrvBaseline = 44.0 + 22.0 * progress
-        let hrv = hrvBaseline + quality * 9.0 + Double.random(in: -5...5, using: &rng) - dip * 14
+        var hrv = hrvBaseline + quality * 9.0 + Double.random(in: -5...5, using: &rng) - dip * 14
+        if shape == .earlyBird, override == nil { hrv -= lateness * earlyBirdHRVPerHour }
         let span = wakeTime.timeIntervalSince(sleepOnset)
         let hrvSamples = [0.2, 0.45, 0.7, 0.95].map { fraction in
             HRVSample(

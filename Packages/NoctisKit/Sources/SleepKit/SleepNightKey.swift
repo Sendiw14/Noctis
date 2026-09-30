@@ -50,6 +50,12 @@ public struct SleepNightKey: Hashable, Comparable, Sendable, Codable, CustomStri
         return Double(localDay.days(from: self)) * 1440 + clock - 720
     }
 
+    /// The weekday of the evening this night began: 1 is Sunday, 6 Friday,
+    /// 7 Saturday (`Calendar`'s numbering; the key is a plain date).
+    public var weekday: Int {
+        Self.gregorian(Self.utc).component(.weekday, from: noonUTC)
+    }
+
     public static func < (lhs: SleepNightKey, rhs: SleepNightKey) -> Bool {
         (lhs.year, lhs.month, lhs.day) < (rhs.year, rhs.month, rhs.day)
     }

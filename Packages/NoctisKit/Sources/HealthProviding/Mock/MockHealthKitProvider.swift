@@ -30,6 +30,18 @@ public enum MockScenario: String, Sendable, CaseIterable {
     /// Like `full`, but last night is the month's best: the longest night,
     /// the most deep sleep and the highest recovery (the highlights).
     case highs
+    /// 90 nights whose bedtime swings an hour either way, and the earlier
+    /// ones are the better ones: fewer awakenings and a higher HRV (the
+    /// earlier-bedtime pattern insight).
+    case earlyBird
+    /// Like `full`, but Friday and Saturday nights run an hour later than
+    /// the rest of the week (the weekend-shift insight).
+    case weekendShift
+    /// Like `full`, but HRV and resting heart rate are off their usual for
+    /// the last three nights (the heart-signal insights).
+    case hrvDip
+    /// Only the last 6 nights: the Insights tab is still learning.
+    case sparse
 }
 
 /// Development-only stand-in for a real HealthKit-backed provider. Clearly
@@ -78,17 +90,29 @@ public final class MockHealthKitProvider: HealthDataProviding {
         let lastNight: MockLastNight = switch scenario {
         case .lateBedtime: .later
         case .steady, .recoveryDip: .steady
+        case .earlyBird, .weekendShift, .hrvDip: .usual
         case .messyNight: .messy
         case .highs: .best
         default: .laterAndShorter
         }
+        let shape: MockShape = switch scenario {
+        case .earlyBird: .earlyBird
+        case .weekendShift: .weekendShift
+        case .hrvDip: .hrvDip
+        case .full: .fullStory
+        default: .standard
+        }
+        // The early bird's story is 90 nights; the others keep the default.
+        let historyDays = scenario == .earlyBird ? min(historyDays, 90) : historyDays
         let generated = MockNightGenerator.generate(
             seed: seed, count: historyDays, referenceDate: referenceDate, calendar: calendar, lastNight: lastNight,
-            dip: scenario == .recoveryDip
+            dip: scenario == .recoveryDip,
+            shape: shape
         )
         let nights: [NightProfile] = switch scenario {
-        case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight, .recoveryDip, .highs: generated
+        case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight, .recoveryDip, .highs, .earlyBird, .weekendShift, .hrvDip: generated
         case .learning: Array(generated.suffix(3))
+        case .sparse: Array(generated.suffix(6))
         case .empty: []
         case .gap: Array(generated.dropLast())
         }

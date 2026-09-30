@@ -34,7 +34,7 @@ let package = Package(
         .target(name: "HealthProviding", swiftSettings: noctisSwiftSettings),
         .target(name: "SleepKit", dependencies: ["HealthProviding"], swiftSettings: engineSwiftSettings),
         .target(name: "RecoveryKit", dependencies: ["HealthProviding", "SleepKit"], swiftSettings: engineSwiftSettings),
-        .target(name: "InsightsKit", dependencies: ["SleepKit", "RecoveryKit"], swiftSettings: engineSwiftSettings),
+        .target(name: "InsightsKit", dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit"], swiftSettings: engineSwiftSettings),
         .target(name: "SleepAnalysisKit", dependencies: ["HealthProviding", "SleepKit", "RecoveryKit"], swiftSettings: engineSwiftSettings),
         .target(
             name: "NoctisCore",

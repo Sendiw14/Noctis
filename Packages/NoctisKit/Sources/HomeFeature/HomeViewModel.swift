@@ -93,6 +93,8 @@ public final class HomeViewModel {
     private var modeFlip: Task<Void, Never>?
     private var bannerTask: Task<Void, Never>?
     private var revealEnd: Task<Void, Never>?
+    /// Waits out the reveal (tests hold it, so a slow run can't end it early).
+    private let revealSleep: @Sendable (Double) async -> Void
 
     #if DEBUG
     /// DEBUG: print every new snapshot (`-noctisLogHomeSnapshot`).
@@ -110,8 +112,10 @@ public final class HomeViewModel {
         clock: @escaping () -> Date = { Date() },
         calendar: Calendar = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
-        modeOverride: HomeMode? = nil
+        modeOverride: HomeMode? = nil,
+        revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) }
     ) {
+        self.revealSleep = revealSleep
         self.repository = repository
         self.profile = profile
         self.connectHealth = connectHealth
@@ -218,7 +222,7 @@ public final class HomeViewModel {
         NoctisSignpost.begin(.reveal)
         revealEnd?.cancel()
         revealEnd = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(HomeReveal.totalDuration))
+            await self?.revealSleep(HomeReveal.totalDuration)
             guard !Task.isCancelled, let self, self.reveal == .playing else { return }
             // Played out: the end state and `.none` look the same.
             self.reveal = .none

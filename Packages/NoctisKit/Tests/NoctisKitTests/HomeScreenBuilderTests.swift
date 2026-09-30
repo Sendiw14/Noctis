@@ -434,17 +434,19 @@ struct HomeViewModelIntroTests {
     }
 
     private func viewModel(scenario: MockScenario = .full, at date: Date, defaults: UserDefaults, reduceMotion: Bool = false,
-                           connect: @escaping () async -> Void = {}) -> HomeViewModel {
+                           connect: @escaping () async -> Void = {},
+                           revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) }) -> HomeViewModel {
         let provider = MockHealthKitProvider(scenario: scenario, referenceDate: date, calendar: Fixture.calendar(), startAuthorized: true)
         let repository = HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { date })
         return HomeViewModel(repository: repository, profile: { UserProfileSnapshot() }, connectHealth: connect,
                              introGate: HomeIntroGate(defaults: defaults), reduceMotion: { reduceMotion },
-                             clock: { date }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
+                             clock: { date }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"), revealSleep: revealSleep)
     }
 
     @Test func theRevealPlaysOncePerDay() async {
         let store = defaults()
-        let morning = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: store)
+        // The reveal's own timer is held (never fires): a busy run can't end it under the test.
+        let morning = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: store, revealSleep: { _ in try? await Task.sleep(for: .seconds(3600)) })
         // Dusk from the first frame: today's reveal is still to come.
         #expect(morning.reveal == .pending)
         await morning.refresh()

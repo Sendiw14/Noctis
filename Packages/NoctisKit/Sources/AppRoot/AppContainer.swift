@@ -12,6 +12,10 @@ public struct AppContainer {
     public let homeViewModel: HomeViewModel
     public let sleepViewModel: SleepViewModel
     public let recoveryViewModel: RecoveryViewModel
+    /// The insights kept on this device and the repository that fills them:
+    /// Home and the Insights tab both read them.
+    public let insightStore: InsightStore
+    public let insightsRepository: InsightsRepository
     public let storeManager: StoreManager
     public let modelContainer: ModelContainer
 
@@ -105,6 +109,21 @@ public struct AppContainer {
         // the repository reads it.)
         if debug.resetState { snapshotStore?.erase() }
         #endif
+        // The insights: derived numbers only, complete file protection,
+        // excluded from backups, and erased with the rest. The mock skips the
+        // file (like the snapshot) so UI tests don't see each other's dismissals.
+        #if DEBUG
+        let insightFile: InsightFileStore? = keepsSnapshot ? InsightFileStore() : nil
+        #else
+        let insightFile: InsightFileStore? = InsightFileStore()
+        #endif
+        if let insightFile { NoctisDataRegistry.shared.register(insightFile) }
+        #if DEBUG
+        if debug.resetState { insightFile?.erase() }
+        #endif
+        let insightStore = InsightStore(file: insightFile)
+        self.insightStore = insightStore
+        self.insightsRepository = InsightsRepository(provider: provider, store: insightStore)
         self.homeViewModel = HomeViewModel(
             repository: HomeRepository(provider: provider, insightHistory: insightHistory, store: snapshotStore),
             profile: { model.profile },
