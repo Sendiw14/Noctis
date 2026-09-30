@@ -14,6 +14,8 @@ public final class MockAIProvider: AIProvider, @unchecked Sendable {
         /// A good draft, after a long wait.
         case slow
         case unavailable
+        /// Apple Intelligence is off in Settings (the one reason the person can fix).
+        case notEnabled
         /// Throws.
         case throwing
 
@@ -24,6 +26,7 @@ public final class MockAIProvider: AIProvider, @unchecked Sendable {
             case "misbehaving": self = .misbehaving
             case "slow": self = .slow
             case "unavailable": self = .unavailable
+            case "notEnabled": self = .notEnabled
             default: return nil
             }
         }
@@ -59,7 +62,13 @@ public final class MockAIProvider: AIProvider, @unchecked Sendable {
     }
 
     public var kind: CoachSourceKind { .appleIntelligence }
-    public var availability: CoachAvailability { mode == .unavailable ? .deviceNotEligible : .available }
+    public var availability: CoachAvailability {
+        switch mode {
+        case .unavailable: .deviceNotEligible
+        case .notEnabled: .notEnabled
+        default: .available
+        }
+    }
 
     /// How many drafts were asked for.
     public var callCount: Int { lock.withLock { calls } }
@@ -73,6 +82,7 @@ public final class MockAIProvider: AIProvider, @unchecked Sendable {
         switch mode {
         case .good: return good
         case .unavailable: throw CoachProviderError.unavailable(.deviceNotEligible)
+        case .notEnabled: throw CoachProviderError.unavailable(.notEnabled)
         case .throwing: throw CoachProviderError.failed
         case .slow:
             try await Task.sleep(for: slowDuration)

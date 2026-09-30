@@ -11,15 +11,17 @@ public struct CoachScreen: View {
     let viewModel: CoachViewModel
     let ask: (CoachQuestion) -> Void
     let send: () -> Void
+    let openHistory: () -> Void
 
     @Environment(AppModel.self) private var appModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollPosition = ScrollPosition(edge: .top)
 
-    public init(viewModel: CoachViewModel, ask: @escaping (CoachQuestion) -> Void, send: @escaping () -> Void) {
+    public init(viewModel: CoachViewModel, ask: @escaping (CoachQuestion) -> Void, send: @escaping () -> Void, openHistory: @escaping () -> Void) {
         self.viewModel = viewModel
         self.ask = ask
         self.send = send
+        self.openHistory = openHistory
     }
 
     public var body: some View {
@@ -31,7 +33,10 @@ public struct CoachScreen: View {
                 dateCaption: viewModel.hub?.dateCaption ?? " ",
                 title: "Coach",
                 summary: AnyView(summary),
-                trailing: AnyView(CoachInfoButton { viewModel.openPrivacy() })
+                trailing: AnyView(HStack(spacing: 0) {
+                    if viewModel.keepsHistory { CoachHistoryButton(open: openHistory) }
+                    CoachInfoButton { viewModel.openPrivacy() }
+                })
             ),
             entrance: viewModel.fieldEntrance,
             onEntered: { viewModel.fieldEntered() },

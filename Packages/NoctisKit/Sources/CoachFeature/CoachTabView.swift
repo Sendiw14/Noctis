@@ -24,14 +24,19 @@ public struct CoachTabView: View {
                 },
                 send: {
                     if viewModel.startConversation(asking: viewModel.draft) { open(.conversation) }
-                }
+                },
+                openHistory: { open(.history) }
             )
             .navigationDestination(for: CoachPage.self) { route in
                 switch route {
                 case .conversation:
                     CoachConversationScreen(viewModel: viewModel)
                 case .history:
-                    EmptyView()
+                    CoachHistoryScreen(viewModel: viewModel) { id in
+                        Task {
+                            if await viewModel.openConversation(id) { appModel.coachPath = [.history, .conversation] }
+                        }
+                    }
                 }
             }
         }

@@ -75,10 +75,12 @@ public final class CoachViewModel {
     public private(set) var fieldEntrance: NoctisFieldEntrance = .none
     /// The privacy sheet is open.
     public var showsPrivacy = false
+    /// The stored conversations, by day; nil until History has been opened.
+    public private(set) var history: CoachHistoryContent?
 
     private let service: any CoachAnswering
     private let dataSource: any CoachDataSource
-    private let history: CoachHistoryStore?
+    private let store: CoachHistoryStore?
     private let profile: () -> UserProfileSnapshot
     private let connectHealth: () async -> Void
     private let firstRun: CoachFirstRunGate
@@ -106,7 +108,7 @@ public final class CoachViewModel {
     ) {
         self.service = service
         self.dataSource = dataSource
-        self.history = history
+        store = history
         self.profile = profile
         self.connectHealth = connectHealth
         self.firstRun = firstRun
@@ -260,7 +262,7 @@ public final class CoachViewModel {
     }
 
     private func answer(_ id: UUID, question: String, started: ContinuousClock.Instant) async {
-        if conversationID == nil, let history { conversationID = await history.startConversation() }
+        if conversationID == nil, let store { conversationID = await store.startConversation() }
         let result = await service.answer(to: question, conversationID: conversationID)
         // A skeleton that flashes and is gone reads as a glitch: it stays for a moment.
         let shown = ContinuousClock.now - started
@@ -291,7 +293,50 @@ public final class CoachViewModel {
         let next: CoachFeedback? = turns[index].feedback == feedback ? nil : feedback
         turns[index].feedback = next
         NoctisHaptics.selection()
-        Task { await history?.setFeedback(next, for: messageID) }
+        Task { await store?.setFeedback(next, for: messageID) }
+    }
+
+    // MARK: - History
+
+    /// Whether Coach is keeping conversations at all.
+    public var keepsHistory: Bool { store != nil }
+
+    /// Reads the stored conversations, and only those.
+    public func loadHistory() async {
+        let summaries = await store?.conversations() ?? []
+        let content = CoachHistoryBuilder.build(summaries, now: clock(), format: format)
+        if history != content { history = content }
+    }
+
+    /// Opens a stored conversation: its questions and answers as they were
+    /// kept, ready for a follow-up. False when it is gone.
+    @discardableResult
+    public func openConversation(_ id: UUID) async -> Bool {
+        guard let store else { return false }
+        let stored = await store.turns(in: id)
+        guard !stored.isEmpty else { return false }
+        sending?.cancel()
+        isSending = false
+        conversationID = id
+        turns = stored.map {
+            CoachTurn(question: $0.question, phase: .answered($0.answer), messageID: $0.id, feedback: $0.feedback, revealed: true)
+        }
+        return true
+    }
+
+    /// One conversation, swiped away.
+    public func deleteConversation(_ id: UUID) async {
+        await store?.deleteConversation(id)
+        if conversationID == id { endConversation() }
+        await loadHistory()
+    }
+
+    /// "Delete all conversations", once confirmed.
+    public func deleteAllConversations() async {
+        await store?.deleteAll()
+        endConversation()
+        await loadHistory()
+        NoctisHaptics.success()
     }
 
     /// Leaving the conversation: the next question starts a new one.
