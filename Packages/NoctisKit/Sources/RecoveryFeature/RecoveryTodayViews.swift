@@ -78,6 +78,7 @@ struct RecoveryHeroView: View {
                 }
             }
             .accessibilityElement(children: .combine)
+            CoachAskButton("Ask Coach why", question: content.coachQuestion, identifier: "recovery.askCoach")
             if let highlight {
                 NoctisHighlightCapsule(highlight)
                     .transition(.opacity)

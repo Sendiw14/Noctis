@@ -1,5 +1,7 @@
 import Foundation
 import InsightsKit
+import RecoveryKit
+import SleepAnalysisKit
 
 /// Which way a number moved, for a question that names it ("Why is my
 /// recovery lower?").
@@ -30,6 +32,24 @@ public nonisolated enum CoachQuestion: Sendable, Hashable, Codable {
 
     /// The suggested questions, in the order Coach lists them with no data to rank by.
     public static let suggested: [CoachQuestion] = [.recovery(nil), .sleep(nil), .week, .bedtime, .consistency, .focus]
+
+    /// A recovery difference of this many points is above or below usual (Recovery's own line for "in line").
+    public static let recoveryThreshold = Double(RecoveryModelV1.trendThreshold)
+    /// A sleep difference of this many minutes is longer or shorter than usual (Recovery's floor for a normal range).
+    public static let sleepThresholdMinutes = RecoveryNormalRange.sleepDurationStandardDeviationFloor
+
+    /// "Why is my recovery higher / lower today?", the way today's score really moved (neutral when it is in line or unknown).
+    public static func recovery(delta: Int?) -> CoachQuestion {
+        guard let delta else { return .recovery(nil) }
+        let value = Double(delta)
+        return .recovery(value <= -recoveryThreshold ? .lower : (value >= recoveryThreshold ? .higher : nil))
+    }
+
+    /// "Why was my sleep better / worse last night?", the way last night's time asleep really moved from usual, in minutes.
+    public static func sleep(deltaMinutes: Double?) -> CoachQuestion {
+        guard let deltaMinutes else { return .sleep(nil) }
+        return .sleep(deltaMinutes <= -sleepThresholdMinutes ? .lower : (deltaMinutes >= sleepThresholdMinutes ? .higher : nil))
+    }
 
     /// A short word for a URL and a log: "recovery.lower", "insight.bedtimeShift".
     public var token: String {

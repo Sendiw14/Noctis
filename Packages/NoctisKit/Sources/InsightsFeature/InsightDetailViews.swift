@@ -104,6 +104,7 @@ struct InsightDetailBody: View {
                 .accessibilityIdentifier("insights.try")
             }
             confidence
+            CoachAskButton("Ask Coach about this", question: .insight(content.type), identifier: "insights.askCoach")
             method
             actions
         }

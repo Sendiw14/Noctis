@@ -70,6 +70,8 @@ public nonisolated struct SleepQualityCardContent: Sendable, Equatable {
     public let modelVersion: String
     /// Factors this night couldn't support, in words ("Stages aren't recorded by your current sources").
     public let omitted: [String]
+    /// "Ask Coach why": the question that matches how the night really compared with usual.
+    public let coachQuestion: CoachQuestion
 }
 
 public nonisolated struct SleepQualityRingContent: Sendable, Equatable {
@@ -459,7 +461,8 @@ public nonisolated enum SleepScreenBuilder {
             confidence: confidenceLine(quality),
             calculation: calculation(quality, need: need),
             modelVersion: "Model \(quality.modelVersion)",
-            omitted: omitted
+            omitted: omitted,
+            coachQuestion: .sleep(deltaMinutes: BaselineEngine.baseline(windowMetrics.map(\.asleepMinutes)).map { metrics.asleepMinutes - $0.value })
         )
     }
 

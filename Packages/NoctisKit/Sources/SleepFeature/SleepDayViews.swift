@@ -443,6 +443,7 @@ struct SleepQualityCard: View {
                 }
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityElement(children: .combine)
+                CoachAskButton("Ask Coach why", question: content.coachQuestion, identifier: "sleep.askCoach")
                 DisclosureGroup(isExpanded: $expanded) {
                     VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                         ForEach(content.calculation, id: \.self) { paragraph in

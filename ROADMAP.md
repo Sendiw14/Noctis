@@ -1,7 +1,6 @@
 # ROADMAP.md
 Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reachable until built. This file must be empty before release.
 
-- Coach tab. It shows the scaffold with its rose field and a "Coming soon" card (R27); the tab itself is not built.
 - Profile. The avatar button at the top right of Home, and `noctis://profile`, open a "Coming soon" screen.
 - Free vs Premium gating for Sleep: Month, the quality factors and the 14-night picker. All of Sleep is open until the paywall decides.
 - Sleep share card. Home's "Share this night" card stays the only share.
@@ -13,8 +12,9 @@ Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reac
 - Free vs Premium gating for Insights: free is the featured story plus one recent insight; premium is everything (the rest of Recent, Your records, History, every detail). All of Insights is open until the paywall decides.
 - Activity insights. Nothing about workouts or steps is generated until workout data is read and the rules are tested (Recovery's load factor waits on the same thing).
 - Insight share card. Home's "Share this night" card stays the only share.
-- The Coach tab's UI. `CoachKit` (router, context, validator, providers, `AIService`, history) is built and tested (APP_RULES.md R29); the tab, its conversation view and its suggested-question chips are not.
 - Remote model (`aiRemote`). `RemoteModelProvider`, its request and response types and its privacy filter exist and are tested; there is no transport, no endpoint and no key, and the flag is off. Nothing leaves the device until a transport, the consent screen and the privacy review exist.
 - Coach history sync. Coach's conversations (`AIConversation`, `AIMessage`) stay on this device: no CloudKit, no backup. Syncing them across devices needs its own privacy decision and an encrypted zone.
-- Coach history in Data Management (Profile). `CoachHistoryErasure` is registered with `NoctisDataRegistry`, so "delete all" reaches it; the list of conversations with a delete for each (`CoachHistoryStore.deleteConversation`) has no screen yet.
-- Localised Coach. The router's patterns and every scripted and template sentence are in `Coach.xcstrings`, English only; each language needs its own patterns and copy (and a banned-word list) before Coach is offered in it.
+- Free vs Premium gating for Coach. Proposal: free is 3 questions a day (the suggested questions and typed ones count alike; a fixed reply does not); premium is unlimited questions and History. All of Coach is open until the paywall decides.
+- Localised Coach and crisis resources. The router's patterns, every scripted and template sentence, and the crisis reply (findahelpline.com) are English only; each language needs its own patterns, copy, banned-word list and a local emergency resource before Coach is offered in it.
+- Coach share. Nothing in Coach can be shared; Home's "Share this night" card stays the only share.
+- Voice input. The text field takes typing only.

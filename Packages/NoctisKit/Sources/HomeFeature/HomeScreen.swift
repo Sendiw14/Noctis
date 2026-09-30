@@ -171,6 +171,8 @@ public nonisolated struct ScoredRecoveryContent: Sendable, Equatable {
     /// baseline yet.
     public let usualCaption: String?
     public let accessibilityLabel: String
+    /// "Ask Coach why": the question that matches how today's score really moved.
+    public let coachQuestion: CoachQuestion
 }
 
 public nonisolated enum RecoveryCardContent: Sendable, Equatable {
@@ -611,7 +613,8 @@ public nonisolated enum HomeScreenBuilder {
             heartCapNote: result.heartCapApplied ? "Your heart rate and HRV are both well outside your normal range." : nil,
             factors: factors.map { FactorCell(kind: $0.kind, name: shortName($0.kind), score: $0.score, usual: $0.usual.map { Int($0.rounded()) }) },
             usualCaption: factors.contains { $0.usual != nil } ? "Tick = your usual" : nil,
-            accessibilityLabel: accessibilitySummary(result, factors: factors)
+            accessibilityLabel: accessibilitySummary(result, factors: factors),
+            coachQuestion: .recovery(delta: result.comparison.delta)
         )
     }
 

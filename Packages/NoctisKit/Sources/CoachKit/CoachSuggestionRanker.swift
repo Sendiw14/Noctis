@@ -30,9 +30,9 @@ public enum CoachSuggestionRanker {
     public static let eveningBedtimeRelevance = 1.0
 
     /// A recovery difference under this many points is "in line", not higher or lower.
-    public static let recoveryThreshold = Double(RecoveryModelV1.trendThreshold)
+    public static let recoveryThreshold = CoachQuestion.recoveryThreshold
     /// A sleep difference under this many minutes is "about the same".
-    public static let sleepThreshold = TemplateCoachProvider.minorMinutes
+    public static let sleepThreshold = CoachQuestion.sleepThresholdMinutes
 
     public static func rank(facts: [CoachFact], state: CoachDataState, evening: Bool) -> [CoachSuggestion] {
         func value(_ id: String) -> Double? { facts.first { $0.id == id }?.value }
