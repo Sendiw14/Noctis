@@ -29,7 +29,7 @@ struct InsightChartPalette {
     )
 
     static let detail = InsightChartPalette(
-        primary: NoctisAppColor.cocoa, secondary: NoctisAppColor.ink3, band: NoctisAppColor.butter.opacity(0.28),
+        primary: NoctisAppColor.ink, secondary: NoctisAppColor.ink3, band: NoctisAppColor.butter.opacity(0.28),
         label: NoctisAppColor.ink2, grid: NoctisAppColor.hairline, within: NoctisAppColor.sage, outside: NoctisAppColor.orange
     )
 
@@ -164,7 +164,7 @@ struct InsightTimelineView: View {
     private var palette: InsightChartPalette { .of(style) }
 
     var body: some View {
-        let height: CGFloat = style == .featured ? 64 : 104
+        let height: CGFloat = style == .featured ? 64 : 84
         VStack(spacing: NoctisSpacing.xxs) {
             GeometryReader { proxy in
                 let width = proxy.size.width

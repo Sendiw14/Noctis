@@ -188,7 +188,7 @@ public nonisolated enum InsightsScreenBuilder {
 
     static func stateSummary(_ state: HomeDataState) -> String {
         switch state {
-        case .failed: "We couldn't read your latest sleep data."
+        case .failed: "Insights are on hold for a moment."
         case .permissionRequired, .healthDataUnavailable: "Insights start with your first night."
         default: "Insights start with your first night."
         }

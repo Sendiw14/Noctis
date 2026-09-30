@@ -300,6 +300,7 @@ struct InsightDetailBody: View {
 /// two numbers.
 struct InsightDetailHeader: View {
     let content: InsightDetailContent
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var onDark: Bool { content.category == .longTerm }
     private var ink: Color { onDark ? NoctisPaper.bg : NoctisAppColor.blockInk }
@@ -335,16 +336,20 @@ struct InsightDetailHeader: View {
     }
 
     private var numbers: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: NoctisSpacing.sm) {
-                ForEach(Array(content.numbers.enumerated()), id: \.offset) { index, number in
-                    if index > 0 { join.frame(height: 40 * 1.15) }
-                    labeled(number)
+        Group {
+            if typeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+                    ForEach(Array(content.numbers.enumerated()), id: \.offset) { _, number in
+                        labeled(number)
+                    }
                 }
-            }
-            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                ForEach(Array(content.numbers.enumerated()), id: \.offset) { _, number in
-                    labeled(number)
+            } else {
+                HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+                    ForEach(Array(content.numbers.enumerated()), id: \.offset) { index, number in
+                        if index > 0 { join.frame(height: 40 * 1.15) }
+                        labeled(number)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
             }
         }

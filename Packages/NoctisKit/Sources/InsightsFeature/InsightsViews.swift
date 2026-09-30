@@ -147,6 +147,7 @@ struct InsightComparisonView: View {
     let reveal: HomeRevealPhase
     let lowPower: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var progress: Double
 
     init(numbers: [InsightNumber], join: InsightComparisonJoin, reveal: HomeRevealPhase, lowPower: Bool) {
@@ -160,36 +161,23 @@ struct InsightComparisonView: View {
     var body: some View {
         Group {
             if numbers.count >= 2 {
-                ViewThatFits(in: .horizontal) {
-                    Grid(alignment: .leading, horizontalSpacing: NoctisSpacing.sm, verticalSpacing: NoctisSpacing.xxs) {
-                        GridRow(alignment: .center) {
-                            InsightCountingMetric(value: numbers[0].value, progress: progress)
-                            joinView
-                            InsightCountingMetric(value: numbers[1].value, progress: progress)
-                        }
-                        GridRow {
-                            caption(numbers[0].label)
-                            Color.clear.frame(width: 1, height: 1)
-                            caption(numbers[1].label)
-                        }
-                    }
+                if typeSize.isAccessibilitySize {
+                    // Large text: one under the other.
                     VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            InsightCountingMetric(value: numbers[0].value, progress: progress)
-                            caption(numbers[0].label)
-                        }
+                        column(numbers[0])
                         joinView
-                        VStack(alignment: .leading, spacing: 0) {
-                            InsightCountingMetric(value: numbers[1].value, progress: progress)
-                            caption(numbers[1].label)
-                        }
+                        column(numbers[1])
+                    }
+                } else {
+                    // One row, each number giving up a little size before it wraps or drops a line.
+                    HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+                        column(numbers[0])
+                        joinView.frame(height: 44 * 1.15)
+                        column(numbers[1])
                     }
                 }
             } else if let only = numbers.first {
-                VStack(alignment: .leading, spacing: 0) {
-                    InsightCountingMetric(value: only.value, progress: progress)
-                    caption(only.label)
-                }
+                column(only)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -225,6 +213,14 @@ struct InsightComparisonView: View {
                 .foregroundStyle(NoctisAppColor.butter)
                 .accessibilityHidden(true)
         }
+    }
+
+    private func column(_ number: InsightNumber) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            InsightCountingMetric(value: number.value, progress: progress)
+            caption(number.label)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func caption(_ text: String) -> some View {
