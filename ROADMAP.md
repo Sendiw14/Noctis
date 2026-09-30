@@ -1,7 +1,7 @@
 # ROADMAP.md
 Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reachable until built. This file must be empty before release.
 
-- Insights tab
+- Insights tab. Its section field is butter (`NoctisSection.insights`, R26) and its tab glyph takes the butter section ink; the tokens and the field exist, the tab is not built.
 - Coach tab
 - Profile. The avatar button at the top right of Home, and `noctis://profile`, open a "Coming soon" screen.
 - Free vs Premium gating for Sleep: Month, the quality factors and the 14-night picker. All of Sleep is open until the paywall decides.

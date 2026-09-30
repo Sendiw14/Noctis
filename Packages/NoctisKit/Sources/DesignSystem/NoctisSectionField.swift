@@ -187,7 +187,7 @@ public struct NoctisSectionField<Content: View, Motif: View>: View {
 
     public var body: some View {
         content
-            .frame(maxWidth: 680)
+            .frame(maxWidth: 680, alignment: .leading)
             .padding(.horizontal, NoctisSpacing.lg)
             .padding(.top, NoctisSpacing.xs)
             .padding(.bottom, bottomInset)

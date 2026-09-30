@@ -166,9 +166,14 @@ nonisolated extension RecoveryScreenBuilder {
     /// An axis label: "7h", "11 PM", "50", "55".
     static func axisText(_ kind: RecoveryFactorKind, _ value: Double, format: HomeFormat) -> String {
         switch kind {
-        case .sleepDuration: HomeFormat.compactDuration(Int(value.rounded()))
-        case .sleepConsistency: format.hour(minutesSinceMidnight: Int(value.rounded()) + 720)
-        case .hrv, .restingHeartRate: "\(Int(value.rounded()))"
+        case .sleepDuration:
+            return HomeFormat.compactDuration(Int(value.rounded()))
+        case .sleepConsistency:
+            // A tick on the half hour says so ("11:30 PM"), so two ticks never read "11 PM".
+            let minutes = Int(value.rounded()) + 720
+            return minutes % 60 == 0 ? format.hour(minutesSinceMidnight: minutes) : format.clock(minutesSinceMidnight: minutes)
+        case .hrv, .restingHeartRate:
+            return "\(Int(value.rounded()))"
         }
     }
 

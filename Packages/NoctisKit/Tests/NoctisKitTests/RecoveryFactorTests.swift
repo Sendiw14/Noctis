@@ -216,3 +216,18 @@ struct RecoveryAnimatableTests {
         #expect(FactorCurve(samples: [], nights: 0).path(in: CGRect(x: 0, y: 0, width: 10, height: 10)).isEmpty)
     }
 }
+
+struct RecoveryFactorAxisTests {
+    @Test func aBedtimeTickOnTheHalfHourSaysSoSoNoTwoTicksReadTheSame() {
+        let format = HomeFormat(calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
+        // Minutes after noon: 660 is 11:00 PM, 690 is 11:30 PM (the system may use a narrow no-break space).
+        func text(_ value: Double) -> String {
+            RecoveryScreenBuilder.axisText(.sleepConsistency, value, format: format)
+                .replacingOccurrences(of: "\u{202F}", with: " ").replacingOccurrences(of: "\u{00A0}", with: " ")
+        }
+        #expect(text(660) == "11 PM")
+        #expect(text(690) == "11:30 PM")
+        #expect(text(720) == "12 AM")
+        #expect(text(660) != text(690))
+    }
+}
