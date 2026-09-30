@@ -73,7 +73,7 @@ final class HomePerformanceQATests: XCTestCase {
     // MARK: - Ring, Low Power Mode and Reduce Motion
 
     /// Tapping a capsule dims the other segments to 40% (a spring on the
-    /// ring's dim value, 0.4s) before Recovery opens on that factor: the
+    /// ring's dim value, 0.4s) before that factor's page opens: the
     /// recording shows it.
     func testCapsuleHighlightDimsTheOtherSegments() {
         let app = launchHome()
@@ -83,7 +83,8 @@ final class HomePerformanceQATests: XCTestCase {
         XCTAssertTrue(capsule.waitForExistence(timeout: 3))
         mark("capsule-tap")
         capsule.tap()
-        XCTAssertTrue(app.navigationBars["Recovery"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.descendants(matching: .any)["recovery.factorScreen"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.navigationBars["HRV"].exists)
         QA.pause(1)
     }
 
