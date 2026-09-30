@@ -16,6 +16,7 @@ public nonisolated struct InsightChipContent: Sendable, Equatable, Identifiable 
 /// One row of the Recent list.
 public nonisolated struct InsightRowContent: Sendable, Equatable, Identifiable {
     public let id: String
+    public let type: InsightType
     public let category: InsightCategory
     public let title: String
     /// One evidence line.
@@ -33,6 +34,7 @@ public nonisolated struct InsightRowGroup: Sendable, Equatable, Identifiable {
 /// The top-ranked insight, as a story.
 public nonisolated struct InsightFeaturedContent: Sendable, Equatable, Identifiable {
     public let id: String
+    public let type: InsightType
     public let category: InsightCategory
     public let title: String
     public let numbers: [InsightNumber]
@@ -235,7 +237,7 @@ public nonisolated enum InsightsScreenBuilder {
     static func featuredContent(_ record: InsightRecord, format: HomeFormat) -> InsightFeaturedContent {
         let words = InsightScreenBuilder.build(record, format: format)
         return InsightFeaturedContent(
-            id: record.id, category: record.category, title: words.title, numbers: words.comparison, join: words.comparisonJoin,
+            id: record.id, type: record.type, category: record.category, title: words.title, numbers: words.comparison, join: words.comparisonJoin,
             interpretation: words.interpretation,
             chart: InsightChartBuilder.chart(for: record, format: format),
             accessibilityLabel: "\(words.title). \(words.rowLine) \(words.interpretation)"
@@ -245,7 +247,7 @@ public nonisolated enum InsightsScreenBuilder {
     static func row(from stored: StoredInsight, format: HomeFormat) -> InsightRowContent {
         let words = InsightScreenBuilder.build(stored.record, format: format)
         return InsightRowContent(
-            id: stored.id, category: stored.record.category, title: words.title, line: words.rowLine,
+            id: stored.id, type: stored.record.type, category: stored.record.category, title: words.title, line: words.rowLine,
             accessibilityLabel: "\(words.title). \(words.rowLine)"
         )
     }
@@ -273,6 +275,121 @@ public nonisolated enum InsightsScreenBuilder {
         return InsightRecordTile(
             type: record.type, title: title, value: value, date: date, tone: tone,
             accessibilityLabel: "\(title): \(value.spoken), \(date)."
+        )
+    }
+}
+
+// MARK: - An insight's page
+
+/// Every part of one insight's page: the header, the evidence, the sentences,
+/// how it was found and where it stands.
+public nonisolated struct InsightDetailContent: Sendable, Equatable, Identifiable {
+    public let id: String
+    public let type: InsightType
+    public let category: InsightCategory
+    public let title: String
+    /// "Wed, Sep 23".
+    public let dateLine: String
+    /// "Not useful" was chosen: the page says so and offers no second try.
+    public let dismissed: Bool
+    public let numbers: [InsightNumber]
+    public let join: InsightComparisonJoin
+    public let chart: InsightChartData?
+    public let evidenceLines: [String]
+    public let context: String
+    public let interpretation: String
+    public let whatToNotice: String
+    public let whatYouCanTry: String?
+    /// "Moderate confidence · based on 23 nights".
+    public let confidenceLine: String
+    /// Patterns only.
+    public let notProofLine: String?
+    public let method: InsightMethod
+    public let accessibilityLabel: String
+}
+
+/// One insight in History.
+public nonisolated struct InsightHistoryRow: Sendable, Equatable, Identifiable {
+    public let id: String
+    public let type: InsightType
+    public let category: InsightCategory
+    public let title: String
+    public let line: String
+    /// "Sep 23".
+    public let date: String
+    /// Muted, with "Not useful" beside it.
+    public let dismissed: Bool
+    public let accessibilityLabel: String
+}
+
+public nonisolated struct InsightMonthGroup: Sendable, Equatable, Identifiable {
+    /// "September 2026".
+    public let title: String
+    public let rows: [InsightHistoryRow]
+    public var id: String { title }
+}
+
+/// Every insight so far, newest first, by month, for the chips' filter.
+public nonisolated struct InsightHistoryContent: Sendable, Equatable {
+    public let summary: String
+    public let chips: [InsightChipContent]
+    public let months: [InsightMonthGroup]
+    public let note: InsightsNoteContent?
+}
+
+extension InsightsScreenBuilder {
+    public static func detail(_ stored: StoredInsight, calendar: Calendar, locale: Locale) -> InsightDetailContent {
+        let format = HomeFormat(calendar: calendar, locale: locale)
+        let record = stored.record
+        let words = InsightScreenBuilder.build(record, format: format)
+        return InsightDetailContent(
+            id: record.id, type: record.type, category: record.category, title: words.title, dateLine: words.dateLine,
+            dismissed: stored.state == .dismissed, numbers: words.comparison, join: words.comparisonJoin,
+            chart: InsightChartBuilder.chart(for: record, format: format), evidenceLines: words.evidenceLines,
+            context: words.context, interpretation: words.interpretation, whatToNotice: words.whatToNotice,
+            whatYouCanTry: words.whatYouCanTry, confidenceLine: words.confidenceLine, notProofLine: words.notProofLine,
+            method: words.method, accessibilityLabel: words.accessibilityLabel
+        )
+    }
+
+    /// "September 2026".
+    static func monthTitle(_ night: SleepNightKey, format: HomeFormat) -> String {
+        guard let date = format.date(night) else { return "" }
+        return date.formatted(Date.FormatStyle(locale: format.locale, calendar: format.calendar, timeZone: format.calendar.timeZone).month(.wide).year())
+    }
+
+    public static func history(_ snapshot: InsightsSnapshot, filter: InsightCategory?, calendar: Calendar, locale: Locale) -> InsightHistoryContent {
+        let format = HomeFormat(calendar: calendar, locale: locale)
+        let chips = [InsightChipContent(category: nil, title: "All")] + InsightCategory.allCases.map { InsightChipContent(category: $0, title: $0.title) }
+        let stored = snapshot.all.filter { filter == nil || $0.record.category == filter }
+        var months: [InsightMonthGroup] = []
+        var current: (title: String, rows: [InsightHistoryRow])?
+        for entry in stored {
+            let title = monthTitle(entry.record.night, format: format)
+            let words = InsightScreenBuilder.build(entry.record, format: format)
+            let dismissed = entry.state == .dismissed
+            let row = InsightHistoryRow(
+                id: entry.id, type: entry.record.type, category: entry.record.category, title: words.title, line: words.rowLine,
+                date: format.monthDay(entry.record.night), dismissed: dismissed,
+                accessibilityLabel: "\(words.title), \(format.weekdayMonthDay(entry.record.night)). \(words.rowLine)\(dismissed ? " Marked not useful." : "")"
+            )
+            if current?.title == title {
+                current?.rows.append(row)
+            } else {
+                if let current { months.append(InsightMonthGroup(title: current.title, rows: current.rows)) }
+                current = (title, [row])
+            }
+        }
+        if let current { months.append(InsightMonthGroup(title: current.title, rows: current.rows)) }
+        var note: InsightsNoteContent?
+        if months.isEmpty {
+            note = filter.map { InsightsNoteContent(title: "No \($0.title.lowercased()) insights yet", detail: "They appear when your data has something to say.") }
+                ?? InsightsNoteContent(title: "No insights yet", detail: "Every insight NOCTIS finds is kept here.")
+        }
+        let count = stored.count
+        return InsightHistoryContent(
+            summary: count == 0 ? "Nothing yet." : "\(count) \(count == 1 ? "insight" : "insights") so far.",
+            chips: chips, months: months, note: note
         )
     }
 }

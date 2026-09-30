@@ -19,6 +19,10 @@ public final class InsightsViewModel {
     public private(set) var screen: InsightsScreenContent?
     /// The chip chosen; nil is All.
     public private(set) var filter: InsightCategory?
+    /// History's own chip (it starts on the tab's).
+    public private(set) var historyFilter: InsightCategory?
+    /// Every insight so far, by month (nil until the first snapshot).
+    public private(set) var history: InsightHistoryContent?
     public private(set) var isRefreshing = false
     /// The day's reveal for this tab (`HomeRevealPhase`, shared): the featured
     /// numbers count up.
@@ -133,7 +137,25 @@ public final class InsightsViewModel {
         rebuild(animated: true)
     }
 
+    /// History is about to open: it starts on the tab's chip.
+    public func openHistory() {
+        historyFilter = filter
+        rebuildHistory()
+    }
+
+    /// One of History's chips.
+    public func select(historyFilter next: InsightCategory?) {
+        guard next != historyFilter else { return }
+        historyFilter = next
+        withAnimation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion())) { rebuildHistory() }
+    }
+
     // MARK: Insights
+
+    /// The page for the stored insight with `id`, or nil when it's hidden or gone.
+    public func detail(id: String) -> InsightDetailContent? {
+        insight(id: id).map { InsightsScreenBuilder.detail($0, calendar: calendar, locale: locale) }
+    }
 
     /// The stored insight with `id`, wherever it lives (the tab, History).
     public func insight(id: String) -> StoredInsight? {
@@ -169,6 +191,7 @@ public final class InsightsViewModel {
         let content = InsightsScreenBuilder.build(snapshot, filter: filter, now: clock(), calendar: calendar, locale: locale)
         let publish = {
             if self.screen != content { self.screen = content }
+            self.rebuildHistory()
         }
         if animated {
             // The list below morphs: a spring, and Reduce Motion's fade.
@@ -177,6 +200,12 @@ public final class InsightsViewModel {
             publish()
         }
         updateReveal()
+    }
+
+    private func rebuildHistory() {
+        guard let snapshot else { return }
+        let next = InsightsScreenBuilder.history(snapshot, filter: historyFilter, calendar: calendar, locale: locale)
+        if history != next { history = next }
     }
 
     // MARK: Reveal

@@ -162,7 +162,7 @@ struct InsightComparisonView: View {
             if numbers.count >= 2 {
                 ViewThatFits(in: .horizontal) {
                     Grid(alignment: .leading, horizontalSpacing: NoctisSpacing.sm, verticalSpacing: NoctisSpacing.xxs) {
-                        GridRow(alignment: .lastTextBaseline) {
+                        GridRow(alignment: .center) {
                             InsightCountingMetric(value: numbers[0].value, progress: progress)
                             joinView
                             InsightCountingMetric(value: numbers[1].value, progress: progress)
@@ -241,6 +241,8 @@ struct InsightFeaturedCard: View {
     let content: InsightFeaturedContent
     let reveal: HomeRevealPhase
     let lowPower: Bool
+    let zoom: Namespace.ID
+    let viewModel: InsightsViewModel
     let open: () -> Void
 
     var body: some View {
@@ -284,6 +286,8 @@ struct InsightFeaturedCard: View {
             .noctisContrastBorder()
         }
         .buttonStyle(NoctisCardButtonStyle())
+        .matchedTransitionSource(id: content.id, in: zoom)
+        .insightContextMenu(id: content.id, type: content.type, viewModel: viewModel, open: open)
         .accessibilityLabel(content.accessibilityLabel)
         .accessibilityHint("Opens the full insight.")
         .accessibilityIdentifier("insights.featured")
@@ -296,6 +300,8 @@ struct InsightFeaturedCard: View {
 /// "Earlier", each group a card of rows.
 struct InsightRowsSection: View {
     let groups: [InsightRowGroup]
+    let zoom: Namespace.ID
+    let viewModel: InsightsViewModel
     let open: (String) -> Void
 
     var body: some View {
@@ -316,7 +322,7 @@ struct InsightRowsSection: View {
                                 if index > 0 {
                                     Rectangle().fill(NoctisAppColor.hairline).frame(height: 1)
                                 }
-                                InsightRowView(row: row) { open(row.id) }
+                                InsightRowView(row: row, zoom: zoom, viewModel: viewModel) { open(row.id) }
                                     .transition(.opacity.combined(with: .offset(y: 8)))
                             }
                         }
@@ -324,12 +330,16 @@ struct InsightRowsSection: View {
                 }
             }
         }
+        // A container's identifier would replace every row's own.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("insights.recent")
     }
 }
 
 struct InsightRowView: View {
     let row: InsightRowContent
+    let zoom: Namespace.ID
+    let viewModel: InsightsViewModel
     let open: () -> Void
 
     var body: some View {
@@ -360,6 +370,8 @@ struct InsightRowView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .matchedTransitionSource(id: row.id, in: zoom)
+        .insightContextMenu(id: row.id, type: row.type, viewModel: viewModel, open: open)
         .accessibilityLabel(row.accessibilityLabel)
         .accessibilityHint("Opens the insight.")
         .accessibilityIdentifier("insights.row.\(row.id)")
@@ -400,6 +412,7 @@ struct InsightRecordsSection: View {
                 }
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("insights.records")
     }
 }

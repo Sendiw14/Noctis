@@ -12,6 +12,7 @@ public struct InsightsScreen: View {
     static let contentMaxWidth: CGFloat = 680
 
     let viewModel: InsightsViewModel
+    let zoom: Namespace.ID
     let openInsight: (String) -> Void
     let openHistory: () -> Void
 
@@ -19,8 +20,9 @@ public struct InsightsScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollPosition = ScrollPosition(edge: .top)
 
-    public init(viewModel: InsightsViewModel, openInsight: @escaping (String) -> Void, openHistory: @escaping () -> Void) {
+    public init(viewModel: InsightsViewModel, zoom: Namespace.ID, openInsight: @escaping (String) -> Void, openHistory: @escaping () -> Void) {
         self.viewModel = viewModel
+        self.zoom = zoom
         self.openInsight = openInsight
         self.openHistory = openHistory
     }
@@ -45,7 +47,7 @@ public struct InsightsScreen: View {
                 NoctisHaptics.soft()
             }
         ) {
-            InsightsContent(viewModel: viewModel, openInsight: openInsight)
+            InsightsContent(viewModel: viewModel, zoom: zoom, openInsight: openInsight)
         }
         // Any touch during the reveal skips to its end.
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
@@ -115,6 +117,7 @@ struct InsightsHistoryButton: View {
 /// learning card, or a state.
 struct InsightsContent: View {
     let viewModel: InsightsViewModel
+    let zoom: Namespace.ID
     let openInsight: (String) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -144,7 +147,7 @@ struct InsightsContent: View {
                 // A filter moves the list with springs: rows leave and arrive, the rest re-flow.
                 VStack(alignment: .leading, spacing: NoctisSpacing.md) {
                     if let featured = screen.featured {
-                        InsightFeaturedCard(content: featured, reveal: viewModel.reveal, lowPower: viewModel.isLowPower) {
+                        InsightFeaturedCard(content: featured, reveal: viewModel.reveal, lowPower: viewModel.isLowPower, zoom: zoom, viewModel: viewModel) {
                             openInsight(featured.id)
                         }
                         .transition(.opacity.combined(with: .offset(y: 12)))
@@ -154,7 +157,7 @@ struct InsightsContent: View {
                             .transition(.opacity)
                     }
                     if !screen.groups.isEmpty {
-                        InsightRowsSection(groups: screen.groups, open: openInsight)
+                        InsightRowsSection(groups: screen.groups, zoom: zoom, viewModel: viewModel, open: openInsight)
                             .transition(.opacity.combined(with: .offset(y: 12)))
                     }
                     if !screen.records.isEmpty {

@@ -3,8 +3,10 @@ import InsightsKit
 
 /// Screens pushed inside the Insights tab's navigation stack.
 public nonisolated enum InsightsRoute: Sendable, Hashable {
-    /// One insight's page.
+    /// One insight's page, from the tab's cards.
     case insight(id: String)
+    /// One insight's page, from History's rows (its own zoom source).
+    case historyInsight(id: String)
     /// Every insight so far, newest first, filtered by the chips.
     case history
 }
