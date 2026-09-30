@@ -13,4 +13,8 @@ Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reac
 - Free vs Premium gating for Insights: free is the featured story plus one recent insight; premium is everything (the rest of Recent, Your records, History, every detail). All of Insights is open until the paywall decides.
 - Activity insights. Nothing about workouts or steps is generated until workout data is read and the rules are tested (Recovery's load factor waits on the same thing).
 - Insight share card. Home's "Share this night" card stays the only share.
-- The Coach reading `InsightRecord`. The records are the safe context (typed numbers, no raw HealthKit data); the Coach tab is not built.
+- The Coach tab's UI. `CoachKit` (router, context, validator, providers, `AIService`, history) is built and tested (APP_RULES.md R29); the tab, its conversation view and its suggested-question chips are not.
+- Remote model (`aiRemote`). `RemoteModelProvider`, its request and response types and its privacy filter exist and are tested; there is no transport, no endpoint and no key, and the flag is off. Nothing leaves the device until a transport, the consent screen and the privacy review exist.
+- Coach history sync. Coach's conversations (`AIConversation`, `AIMessage`) stay on this device: no CloudKit, no backup. Syncing them across devices needs its own privacy decision and an encrypted zone.
+- Coach history in Data Management (Profile). `CoachHistoryErasure` is registered with `NoctisDataRegistry`, so "delete all" reaches it; the list of conversations with a delete for each (`CoachHistoryStore.deleteConversation`) has no screen yet.
+- Localised Coach. The router's patterns and every scripted and template sentence are in `Coach.xcstrings`, English only; each language needs its own patterns and copy (and a banned-word list) before Coach is offered in it.

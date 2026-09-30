@@ -9,7 +9,7 @@ import RecoveryKit
 /// Recovery carries a range and a factor: `noctis://recovery?range=30d&factor=hrv`.
 /// Insights carries a chip: `noctis://insights?category=sleep`; one insight's
 /// page is `noctis://insight?id=sleepDurationShift-3fa9c2d1`.
-public nonisolated enum AppRoute: Sendable, Hashable {
+public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     case home
     /// Sleep on `range`, ending on the night that contains `night` (any
     /// moment of it: its bedtime, its waking, or noon of its evening); the

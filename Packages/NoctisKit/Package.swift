@@ -14,6 +14,7 @@ let engineSwiftSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "NoctisKit",
+    defaultLocalization: "en",
     platforms: [.iOS(.v26)],
     products: [
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
@@ -28,6 +29,7 @@ let package = Package(
         .library(name: "SleepFeature", targets: ["SleepFeature"]),
         .library(name: "RecoveryFeature", targets: ["RecoveryFeature"]),
         .library(name: "InsightsFeature", targets: ["InsightsFeature"]),
+        .library(name: "CoachKit", targets: ["CoachKit"]),
         .library(name: "AppRoot", targets: ["AppRoot"]),
     ],
     targets: [
@@ -63,16 +65,26 @@ let package = Package(
             dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "HomeFeature"],
             swiftSettings: noctisSwiftSettings
         ),
+        // Coach's foundation: the router, facts and context, the validator, the providers
+        // and the service. No UI. Nonisolated like the other engines.
+        .target(
+            name: "CoachKit",
+            dependencies: [
+                "DesignSystem", "NoctisCore", "HomeFeature", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit",
+            ],
+            resources: [.process("Resources")],
+            swiftSettings: engineSwiftSettings
+        ),
         .target(
             name: "AppRoot",
-            dependencies: ["DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature"],
+            dependencies: ["DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit"],
             swiftSettings: noctisSwiftSettings
         ),
         .testTarget(
             name: "NoctisKitTests",
             dependencies: [
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
-                "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "AppRoot",
+                "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "AppRoot",
             ],
             swiftSettings: noctisSwiftSettings
         ),

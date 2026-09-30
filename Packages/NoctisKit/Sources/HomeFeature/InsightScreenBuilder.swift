@@ -77,9 +77,7 @@ public nonisolated struct InsightContent: Sendable, Equatable, Identifiable {
 public nonisolated enum InsightScreenBuilder {
     public static let notProofLine = "This is a pattern in your data, not proof of a cause."
     /// Words no generated sentence may contain (the language lint).
-    public static let bannedWords = [
-        "cause", "because", "diagnos", "disease", "sick", "insomnia", "apnea", "should", "must", "poor", "bad", "debt", "danger", "warning", "worry",
-    ]
+    public static let bannedWords = BannedLanguage.insights
 
     public static func build(_ record: InsightRecord, format: HomeFormat) -> InsightContent {
         let words = words(for: record, format: format)

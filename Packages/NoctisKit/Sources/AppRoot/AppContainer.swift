@@ -1,3 +1,4 @@
+import CoachKit
 import DesignSystem
 import Foundation
 import HealthProviding
@@ -18,6 +19,9 @@ public struct AppContainer {
     /// Home and the Insights tab both read them.
     public let insightStore: InsightStore
     public let insightsRepository: InsightsRepository
+    /// Coach's front door: question in, validated answer out. There is no
+    /// Coach UI yet (ROADMAP.md); the tab will read this and nothing else.
+    public let coachService: AIService
     public let storeManager: StoreManager
     public let modelContainer: ModelContainer
 
@@ -122,20 +126,24 @@ public struct AppContainer {
         let insightStore = InsightStore(file: insightFile)
         self.insightStore = insightStore
         self.insightsRepository = InsightsRepository(provider: provider, store: insightStore)
+        // The repositories the tabs read: Coach reads the same snapshots (R20).
+        let homeRepository = HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore)
+        let sleepRepository = SleepRepository(provider: provider)
+        let recoveryRepository = RecoveryRepository(provider: provider)
         self.homeViewModel = HomeViewModel(
-            repository: HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore),
+            repository: homeRepository,
             profile: { model.profile },
             // "Connect Apple Health" reuses onboarding's authorization flow.
             connectHealth: { await model.requestHealthAuthorization() },
             modeOverride: modeOverride
         )
         self.sleepViewModel = SleepViewModel(
-            repository: SleepRepository(provider: provider),
+            repository: sleepRepository,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() }
         )
         self.recoveryViewModel = RecoveryViewModel(
-            repository: RecoveryRepository(provider: provider),
+            repository: recoveryRepository,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() }
         )
@@ -144,6 +152,36 @@ public struct AppContainer {
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() }
         )
+
+        // Coach (R29). Its history is local only, protected, out of backups and
+        // registered so Data Management can erase it; if it can't be opened,
+        // Coach still answers, it just keeps nothing.
+        let coachHistory: CoachHistoryStore?
+        if let container = try? CoachHistoryContainer.make() {
+            let erasure = CoachHistoryErasure(container: container)
+            NoctisDataRegistry.shared.register(erasure)
+            #if DEBUG
+            if debug.resetState { erasure.erase() }
+            #endif
+            coachHistory = CoachHistoryStore(modelContainer: container)
+        } else {
+            coachHistory = nil
+        }
+        #if DEBUG
+        // `-mockAI good|misbehaving|slow|unavailable` plays a script; a mock
+        // Health scenario without it answers from the template alone, so a
+        // test's answer never depends on whether this Mac has a model.
+        let coachModel: (any AIProvider)? = debug.mockAI.map { MockAIProvider(mode: $0) } ?? (debug.mockScenario == nil ? Self.systemModel() : nil)
+        #else
+        let coachModel: (any AIProvider)? = Self.systemModel()
+        #endif
+        self.coachService = AIService(
+            format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
+            dataSource: RepositoryCoachDataSource(home: homeRepository, sleep: sleepRepository, recovery: recoveryRepository, insights: insightsRepository),
+            profile: { await MainActor.run { model.profile } },
+            model: coachModel,
+            history: coachHistory
+        )
         #if DEBUG
         if debug.logHomeSnapshot {
             homeViewModel.debugLogsSnapshots = true
@@ -151,6 +189,17 @@ public struct AppContainer {
         if let seconds = debug.homeModeFlipIn {
             homeViewModel.debugFlipMode(after: seconds)
         }
+        #endif
+    }
+}
+
+extension AppContainer {
+    /// The on-device model (Apple Intelligence), where this OS has it.
+    static func systemModel() -> (any AIProvider)? {
+        #if canImport(FoundationModels)
+        FoundationModelsProvider(backend: SystemLanguageModelBackend())
+        #else
+        nil
         #endif
     }
 }
@@ -181,6 +230,8 @@ struct DebugLaunchOptions {
     /// `-noctisLowPowerMode`: Home behaves as under Low Power Mode, which
     /// the simulator can't turn on.
     let lowPowerMode: Bool
+    /// `-mockAI good|misbehaving|slow|unavailable`: Coach's model plays a script.
+    let mockAI: MockAIProvider.Mode?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -204,6 +255,7 @@ struct DebugLaunchOptions {
         homeModeFlipIn = value(after: "-homeModeFlipIn").flatMap(Double.init)
         snapshotCache = arguments.contains("-noctisSnapshotCache")
         lowPowerMode = arguments.contains("-noctisLowPowerMode")
+        mockAI = value(after: "-mockAI").flatMap(MockAIProvider.Mode.init(launchValue:))
     }
 }
 #endif
