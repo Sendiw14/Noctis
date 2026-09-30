@@ -104,6 +104,16 @@ public actor InsightsRepository {
         return snapshot
     }
 
+    /// Home already read the last `InsightInputsBuilder.historyDays` days:
+    /// the insights are made from those instead of asking Health again.
+    public func refresh(
+        profile: UserProfileSnapshot, sleep: [RawSleepSample], hrv: [HRVSample], restingHeartRate: [HeartRateSample]
+    ) async -> InsightsSnapshot {
+        let snapshot = await build(profile: profile, sleep: sleep, hrv: hrv, resting: restingHeartRate)
+        cachedSnapshot = snapshot
+        return snapshot
+    }
+
     private func load(profile: UserProfileSnapshot) async -> InsightsSnapshot {
         let now = clock()
         guard await provider.isHealthDataAvailable else { return .placeholder(.healthDataUnavailable, now: now) }
@@ -115,20 +125,25 @@ public actor InsightsRepository {
             async let hrv = provider.fetchHRVSamples(from: start, to: now)
             async let resting = provider.fetchRestingHeartRate(from: start, to: now)
             let (sleepSamples, hrvSamples, restingSamples) = try await (sleep, hrv, resting)
-            guard !sleepSamples.isEmpty || !hrvSamples.isEmpty || !restingSamples.isEmpty else { return .placeholder(.empty, now: now) }
-            let inputs = InsightInputsBuilder.build(
-                sleep: sleepSamples, hrv: hrvSamples, restingHeartRate: restingSamples,
-                needMinutes: Double(profile.needMinutes), now: now, timeZone: timeZone
-            )
-            lastInputs = inputs
-            let history = await store.snapshot().history
-            let generated = InsightEngineV2.generate(inputs, history: history)
-            let library = await store.ingest(generated, featuredOn: inputs.lastNight?.night)
-            return InsightsSnapshotBuilder.build(library, inputs: inputs, now: now)
+            return await build(profile: profile, sleep: sleepSamples, hrv: hrvSamples, resting: restingSamples)
         } catch HealthProviderError.unauthorized {
             return .placeholder(.permissionRequired, now: now)
         } catch {
             return .placeholder(.failed, now: now)
         }
+    }
+
+    /// The insights for these samples, merged into the store.
+    private func build(profile: UserProfileSnapshot, sleep: [RawSleepSample], hrv: [HRVSample], resting: [HeartRateSample]) async -> InsightsSnapshot {
+        let now = clock()
+        guard !sleep.isEmpty || !hrv.isEmpty || !resting.isEmpty else { return .placeholder(.empty, now: now) }
+        let inputs = InsightInputsBuilder.build(
+            sleep: sleep, hrv: hrv, restingHeartRate: resting, needMinutes: Double(profile.needMinutes), now: now, timeZone: timeZone
+        )
+        lastInputs = inputs
+        let history = await store.snapshot().history
+        let generated = InsightEngineV2.generate(inputs, history: history)
+        let library = await store.ingest(generated, featuredOn: inputs.lastNight?.night)
+        return InsightsSnapshotBuilder.build(library, inputs: inputs, now: now)
     }
 }

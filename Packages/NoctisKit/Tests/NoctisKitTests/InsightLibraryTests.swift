@@ -69,18 +69,15 @@ struct InsightV2FatigueTests {
         #expect(history.featured(from: [R.bedtime(delta: 55)], on: today) == nil)
     }
 
-    @Test func hidingAV1KindHidesItsType() {
-        var history = InsightHistory()
-        history.hide(.bedtimeShift as InsightKind)
-        #expect(history.isHidden(.bedtimeShift as InsightType))
-    }
-
     @Test func aHiddenTypeStopsBeingFeaturedEvenIfChosen() {
         let record = R.bedtime(delta: 55)
         var history = InsightHistory()
         history.recordFeatured(record, on: today)
         history.hide(type: .bedtimeShift)
-        #expect(history.featured(from: [record], on: today) == nil)
+        #expect(history.featured(from: [record], on: today) == nil, "nothing else to show")
+        // With another insight about the night, hiding the featured kind moves on to it.
+        let other = R.duration(delta: -70)
+        #expect(history.featured(from: [record, other], on: today)?.id == other.id)
     }
 
     // MARK: - Dismissed insights
@@ -107,13 +104,12 @@ struct InsightV2FatigueTests {
         #expect(history.featured(from: [other], on: today.adding(days: 1))?.id == other.id)
     }
 
-    @Test func historyFromBeforeV2StillDecodes() throws {
-        let v1 = #"{"lastShown":{"kind":"bedtimeShift","night":{"year":2026,"month":9,"day":22}},"dismissals":[],"hiddenKinds":["sleepDurationShift"]}"#
-        let history = try JSONDecoder().decode(InsightHistory.self, from: Data(v1.utf8))
-        #expect(history.lastShown?.kind == .bedtimeShift)
-        #expect(history.hiddenKinds == [.sleepDurationShift])
-        #expect(history.hiddenTypes.isEmpty)
-        #expect(history.featuredByNight.isEmpty)
+    @Test func aFileWithExtraKeysStillDecodes() throws {
+        // A file written while the v1 fatigue keys were still around: the extras are ignored.
+        let file = #"{"lastShown":null,"dismissals":[],"hiddenKinds":[],"featuredTypes":{},"featuredByNight":{},"dismissedIDs":["bedtimeShift-3fa9c2d1"],"hiddenTypes":["weekendShift"]}"#
+        let history = try JSONDecoder().decode(InsightHistory.self, from: Data(file.utf8))
+        #expect(history.dismissedIDs == ["bedtimeShift-3fa9c2d1"])
+        #expect(history.isHidden(.weekendShift))
     }
 
     @Test func historyRoundTrips() throws {
@@ -262,9 +258,8 @@ struct InsightLibraryTests {
     @Test func theFeaturedIsTheTopRankedInsightAboutLastNight() {
         let library = library([R.bedtime(delta: 55), R.duration(delta: -70), R.pattern(), R.duration(delta: -50, on: today.adding(days: -1))])
         let featured = library.featured(on: today)
-        // Duration and bedtime share confidence and actionability; the tie goes to the smaller id.
-        let expected = [R.bedtime(delta: 55), R.duration(delta: -70)].sorted { $0.id < $1.id }.first
-        #expect(featured?.id == expected?.id)
+        // Duration and bedtime share confidence and actionability; the larger shift (70 minutes) leads.
+        #expect(featured?.id == R.duration(delta: -70).id)
     }
 
     @Test func aMilestoneIsFeaturedOnlyWhenNothingElseIs() {

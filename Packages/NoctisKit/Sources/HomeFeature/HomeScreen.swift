@@ -193,6 +193,8 @@ public nonisolated enum RecoveryCardContent: Sendable, Equatable {
 /// The insight, worded here from `InsightEngine`'s evidence, with a small
 /// chart of that evidence.
 public nonisolated struct InsightCardContent: Sendable, Equatable {
+    /// The insight's id: the block opens that insight's page.
+    public let id: String
     public let title: String
     public let message: String
     public let chart: InsightChartContent
@@ -210,6 +212,9 @@ public nonisolated enum InsightChartContent: Sendable, Equatable {
     /// bedtime, open outside it, faint with no sleep recorded, with a
     /// caption under them ("Last 7 nights").
     case nights([InsightNightDot], caption: String)
+    /// Two numbers, from the reference to now (an arrow) or side by side
+    /// ("vs"): every insight that isn't one of the first three.
+    case figures([InsightNumber], join: InsightComparisonJoin)
 }
 
 public nonisolated struct InsightBar: Sendable, Equatable {

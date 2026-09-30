@@ -58,6 +58,8 @@ struct HomeActions {
     var openWeek: () -> Void = {}
     /// The share preview ("Share today", "Share this night").
     var share: () -> Void = {}
+    /// The Insight block opens that insight's page (Insights tab).
+    var openInsight: (String) -> Void = { _ in }
     var dismissInsight: () -> Void = {}
     var hideInsights: () -> Void = {}
 }
@@ -250,6 +252,7 @@ struct HomeView: View {
             openLastNight: { model.open(.sleep(night: viewModel.lastNightMoment, range: .day)) },
             openWeek: { model.open(.sleep(night: nil, range: .week)) },
             share: { sharing = true },
+            openInsight: { model.open(.insight(id: $0)) },
             dismissInsight: { removeInsight(viewModel.dismissInsight) },
             hideInsights: { removeInsight(viewModel.hideInsights) }
         )
@@ -456,7 +459,7 @@ struct HomeContent: View {
     @ViewBuilder
     private func blocks(_ screen: HomeScreen) -> some View {
         if let insight = screen.insight {
-            InsightBlockView(content: insight, dismiss: actions.dismissInsight, hide: actions.hideInsights)
+            InsightBlockView(content: insight, open: { actions.openInsight(insight.id) }, dismiss: actions.dismissInsight, hide: actions.hideInsights)
                 .accessibilityRotorEntry(id: HomeSection.insight, in: rotor)
                 // It fades faster than the spring that closes the gap, so
                 // the block below never slides over its text.

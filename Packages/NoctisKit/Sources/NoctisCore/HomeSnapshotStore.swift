@@ -18,7 +18,7 @@ import SleepKit
 public nonisolated final class HomeSnapshotStore: NoctisErasable, @unchecked Sendable {
     /// Bumped whenever the persisted shape changes: an older file is
     /// dropped, never half-read.
-    public static let schemaVersion = 1
+    public static let schemaVersion = 2
     /// A file older than this is dropped: the baselines behind it reach
     /// back 30 days, so it says nothing current.
     public static let maximumAge: TimeInterval = 30 * 24 * 3600
@@ -140,7 +140,7 @@ nonisolated struct PersistedHome: Codable {
     var recentNights: [NightDuration]
     var weekAverageMinutes: Double?
     var tonight: TonightPlan
-    var topInsight: Insight?
+    var topInsight: InsightRecord?
     var lastNightHeart: NightHeartSeries?
     /// Added after schema 1: a file without it reads as nil.
     var lastNightSleepQuality: Int?

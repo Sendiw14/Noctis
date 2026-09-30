@@ -15,21 +15,15 @@ import SleepKit
 /// the larger one (in minutes) wins, with duration winning a tie. Nothing
 /// fires without a baseline (5+ nights).
 ///
-/// Home shows the first candidate the person's `InsightHistory` allows
-/// (fatigue): never a hidden kind, never the kind shown on the night
-/// before, and nothing more on a night whose insight was dismissed.
+/// `InsightEngineV2` wraps these three as its rules 1-3; what is shown, and
+/// when, is `InsightHistory`'s and `InsightLibrary`'s (fatigue, hiding,
+/// dismissing).
 public enum InsightEngine {
     public static let shiftThresholdMinutes: Double = 30
     public static let streakToleranceMinutes: Double = 30
     public static let minimumStreakNights = 5
     /// The streak's evidence shows this many nights, ending last night.
     public static let streakWindowNights = 7
-
-    /// The top insight for the most recent night in `history` that ended
-    /// within the last 24 hours, after fatigue, or nil.
-    public static func topInsight(history: [NightMetrics], asOf now: Date, fatigue: InsightHistory = InsightHistory()) -> Insight? {
-        fatigue.pick(from: candidates(history: history, asOf: now))
-    }
 
     /// Every insight about last night, best first.
     public static func candidates(history: [NightMetrics], asOf now: Date) -> [Insight] {

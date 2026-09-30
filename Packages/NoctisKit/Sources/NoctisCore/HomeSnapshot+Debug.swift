@@ -27,7 +27,7 @@ extension HomeSnapshot {
         }
         lines.append("recentNights=" + recentNights.map { "\($0.night):\($0.asleepMinutes.map { String(Int($0)) } ?? "-")" }.joined(separator: " "))
         lines.append("tonight bedtime=\(tonight.bedtimeMinutes) wake=\(tonight.wakeMinutes) need=\(tonight.needMinutes)")
-        lines.append("insight=\(topInsight.map { "\($0.kind.rawValue): value=\(Int($0.evidence.value)) baseline=\(Int($0.evidence.baseline)) delta=\(Int($0.evidence.delta))" } ?? "nil")")
+        lines.append("insight=\(topInsight.map { "\($0.type.rawValue): \($0.id) confidence=\($0.confidence.rawValue)" } ?? "nil")")
         lines.append("heart=\(lastNightHeart.map { "\($0.points.count) points, min \(Int($0.lowest.bpm))" } ?? "nil")")
         return lines.joined(separator: "\n")
     }

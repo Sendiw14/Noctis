@@ -387,6 +387,7 @@ struct TonightCrescent: View {
 /// useful" and "Hide insights like this".
 struct InsightBlockView: View {
     let content: InsightCardContent
+    let open: () -> Void
     let dismiss: () -> Void
     let hide: () -> Void
 
@@ -396,41 +397,47 @@ struct InsightBlockView: View {
     @State private var glyphShown = false
 
     var body: some View {
-        ColorBlock(fill: NoctisAppColor.blockButter) {
-            HStack(alignment: .top, spacing: 14) {
-                Circle()
-                    .fill(NoctisAppColor.blockInk)
-                    .frame(width: 32, height: 32)
-                    .overlay {
-                        if glyphShown || reduceMotion || lowPower {
-                            Image(systemName: "lightbulb.fill")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(NoctisAppColor.blockButter)
-                                .transition(.symbolEffect(.drawOn))
+        Button(action: open) {
+            ColorBlock(fill: NoctisAppColor.blockButter) {
+                HStack(alignment: .top, spacing: 14) {
+                    Circle()
+                        .fill(NoctisAppColor.blockInk)
+                        .frame(width: 32, height: 32)
+                        .overlay {
+                            if glyphShown || reduceMotion || lowPower {
+                                Image(systemName: "lightbulb.fill")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(NoctisAppColor.blockButter)
+                                    .transition(.symbolEffect(.drawOn))
+                            }
                         }
+                    VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
+                        Text(content.title)
+                            .noctisFont(17, .semibold, relativeTo: .body)
+                            .foregroundStyle(NoctisAppColor.blockInk)
+                        Text(content.message)
+                            .noctisFont(15, relativeTo: .subheadline)
+                            .foregroundStyle(NoctisAppColor.blockInk)
+                        InsightEvidenceChart(chart: content.chart)
+                            .padding(.top, NoctisSpacing.xs)
                     }
-                VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-                    Text(content.title)
-                        .noctisFont(17, .semibold, relativeTo: .body)
-                        .foregroundStyle(NoctisAppColor.blockInk)
-                    Text(content.message)
-                        .noctisFont(15, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisAppColor.blockInk)
-                    InsightEvidenceChart(chart: content.chart)
-                        .padding(.top, NoctisSpacing.xs)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .buttonStyle(NoctisCardButtonStyle())
         .contextMenu {
+            Button("Open insight", systemImage: "arrow.up.forward.square", action: open)
             Button("Not useful", systemImage: "hand.thumbsdown", action: dismiss)
             Button("Hide insights like this", systemImage: "eye.slash", action: hide)
         }
         .modifier(InsightSwipeActions(dismiss: dismiss, hide: hide))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(content.accessibilityLabel)
+        .accessibilityHint("Opens the insight.")
         .accessibilityAction(named: "Not useful", dismiss)
         .accessibilityAction(named: "Hide insights like this", hide)
+        .accessibilityIdentifier("home.insight")
         .task {
             guard !reduceMotion, !lowPower, !glyphShown else { return }
             // With the morning reveal, the glyph draws on as the content does.
@@ -470,6 +477,31 @@ struct InsightEvidenceChart: View {
                 .frame(height: 16)
                 NoctisFractionLayout {
                     tickLabel(usual, emphasized: false).noctisFraction(usual.position)
+                }
+            }
+        case .figures(let numbers, let join):
+            HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+                ForEach(Array(numbers.enumerated()), id: \.offset) { index, number in
+                    if index > 0 {
+                        Group {
+                            if join == .arrow {
+                                Image(systemName: "arrow.right").font(.system(size: 14, weight: .semibold))
+                            } else {
+                                Text("vs").noctisFont(13, .semibold, relativeTo: .footnote)
+                            }
+                        }
+                        .foregroundStyle(NoctisAppColor.blockInk)
+                        .frame(height: 26)
+                        .accessibilityHidden(true)
+                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        NoctisMetric(number.value, size: 22, relativeTo: .title3, tone: .block)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        Text(number.label)
+                            .noctisFont(12, .medium, relativeTo: .caption)
+                            .foregroundStyle(NoctisAppColor.blockInk)
+                    }
                 }
             }
         case .nights(let dots, let caption):

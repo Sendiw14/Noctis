@@ -4,6 +4,7 @@ import Testing
 @testable import AppRoot
 @testable import HomeFeature
 @testable import HealthProviding
+@testable import InsightsKit
 @testable import NoctisCore
 
 struct AppRouteTests {
@@ -13,7 +14,7 @@ struct AppRouteTests {
             #expect(AppRoute(url: route.url) == route)
             #expect(AppRoute(name: route.name) == route)
         }
-        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights, .coach, .profile])
+        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach, .profile])
         #expect(AppRoute.destinations.map(\.name) == ["home", "sleep", "recovery", "insights", "coach", "profile"])
     }
 
@@ -40,7 +41,7 @@ struct AppRouteTests {
         let parts = Calendar.current.dateComponents([.year, .month, .day, .hour], from: night)
         #expect((parts.year, parts.month, parts.day, parts.hour) == (2026, 9, 28, 12))
         // Other routes ignore a query.
-        #expect(try route("noctis://insights?range=week") == .insights)
+        #expect(try route("noctis://insights?range=week") == .insights())
     }
 
     @Test func recoveryCarriesARangeAndAFactorThroughItsURL() throws {
@@ -95,9 +96,85 @@ struct AppRouteTests {
         #expect(AppRoute.sleep(night: Date(), range: .month).tab == .sleep)
         #expect(AppRoute.recovery().tab == .recovery)
         #expect(AppRoute.recovery(range: .month, factor: .hrv).tab == .recovery)
-        #expect(AppRoute.insights.tab == .insights)
+        #expect(AppRoute.insights().tab == .insights)
+        #expect(AppRoute.insights(category: .heart).tab == .insights)
+        #expect(AppRoute.insight(id: "bedtimeShift-3fa9c2d1").tab == .insights)
         #expect(AppRoute.coach.tab == .coach)
         #expect(AppRoute.profile.tab == .home)
+    }
+
+    // MARK: - Insights routes
+
+    private let insightID = "bedtimeShift-3fa9c2d1"
+
+    private func route(_ text: String) throws -> AppRoute? { AppRoute(url: try #require(URL(string: text))) }
+
+    @Test func insightsCarriesAChipThroughItsURL() throws {
+        #expect(try route("noctis://insights?category=sleep") == .insights(category: .sleep))
+        #expect(try route("noctis://insights?category=longTerm") == .insights(category: .longTerm))
+        #expect(try route("noctis://insights?category=long-term") == .insights(category: .longTerm))
+        #expect(try route("noctis://insights?category=HEART") == .insights(category: .heart))
+        #expect(try route("noctis://insights?category=nonsense") == .insights(), "an unknown chip is All")
+        #expect(try route("noctis://insights") == .insights())
+        for category in InsightCategory.allCases {
+            let route = AppRoute.insights(category: category)
+            #expect(AppRoute(url: route.url) == route)
+        }
+        #expect(AppRoute.insights(category: .sleep).url.absoluteString == "noctis://insights?category=sleep")
+        #expect(AppRoute.insights().url.absoluteString == "noctis://insights")
+    }
+
+    @Test func insightOpensOnePageByItsID() throws {
+        #expect(try route("noctis://insight?id=\(insightID)") == .insight(id: insightID))
+        #expect(AppRoute.insight(id: insightID).url.absoluteString == "noctis://insight?id=\(insightID)")
+        #expect(AppRoute(url: AppRoute.insight(id: insightID).url) == .insight(id: insightID))
+        #expect(AppRoute.insight(id: insightID).name == "insight")
+    }
+
+    @Test func anInsightIDIsATypeAndEightHexDigits() {
+        #expect(AppRoute(url: URL(string: "noctis://insight")!) == nil)
+        #expect(AppRoute(url: URL(string: "noctis://insight?id=")!) == nil)
+        #expect(AppRoute(url: URL(string: "noctis://insight?id=bedtimeShift")!) == nil)
+        #expect(AppRoute(url: URL(string: "noctis://insight?id=nonsense-3fa9c2d1")!) == nil, "no such type")
+        #expect(AppRoute(url: URL(string: "noctis://insight?id=bedtimeShift-3fa9c2d")!) == nil, "seven digits")
+        #expect(AppRoute(url: URL(string: "noctis://insight?id=bedtimeShift-3fa9c2dz")!) == nil, "not hex")
+        #expect(AppRoute(url: URL(string: "noctis://insight?id=../../etc")!) == nil)
+        for type in InsightType.allCases {
+            #expect(AppRoute(url: URL(string: "noctis://insight?id=\(type.rawValue)-0123abcd")!) == .insight(id: "\(type.rawValue)-0123abcd"))
+        }
+    }
+
+    @Test func launchArgumentsNameAChipAndAnInsight() {
+        #expect(AppRoute(name: "insights:sleep") == .insights(category: .sleep))
+        #expect(AppRoute(name: "insights:longTerm") == .insights(category: .longTerm))
+        #expect(AppRoute(name: "insights:whatever") == .insights())
+        // An insight's id keeps its case.
+        #expect(AppRoute(name: "insight:\(insightID)") == .insight(id: insightID))
+        #expect(AppRoute(name: "insight:nope") == nil)
+        #expect(AppRoute(name: "insight") == nil)
+    }
+
+    @Test func openingInsightsRoutes() throws {
+        let container = try ModelContainer(for: Schema([UserProfileRecord.self]), configurations: [ModelConfiguration(isStoredInMemoryOnly: true)])
+        let model = AppModel(healthProvider: MockHealthKitProvider(scenario: .empty), profileStore: ProfileStore(context: ModelContext(container)))
+        model.open(.insights(category: .heart))
+        #expect(model.selectedTab == .insights)
+        #expect(model.insightsPath.isEmpty)
+        #expect(model.takeInsightsDestination()?.category == .heart)
+        #expect(model.takeInsightsDestination() == nil, "it's handed over once")
+        // The same chip twice is still a change the tab can see.
+        model.open(.insights(category: .heart))
+        let first = model.insightsDestination
+        model.open(.insights(category: .heart))
+        #expect(model.insightsDestination != first)
+        // One insight's page is pushed over the tab, whichever tab asked.
+        model.open(.home)
+        model.open(.insight(id: insightID))
+        #expect(model.selectedTab == .insights)
+        #expect(model.insightsPath == [.insight(id: insightID)])
+        // The tab's own chip route clears a page that was open.
+        model.open(.insights())
+        #expect(model.insightsPath.isEmpty)
     }
 
     @Test func tabsMatchTheSpecInOrder() {
@@ -148,7 +225,7 @@ struct AppRouteTests {
         #expect(DebugLaunchOptions(arguments: ["-mockScenario", "sleepOnly"]).mockScenario == .sleepOnly)
         #expect(DebugLaunchOptions(arguments: ["-useMockHealth"]).mockScenario == .full)
         #expect(DebugLaunchOptions(arguments: []).mockScenario == nil)
-        #expect(DebugLaunchOptions(arguments: ["-noctisInitialRoute", "insights"]).initialRoute == .insights)
+        #expect(DebugLaunchOptions(arguments: ["-noctisInitialRoute", "insights"]).initialRoute == .insights())
         #expect(DebugLaunchOptions(arguments: ["-noctisInitialRoute", "sleep"]).initialRoute == .sleep())
         #expect(DebugLaunchOptions(arguments: ["-noctisInitialRoute", "sleep:week"]).initialRoute == .sleep(night: nil, range: .week))
         #expect(DebugLaunchOptions(arguments: ["-mockUnauthorized"]).unauthorized)

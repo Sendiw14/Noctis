@@ -137,7 +137,8 @@ struct InsightScenarioTests {
         let after = try #require(await repo.hide(type))
         #expect(!after.all.contains { $0.record.type == type })
         #expect(!after.recent.contains { $0.record.type == type })
-        #expect(after.featured == nil)
+        #expect(after.featured?.type != type, "the next insight takes its place, if there is one")
+        #expect(after.featured != nil, "the full scenario has others")
         #expect(await repo.refresh(profile: UserProfileSnapshot()).all.contains { $0.record.type == type } == false)
     }
 

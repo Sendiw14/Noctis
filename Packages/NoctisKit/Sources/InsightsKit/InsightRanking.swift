@@ -12,7 +12,9 @@ import SleepKit
 ///   it was featured over 14, at most 1.
 /// - actionability: 0.8 with something generic to try, 0.5 for a pattern, 0.25
 ///   otherwise (`InsightType.actionability`).
-/// Scores are rounded to 1e-6 (so float noise can't reorder a tie); a tie
+/// Scores are rounded to 1e-6 (so float noise can't reorder a tie). A tie
+/// puts the two baseline shifts (duration and bedtime) first, the larger one
+/// in minutes leading and duration an equal one, as in v1; every other tie
 /// goes to the smaller id. A learning milestone is information, not a
 /// finding: it ranks after every insight, whatever its score.
 public enum InsightRanking {
@@ -55,8 +57,19 @@ public enum InsightRanking {
             .sorted { lhs, rhs in
                 if lhs.type.isInformational != rhs.type.isInformational { return !lhs.type.isInformational }
                 let (a, b) = (score(lhs), score(rhs))
-                return a != b ? a > b : lhs.id < rhs.id
+                if a != b { return a > b }
+                let (shiftA, shiftB) = (isShift(lhs), isShift(rhs))
+                if shiftA != shiftB { return shiftA }
+                if shiftA, lhs.magnitude != rhs.magnitude { return lhs.magnitude > rhs.magnitude }
+                if shiftA, lhs.type != rhs.type { return lhs.type == .sleepDurationShift }
+                return lhs.id < rhs.id
             }
+    }
+
+    /// The two baseline shifts, which lead any tie (a strict order: shifts
+    /// first, by size, then by id).
+    static func isShift(_ record: InsightRecord) -> Bool {
+        record.type == .sleepDurationShift || record.type == .bedtimeShift
     }
 
     public static func score(_ record: InsightRecord) -> Double {

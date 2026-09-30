@@ -117,6 +117,16 @@ public enum InsightType: String, Sendable, CaseIterable, Codable, Hashable {
         }
     }
 
+    /// The v1 kind of a baseline rule (1-3); nil for every other type.
+    public var baselineKind: InsightKind? {
+        switch self {
+        case .sleepDurationShift: .sleepDurationShift
+        case .bedtimeShift: .bedtimeShift
+        case .consistentBedtime: .consistentBedtime
+        default: nil
+        }
+    }
+
     /// Information rather than a finding: ranks after everything else and
     /// is never a to-do.
     public var isInformational: Bool { self == .milestone }

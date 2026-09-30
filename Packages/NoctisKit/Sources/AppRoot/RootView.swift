@@ -67,6 +67,7 @@ struct RootTabView: View {
                 // A deep link that arrived before this view existed.
                 if let destination = model.takeSleepDestination() { sleep.open(destination) }
                 if let destination = model.takeRecoveryDestination() { open(destination) }
+                if let destination = model.takeInsightsDestination() { insights.select(filter: destination.category) }
             }
             .onChange(of: model.sleepDestination) { _, destination in
                 guard destination != nil, let taken = model.takeSleepDestination() else { return }
@@ -75,6 +76,10 @@ struct RootTabView: View {
             .onChange(of: model.recoveryDestination) { _, destination in
                 guard destination != nil, let taken = model.takeRecoveryDestination() else { return }
                 open(taken)
+            }
+            .onChange(of: model.insightsDestination) { _, destination in
+                guard destination != nil, let taken = model.takeInsightsDestination() else { return }
+                insights.select(filter: taken.category)
             }
             .onChange(of: scenePhase) { _, phase in
                 // Ticks only while the app is up; catches up on return.

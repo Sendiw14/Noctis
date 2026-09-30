@@ -339,7 +339,7 @@ struct HomeSnapshotStoreTests {
         let repository = HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { now }, store: store(dir))
         let built = await repository.refresh(profile: UserProfileSnapshot())
         let insight = try #require(built.topInsight)
-        _ = await repository.dismiss(insight)
+        _ = await repository.dismiss(id: insight.id)
         #expect(store(dir).load()?.topInsight == nil)
     }
 }
@@ -735,32 +735,17 @@ struct NoctisSignpostTests {
 }
 
 struct ErasableStoresTests {
-    @Test func insightHistoryIsErasedThroughTheRegistry() {
-        let defaults = UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? .standard
-        let store = InsightHistoryStore(defaults: defaults)
-        store.update { $0.hide(.bedtimeShift) }
-        #expect(store.history != InsightHistory())
-        #expect(defaults.data(forKey: InsightHistoryStore.defaultsKey) != nil)
+    @Test func storedInsightsAreErasedThroughTheRegistry() async {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "noctis-erase-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = InsightFileStore(directory: folder)
+        let store = InsightStore(file: file)
+        await store.ingest([InsightRecordFixture.duration(delta: -70)], featuredOn: InsightFixture.last)
+        #expect(FileManager.default.fileExists(atPath: file.fileURL.path))
         let registry = NoctisDataRegistry()
-        registry.register(store)
+        registry.register(file)
         registry.eraseAll()
-        #expect(store.history == InsightHistory())
-        #expect(defaults.data(forKey: InsightHistoryStore.defaultsKey) == nil)
-        #expect(InsightHistoryStore(defaults: defaults).history == InsightHistory())
-    }
-}
-
-struct RingLayoutArrangementTests {
-    @Test func arrangedFillsInTheAnglesTheModelWouldHaveGiven() async throws {
-        let render = await snapshot().render
-        let bare = render.ring.map {
-            NoctisRingSegment(color: .red, weight: $0.weight, fraction: $0.fraction, usual: $0.usual)
-        }
-        let arranged = NoctisRecoveryRingLayout.arranged(bare)
-        for (segment, arc) in zip(arranged, render.ring) {
-            #expect(segment.arc == NoctisRingArc(startDegrees: arc.startDegrees, endDegrees: arc.endDegrees, tickDegrees: arc.tickDegrees))
-        }
-        // Segments that already have angles are left alone.
-        #expect(NoctisRecoveryRingLayout.arranged(arranged) == arranged)
+        #expect(!FileManager.default.fileExists(atPath: file.fileURL.path))
+        #expect(await store.snapshot().entries.isEmpty)
     }
 }

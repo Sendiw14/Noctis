@@ -92,7 +92,9 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
     /// none do.
     public let weekAverageMinutes: Double?
     public let tonight: TonightPlan
-    public let topInsight: Insight?
+    /// The featured insight for last night: the one the Insights tab shows
+    /// too (`InsightStore`), so the two never disagree.
+    public let topInsight: InsightRecord?
     /// Heart rate recorded during last night; nil without any.
     public let lastNightHeart: NightHeartSeries?
     /// Last night's sleep quality (0...100), the same number the Sleep tab
@@ -113,7 +115,7 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         recentNights: [NightDuration],
         weekAverageMinutes: Double?,
         tonight: TonightPlan,
-        topInsight: Insight?,
+        topInsight: InsightRecord?,
         lastNightHeart: NightHeartSeries? = nil,
         lastNightSleepQuality: Int? = nil,
         newestSample: Date?,
@@ -144,7 +146,7 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
 
 nonisolated extension HomeSnapshot {
     /// The same snapshot with another insight (or none).
-    public func replacingInsight(_ insight: Insight?) -> HomeSnapshot {
+    public func replacingInsight(_ insight: InsightRecord?) -> HomeSnapshot {
         HomeSnapshot(
             dataState: dataState,
             recovery: recovery,

@@ -97,8 +97,8 @@ public struct AppContainer {
         // Before the view model reads Low Power Mode for the first time.
         if debug.lowPowerMode { HomeViewModel.debugForcesLowPower = true }
         #endif
-        let insightHistory = InsightHistoryStore(defaults: .standard)
-        NoctisDataRegistry.shared.register(insightHistory)
+        // The v1 insight history (UserDefaults) is gone: the stored insights hold it now.
+        UserDefaults.standard.removeObject(forKey: "noctis.insights.history")
         #if DEBUG
         let keepsSnapshot = debug.mockScenario == nil || debug.snapshotCache
         let snapshotStore: HomeSnapshotStore? = keepsSnapshot ? HomeSnapshotStore() : nil
@@ -112,22 +112,18 @@ public struct AppContainer {
         if debug.resetState { snapshotStore?.erase() }
         #endif
         // The insights: derived numbers only, complete file protection,
-        // excluded from backups, and erased with the rest. The mock skips the
-        // file (like the snapshot) so UI tests don't see each other's dismissals.
+        // excluded from backups, and erased with the rest. UI tests start
+        // clean with `-noctisResetState`.
+        let insightFile = InsightFileStore()
+        NoctisDataRegistry.shared.register(insightFile)
         #if DEBUG
-        let insightFile: InsightFileStore? = keepsSnapshot ? InsightFileStore() : nil
-        #else
-        let insightFile: InsightFileStore? = InsightFileStore()
-        #endif
-        if let insightFile { NoctisDataRegistry.shared.register(insightFile) }
-        #if DEBUG
-        if debug.resetState { insightFile?.erase() }
+        if debug.resetState { insightFile.erase() }
         #endif
         let insightStore = InsightStore(file: insightFile)
         self.insightStore = insightStore
         self.insightsRepository = InsightsRepository(provider: provider, store: insightStore)
         self.homeViewModel = HomeViewModel(
-            repository: HomeRepository(provider: provider, insightHistory: insightHistory, store: snapshotStore),
+            repository: HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore),
             profile: { model.profile },
             // "Connect Apple Health" reuses onboarding's authorization flow.
             connectHealth: { await model.requestHealthAuthorization() },

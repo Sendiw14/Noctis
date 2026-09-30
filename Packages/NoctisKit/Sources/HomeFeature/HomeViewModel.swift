@@ -254,14 +254,14 @@ public final class HomeViewModel {
     public func dismissInsight() {
         guard let insight = snapshot?.topInsight else { return }
         dropInsight()
-        Task { _ = await repository.dismiss(insight) }
+        Task { _ = await repository.dismiss(id: insight.id) }
     }
 
     /// "Hide insights like this": this kind never shows again.
     public func hideInsights() {
         guard let insight = snapshot?.topInsight else { return }
         dropInsight()
-        Task { _ = await repository.hide(insight) }
+        Task { _ = await repository.hide(insight.type) }
     }
 
     private func dropInsight() {

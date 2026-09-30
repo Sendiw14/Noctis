@@ -471,7 +471,7 @@ struct InsightCardWordingTests {
     }
 
     private func card(_ history: [NightMetrics]) throws -> InsightCardContent {
-        HomeScreenBuilder.insightCard(try #require(InsightEngine.topInsight(history: history, asOf: Fixture.morningAfter)), format: format)
+        HomeScreenBuilder.insightCard(try #require(InsightEngine.candidates(history: history, asOf: Fixture.morningAfter).first), format: format)
     }
 
     @Test func aShorterNightComparesTwoBars() throws {

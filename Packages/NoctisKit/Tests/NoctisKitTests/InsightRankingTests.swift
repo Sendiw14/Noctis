@@ -73,6 +73,23 @@ struct InsightRankingTests {
         #expect(InsightRanking.ranked([b, a], on: today).map(\.id) == expected)
     }
 
+    @Test func theLargerOfTwoShiftsLeadsAndDurationWinsAnEqualOne() {
+        let duration = R.duration(delta: -70)
+        let bedtime = R.bedtime(delta: 55)
+        #expect(InsightRanking.score(duration) == InsightRanking.score(bedtime), "the same score, so the shifts' own order decides")
+        #expect(InsightRanking.ranked([bedtime, duration], on: today).map(\.type) == [.sleepDurationShift, .bedtimeShift])
+        #expect(InsightRanking.ranked([R.duration(delta: -40), R.bedtime(delta: 55)], on: today).map(\.type) == [.bedtimeShift, .sleepDurationShift])
+        #expect(InsightRanking.ranked([R.bedtime(delta: 50), R.duration(delta: -50)], on: today).map(\.type) == [.sleepDurationShift, .bedtimeShift])
+    }
+
+    @Test func theShiftsLeadAnyTieWithAnotherKindAtTheSameScore() {
+        // A sleep balance has the same confidence and actionability as a shift; the shifts go first.
+        let balance = R.balance(behind: true)
+        #expect(InsightRanking.score(balance) == InsightRanking.score(R.duration(delta: -70)))
+        let ranked = InsightRanking.ranked([balance, R.duration(delta: -70), R.bedtime(delta: 55)], on: today)
+        #expect(ranked.map(\.type) == [.sleepDurationShift, .bedtimeShift, .sleepBalance])
+    }
+
     @Test func aLearningMilestoneRanksAfterEveryInsight() {
         // Even a low-confidence insight scores under a high-confidence milestone.
         let weak = R.record(.recoveryDirection, R.recovery().evidence, confidence: .low, nights: 7)

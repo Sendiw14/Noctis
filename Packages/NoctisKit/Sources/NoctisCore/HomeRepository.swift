@@ -33,7 +33,7 @@ public nonisolated enum HomeSnapshotBuilder {
         profile: UserProfileSnapshot,
         now: Date,
         timeZone: TimeZone,
-        insightHistory: InsightHistory = InsightHistory()
+        insight: InsightRecord? = nil
     ) -> HomeSnapshot {
         let dates = inputs.sleep.map(\.end) + inputs.hrv.map(\.date) + inputs.restingHeartRate.map(\.date) + inputs.heartRate.map(\.date)
         guard let newest = dates.filter({ $0 <= now }).max() else {
@@ -74,7 +74,7 @@ public nonisolated enum HomeSnapshotBuilder {
             recentNights: week,
             weekAverageMinutes: averageMinutes(week),
             tonight: TonightPlan(profile: profile),
-            topInsight: InsightEngine.topInsight(history: metrics, asOf: now, fatigue: insightHistory),
+            topInsight: insight,
             lastNightHeart: lastNight.flatMap { heartSeries(inputs.heartRate, for: $0) },
             lastNightSleepQuality: sleepQuality,
             newestSample: newest,
@@ -150,7 +150,7 @@ public actor HomeRepository {
     private let provider: any HealthDataProviding
     private let timeZone: TimeZone
     private let clock: @Sendable () -> Date
-    private let insightHistory: InsightHistoryStore
+    private let insights: InsightsRepository
     private let store: HomeSnapshotStore?
     private var inFlight: Task<HomeSnapshot, Never>?
 
@@ -162,20 +162,21 @@ public actor HomeRepository {
     /// from another schema or too old.
     public nonisolated let restoredSnapshot: HomeSnapshot?
 
-    /// `insightHistory` defaults to one kept in memory; the app passes
-    /// the persisted store. With a `store`, every snapshot built is saved
+    /// `insights` is the repository the Insights tab uses too, so both show
+    /// the one featured insight; by default Home has its own, kept in memory
+    /// (tests, previews). With a `store`, every snapshot built is saved
     /// (`HomeSnapshotStore`) and the last one is restored at launch.
     public init(
         provider: any HealthDataProviding,
         timeZone: TimeZone = .autoupdatingCurrent,
         clock: @escaping @Sendable () -> Date = { Date() },
-        insightHistory: InsightHistoryStore = InsightHistoryStore(),
+        insights: InsightsRepository? = nil,
         store: HomeSnapshotStore? = nil
     ) {
         self.provider = provider
         self.timeZone = timeZone
         self.clock = clock
-        self.insightHistory = insightHistory
+        self.insights = insights ?? InsightsRepository(provider: provider, timeZone: timeZone, clock: clock)
         self.store = store
         let restored = store?.load()
         restoredSnapshot = restored
@@ -188,23 +189,21 @@ public actor HomeRepository {
         inFlight = task
         let snapshot = await task.value
         inFlight = nil
-        if let insight = snapshot.topInsight {
-            insightHistory.update { $0.recordShown(insight) }
-        }
         cachedSnapshot = snapshot
         store?.save(snapshot)
         return snapshot
     }
 
-    /// "Not useful": no insight for the rest of this night.
-    public func dismiss(_ insight: Insight) -> HomeSnapshot? {
-        insightHistory.update { $0.recordDismissal(insight) }
+    /// "Not useful": no insight for the rest of this night, and never this
+    /// evidence again (the Insights tab keeps it, muted, in History).
+    public func dismiss(id: String) async -> HomeSnapshot? {
+        _ = await insights.dismiss(id: id)
         return dropInsight()
     }
 
-    /// "Hide insights like this": this kind never shows again.
-    public func hide(_ insight: Insight) -> HomeSnapshot? {
-        insightHistory.update { $0.hide(insight.kind) }
+    /// "Hide insights like this": this kind never shows again, anywhere.
+    public func hide(_ type: InsightType) async -> HomeSnapshot? {
+        _ = await insights.hide(type)
         return dropInsight()
     }
 
@@ -230,15 +229,25 @@ public actor HomeRepository {
         guard await provider.authorizationStatus() == .authorized else {
             return HomeSnapshotBuilder.placeholder(.permissionRequired, profile: profile, now: now, timeZone: timeZone)
         }
-        // Reach back 18 hours more so the oldest night is seen whole.
-        let start = now.addingTimeInterval(-Double(Self.historyDays) * 86_400 - 18 * 3600)
+        // One read serves Home (the last 30 days) and the insights (the last
+        // 110): Home's inputs are the same samples a 30-day read would give.
+        let start = now.addingTimeInterval(-Double(InsightInputsBuilder.historyDays) * 86_400 - 18 * 3600)
+        let homeStart = now.addingTimeInterval(-Double(Self.historyDays) * 86_400 - 18 * 3600)
         do {
             async let sleep = provider.fetchSleepSamples(from: start, to: now)
             async let hrv = provider.fetchHRVSamples(from: start, to: now)
             async let resting = provider.fetchRestingHeartRate(from: start, to: now)
             async let heartRate = provider.fetchHeartRateSamples(from: now.addingTimeInterval(-2 * 86_400), to: now)
-            let inputs = try await HomeHealthInputs(sleep: sleep, hrv: hrv, restingHeartRate: resting, heartRate: heartRate)
-            return HomeSnapshotBuilder.build(inputs, profile: profile, now: now, timeZone: timeZone, insightHistory: insightHistory.history)
+            let (allSleep, allHRV, allResting) = try await (sleep, hrv, resting)
+            // The featured insight comes from the shared store, made at the same time as the snapshot.
+            async let featured = insights.refresh(profile: profile, sleep: allSleep, hrv: allHRV, restingHeartRate: allResting).featured
+            let inputs = try await HomeHealthInputs(
+                sleep: allSleep.filter { $0.start < now && $0.end > homeStart },
+                hrv: allHRV.filter { $0.date >= homeStart && $0.date <= now },
+                restingHeartRate: allResting.filter { $0.date >= homeStart && $0.date <= now },
+                heartRate: heartRate
+            )
+            return HomeSnapshotBuilder.build(inputs, profile: profile, now: now, timeZone: timeZone, insight: await featured)
         } catch HealthProviderError.unauthorized {
             return HomeSnapshotBuilder.placeholder(.permissionRequired, profile: profile, now: now, timeZone: timeZone)
         } catch {

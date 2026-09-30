@@ -84,114 +84,95 @@ struct HomeCollapseTests {
     }
 }
 
-// MARK: - Insight fatigue
+// MARK: - Home's Insight block and the shared store
 
-/// Hidden kinds never show, the same kind never shows two nights in a
-/// row, and a dismissed night shows nothing more.
+/// Home shows the insight the Insights tab features: one `InsightStore`, so
+/// the two never disagree. Fatigue itself is `InsightV2FatigueTests`'.
 struct InsightFatigueTests {
-    private let tonight = SleepNightKey(year: 2026, month: 9, day: 23)
+    private let now = Fixture.date(2026, 9, 24, 10)
 
-    private func insight(_ kind: InsightKind, night: SleepNightKey? = nil) -> Insight {
-        Insight(kind: kind, evidence: InsightEvidence(night: night ?? tonight, value: 0, baseline: 0, delta: 0, baselineNights: 14))
+    private func provider(_ scenario: MockScenario = .full) -> MockHealthKitProvider {
+        MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
     }
 
-    private var candidates: [Insight] {
-        [insight(.sleepDurationShift), insight(.bedtimeShift), insight(.consistentBedtime)]
+    private func pair(_ scenario: MockScenario = .full) -> (home: HomeRepository, insights: InsightsRepository) {
+        let clock = now
+        let insights = InsightsRepository(provider: provider(scenario), timeZone: Fixture.newYork, clock: { clock })
+        return (HomeRepository(provider: provider(scenario), timeZone: Fixture.newYork, clock: { clock }, insights: insights), insights)
     }
 
-    @Test func withNoHistoryTheBestCandidateShows() {
-        #expect(InsightHistory().pick(from: candidates)?.kind == .sleepDurationShift)
-        #expect(InsightHistory().pick(from: []) == nil)
+    @Test func homeAndTheTabFeatureTheSameInsight() async throws {
+        let repositories = pair()
+        let home = try #require(await repositories.home.refresh(profile: UserProfileSnapshot()).topInsight)
+        let tab = try #require(await repositories.insights.refresh(profile: UserProfileSnapshot()).featured)
+        #expect(home.id == tab.id)
+        #expect(home == tab)
+        // And the other way round: the tab first.
+        let other = pair()
+        let first = try #require(await other.insights.refresh(profile: UserProfileSnapshot()).featured)
+        #expect(try #require(await other.home.refresh(profile: UserProfileSnapshot()).topInsight).id == first.id)
     }
 
-    @Test func aHiddenKindNeverShows() {
-        var history = InsightHistory()
-        history.hide(.sleepDurationShift)
-        #expect(history.pick(from: candidates)?.kind == .bedtimeShift)
-        history.hide(.bedtimeShift)
-        history.hide(.consistentBedtime)
-        #expect(history.pick(from: candidates) == nil)
-    }
-
-    @Test func theSameInsightNeverShowsTwoNightsInARow() {
-        var history = InsightHistory()
-        history.recordShown(insight(.sleepDurationShift, night: tonight.adding(days: -1)))
-        #expect(history.pick(from: candidates)?.kind == .bedtimeShift)
-        // Only one candidate, and it showed yesterday: nothing today.
-        #expect(history.pick(from: [insight(.sleepDurationShift)]) == nil)
-    }
-
-    @Test func theSameNightKeepsItsInsight() {
-        var history = InsightHistory()
-        history.recordShown(insight(.sleepDurationShift))
-        #expect(history.pick(from: candidates)?.kind == .sleepDurationShift)
-    }
-
-    @Test func twoNightsLaterItMayShowAgain() {
-        var history = InsightHistory()
-        history.recordShown(insight(.sleepDurationShift, night: tonight.adding(days: -2)))
-        #expect(history.pick(from: candidates)?.kind == .sleepDurationShift)
-    }
-
-    @Test func aDismissedNightShowsNothingMore() {
-        var history = InsightHistory()
-        history.recordDismissal(insight(.sleepDurationShift))
-        #expect(history.pick(from: candidates) == nil)
-        // The next night starts fresh.
-        let tomorrow = tonight.adding(days: 1)
-        #expect(history.pick(from: [insight(.bedtimeShift, night: tomorrow)])?.kind == .bedtimeShift)
-    }
-
-    @Test func dismissalsKeepOnlyTheRecentOnes() {
-        var history = InsightHistory()
-        for day in 0..<40 {
-            history.recordDismissal(insight(.bedtimeShift, night: tonight.adding(days: -day)))
+    @Test func homeAndTheTabAgreeForEveryScenario() async throws {
+        for scenario in MockScenario.allCases {
+            let repositories = pair(scenario)
+            let home = await repositories.home.refresh(profile: UserProfileSnapshot()).topInsight
+            let tab = await repositories.insights.refresh(profile: UserProfileSnapshot()).featured
+            #expect(home?.id == tab?.id, "\(scenario.rawValue)")
         }
-        #expect(history.dismissals.count == InsightHistory.maxDismissals)
     }
 
-    @Test func theEngineSkipsHiddenKinds() {
-        // 45 minutes short and 55 minutes late: both shifts fire, the later
-        // bedtime ranks first.
-        let history = Fixture.metrics(count: 15) { index in
-            (asleep: index == 14 ? 375 : 420, bedtime: index == 14 ? 715 : 660, wake: 1140, hrv: nil, resting: nil)
-        }
-        let ranked = InsightEngine.candidates(history: history, asOf: Fixture.morningAfter)
-        #expect(ranked.map(\.kind) == [.bedtimeShift, .sleepDurationShift])
-        var fatigue = InsightHistory()
-        fatigue.hide(.bedtimeShift)
-        #expect(InsightEngine.topInsight(history: history, asOf: Fixture.morningAfter, fatigue: fatigue)?.kind == .sleepDurationShift)
-    }
-
-    @Test func theStoreKeepsHistoryAcrossLaunches() throws {
-        let suite = "noctis.tests.\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        let store = InsightHistoryStore(defaults: defaults)
-        store.update {
-            $0.recordShown(insight(.bedtimeShift))
-            $0.hide(.consistentBedtime)
-        }
-        let reopened = InsightHistoryStore(defaults: defaults)
-        #expect(reopened.history == store.history)
-        #expect(reopened.history.hiddenKinds == [.consistentBedtime])
-        #expect(reopened.history.lastShown?.kind == .bedtimeShift)
-        // In memory only, nothing is written.
-        #expect(InsightHistoryStore().history == InsightHistory())
+    @Test func dismissingOnHomeLeavesTheTabWithoutItToo() async throws {
+        let repositories = pair()
+        let featured = try #require(await repositories.home.refresh(profile: UserProfileSnapshot()).topInsight)
+        let dropped = await repositories.home.dismiss(id: featured.id)
+        #expect(dropped?.topInsight == nil)
+        let tab = await repositories.insights.refresh(profile: UserProfileSnapshot())
+        #expect(tab.featured == nil, "nothing stands in for it that night")
+        #expect(tab.all.first { $0.id == featured.id }?.state == .dismissed, "History keeps it, muted")
+        #expect(await repositories.home.refresh(profile: UserProfileSnapshot()).topInsight == nil)
     }
 
     @Test func hidingThroughTheRepositorySticks() async throws {
-        let now = Fixture.date(2026, 9, 24, 10)
-        let provider = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
-        let store = InsightHistoryStore()
-        let repository = HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { now }, insightHistory: store)
-        let first = try #require(await repository.refresh(profile: UserProfileSnapshot()).topInsight)
-        #expect(store.history.lastShown?.kind == first.kind)
-
-        let hidden = await repository.hide(first)
+        let repositories = pair()
+        let first = try #require(await repositories.home.refresh(profile: UserProfileSnapshot()).topInsight)
+        let hidden = await repositories.home.hide(first.type)
         #expect(hidden?.topInsight == nil)
-        #expect(store.history.hiddenKinds == [first.kind])
-        let after = await repository.refresh(profile: UserProfileSnapshot())
-        #expect(after.topInsight?.kind != first.kind)
+        let after = await repositories.home.refresh(profile: UserProfileSnapshot())
+        #expect(after.topInsight?.type != first.type)
+        let tab = await repositories.insights.refresh(profile: UserProfileSnapshot())
+        #expect(!tab.all.contains { $0.record.type == first.type }, "hidden everywhere")
+    }
+
+    @Test func theBlockCarriesTheIdItOpens() async throws {
+        let repositories = pair()
+        let snapshot = await repositories.home.refresh(profile: UserProfileSnapshot())
+        let record = try #require(snapshot.topInsight)
+        let card = try #require(HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US")).insight)
+        #expect(card.id == record.id)
+        #expect(!card.title.isEmpty)
+    }
+
+    @Test func aRuleBeyondTheFirstThreeShowsItsTwoNumbers() throws {
+        let format = HomeFormat(calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
+        let card = HomeScreenBuilder.insightCard(InsightRecordFixture.pattern(), format: format)
+        #expect(card.id == InsightRecordFixture.pattern().id)
+        #expect(card.title == "Earlier bedtimes, higher sleep scores")
+        guard case .figures(let numbers, let join) = card.chart else { Issue.record("expected figures"); return }
+        #expect(numbers.map(\.value.plain) == ["92pts", "66pts"])
+        #expect(join == .versus)
+        #expect(!card.accessibilityLabel.isEmpty)
+    }
+
+    @Test func aBaselineRuleKeepsItsSmallChart() throws {
+        let format = HomeFormat(calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
+        let duration = HomeScreenBuilder.insightCard(InsightRecordFixture.duration(delta: -70), format: format)
+        guard case .comparison = duration.chart else { Issue.record("expected the two bars"); return }
+        #expect(duration.title == "Shorter night than usual")
+        // The streak's page draws two weeks; the card draws one.
+        let streak = HomeScreenBuilder.insightCard(InsightRecordFixture.streak(nights: 6), format: format)
+        guard case .nights(let dots, let caption) = streak.chart else { Issue.record("expected dots"); return }
+        #expect(dots.count == 7 && caption == "Last 7 nights")
     }
 
     @Test func dismissingThroughTheViewModelCollapsesAtOnce() async throws {

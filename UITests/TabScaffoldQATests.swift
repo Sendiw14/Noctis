@@ -140,14 +140,24 @@ final class TabScaffoldQATests: XCTestCase {
         }
     }
 
-    /// The placeholders say "Coming soon" on the same scaffold.
-    func testInsightsAndCoachAreScaffoldedPlaceholders() {
-        for tab in tabs.filter({ $0.name == "insights" || $0.name == "coach" }) {
+    /// Coach is still a placeholder: "Coming soon" on the same scaffold.
+    func testCoachIsAScaffoldedPlaceholder() {
+        for tab in tabs.filter({ $0.name == "coach" }) {
             let app = launch(tab)
             XCTAssertTrue(element(app, "tab.comingSoon").waitForExistence(timeout: 12), tab.name)
             XCTAssertTrue(element(app, "tab.title").exists)
             app.terminate()
         }
+    }
+
+    /// Insights is built on the same scaffold: its title and its summary line.
+    func testInsightsIsOnTheScaffold() {
+        let tab = tabs.first { $0.name == "insights" }!
+        let app = launch(tab)
+        XCTAssertTrue(element(app, "insights.summary").waitForExistence(timeout: 12))
+        XCTAssertTrue(element(app, "tab.title").exists)
+        XCTAssertFalse(element(app, "tab.comingSoon").exists)
+        app.terminate()
     }
 
     /// Home and Sleep with the field scrolled away: the compact bar takes

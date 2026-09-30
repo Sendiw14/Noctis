@@ -7,7 +7,21 @@ import SleepKit
 // evidence (the engine hands over numbers, never sentences).
 
 nonisolated extension HomeScreenBuilder {
-    static func insightCard(_ insight: Insight, format: HomeFormat) -> InsightCardContent {
+    /// The featured insight, whichever rule found it: the first three keep
+    /// their small charts; the rest show their two numbers.
+    static func insightCard(_ record: InsightRecord, format: HomeFormat) -> InsightCardContent {
+        if case .baseline(let evidence) = record.evidence, let kind = record.type.baselineKind {
+            return insightCard(Insight(kind: kind, evidence: evidence), format: format, id: record.id)
+        }
+        let words = InsightScreenBuilder.build(record, format: format)
+        return InsightCardContent(
+            id: record.id, title: words.title, message: words.rowLine,
+            chart: .figures(words.comparison, join: words.comparisonJoin),
+            accessibilityLabel: "\(words.title). \(words.rowLine)"
+        )
+    }
+
+    static func insightCard(_ insight: Insight, format: HomeFormat, id: String = "") -> InsightCardContent {
         let evidence = insight.evidence
         let minutes = Int(abs(evidence.delta).rounded())
         let amount = HomeFormat.compactDuration(minutes, minutesWord: true)
@@ -19,6 +33,7 @@ nonisolated extension HomeScreenBuilder {
             let usual = HomeFormat.durationMetric(Int(evidence.baseline.rounded()))
             let longest = max(evidence.value, evidence.baseline, 1)
             return InsightCardContent(
+                id: id,
                 title: title,
                 message: "\(amount) \(less ? "less" : "more") than your usual.",
                 chart: .comparison(
@@ -38,6 +53,7 @@ nonisolated extension HomeScreenBuilder {
             let usualTime = format.clock(minutesAfterNoon: evidence.baseline)
             let lastTime = format.clock(minutesAfterNoon: evidence.value)
             return InsightCardContent(
+                id: id,
                 title: title,
                 message: "\(amount) \(later ? "later" : "earlier") than your usual.",
                 chart: .timeline(
@@ -49,14 +65,17 @@ nonisolated extension HomeScreenBuilder {
         case .consistentBedtime:
             let streak = evidence.streakNights ?? 0
             let tolerance = Int(InsightEngine.streakToleranceMinutes)
-            let count = evidence.recentNights.count
-            let dots = evidence.recentNights.enumerated().map { index, within in
+            // The card draws the last week; the insight's page draws two.
+            let recent = Array(evidence.recentNights.suffix(InsightEngine.streakWindowNights))
+            let count = recent.count
+            let dots = recent.enumerated().map { index, within in
                 let morning = evidence.night.adding(days: index - count + 2)
                 return InsightNightDot(label: format.weekday(morning, width: .narrow), within: within)
             }
-            let withinCount = evidence.recentNights.filter { $0 == true }.count
+            let withinCount = recent.filter { $0 == true }.count
             let message = "\(streak) nights in a row within \(tolerance) min of your usual bedtime."
             return InsightCardContent(
+                id: id,
                 title: "Steady bedtime",
                 message: message,
                 chart: .nights(dots, caption: "Last \(count) nights"),

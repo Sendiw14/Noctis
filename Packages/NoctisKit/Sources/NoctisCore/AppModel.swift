@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Observation
+import InsightsKit
 import RecoveryKit
 
 /// App-wide state: the profile, Health authorization and navigation.
@@ -20,6 +21,8 @@ public final class AppModel {
     public private(set) var sleepDestination: SleepDestination?
     /// Where the Recovery tab should land, until it takes it.
     public private(set) var recoveryDestination: RecoveryDestination?
+    /// Which chip the Insights tab should show, until it takes it.
+    public private(set) var insightsDestination: InsightsDestination?
     /// The tab whose button was pressed while it was already showing.
     public private(set) var tabRetap: TabRetap?
     private var serial = 0
@@ -70,8 +73,21 @@ public final class AppModel {
             recoveryDestination = RecoveryDestination(segment: range, factor: factor, serial: serial)
             // A factor's page is pushed over the tab's root.
             recoveryPath = factor.map { [.factor($0, range: range.factorRange)] } ?? []
-        case .insights, .coach: break
+        case .insights(let category):
+            serial += 1
+            insightsDestination = InsightsDestination(category: category, serial: serial)
+            insightsPath = []
+        case .insight(let id):
+            // The page is pushed over the tab's root, on the chip it was on.
+            insightsPath = [.insight(id: id)]
+        case .coach: break
         }
+    }
+
+    /// The Insights destination waiting for the tab, once.
+    public func takeInsightsDestination() -> InsightsDestination? {
+        defer { insightsDestination = nil }
+        return insightsDestination
     }
 
     /// The Recovery destination waiting for the tab, once.
@@ -112,5 +128,12 @@ public nonisolated struct TabRetap: Sendable, Equatable {
 public nonisolated struct RecoveryDestination: Sendable, Equatable {
     public let segment: RecoverySegment
     public let factor: RecoveryFactorKind?
+    let serial: Int
+}
+
+/// Which chip Insights should show. Each is distinct, so opening the same
+/// chip twice is still a change.
+public nonisolated struct InsightsDestination: Sendable, Equatable {
+    public let category: InsightCategory?
     let serial: Int
 }

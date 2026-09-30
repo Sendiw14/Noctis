@@ -15,7 +15,7 @@ struct InsightEngineTests {
     }
 
     private func top(_ history: [NightMetrics]) -> Insight? {
-        InsightEngine.topInsight(history: history, asOf: Fixture.morningAfter)
+        InsightEngine.candidates(history: history, asOf: Fixture.morningAfter).first
     }
 
     // MARK: - Duration
@@ -107,7 +107,7 @@ struct InsightEngineTests {
 
     @Test func nothingFiresWithoutLastNight() {
         let later = Fixture.date(2026, 9, 25, 13)
-        #expect(InsightEngine.topInsight(history: history(lastAsleep: 300), asOf: later) == nil)
+        #expect(InsightEngine.candidates(history: history(lastAsleep: 300), asOf: later).isEmpty)
     }
 
     @Test func everyKindCarriesItsEvidence() throws {

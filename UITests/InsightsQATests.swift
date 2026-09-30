@@ -95,17 +95,29 @@ final class InsightsQATests: XCTestCase {
 
     // MARK: - An insight's page
 
+    /// The full scenario's featured story is the duration shift (70 minutes outranks 55).
     func testDurationDetail() {
         let app = launch()
         settled(app, waitFor: "insights.featured")
-        scrollDown(app)
-        let shorter = row(app, "Shorter night than usual")
-        QA.tap(shorter, in: app)
+        XCTAssertTrue(element(app, "insights.featured").label.hasPrefix("Shorter night than usual"))
+        element(app, "insights.featured").tap()
         settled(app, waitFor: "insights.detail")
-        XCTAssertTrue(element(app, "insights.header").exists)
+        XCTAssertTrue(element(app, "insights.header").label.hasPrefix("Shorter night than usual"))
         XCTAssertTrue(element(app, "insights.try").exists, "rule 1 offers something to try")
         XCTAssertFalse(element(app, "insights.notProof").exists)
         QA.capturePages(app, "insights-detail-duration", maxPages: 5)
+    }
+
+    /// A bedtime insight from the Recent list: something to try, a timeline for a chart.
+    func testBedtimeDetailFromRecent() {
+        let app = launch()
+        settled(app, waitFor: "insights.featured")
+        scrollDown(app)
+        QA.tap(row(app, "Later bedtime than usual"), in: app)
+        settled(app, waitFor: "insights.detail")
+        XCTAssertTrue(element(app, "insights.header").label.hasPrefix("Later bedtime than usual"))
+        XCTAssertTrue(element(app, "insights.try").exists)
+        QA.shot("insights-detail-bedtime")
     }
 
     func testPatternDetail() {
@@ -159,9 +171,12 @@ final class InsightsQATests: XCTestCase {
         QA.tap(element(app, "insights.hide"), in: app)
         XCTAssertTrue(element(app, "insights.summary").waitForExistence(timeout: 8))
         QA.pause(1.2)
-        XCTAssertFalse(element(app, "insights.featured").exists)
+        // The next insight takes its place; the hidden kind is gone from the story and from Recent.
         let first = title.components(separatedBy: ".").first ?? title
+        XCTAssertTrue(element(app, "insights.featured").exists)
+        XCTAssertFalse(element(app, "insights.featured").label.hasPrefix(first), "the featured story moved on")
         XCTAssertFalse(row(app, first).exists, "a hidden kind is gone from Recent too")
+        QA.shot("insights-after-hide")
     }
 
     func testLongPressMenuOnARow() {
@@ -242,5 +257,45 @@ final class InsightsQATests: XCTestCase {
         for _ in 0..<2 where app.tabBars.buttons["Insights"].exists { app.tabBars.buttons["Insights"].tap(); QA.pause(0.6) }
         XCTAssertTrue(element(app, "insights.chips").waitForExistence(timeout: 4))
         QA.shot("insights-after-retap")
+    }
+
+    // MARK: - Routing
+
+    /// Home's Insight block opens that insight's page, on the Insights tab.
+    func testHomeInsightBlockOpensThatInsight() {
+        let app = QA.launch(extra: ["-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding"])
+        let block = QA.element(app, labelBeginsWith: "Shorter night than usual")
+        XCTAssertTrue(block.waitForExistence(timeout: 14))
+        QA.pause(3)
+        QA.tap(block, in: app)
+        settled(app, waitFor: "insights.detail")
+        XCTAssertTrue(element(app, "insights.header").label.hasPrefix("Shorter night than usual"), element(app, "insights.header").label)
+        QA.shot("insights-from-home")
+        // Back to the tab's root, on All.
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(element(app, "insights.chips").waitForExistence(timeout: 6))
+        XCTAssertTrue(element(app, "insights.chip.all").isSelected)
+    }
+
+    /// Home and the tab feature the same insight.
+    func testHomeAndTheTabAgreeOnTheFeaturedInsight() {
+        let app = QA.launch(extra: ["-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding"])
+        let block = element(app, "home.insight")
+        XCTAssertTrue(block.waitForExistence(timeout: 14))
+        let home = block.label.components(separatedBy: ".").first ?? ""
+        app.tabBars.buttons["Insights"].tap()
+        settled(app, waitFor: "insights.featured")
+        let tab = element(app, "insights.featured").label.components(separatedBy: ".").first ?? ""
+        XCTAssertFalse(home.isEmpty)
+        XCTAssertEqual(home, tab)
+    }
+
+    /// A launch route names a chip.
+    func testInitialRouteOpensAChip() {
+        let app = QA.launch(extra: ["-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-noctisInitialRoute", "insights:heart"])
+        XCTAssertTrue(element(app, "insights.chips").waitForExistence(timeout: 14))
+        QA.pause(2)
+        XCTAssertTrue(element(app, "insights.chip.heart").isSelected)
+        QA.shot("insights-route-heart")
     }
 }
