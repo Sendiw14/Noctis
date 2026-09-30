@@ -166,12 +166,27 @@ struct CoachRouterTests {
         "is my heart rate dangerous", "am I sick", "should I see a doctor", "is my HRV a sign of a heart condition",
         "do I have depression", "is this normal or a disorder", "what treatment is there for restless legs", "am I healthy",
         "Is my resting heart rate a symptom of something?", "what's wrong with me", "Does this mean I have diabetes",
+        // What someone says when they describe how they feel rather than ask about a condition.
+        "I have chest pain and feel dizzy", "my chest hurts", "I feel faint", "I keep getting palpitations at night", "my heart is racing",
+        "I can't breathe properly when I lie down", "I passed out this morning", "I feel sick and have a fever", "I have a bad headache",
+        "my arm is numb", "should I call an ambulance", "I'm in pain",
     ])
     func medicalQuestionsGetTheScriptAndNeverAModel(_ question: String) {
         let route = router.route(question)
         #expect(route.intent == .medicalOutOfScope, Comment(rawValue: question))
         #expect(route.reply == .medical)
         #expect(!route.mayClassify)
+    }
+
+    @Test(arguments: [
+        "why is my recovery lower today", "why was my sleep worse last night", "when should I sleep", "how can I improve consistency",
+        "what should I focus on today", "what changed this week", "why do I feel tired", "did I sleep better than usual", "was my HRV lower",
+        "how was my resting heart rate", "how did I sleep last night", "why do I wake up so often",
+    ])
+    func everydaySleepAndRecoveryQuestionsAreNotMedical(_ question: String) {
+        let route = router.route(question)
+        #expect(route.intent != .medicalOutOfScope, Comment(rawValue: question))
+        #expect(route.reply != .medical, Comment(rawValue: question))
     }
 
     @Test func theMedicalScriptIsTheOneTheSpecWrote() {
