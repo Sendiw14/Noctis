@@ -46,6 +46,13 @@ public struct CoachContextBuilder: Sendable {
         formatter = CoachFactFormatter(format: format)
     }
 
+    /// Every fact the snapshots support (no insights): what the hub reads to
+    /// decide which questions are worth asking.
+    public func allFacts(snapshots: CoachSnapshots, profile: UserProfileSnapshot) -> [CoachFact] {
+        let state = Self.dataState(snapshots)
+        return allFacts(snapshots, state: state, profile: profile, nights: Self.nightsOfHistory(snapshots))
+    }
+
     public func build(
         intent: CoachIntent, direction: CoachDirection?, snapshots: CoachSnapshots, profile: UserProfileSnapshot
     ) -> CoachContext {

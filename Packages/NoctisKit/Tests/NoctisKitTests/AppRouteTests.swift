@@ -14,7 +14,7 @@ struct AppRouteTests {
             #expect(AppRoute(url: route.url) == route)
             #expect(AppRoute(name: route.name) == route)
         }
-        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach, .profile])
+        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach(), .profile])
         #expect(AppRoute.destinations.map(\.name) == ["home", "sleep", "recovery", "insights", "coach", "profile"])
     }
 
@@ -99,7 +99,7 @@ struct AppRouteTests {
         #expect(AppRoute.insights().tab == .insights)
         #expect(AppRoute.insights(category: .heart).tab == .insights)
         #expect(AppRoute.insight(id: "bedtimeShift-3fa9c2d1").tab == .insights)
-        #expect(AppRoute.coach.tab == .coach)
+        #expect(AppRoute.coach().tab == .coach)
         #expect(AppRoute.profile.tab == .home)
     }
 

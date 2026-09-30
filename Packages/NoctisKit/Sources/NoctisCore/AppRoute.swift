@@ -23,13 +23,14 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     case insights(category: InsightCategory? = nil)
     /// One insight's page over the Insights tab.
     case insight(id: String)
-    case coach
+    /// Coach, on a question when given: the conversation opens with it asked.
+    case coach(question: CoachQuestion? = nil)
     case profile
 
     public static let urlScheme = "noctis"
 
     /// Every destination, Sleep on its newest night.
-    public static let destinations: [AppRoute] = [.home, .sleep(), .recovery(), .insights(), .coach, .profile]
+    public static let destinations: [AppRoute] = [.home, .sleep(), .recovery(), .insights(), .coach(), .profile]
 
     /// "home", "sleep", "recovery"…: the URL's host.
     public var name: String {
@@ -58,7 +59,7 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
         case "insight":
             guard let argument, Self.isInsightID(argument) else { return nil }
             self = .insight(id: argument)
-        case "coach": self = .coach
+        case "coach": self = .coach(question: argument.flatMap(CoachQuestion.init(token:)))
         case "profile": self = .profile
         default: return nil
         }
@@ -90,6 +91,8 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
             self = .recovery(range: range, factor: factor)
         case .insights:
             self = .insights(category: value("category").flatMap(Self.category(named:)))
+        case .coach:
+            self = .coach(question: value("question").flatMap(CoachQuestion.init(token:)))
         default:
             self = route
         }
@@ -109,6 +112,8 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
             if let factor { items.append(URLQueryItem(name: "factor", value: factor.rawValue)) }
         case .insights(let category):
             if let category { items.append(URLQueryItem(name: "category", value: category.rawValue)) }
+        case .coach(let question):
+            if let question { items.append(URLQueryItem(name: "question", value: question.token)) }
         case .insight(let id):
             items.append(URLQueryItem(name: "id", value: id))
         default:

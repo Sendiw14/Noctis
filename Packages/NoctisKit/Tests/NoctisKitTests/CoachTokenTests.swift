@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 @testable import CoachKit
+@testable import NoctisCore
 @testable import HomeFeature
 
 /// Tokens: how a draft points at a number, and how the app puts it in.

@@ -30,6 +30,7 @@ let package = Package(
         .library(name: "RecoveryFeature", targets: ["RecoveryFeature"]),
         .library(name: "InsightsFeature", targets: ["InsightsFeature"]),
         .library(name: "CoachKit", targets: ["CoachKit"]),
+        .library(name: "CoachFeature", targets: ["CoachFeature"]),
         .library(name: "AppRoot", targets: ["AppRoot"]),
     ],
     targets: [
@@ -75,16 +76,23 @@ let package = Package(
             resources: [.process("Resources")],
             swiftSettings: engineSwiftSettings
         ),
+        // The Coach tab: the hub, the conversation, History and the privacy sheet. It reads
+        // only `CoachViewModel`, which asks `AIService` (APP_RULES.md R20, R29).
+        .target(
+            name: "CoachFeature",
+            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "InsightsKit", "HomeFeature", "CoachKit"],
+            swiftSettings: noctisSwiftSettings
+        ),
         .target(
             name: "AppRoot",
-            dependencies: ["DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit"],
+            dependencies: ["DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature"],
             swiftSettings: noctisSwiftSettings
         ),
         .testTarget(
             name: "NoctisKitTests",
             dependencies: [
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
-                "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "AppRoot",
+                "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature", "AppRoot",
             ],
             swiftSettings: noctisSwiftSettings
         ),

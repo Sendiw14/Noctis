@@ -34,6 +34,8 @@ public final class AIMessage {
     public var answerData: Data = Data()
     /// The answer's summary, for a list and for the next turn's context.
     public var answerSummary: String = ""
+    /// "helpful" or "notHelpful", when the person said; kept here and nowhere else.
+    public var feedbackRaw: String?
     public var conversation: AIConversation?
 
     public init(id: UUID = UUID(), createdAt: Date = .now, question: String, answer: CoachAnswer, data: Data) {
@@ -46,8 +48,17 @@ public final class AIMessage {
 }
 
 extension CoachAnswer {
-    /// A crisis exchange is never kept.
-    public var isStorable: Bool { intent != .crisis && helpLink == nil }
+    /// Only an answer built from the person's data is kept. A fixed reply (a
+    /// crisis message, the medical redirect, "I can help with...", an apology)
+    /// never is.
+    public var isStorable: Bool { sourceKind != .scripted && intent != .crisis && helpLink == nil }
+}
+
+/// What a person said about an answer. Saved on this device, next to the
+/// answer, and nowhere else.
+public enum CoachFeedback: String, Sendable, Codable, Hashable {
+    case helpful
+    case notHelpful
 }
 
 /// One conversation in a list.
@@ -64,6 +75,7 @@ public struct CoachStoredTurn: Sendable, Equatable, Identifiable {
     public let createdAt: Date
     public let question: String
     public let answer: CoachAnswer
+    public let feedback: CoachFeedback?
 }
 
 /// Where Coach's conversations are kept.
@@ -77,22 +89,32 @@ public actor CoachHistoryStore {
         return conversation.id
     }
 
-    /// Keeps a turn; false when it isn't kept: a crisis exchange, or a
-    /// conversation that isn't there.
+    /// Keeps a turn and returns its id; nil when it isn't kept: a fixed reply
+    /// (crisis, medical, unknown), or a conversation that isn't there.
     @discardableResult
-    public func append(question: String, answer: CoachAnswer, to id: UUID, at date: Date = .now) -> Bool {
-        guard answer.isStorable, let conversation = conversation(id), let data = try? JSONEncoder().encode(answer) else { return false }
+    public func append(question: String, answer: CoachAnswer, to id: UUID, at date: Date = .now) -> UUID? {
+        guard answer.isStorable, let conversation = conversation(id), let data = try? JSONEncoder().encode(answer) else { return nil }
         let message = AIMessage(createdAt: date, question: question, answer: answer, data: data)
         message.conversation = conversation
         modelContext.insert(message)
         conversation.updatedAt = date
         try? modelContext.save()
-        return true
+        return message.id
+    }
+
+    /// What the person said about a stored answer (nil takes it back).
+    public func setFeedback(_ feedback: CoachFeedback?, for messageID: UUID) {
+        var descriptor = FetchDescriptor<AIMessage>(predicate: #Predicate { $0.id == messageID })
+        descriptor.fetchLimit = 1
+        guard let message = try? modelContext.fetch(descriptor).first else { return }
+        message.feedbackRaw = feedback?.rawValue
+        try? modelContext.save()
     }
 
     public func conversations() -> [CoachConversationSummary] {
         let all = (try? modelContext.fetch(FetchDescriptor<AIConversation>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)]))) ?? []
-        return all.map { conversation in
+        // A conversation nothing was kept from (every reply was fixed) has nothing to show.
+        return all.filter { !$0.messages.isEmpty }.map { conversation in
             let ordered = conversation.messages.sorted { $0.createdAt < $1.createdAt }
             return CoachConversationSummary(
                 id: conversation.id, updatedAt: conversation.updatedAt, firstQuestion: ordered.first?.question ?? "", turns: ordered.count
@@ -104,7 +126,10 @@ public actor CoachHistoryStore {
         guard let conversation = conversation(id) else { return [] }
         return conversation.messages.sorted { $0.createdAt < $1.createdAt }.compactMap { message in
             guard let answer = try? JSONDecoder().decode(CoachAnswer.self, from: message.answerData) else { return nil }
-            return CoachStoredTurn(id: message.id, createdAt: message.createdAt, question: message.question, answer: answer)
+            return CoachStoredTurn(
+                id: message.id, createdAt: message.createdAt, question: message.question, answer: answer,
+                feedback: message.feedbackRaw.flatMap(CoachFeedback.init(rawValue:))
+            )
         }
     }
 

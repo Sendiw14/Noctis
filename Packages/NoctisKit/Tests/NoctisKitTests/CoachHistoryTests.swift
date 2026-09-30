@@ -21,7 +21,7 @@ struct CoachHistoryTests {
         let (store, _) = try store()
         let id = await store.startConversation()
         let kept = await store.append(question: "Why is my recovery lower?", answer: answer(), to: id)
-        #expect(kept)
+        #expect(kept != nil)
         let turns = await store.turns(in: id)
         #expect(turns.count == 1)
         #expect(turns[0].question == "Why is my recovery lower?")
@@ -34,15 +34,15 @@ struct CoachHistoryTests {
         let id = await store.startConversation()
         let crisis = CoachScriptedAnswers.answer(.crisis)
         #expect(!crisis.isStorable)
-        #expect(await store.append(question: "I want to die", answer: crisis, to: id) == false)
-        #expect(await store.append(question: "anything", answer: answer(intent: .crisis), to: id) == false)
+        #expect(await store.append(question: "I want to die", answer: crisis, to: id) == nil)
+        #expect(await store.append(question: "anything", answer: answer(intent: .crisis), to: id) == nil)
         #expect(await store.messageCount() == 0)
-        #expect(await store.conversations().first?.turns == 0)
+        #expect(await store.conversations().isEmpty, "a conversation nothing was kept from has nothing to show")
     }
 
     @Test func aTurnForAConversationThatIsntThereIsNotStored() async throws {
         let (store, _) = try store()
-        #expect(await store.append(question: "q", answer: answer(), to: UUID()) == false)
+        #expect(await store.append(question: "q", answer: answer(), to: UUID()) == nil)
         #expect(await store.messageCount() == 0)
     }
 

@@ -1,3 +1,4 @@
+import CoachFeature
 import CoachKit
 import DesignSystem
 import Foundation
@@ -22,6 +23,8 @@ public struct AppContainer {
     /// Coach's front door: question in, validated answer out. There is no
     /// Coach UI yet (ROADMAP.md); the tab will read this and nothing else.
     public let coachService: AIService
+    /// The Coach tab's view model.
+    public let coachViewModel: CoachViewModel
     public let storeManager: StoreManager
     public let modelContainer: ModelContainer
 
@@ -175,12 +178,21 @@ public struct AppContainer {
         #else
         let coachModel: (any AIProvider)? = Self.systemModel()
         #endif
-        self.coachService = AIService(
+        let coachData = RepositoryCoachDataSource(home: homeRepository, sleep: sleepRepository, recovery: recoveryRepository, insights: insightsRepository)
+        let coachService = AIService(
             format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
-            dataSource: RepositoryCoachDataSource(home: homeRepository, sleep: sleepRepository, recovery: recoveryRepository, insights: insightsRepository),
+            dataSource: coachData,
             profile: { await MainActor.run { model.profile } },
             model: coachModel,
             history: coachHistory
+        )
+        self.coachService = coachService
+        self.coachViewModel = CoachViewModel(
+            service: coachService,
+            dataSource: coachData,
+            history: coachHistory,
+            profile: { model.profile },
+            connectHealth: { await model.requestHealthAuthorization() }
         )
         #if DEBUG
         if debug.logHomeSnapshot {

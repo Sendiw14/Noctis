@@ -68,6 +68,14 @@ public enum CoachOutcome: Sendable, Equatable {
 public struct CoachResult: Sendable, Equatable {
     public let answer: CoachAnswer
     public let outcome: CoachOutcome
+    /// The stored turn's id, when the exchange was kept (feedback is saved against it).
+    public let messageID: UUID?
+
+    public init(answer: CoachAnswer, outcome: CoachOutcome, messageID: UUID? = nil) {
+        self.answer = answer
+        self.outcome = outcome
+        self.messageID = messageID
+    }
 }
 
 /// Coach's one entry point: question in, validated answer out.
@@ -130,11 +138,19 @@ public actor AIService {
     /// is a crisis exchange, which is never kept and never logged.
     public func answer(to question: String, conversationID: UUID? = nil) async -> CoachResult {
         let result = await resolve(question: question, conversationID: conversationID)
-        if result.answer.isStorable {
-            log(result.outcome)
-            if let history, let conversationID { await history.append(question: question, answer: result.answer, to: conversationID) }
-        }
-        return result
+        // A crisis exchange is neither logged nor kept; a fixed reply is logged as its word and not kept.
+        guard result.answer.intent != .crisis else { return result }
+        log(result.outcome)
+        guard result.answer.isStorable, let history, let conversationID,
+              let id = await history.append(question: question, answer: result.answer, to: conversationID) else { return result }
+        return CoachResult(answer: result.answer, outcome: result.outcome, messageID: id)
+    }
+
+    /// Whether the on-device model can answer right now (`.notConfigured`
+    /// when the app has none): the hub says so when it can't.
+    public func modelAvailability() -> CoachAvailability {
+        guard flags.aiAppleIntelligence else { return .notConfigured }
+        return model?.availability ?? .notConfigured
     }
 
     // MARK: - Steps
@@ -297,3 +313,12 @@ enum CoachRace {
         }
     }
 }
+
+/// What the Coach screens need from the service, so a view model can be
+/// driven by a stand-in in tests.
+public protocol CoachAnswering: Sendable {
+    func answer(to question: String, conversationID: UUID?) async -> CoachResult
+    func modelAvailability() async -> CoachAvailability
+}
+
+extension AIService: CoachAnswering {}

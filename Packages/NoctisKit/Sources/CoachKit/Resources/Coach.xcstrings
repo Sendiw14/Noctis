@@ -155,6 +155,292 @@
         }
       }
     },
+    "coach.q.bedtime": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When should I sleep?"
+          }
+        }
+      }
+    },
+    "coach.q.consistency": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How can I improve consistency?"
+          }
+        }
+      }
+    },
+    "coach.q.focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should I focus on today?"
+          }
+        }
+      }
+    },
+    "coach.q.insight.bedtimeShift": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my bedtime shift."
+          }
+        }
+      }
+    },
+    "coach.q.insight.consistencyChange": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my bedtime spread."
+          }
+        }
+      }
+    },
+    "coach.q.insight.consistentBedtime": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my consistent bedtime streak."
+          }
+        }
+      }
+    },
+    "coach.q.insight.earlierBedtimePattern": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What does my earlier bedtime pattern show?"
+          }
+        }
+      }
+    },
+    "coach.q.insight.hrvBelowRange": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my HRV lately."
+          }
+        }
+      }
+    },
+    "coach.q.insight.milestone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What patterns can you see in my recorded nights?"
+          }
+        }
+      }
+    },
+    "coach.q.insight.recordBestConsistency": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my steadiest week."
+          }
+        }
+      }
+    },
+    "coach.q.insight.recordHighestRecovery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my highest recovery."
+          }
+        }
+      }
+    },
+    "coach.q.insight.recordLongestNight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my longest night."
+          }
+        }
+      }
+    },
+    "coach.q.insight.recordLowestRestingHeartRate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my lowest resting heart rate."
+          }
+        }
+      }
+    },
+    "coach.q.insight.recoveryDirection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my recovery trend."
+          }
+        }
+      }
+    },
+    "coach.q.insight.restingHeartRateAboveRange": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my resting heart rate lately."
+          }
+        }
+      }
+    },
+    "coach.q.insight.sleepBalance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my sleep balance this week."
+          }
+        }
+      }
+    },
+    "coach.q.insight.sleepDurationShift": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my sleep duration shift."
+          }
+        }
+      }
+    },
+    "coach.q.insight.stageShare": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my deep and REM sleep."
+          }
+        }
+      }
+    },
+    "coach.q.insight.weekendShift": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell me about my weekend bedtimes."
+          }
+        }
+      }
+    },
+    "coach.q.recovery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How is my recovery today?"
+          }
+        }
+      }
+    },
+    "coach.q.recovery.higher": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why is my recovery higher today?"
+          }
+        }
+      }
+    },
+    "coach.q.recovery.lower": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why is my recovery lower today?"
+          }
+        }
+      }
+    },
+    "coach.q.sleep": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How did I sleep last night?"
+          }
+        }
+      }
+    },
+    "coach.q.sleep.higher": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why was my sleep better last night?"
+          }
+        }
+      }
+    },
+    "coach.q.sleep.lower": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why was my sleep worse last night?"
+          }
+        }
+      }
+    },
+    "coach.q.week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What changed this week?"
+          }
+        }
+      }
+    },
     "coach.router.bedtimeAdvice": {
       "extractionState": "manual",
       "localizations": {
@@ -172,7 +458,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "\\bconsisten\\w*\n\\bregular (schedule|routine|bed ?time|sleep)\\b\n\\b(same|fixed|steady) (time|schedule|routine|bed ?time)\\b\n\\broutine\\b\n\\bstay (on track|steady)\\b\n\\bschedule\\b"
+            "value": "\\bconsisten\\w*\n\\bbedtime (shift|change|spread|variation|streak)s?\\b\n\\bweekend\\b\n\\bsteadiest\\b\n\\bregular (schedule|routine|bed ?time|sleep)\\b\n\\b(same|fixed|steady) (time|schedule|routine|bed ?time)\\b\n\\broutine\\b\n\\bstay (on track|steady)\\b\n\\bschedule\\b"
           }
         }
       }
@@ -271,7 +557,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "\\brecovery\\b\n\\b(readiness|recovered)\\b\n\\bwhy (am i|do i feel) (so )?(tired|drained|exhausted|wiped)\\b"
+            "value": "\\brecovery\\b\n\\b(hrv|heart rate variability|resting heart rate|resting rate)\\b\n\\b(readiness|recovered)\\b\n\\bwhy (am i|do i feel) (so )?(tired|drained|exhausted|wiped)\\b"
           }
         }
       }
@@ -282,7 +568,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "\\bhow did i sleep\\b\n\\bwhy did i sleep\\b\n\\bhow was my sleep\\b\n\\b(sleep|slept)\\b.*\\b(better|worse|more|less|longer|shorter|badly|well|lower|higher|same|different|usual|normal)\\b\n\\bdid i (sleep|slept)\\b\n\\b(better|worse|more|less|longer|shorter)\\b.*\\b(sleep|slept)\\b\n\\blast night\\b\n\\bmy sleep\\b"
+            "value": "\\bhow did i sleep\\b\n\\bwhy did i sleep\\b\n\\bhow was my sleep\\b\n\\b(sleep|slept)\\b.*\\b(better|worse|more|less|longer|shorter|badly|well|lower|higher|same|different|usual|normal)\\b\n\\bdid i (sleep|slept)\\b\n\\b(deep|rem) sleep\\b\n\\b(longest|shortest) night\\b\n\\b(better|worse|more|less|longer|shorter)\\b.*\\b(sleep|slept)\\b\n\\blast night\\b\n\\bmy sleep\\b"
           }
         }
       }
@@ -393,72 +679,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "I can help with questions about your sleep and recovery."
-          }
-        }
-      }
-    },
-    "coach.suggest.bedtimeAdvice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "When should I sleep?"
-          }
-        }
-      }
-    },
-    "coach.suggest.consistencyHelp": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How do I stay more consistent?"
-          }
-        }
-      }
-    },
-    "coach.suggest.recoveryChange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Why is my recovery lower today?"
-          }
-        }
-      }
-    },
-    "coach.suggest.sleepChange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How did I sleep better?"
-          }
-        }
-      }
-    },
-    "coach.suggest.todayFocus": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What should I focus on today?"
-          }
-        }
-      }
-    },
-    "coach.suggest.weekChange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What changed this week?"
           }
         }
       }

@@ -75,11 +75,21 @@ nonisolated private final class FakeClassifier: CoachIntentClassifying, @uncheck
 }
 
 /// How long an empty task takes to run: near zero on an idle machine, seconds when the whole suite has the pool busy.
-private func schedulerLag() async -> Duration {
+nonisolated private func schedulerLag() async -> Duration {
     let clock = ContinuousClock()
     let started = clock.now
     await Task.detached {}.value
     return clock.now - started
+}
+
+/// Asks one question and times it, off the main actor (the other tests in the suite use it), with the scheduler's lag before and after.
+nonisolated private func timedAnswer(_ service: AIService) async -> (CoachResult, Duration, Duration) {
+    let lagBefore = await schedulerLag()
+    let clock = ContinuousClock()
+    let started = clock.now
+    let result = await service.answer(to: "Why is my recovery lower today?")
+    let elapsed = clock.now - started
+    return (result, elapsed, max(lagBefore, await schedulerLag()))
 }
 
 // MARK: - Tests
@@ -233,8 +243,8 @@ struct CoachServiceTests {
     }
 
     @Test func aMisbehavingModelIsRejectedForEveryIntent() async {
-        for intent in CoachQuestionRouter.intentOrder {
-            let question = CoachCopy.string("coach.suggest.\(intent == .patterns ? CoachIntent.weekChange.rawValue : intent.rawValue)")
+        for suggested in CoachQuestion.suggested {
+            let question = CoachQuestionText.text(suggested)
             let result = await service(model: MockAIProvider(mode: .failing(.diagnosis), locale: CoachFixture.locale)).answer(to: question)
             #expect(result.outcome == .template(.validationFailed("bannedLanguage")), Comment(rawValue: question))
         }
@@ -252,12 +262,7 @@ struct CoachServiceTests {
         let timeout = Duration.milliseconds(300)
         let model = MockAIProvider(mode: .slow, slowDuration: .seconds(30), locale: CoachFixture.locale)
         let service = await service(model: model, timeout: timeout)
-        let lagBefore = await schedulerLag()
-        let clock = ContinuousClock()
-        let started = clock.now
-        let result = await service.answer(to: "Why is my recovery lower today?")
-        let elapsed = clock.now - started
-        let lag = max(lagBefore, await schedulerLag())
+        let (result, elapsed, lag) = await timedAnswer(service)
         #expect(result.outcome == .template(.timedOut))
         #expect(result.answer.sourceKind == .fromYourData)
         print("COACH-TIMING slow provider: timeout \(timeout), answered after \(elapsed)")
@@ -271,12 +276,7 @@ struct CoachServiceTests {
     @Test func aProviderThatIgnoresCancellationIsLeftBehindNotWaitedFor() async {
         let timeout = Duration.milliseconds(300)
         let service = await service(model: StubbornProvider(), timeout: timeout)
-        let lagBefore = await schedulerLag()
-        let clock = ContinuousClock()
-        let started = clock.now
-        let result = await service.answer(to: "Why is my recovery lower today?")
-        let elapsed = clock.now - started
-        let lag = max(lagBefore, await schedulerLag())
+        let (result, elapsed, lag) = await timedAnswer(service)
         print("COACH-TIMING stubborn provider: timeout \(timeout), answered after \(elapsed)")
         #expect(result.outcome == .template(.timedOut))
         #expect(elapsed < .seconds(5), "the provider only answers after 6 seconds")
@@ -373,7 +373,7 @@ struct CoachServiceTests {
         #expect(!stored.answer.allText.joined().contains("{{"))
     }
 
-    @Test func medicalAndUnknownExchangesAreStoredButCrisisIsNot() async throws {
+    @Test func fixedRepliesAreNeverStoredOnlyAnswersFromTheData() async throws {
         let history = try store()
         let id = await history.startConversation()
         let service = await service(history: history)
@@ -381,7 +381,7 @@ struct CoachServiceTests {
             _ = await service.answer(to: question, conversationID: id)
         }
         let questions = await history.turns(in: id).map(\.question)
-        #expect(questions == ["do I have sleep apnea", "what's the weather", "When should I sleep?"])
+        #expect(questions == ["When should I sleep?"], "medical, unknown and crisis replies are fixed; none is kept")
     }
 
     @Test func theLastTwoTurnsGoIntoTheNextContextAsPlainSummaries() async throws {

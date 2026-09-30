@@ -17,12 +17,16 @@ public final class AppModel {
     public var recoveryPath: [RecoveryRoute] = []
     /// The Insights tab's navigation stack.
     public var insightsPath: [InsightsRoute] = []
+    /// The Coach tab's navigation stack.
+    public var coachPath: [CoachPage] = []
     /// Where the Sleep tab should land, until it takes it (`takeSleepDestination`).
     public private(set) var sleepDestination: SleepDestination?
     /// Where the Recovery tab should land, until it takes it.
     public private(set) var recoveryDestination: RecoveryDestination?
     /// Which chip the Insights tab should show, until it takes it.
     public private(set) var insightsDestination: InsightsDestination?
+    /// The question the Coach tab should open on, until it takes it.
+    public private(set) var coachDestination: CoachDestination?
     /// The tab whose button was pressed while it was already showing.
     public private(set) var tabRetap: TabRetap?
     private var serial = 0
@@ -80,8 +84,17 @@ public final class AppModel {
         case .insight(let id):
             // The page is pushed over the tab's root, on the chip it was on.
             insightsPath = [.insight(id: id)]
-        case .coach: break
+        case .coach(let question):
+            serial += 1
+            coachDestination = CoachDestination(question: question, serial: serial)
+            coachPath = []
         }
+    }
+
+    /// The Coach destination waiting for the tab, once.
+    public func takeCoachDestination() -> CoachDestination? {
+        defer { coachDestination = nil }
+        return coachDestination
     }
 
     /// The Insights destination waiting for the tab, once.

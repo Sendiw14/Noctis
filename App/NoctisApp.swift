@@ -13,6 +13,7 @@ struct NoctisApp: App {
                 .environment(container.sleepViewModel)
                 .environment(container.recoveryViewModel)
                 .environment(container.insightsViewModel)
+                .environment(container.coachViewModel)
                 .environment(container.storeManager)
         }
     }

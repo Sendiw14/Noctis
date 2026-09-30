@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 @testable import CoachKit
+@testable import NoctisCore
 
 /// The deterministic router: what each question is, which way it leans, and
 /// which questions never reach a model.
@@ -35,7 +36,8 @@ struct CoachRouterTests {
     @Test func theSuggestedQuestionsComeFromTheCatalogAndEachRoutesToItsIntent() {
         let questions = router.suggestedQuestions
         #expect(questions.count == 6)
-        #expect(questions == CoachQuestionRouter.suggestedIntents.map { CoachCopy.string("coach.suggest.\($0.rawValue)") })
+        #expect(questions == CoachQuestion.suggested.map { CoachQuestionText.text($0) })
+        #expect(CoachQuestionRouter.suggestedIntents == [.recoveryChange, .sleepChange, .weekChange, .bedtimeAdvice, .consistencyHelp, .todayFocus])
         for (question, intent) in zip(questions, CoachQuestionRouter.suggestedIntents) {
             #expect(router.route(question).intent == intent, Comment(rawValue: question))
         }

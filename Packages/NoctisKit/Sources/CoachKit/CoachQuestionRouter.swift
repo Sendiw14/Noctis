@@ -1,4 +1,5 @@
 import Foundation
+import NoctisCore
 
 /// What the router decided about a question.
 public struct CoachRoute: Sendable, Equatable {
@@ -114,12 +115,12 @@ public final class CoachQuestionRouter: @unchecked Sendable {
         return nil
     }
 
-    /// The six questions Coach suggests.
-    public static let suggestedIntents: [CoachIntent] = [.recoveryChange, .sleepChange, .weekChange, .bedtimeAdvice, .consistencyHelp, .todayFocus]
+    /// The six questions Coach suggests, and the intent each is read as.
+    public static let suggestedIntents: [CoachIntent] = CoachQuestion.suggested.map(CoachQuestionText.intent(of:))
 
-    /// The six questions Coach suggests, in order.
+    /// The six questions Coach suggests, in order (neutral: no direction).
     public var suggestedQuestions: [String] {
-        Self.suggestedIntents.map { copy("coach.suggest.\($0.rawValue)") }
+        CoachQuestion.suggested.map { CoachQuestionText.text($0, copy: copy) }
     }
 
     private func matches(_ regexes: [NSRegularExpression], _ text: String) -> Bool {

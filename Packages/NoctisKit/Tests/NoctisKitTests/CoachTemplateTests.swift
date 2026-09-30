@@ -63,7 +63,7 @@ struct CoachTemplateTests {
         #expect(raw.count > 100)
         // Scripts and suggested questions are the app's own words (the spec's medical script says "diagnose"; a question says "should"),
         // the pattern note is the required "not proof of a cause" line, and the confidence line holds {level} and {nights}.
-        let exempt = ["coach.script.", "coach.suggest.", "coach.pattern.note", "coach.confidence.line."]
+        let exempt = ["coach.script.", "coach.q.", "coach.pattern.note", "coach.confidence.line."]
         for (key, text) in raw where !exempt.contains(where: key.hasPrefix) {
             let written = CoachTokens.stripped(text)
             #expect(BannedLanguage.hits(in: written, of: BannedLanguage.coach).isEmpty, Comment(rawValue: "\(key): \(text)"))

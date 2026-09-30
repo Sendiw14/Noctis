@@ -1,3 +1,4 @@
+import CoachFeature
 import DesignSystem
 import HomeFeature
 import InsightsFeature
@@ -56,6 +57,7 @@ struct RootTabView: View {
     @Environment(SleepViewModel.self) private var sleep
     @Environment(RecoveryViewModel.self) private var recovery
     @Environment(InsightsViewModel.self) private var insights
+    @Environment(CoachViewModel.self) private var coach
     @Environment(\.scenePhase) private var scenePhase
     @State private var clock = HomeClock()
 
@@ -166,7 +168,7 @@ struct RootTabView: View {
             InsightsTabView(viewModel: insights)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .coach:
-            NoctisTabPlaceholder(.coach, title: tab.title, dateCaption: home.header.dateCaption)
+            CoachTabView(viewModel: coach)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         }
     }
