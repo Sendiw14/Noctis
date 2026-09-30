@@ -13,10 +13,11 @@ public enum RecoveryPresentation: Sendable {
     case pushed
 }
 
-/// Recovery: the date, the title, the segmented control (Today | 7D | 30D |
-/// 90D) and whatever the segment shows, on the paper. One scroll. The same
-/// component is the Recovery tab's root and the screen Home's ring zooms
-/// into; it reads only `RecoveryViewModel` (APP_RULES.md R20).
+/// Recovery on the tab scaffold: the lavender field (date, the title, the
+/// segmented control Today | 7D | 30D | 90D) and whatever the segment shows
+/// on the paper. One scroll. The same component is the Recovery tab's root
+/// and the screen Home's ring zooms into; it reads only `RecoveryViewModel`
+/// (APP_RULES.md R20).
 public struct RecoveryScreen: View {
     static let contentMaxWidth: CGFloat = 680
 
@@ -28,7 +29,6 @@ public struct RecoveryScreen: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollPosition = ScrollPosition(edge: .top)
-    @State private var fieldHeight: CGFloat = 0
 
     public init(
         viewModel: RecoveryViewModel,
@@ -42,25 +42,45 @@ public struct RecoveryScreen: View {
         self.openFactor = openFactor
     }
 
+    /// How far the first thing under the field rides up over its edge: a
+    /// card by 24pt; Today's ring on its paper disc so the disc is 24pt in;
+    /// nothing for a state's dormant ring or the skeleton.
+    private var top: TabContentTop {
+        guard let screen = viewModel.screen else { return .below(NoctisSpacing.md) }
+        if screen.state != nil || screen.learning != nil || screen.noSleep != nil { return .below(NoctisSpacing.md) }
+        return screen.today != nil ? .overlapsDisc : .overlapsField
+    }
+
     public var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
-                RecoveryContent(viewModel: viewModel, presentation: presentation, fieldHeight: $fieldHeight, openFactor: openFactor)
+            TabScreenScaffold(
+                .recovery,
+                presentation: presentation == .tab ? .tab : .pushed,
+                header: TabScreenHeader(
+                    // A space while loading keeps the caption's line, so the title doesn't drop when it arrives.
+                    dateCaption: viewModel.screen?.dateCaption ?? " ",
+                    title: "Recovery",
+                    showsTitle: presentation == .tab,
+                    control: viewModel.screen?.state == nil ? AnyView(segmentPicker) : nil
+                ),
+                entrance: presentation == .tab ? viewModel.fieldEntrance : .none,
+                onEntered: { viewModel.fieldEntered() },
+                contentTop: top,
+                scrollPosition: $scrollPosition,
+                refresh: {
+                    await viewModel.refresh()
+                    NoctisHaptics.soft()
+                }
+            ) {
+                RecoveryContent(viewModel: viewModel, openFactor: openFactor)
             }
-            .scrollPosition($scrollPosition)
-            .scrollClipDisabled()
             .task(id: viewModel.screen?.today != nil) {
                 guard let focus, viewModel.screen?.today != nil else { return }
                 try? await Task.sleep(for: .seconds(0.05))
                 proxy.scrollTo(focus, anchor: .top)
             }
         }
-        .modifier(RecoveryChrome(presentation: presentation, fieldHeight: fieldHeight))
-        .refreshable {
-            await viewModel.refresh()
-            NoctisHaptics.soft()
-        }
-        .background { PaperBackground(adaptive: true).ignoresSafeArea() }
+        .modifier(RecoveryNavigation(presentation: presentation))
         // Any touch during the reveal skips to its end.
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
         .task { await viewModel.onAppear() }
@@ -73,6 +93,26 @@ public struct RecoveryScreen: View {
         }
     }
 
+    private var segmentPicker: some View {
+        Picker("Range", selection: segmentBinding) {
+            ForEach(RecoverySegment.allCases, id: \.self) { segment in
+                Text(segment.title).tag(segment)
+            }
+        }
+        .pickerStyle(.segmented)
+        .disabled(viewModel.screen == nil)
+        .accessibilityIdentifier("recovery.range")
+    }
+
+    private var segmentBinding: Binding<RecoverySegment> {
+        Binding {
+            viewModel.selection.segment
+        } set: { segment in
+            NoctisHaptics.snapLight()
+            viewModel.select(segment: segment)
+        }
+    }
+
     /// Back to the top: a second press of the Recovery tab.
     public func scrollToTop() {
         withAnimation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion)) {
@@ -81,20 +121,15 @@ public struct RecoveryScreen: View {
     }
 }
 
-/// The chrome a presentation adds: the tab hides the navigation bar and
-/// guards the status bar; pushed shows an inline "Recovery" with a back
-/// button.
-private struct RecoveryChrome: ViewModifier {
+/// Pushed shows an inline "Recovery" with a back button (the tab's scaffold
+/// hides the navigation bar itself).
+private struct RecoveryNavigation: ViewModifier {
     let presentation: RecoveryPresentation
-    let fieldHeight: CGFloat
 
     func body(content: Content) -> some View {
         switch presentation {
         case .tab:
             content
-                .noctisSectionStatusBar(.recovery, fieldHeight: fieldHeight)
-                .navigationTitle("Recovery")
-                .toolbar(.hidden, for: .navigationBar)
         case .pushed:
             content
                 .navigationTitle("Recovery")
@@ -103,53 +138,24 @@ private struct RecoveryChrome: ViewModifier {
     }
 }
 
-/// The scrolling content: the lavender field (date, title, control), then
-/// whatever the selection shows.
+/// What the segment shows under the field, on the paper.
 struct RecoveryContent: View {
     let viewModel: RecoveryViewModel
-    let presentation: RecoveryPresentation
-    @Binding var fieldHeight: CGFloat
     let openFactor: (RecoveryFactorKind, RecoveryFactorRange) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// How far the first thing under the field rides up over its edge: a
-    /// card by 24pt; Today's ring, on its paper disc, so the disc's top is
-    /// 24pt in; nothing for a state's dormant ring or the skeleton.
-    private var overlap: CGFloat {
-        let full = NoctisSectionField<EmptyView, EmptyView>.overlap
-        guard let screen = viewModel.screen else { return 0 }
-        if screen.state != nil || screen.learning != nil || screen.noSleep != nil { return 0 }
-        return screen.today != nil ? full - RecoveryHeroView.discMargin : full
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            NoctisSectionField(
-                .recovery, bottomInset: NoctisSpacing.md + NoctisSectionField<EmptyView, EmptyView>.overlap, height: $fieldHeight,
-                entrance: presentation == .tab ? viewModel.fieldEntrance : .none,
-                onEntered: { viewModel.fieldEntered() }
-            ) {
-                RecoveryHeaderView(viewModel: viewModel, presentation: presentation)
-            } motif: {
-                NoctisArcsMotif()
+        ZStack(alignment: .top) {
+            if let screen = viewModel.screen {
+                body(screen)
+                    .id(viewModel.revealSkips)
+                    .transition(.opacity)
+            } else {
+                RecoverySkeletonView(charts: viewModel.selection.segment != .today)
+                    .transition(.opacity)
             }
-            ZStack(alignment: .top) {
-                if let screen = viewModel.screen {
-                    body(screen)
-                        .id(viewModel.revealSkips)
-                        .transition(.opacity)
-                } else {
-                    RecoverySkeletonView(charts: viewModel.selection.segment != .today)
-                        .transition(.opacity)
-                }
-            }
-            .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.screen == nil)
-            .frame(maxWidth: RecoveryScreen.contentMaxWidth)
-            .padding(.horizontal, NoctisSpacing.lg)
-            .padding(.top, overlap > 0 ? -overlap : NoctisSpacing.md)
-            .padding(.bottom, NoctisSpacing.xl)
-            .frame(maxWidth: .infinity)
         }
+        .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.screen == nil)
     }
 
     @ViewBuilder
@@ -171,47 +177,6 @@ struct RecoveryContent: View {
                     RecoveryHistoryView(history: history, viewModel: viewModel, openFactor: openFactor)
                 }
             }
-        }
-    }
-}
-
-/// Date caption, "Recovery", and the segmented control.
-struct RecoveryHeaderView: View {
-    let viewModel: RecoveryViewModel
-    let presentation: RecoveryPresentation
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-            // A space while loading keeps the caption's line, so the title doesn't drop when it arrives.
-            NoctisCaption(viewModel.screen?.dateCaption ?? " ", style: .noctisFieldInk2)
-            if presentation == .tab {
-                Text("Recovery")
-                    .noctisFont(34, .bold, relativeTo: .largeTitle)
-                    .tracking(-0.6)
-                    .foregroundStyle(.noctisFieldInk)
-                    .accessibilityAddTraits(.isHeader)
-            }
-            if viewModel.screen?.state == nil {
-                Picker("Range", selection: segmentBinding) {
-                    ForEach(RecoverySegment.allCases, id: \.self) { segment in
-                        Text(segment.title).tag(segment)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.top, NoctisSpacing.xs)
-                .disabled(viewModel.screen == nil)
-                .noctisWashOrigin()
-                .accessibilityIdentifier("recovery.range")
-            }
-        }
-    }
-
-    private var segmentBinding: Binding<RecoverySegment> {
-        Binding {
-            viewModel.selection.segment
-        } set: { segment in
-            NoctisHaptics.snapLight()
-            viewModel.select(segment: segment)
         }
     }
 }

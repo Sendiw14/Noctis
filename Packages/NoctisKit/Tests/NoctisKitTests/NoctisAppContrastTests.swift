@@ -154,12 +154,13 @@ struct NoctisAppContrastTests {
     }
 
     /// The tab glyphs' section inks: 3:1 as graphics on the paper and the
-    /// card, in both modes.
+    /// card, in both modes, for all five tabs.
     @Test(arguments: modes)
     func sectionInksStandOutAsGraphics(_ mode: String, _ palette: NoctisAppPalette) {
-        for (name, ink) in [("sage", palette.sectionSage), ("lavender", palette.sectionLavender), ("butter", palette.sectionButter)] {
-            #expect(ratio(ink, palette.bg) >= 3, "\(mode): section \(name) on the paper \(ratio(ink, palette.bg))")
-            #expect(ratio(ink, palette.surface) >= 3, "\(mode): section \(name) on the card \(ratio(ink, palette.surface))")
+        for section in NoctisSection.allCases {
+            let ink = section.inkHex(palette)
+            #expect(ratio(ink, palette.bg) >= 3, "\(mode): \(section) glyph on the paper \(ratio(ink, palette.bg))")
+            #expect(ratio(ink, palette.surface) >= 3, "\(mode): \(section) glyph on the card \(ratio(ink, palette.surface))")
         }
     }
 
@@ -187,26 +188,79 @@ struct NoctisAppContrastTests {
         }
     }
 
-    /// Text on a section field: block ink, and the quieter ink, on all three
-    /// fields in both modes.
+    /// Cocoa ink on every field, in both modes: full ink, and the quieter
+    /// inks (the caption's .7, the summary's .8) at 4.5:1, raised where a
+    /// field needs it.
     @Test(arguments: modes)
     func fieldInkReadsOnEveryField(_ mode: String, _ palette: NoctisAppPalette) {
-        for (name, fill) in [("sage", palette.blockSage), ("lavender", palette.blockLavender), ("butter", palette.blockButter)] {
-            #expect(ratio(palette.blockInk, fill) >= 4.5, "\(mode): field ink on \(name)")
-            let quieter = blend(palette.blockInk, over: fill, alpha: NoctisFieldInkStyle.secondaryOpacity(dark: mode == "dark"))
-            #expect(ratio(quieter, fill) >= 4.5, "\(mode): the quieter field ink on \(name) \(ratio(quieter, fill))")
+        let dark = mode == "dark"
+        for section in NoctisSection.allCases {
+            let fill = section.fillHex(palette)
+            #expect(ratio(palette.blockInk, fill) >= 4.5, "\(mode): field ink on \(section)")
+            for target in [NoctisFieldInkStyle.captionOpacity, NoctisFieldInkStyle.summaryOpacity] {
+                let opacity = section.quietOpacity(target: target, dark: dark)
+                #expect(opacity >= target && opacity <= 1, "\(mode) \(section) \(target)")
+                let quieter = blend(palette.blockInk, over: fill, alpha: opacity)
+                #expect(ratio(quieter, fill) >= 4.5, "\(mode): ink at \(opacity) on \(section) \(ratio(quieter, fill))")
+            }
         }
     }
 
+    /// The five field colors are the ones the tab scaffold names.
+    @Test func theFiveFieldColorsAreTheScaffoldsTokens() {
+        let light = NoctisAppPalette.light, dark = NoctisAppPalette.dark
+        #expect([NoctisSection.home, .sleep, .recovery, .insights, .coach].map { $0.fillHex(light) } == ["F0B27F", "A9BC84", "A08CEB", "F2CE6B", "EBA79E"])
+        #expect([NoctisSection.home, .sleep, .recovery, .insights, .coach].map { $0.fillHex(dark) } == ["D48A55", "8FA366", "8E7BDC", "E0B955", "C98580"])
+        #expect([NoctisSection.home, .sleep, .recovery, .insights, .coach].map { $0.inkHex(light) } == ["B4622A", "6B8A3E", "6B55C4", "8A6A1F", "A4524A"])
+        #expect(dark.sectionApricot == "D48A55")
+    }
+
     /// The field runs under the status bar only where the system's status-bar
-    /// text (black in Light, white in Dark) clears 3:1 over it.
+    /// text (black in Light, white in Dark) clears 3:1 over it; a field that
+    /// can't starts below the safe area.
     @Test func theFieldRunsUnderTheStatusBarWhereItsTextStaysLegible() {
         for section in NoctisSection.allCases {
             #expect(section.extendsUnderStatusBar(dark: false), "Light \(section)")
         }
+        // White on the dark fields, from their luminance.
+        for section in NoctisSection.allCases {
+            let ratio = ratio("FFFFFF", section.fillHex(.dark))
+            #expect(section.extendsUnderStatusBar(dark: true) == (ratio >= 3), "Dark \(section) \(ratio)")
+        }
         #expect(NoctisSection.recovery.extendsUnderStatusBar(dark: true), "white on the dark lavender is 3.5:1")
         #expect(!NoctisSection.sleep.extendsUnderStatusBar(dark: true), "white on the dark sage fails 3:1")
         #expect(!NoctisSection.insights.extendsUnderStatusBar(dark: true), "white on the dark butter fails 3:1")
+    }
+
+    /// The first card or hero below a field overlaps its bottom edge by 24pt;
+    /// a ring's paper disc is 8pt wide, so the ring itself rides up 16.
+    @Test func theFirstCardOverlapsTheFieldBy24pt() {
+        #expect(TabScreenScaffold<EmptyView>.overlap == 24)
+        #expect(NoctisSectionField<EmptyView, EmptyView>.overlap == 24)
+        #expect(TabScreenScaffold<EmptyView>.discMargin == 8)
+    }
+
+    /// The daily gate the placeholders' wash uses: once per calendar day.
+    @Test func theDailyGateClaimsOncePerCalendarDay() {
+        let defaults = UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? .standard
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+        let morning = calendar.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: 8)) ?? Date()
+        let evening = calendar.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: 21)) ?? Date()
+        let nextDay = calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 8)) ?? Date()
+        #expect(!NoctisDailyGate.isClaimed(key: "noctis.insights.lastWashDay", now: morning, calendar: calendar, defaults: defaults))
+        NoctisDailyGate.claim(key: "noctis.insights.lastWashDay", now: morning, calendar: calendar, defaults: defaults)
+        #expect(NoctisDailyGate.isClaimed(key: "noctis.insights.lastWashDay", now: evening, calendar: calendar, defaults: defaults))
+        #expect(!NoctisDailyGate.isClaimed(key: "noctis.insights.lastWashDay", now: nextDay, calendar: calendar, defaults: defaults))
+        #expect(!NoctisDailyGate.isClaimed(key: "noctis.coach.lastWashDay", now: morning, calendar: calendar, defaults: defaults), "each tab has its own")
+    }
+
+    /// Each tab has its own glyph, and every field has a motif strip only
+    /// where the motif needs one.
+    @Test func everyTabHasItsOwnGlyphAndFieldMotif() {
+        #expect(Set(NoctisSection.allCases.map(\.systemImage)).count == 5)
+        #expect(NoctisSectionMotif.bottomStrip(.sleep) == 52 && NoctisSectionMotif.bottomStrip(.home) == 32)
+        #expect([NoctisSection.recovery, .insights, .coach].allSatisfy { NoctisSectionMotif.bottomStrip($0) == 0 })
     }
 
     @Test func theDarkCardIsTheApprovedValue() {

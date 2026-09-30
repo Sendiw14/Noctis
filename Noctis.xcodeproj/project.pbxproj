@@ -24,6 +24,7 @@
 		C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */; };
 		EA7DA501DAE317EC1028F0CD /* RecoveryQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */; };
 		F432F7BBD5A4F6990A6BA96C /* AppRoot in Frameworks */ = {isa = PBXBuildFile; productRef = 17C413CE67E2BAD13B2C2447 /* AppRoot */; };
+		F44796F3FE12B39F7FCDC5C0 /* TabScaffoldQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,7 @@
 		5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisApp.swift; sourceTree = "<group>"; };
 		811601970E5BB83FD5627B7D /* Noctis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Noctis.entitlements; sourceTree = "<group>"; };
 		85F4213CBB03353749905D7E /* HomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQATests.swift; sourceTree = "<group>"; };
+		92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabScaffoldQATests.swift; sourceTree = "<group>"; };
 		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
 		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
 		B596F2C4EB2DB5C8C3B19C1C /* HomePerformanceQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePerformanceQATests.swift; sourceTree = "<group>"; };
@@ -111,6 +113,7 @@
 				4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */,
 				2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */,
 				14A364E8BF38E298E7413078 /* SleepQATests.swift */,
+				92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */,
 				BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */,
 			);
 			path = UITests;
@@ -246,6 +249,7 @@
 				EA7DA501DAE317EC1028F0CD /* RecoveryQATests.swift in Sources */,
 				5D47D15860502C898689BDAF /* ScreenCatalogQATests.swift in Sources */,
 				B88BAE63AC69365D3DD5E6E9 /* SleepQATests.swift in Sources */,
+				F44796F3FE12B39F7FCDC5C0 /* TabScaffoldQATests.swift in Sources */,
 				0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

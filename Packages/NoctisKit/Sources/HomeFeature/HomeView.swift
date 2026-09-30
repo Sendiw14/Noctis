@@ -78,6 +78,7 @@ struct HomeView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollPosition = ScrollPosition(edge: .top)
     @State private var heroFrame: CGRect = .zero
@@ -103,20 +104,54 @@ struct HomeView: View {
         let _ = HomeBodyProbe.hit("HomeView")
         #endif
         // The compact bar is a sibling above the scroll view, not part of it.
-        ZStack(alignment: .top) {
-            scroll
-            HomeTopOverlay(viewModel: viewModel, scrollToTop: scrollToTop)
-                .zIndex(1)
+        TabScreenScaffold(
+            .home,
+            header: header,
+            entrance: viewModel.fieldEntrance,
+            onEntered: { viewModel.fieldEntered() },
+            fieldMaxWidth: contentWidth,
+            contentMaxWidth: contentWidth,
+            contentTop: top,
+            compactBar: .custom,
+            contentSpace: HomeView.contentSpace,
+            // Paper plus the 3% grain, in both modes; the evening paper over
+            // it in evening mode, and a flat dusk that lifts during the
+            // morning reveal (off the field too).
+            paperOverlay: AnyView(
+                ZStack {
+                    NoctisAppColor.eveningPaper.opacity(evening)
+                    NoctisAppColor.dusk.opacity(dusk).id(viewModel.revealSkips)
+                }
+            ),
+            // Nothing may show behind the status bar; the scrim wears the
+            // evening paper and the dusk too.
+            paperWashes: [
+                NoctisWash(NoctisAppColor.eveningPaper, opacity: evening),
+                NoctisWash(NoctisAppColor.dusk, opacity: dusk),
+            ],
+            fieldWashes: [NoctisWash(NoctisAppColor.dusk, opacity: dusk)],
+            topOverlay: AnyView(HomeTopOverlay(viewModel: viewModel, scrollToTop: scrollToTop).zIndex(1)),
+            scrollPosition: $scrollPosition,
+            refresh: {
+                await viewModel.refresh()
+                NoctisHaptics.soft()
+            },
+            onScroll: { top in
+                scrollProbe.top = top
+                viewModel.scrolled(visibleTop: top, heroTop: heroFrame.minY, heroHeight: heroFrame.height)
+            },
+            onScrollPhase: { _, phase in
+                if phase == .interacting { skipReveal() }
+                // The collapse budget covers a scroll, finger down to rest.
+                if phase == .interacting { NoctisSignpost.begin(.collapse) }
+                if phase == .idle { NoctisSignpost.end(.collapse) }
+            },
+            configureScroll: { AnyView($0.modifier(HomeSwipeActionsContainer())) }
+        ) {
+            HomeContent(viewModel: viewModel, zoomNamespace: zoomNamespace, actions: actions) { heroFrame = $0 }
         }
-        // Paper plus the 3% grain, in both modes; the evening paper over it
-        // in evening mode, and a flat dusk that lifts during the morning
-        // reveal.
-        .background {
-            PaperBackground(adaptive: true)
-                .overlay(NoctisAppColor.eveningPaper.opacity(evening))
-                .overlay(NoctisAppColor.dusk.opacity(dusk).id(viewModel.revealSkips))
-                .ignoresSafeArea()
-        }
+        .environment(\.homePaperWash, HomePaperWash(evening: evening, dusk: dusk))
+        .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: top)
         // Any touch or scroll during the morning reveal skips to its end.
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in skipReveal() }, including: revealRunning ? .all : .subviews)
         .task { await viewModel.onAppear() }
@@ -129,6 +164,9 @@ struct HomeView: View {
             // else back to the top.
             guard retap?.tab == .home else { return }
             if model.homePath.isEmpty { scrollToTop() } else { model.homePath = [] }
+        }
+        .onChange(of: heroFrame) { _, frame in
+            viewModel.scrolled(visibleTop: scrollProbe.top, heroTop: frame.minY, heroHeight: frame.height)
         }
         .onChange(of: viewModel.reveal) { _, phase in
             let target: Double = phase == .pending ? 1 : 0
@@ -154,11 +192,41 @@ struct HomeView: View {
                 SharePreviewSheet(content: share)
             }
         }
-        .navigationTitle("Home")
-        .toolbar(.hidden, for: .navigationBar)
         #if DEBUG
         .homeDebugProbe(lowPower: viewModel.isLowPower)
         #endif
+    }
+
+    /// One column at most 680pt wide; two columns to 1100 at regular width
+    /// (R21). The field is as wide.
+    private var contentWidth: CGFloat {
+        sizeClass == .regular ? HomeContent.regularMaxWidth : HomeContent.compactMaxWidth
+    }
+
+    /// Day's ring sits on a paper disc that rides up over the field's edge,
+    /// like Recovery Today; evening's Tonight hero and the states are text
+    /// on the paper below it.
+    private var top: TabContentTop {
+        guard let screen = viewModel.screen else { return .below(NoctisSpacing.md) }
+        switch screen.mode {
+        case .evening: return .below(NoctisSpacing.xl)
+        case .day:
+            if case .scored = screen.recovery { return .overlapsDisc }
+            return .below(NoctisSpacing.md)
+        }
+    }
+
+    /// The field's contents: the date, the greeting (its emphasized word in
+    /// cocoa), the one-sentence summary and the avatar.
+    private var header: TabScreenHeader {
+        let header = viewModel.header
+        return TabScreenHeader(
+            dateCaption: header.dateCaption,
+            title: Text("\(Text(header.greetingLead))\(Text(header.greetingEmphasis).foregroundStyle(NoctisAppColor.blockCocoa))\(Text(header.greetingTrail))"),
+            plainTitle: "Home",
+            summary: AnyView(HomeHeaderSummary(header: header)),
+            trailing: AnyView(HomeAvatarButton(open: actions.openProfile))
+        )
     }
 
     private var revealRunning: Bool { viewModel.reveal != .none }
@@ -171,39 +239,6 @@ struct HomeView: View {
         withTransaction(transaction) {
             dusk = 0
             viewModel.skipReveal()
-        }
-    }
-
-    private var scroll: some View {
-        ScrollView {
-            HomeContent(viewModel: viewModel, zoomNamespace: zoomNamespace, actions: actions) { heroFrame = $0 }
-        }
-        .scrollPosition($scrollPosition)
-        .onScrollPhaseChange { old, phase in
-            if phase == .interacting { skipReveal() }
-            // The collapse budget covers a scroll, finger down to rest.
-            if phase == .interacting { NoctisSignpost.begin(.collapse) }
-            if phase == .idle { NoctisSignpost.end(.collapse) }
-        }
-        .onScrollGeometryChange(for: Double.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, top in
-            scrollProbe.top = top
-            viewModel.scrolled(visibleTop: top, heroTop: heroFrame.minY, heroHeight: heroFrame.height)
-        }
-        .onChange(of: heroFrame) { _, frame in
-            viewModel.scrolled(visibleTop: scrollProbe.top, heroTop: frame.minY, heroHeight: frame.height)
-        }
-        // R14: cards keep their shadows at the scroll view's edges.
-        .scrollClipDisabled()
-        .modifier(HomeSwipeActionsContainer())
-        // Nothing may show behind the status bar; the scrim wears the
-        // evening paper and the dusk too.
-        .noctisStatusBarGuard(washes: [
-            NoctisWash(NoctisAppColor.eveningPaper, opacity: evening),
-            NoctisWash(NoctisAppColor.dusk, opacity: dusk),
-        ])
-        .refreshable {
-            await viewModel.refresh()
-            NoctisHaptics.soft()
         }
     }
 
@@ -298,29 +333,20 @@ struct HomeContent: View {
         #if DEBUG
         let _ = HomeBodyProbe.hit("HomeContent")
         #endif
-        VStack(alignment: .leading, spacing: 0) {
-            HomeHeaderView(header: viewModel.header, openProfile: actions.openProfile)
-            // R6: content starts 24pt below the title.
-            Color.clear.frame(height: NoctisSpacing.xl)
-            // The skeleton crossfades into the content in place.
-            ZStack(alignment: .top) {
-                if let screen = viewModel.screen {
-                    sections(screen)
-                        // A skipped reveal rebuilds the content at its end
-                        // state, cutting every animation in flight.
-                        .id(viewModel.revealSkips)
-                        .transition(.opacity)
-                } else {
-                    HomeSkeletonView(columns: isRegular ? 2 : 1, mode: viewModel.header.mode)
-                        .transition(.opacity)
-                }
+        // The skeleton crossfades into the content in place.
+        ZStack(alignment: .top) {
+            if let screen = viewModel.screen {
+                sections(screen)
+                    // A skipped reveal rebuilds the content at its end
+                    // state, cutting every animation in flight.
+                    .id(viewModel.revealSkips)
+                    .transition(.opacity)
+            } else {
+                HomeSkeletonView(columns: isRegular ? 2 : 1, mode: viewModel.header.mode)
+                    .transition(.opacity)
             }
-            .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.screen == nil)
         }
-        .frame(maxWidth: isRegular ? Self.regularMaxWidth : Self.compactMaxWidth)
-        .padding(.horizontal, NoctisSpacing.lg)
-        .padding(.top, NoctisSpacing.xs)
-        .padding(.bottom, NoctisSpacing.xl)
+        .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.screen == nil)
         .frame(maxWidth: .infinity)
         .coordinateSpace(.named(HomeView.contentSpace))
         .environment(\.noctisEveningPaper, viewModel.header.mode == .evening)
@@ -454,71 +480,78 @@ struct HomeContent: View {
 
 // MARK: - Header
 
-/// Date caption, greeting, one-sentence summary and the avatar.
-struct HomeHeaderView: View {
+/// The field's one-sentence summary, and "Updated 2h ago" once the data is
+/// old. Text on the field wears its cocoa inks.
+struct HomeHeaderSummary: View {
     let header: HomeHeader
-    let openProfile: () -> Void
-
-    private var emphasis: Color {
-        header.mode == .evening ? NoctisAppColor.lavenderText : NoctisAppColor.orangeText
-    }
 
     var body: some View {
-        HStack(alignment: .top, spacing: NoctisSpacing.sm) {
-            VStack(alignment: .leading, spacing: 6) {
-                NoctisCaption(header.dateCaption, style: .noctisInk3)
-                Text("\(Text(header.greetingLead))\(Text(header.greetingEmphasis).foregroundStyle(emphasis))\(Text(header.greetingTrail))")
-                    .noctisFont(34, .bold, relativeTo: .largeTitle)
-                    .tracking(-0.6)
-                    .foregroundStyle(NoctisAppColor.ink)
-                    .lineLimit(3)
-                    .minimumScaleFactor(0.8)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityAddTraits(.isHeader)
-                HomeSummaryLine(summary: header.summary)
-                if let updated = header.updated {
-                    Text(updated)
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(.noctisInk3)
-                }
+        VStack(alignment: .leading, spacing: 6) {
+            HomeSummaryLine(summary: header.summary)
+            if let updated = header.updated {
+                Text(updated)
+                    .noctisFont(13, relativeTo: .footnote)
+                    .foregroundStyle(.noctisInk3)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Button(action: openProfile) {
-                Circle()
-                    .fill(NoctisAppColor.track)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(NoctisAppColor.ink2)
-                    )
-                    .frame(width: 44, height: 44)
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Profile")
-            .accessibilityHint("Opens your profile.")
         }
     }
 }
 
-/// 13pt uppercase caption with 0.08em tracking ("LAST NIGHT").
-public struct NoctisCaption<Style: ShapeStyle>: View {
-    let text: String
-    let style: Style
+/// The 36pt avatar at the field's trailing edge, in a 44pt target.
+struct HomeAvatarButton: View {
+    let open: () -> Void
 
-    public init(_ text: String, style: Style) {
-        self.text = text
-        self.style = style
+    var body: some View {
+        Button(action: open) {
+            Circle()
+                .fill(NoctisAppColor.blockInk.opacity(0.12))
+                .frame(width: 36, height: 36)
+                .overlay(
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(NoctisAppColor.blockInk)
+                )
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Profile")
+        .accessibilityHint("Opens your profile.")
     }
+}
 
-    public var body: some View {
-        Text(text)
-            .noctisFont(13, .semibold, relativeTo: .footnote)
-            .tracking(13 * 0.08)
-            .foregroundStyle(style)
-            .fixedSize(horizontal: false, vertical: true)
+/// How much of the evening paper and the morning's dusk lie over Home's
+/// paper: what the ring's paper disc must wear to match the page.
+struct HomePaperWash: Equatable {
+    var evening: Double = 0
+    var dusk: Double = 0
+}
+
+private struct HomePaperWashKey: EnvironmentKey {
+    static let defaultValue = HomePaperWash()
+}
+
+extension EnvironmentValues {
+    var homePaperWash: HomePaperWash {
+        get { self[HomePaperWashKey.self] }
+        set { self[HomePaperWashKey.self] = newValue }
+    }
+}
+
+/// The paper disc under day's ring, where it rides up over the field: the
+/// same paper as the page behind it (evening paper and dusk included), so
+/// the ring stands on paper. Its own view, so the dusk lifting re-draws
+/// only this.
+struct HomePaperDisc: View {
+    @Environment(\.homePaperWash) private var wash
+
+    var body: some View {
+        Circle()
+            .fill(NoctisAppColor.bg)
+            .overlay(Circle().fill(NoctisAppColor.eveningPaper.opacity(wash.evening)))
+            .overlay(Circle().fill(NoctisAppColor.dusk.opacity(wash.dusk)))
+            .padding(-TabScreenScaffold<EmptyView>.discMargin)
+            .accessibilityHidden(true)
     }
 }
 

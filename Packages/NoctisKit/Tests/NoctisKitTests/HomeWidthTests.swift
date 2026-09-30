@@ -133,13 +133,17 @@ struct HomeWidthTests {
 }
 
 /// `HomeContent` outside its scroll view, with the namespace its zoom
-/// source needs.
+/// source needs, and the width and margins the tab scaffold gives it.
 private struct HomeRenderHarness: View {
     let viewModel: HomeViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Namespace private var zoom
 
     var body: some View {
         HomeContent(viewModel: viewModel, zoomNamespace: zoom, actions: HomeActions())
+            .frame(maxWidth: sizeClass == .regular ? HomeContent.regularMaxWidth : HomeContent.compactMaxWidth)
+            .padding(.horizontal, NoctisSpacing.lg)
+            .frame(maxWidth: .infinity)
             .background(NoctisAppColor.bg)
     }
 }

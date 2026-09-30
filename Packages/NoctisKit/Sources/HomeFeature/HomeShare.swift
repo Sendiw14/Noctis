@@ -23,20 +23,19 @@ struct SharePreviewSheet: View {
                 VStack(spacing: NoctisSpacing.lg) {
                     preview
                     if content.details != nil {
-                        Toggle(isOn: $includeDetails) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Include details")
-                                    .noctisFont(17, .semibold, relativeTo: .body)
-                                    .foregroundStyle(NoctisAppColor.ink)
-                                Text("Adds HRV and resting heart rate.")
-                                    .noctisFont(13, relativeTo: .footnote)
-                                    .foregroundStyle(.noctisInk3)
+                        NoctisAppCard {
+                            Toggle(isOn: $includeDetails) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Include details")
+                                        .noctisFont(17, .semibold, relativeTo: .body)
+                                        .foregroundStyle(NoctisAppColor.ink)
+                                    Text("Adds HRV and resting heart rate.")
+                                        .noctisFont(13, relativeTo: .footnote)
+                                        .foregroundStyle(.noctisInk3)
+                                }
                             }
+                            .tint(NoctisAppColor.sage)
                         }
-                        .tint(NoctisAppColor.sage)
-                        .padding(NoctisSpacing.lg)
-                        .background(NoctisAppColor.surface, in: RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous))
-                        .noctisContrastBorder()
                     }
                     shareButton
                 }

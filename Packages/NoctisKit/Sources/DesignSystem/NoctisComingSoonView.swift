@@ -1,68 +1,26 @@
 import SwiftUI
 
-/// The placeholder for a main-app tab that isn't built yet (APP_RULES.md
-/// R19): the tab's title and a plain "Coming soon" card, nothing
-/// tappable. Every screen using it is listed in ROADMAP.md.
+/// The placeholder for a screen that isn't built yet (APP_RULES.md R19),
+/// pushed over a tab (Profile): the tab scaffold's field, the title and a
+/// plain "Coming soon" card, nothing tappable. Tabs use `NoctisTabPlaceholder`
+/// directly. Every screen using it is listed in ROADMAP.md.
 public struct NoctisComingSoonView: View {
     private let title: String
-    private let systemImage: String
 
-    public init(title: String, systemImage: String) {
+    public init(title: String, systemImage: String = "") {
         self.title = title
-        self.systemImage = systemImage
     }
 
     public var body: some View {
-        ScrollView {
-            // R3/R6: content starts exactly 24pt below the title.
-            VStack(alignment: .leading, spacing: NoctisSpacing.xl) {
-                Text(title)
-                    .noctisFont(38, .bold, relativeTo: .largeTitle)
-                    .tracking(-0.6)
-                    .foregroundStyle(NoctisAppColor.ink)
-                    .lineLimit(3)
-                    .minimumScaleFactor(0.8)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityAddTraits(.isHeader)
-
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Image(systemName: systemImage)
-                        .noctisIcon(17)
-                        .foregroundStyle(NoctisAppColor.orangeText)
-                        .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Coming soon")
-                            .noctisFont(17, .semibold, relativeTo: .body)
-                            .foregroundStyle(NoctisAppColor.ink)
-                        Text("This part of NOCTIS isn't ready yet.")
-                            .noctisFont(15, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink2)
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 0)
-                }
-                .padding(NoctisSpacing.lg)
-                .background(NoctisAppColor.surface, in: RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
-                .accessibilityElement(children: .combine)
-            }
-            // R21: one centered column, never wider than 680pt.
-            .frame(maxWidth: 680, alignment: .leading)
-            .padding(.horizontal, NoctisSpacing.lg)
-            .padding(.top, 8)
-            .frame(maxWidth: .infinity)
-        }
-        .scrollBounceBehavior(.basedOnSize)
-        .noctisStatusBarGuard()
-        .background { PaperBackground(adaptive: true).ignoresSafeArea() }
+        NoctisTabPlaceholder(.home, title: title, presentation: .pushed)
     }
 }
 
 #Preview("Light") {
-    NoctisComingSoonView(title: "Sleep", systemImage: "moon.zzz")
+    NoctisTabPlaceholder(.insights, title: "Insights", dateCaption: "WEDNESDAY, SEPTEMBER 30")
 }
 
 #Preview("Dark") {
-    NoctisComingSoonView(title: "Sleep", systemImage: "moon.zzz")
+    NoctisTabPlaceholder(.coach, title: "Coach", dateCaption: "WEDNESDAY, SEPTEMBER 30")
         .preferredColorScheme(.dark)
 }

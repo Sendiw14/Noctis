@@ -93,15 +93,16 @@ struct RootTabView: View {
         recovery.open(segment: destination.segment, factor: destination.factor, factorRange: destination.segment.factorRange)
     }
 
-    /// The selected glyph takes its section's ink (Sleep sage, Recovery
-    /// lavender, Insights butter); Home and Coach stay cocoa. Unselected
-    /// glyphs stay neutral.
+    /// The selected glyph takes its section's ink (Home apricot, Sleep sage,
+    /// Recovery lavender, Insights butter, Coach rose). Unselected glyphs
+    /// stay neutral.
     private var tabTint: Color {
         switch model.selectedTab {
+        case .home: NoctisSection.home.ink
         case .sleep: NoctisSection.sleep.ink
         case .recovery: NoctisSection.recovery.ink
         case .insights: NoctisSection.insights.ink
-        case .home, .coach: NoctisAppColor.ink
+        case .coach: NoctisSection.coach.ink
         }
     }
 
@@ -154,9 +155,12 @@ struct RootTabView: View {
         case .recovery:
             RecoveryTabView(viewModel: recovery)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
-        case .insights, .coach:
+        case .insights:
             // R19: unbuilt tabs, listed in ROADMAP.md.
-            NoctisComingSoonView(title: tab.title, systemImage: tab.systemImage)
+            NoctisTabPlaceholder(.insights, title: tab.title, dateCaption: home.header.dateCaption)
+                .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
+        case .coach:
+            NoctisTabPlaceholder(.coach, title: tab.title, dateCaption: home.header.dateCaption)
                 .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         }
     }

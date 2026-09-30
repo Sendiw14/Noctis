@@ -27,11 +27,21 @@ public final class HomeViewModel {
     /// Always available, even while loading.
     public private(set) var header: HomeHeader
     public private(set) var isRefreshing = false
+    /// How the color field arrives the first time Home is shown.
+    public private(set) var fieldEntrance: NoctisFieldEntrance = .none
+    /// The key of Home's once-a-day field wash.
+    public static let washKey = "noctis.home.lastWashDay"
     /// The morning reveal (`HomeReveal`): `.pending` while its start state
     /// shows, `.playing` once it runs. Once per calendar day, on the first
     /// day-mode Home; the day is used up even under Reduce Motion, which
     /// never sees it.
     public private(set) var reveal: HomeRevealPhase = .none
+    /// The field has arrived: today's wash is spent.
+    public func fieldEntered() {
+        _ = washGate.claim(now: clock(), calendar: calendar)
+        fieldEntrance = .none
+    }
+
     /// Whether the reveal played during this launch (read by UI tests).
     public private(set) var revealPlayed = false
     /// Low Power Mode is on: Home skips the score's count-up, the
@@ -66,6 +76,7 @@ public final class HomeViewModel {
     private let profile: () -> UserProfileSnapshot
     private let connectHealth: () async -> Void
     private let introGate: HomeIntroGate
+    private let washGate: HomeIntroGate
     private let reduceMotion: () -> Bool
     private let lowPower: () -> Bool
     private let clock: () -> Date
@@ -93,6 +104,7 @@ public final class HomeViewModel {
         profile: @escaping () -> UserProfileSnapshot,
         connectHealth: @escaping () async -> Void = {},
         introGate: HomeIntroGate = HomeIntroGate(),
+        washGate: HomeIntroGate = HomeIntroGate(key: HomeViewModel.washKey),
         reduceMotion: @escaping () -> Bool = { HomeViewModel.systemReduceMotion() },
         lowPower: @escaping () -> Bool = { HomeViewModel.systemLowPower() },
         clock: @escaping () -> Date = { Date() },
@@ -104,6 +116,7 @@ public final class HomeViewModel {
         self.profile = profile
         self.connectHealth = connectHealth
         self.introGate = introGate
+        self.washGate = washGate
         self.reduceMotion = reduceMotion
         self.lowPower = lowPower
         isLowPower = lowPower()
@@ -119,6 +132,10 @@ public final class HomeViewModel {
         if header.mode == .day, !reduceMotion(), !introGate.isClaimed(now: clock(), calendar: calendar) {
             reveal = .pending
         }
+        // The field's arrival: the morning reveal's dusk lifting off it is
+        // Home's own wash; otherwise the tab-entry wash once a day, then a
+        // fade (the same as every tab).
+        fieldEntrance = reveal == .pending ? .none : (washGate.isClaimed(now: clock(), calendar: calendar) ? .fade : .wash)
         // The last launch's snapshot, before the first frame: Home opens
         // with content, then revalidates in the background.
         if let restored = repository.restoredSnapshot {

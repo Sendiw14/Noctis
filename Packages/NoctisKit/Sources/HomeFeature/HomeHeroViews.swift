@@ -80,7 +80,7 @@ struct ScoredHeroView: View {
         let _ = HomeBodyProbe.hit("ScoredHero")
         #endif
         VStack(spacing: NoctisSpacing.md) {
-            HomeCollapseEffect(viewModel: viewModel) { ring }
+            HomeCollapseEffect(viewModel: viewModel) { ring.background { HomePaperDisc() } }
 
             // Exactly one line under the ring, then why (when a factor is
             // outside its normal range).

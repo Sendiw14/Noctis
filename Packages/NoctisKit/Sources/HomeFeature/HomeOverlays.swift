@@ -47,32 +47,19 @@ struct HomeCollapsedBar: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Button(action: action) {
-                HStack(spacing: 10) {
-                    content
-                    Spacer(minLength: 0)
-                }
-                .frame(minHeight: 44)
-                .frame(maxWidth: HomeContent.compactMaxWidth)
-                .padding(.horizontal, NoctisSpacing.lg)
-                .padding(.vertical, NoctisSpacing.xxs)
-                .frame(maxWidth: .infinity)
-                .background(paper)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            // The button's frame is exactly what it answers to.
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(label). Scroll to top")
-            .accessibilityAddTraits(.isButton)
-            .accessibilityIdentifier("home.collapsedBar")
-            // The same paper fade as the status bar scrim, under the bar;
-            // touches pass through it to the content.
-            LinearGradient(colors: [paper, paper.opacity(0)], startPoint: .top, endPoint: .bottom)
-                .frame(height: NoctisStatusBarScrimMetrics.fadeHeight)
-                .allowsHitTesting(false)
+        TabCompactBar(
+            paper: paper,
+            label: label,
+            identifier: "home.collapsedBar",
+            maxWidth: HomeContent.compactMaxWidth,
+            action: action
+        ) {
+            // The same leading glyph as every tab's bar, in Home's apricot.
+            Image(systemName: NoctisSection.home.systemImage)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(NoctisSection.home.ink)
                 .accessibilityHidden(true)
+            content
         }
     }
 

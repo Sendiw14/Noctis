@@ -47,7 +47,7 @@ struct RecoveryHeroView: View {
     static let ringLineWidth: CGFloat = 22
     /// The paper disc the ring sits on reaches this far past it, so the ring
     /// stands on paper where it rides up over the field.
-    static let discMargin: CGFloat = 8
+    static let discMargin = TabScreenScaffold<EmptyView>.discMargin
 
     init(content: ScoredRecoveryContent, highlight: String? = nil, reveal: HomeRevealPhase, lowPower: Bool) {
         self.content = content

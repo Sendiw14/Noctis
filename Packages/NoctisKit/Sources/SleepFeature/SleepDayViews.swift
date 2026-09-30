@@ -534,10 +534,10 @@ struct SleepDetailsGrid: View {
                 .padding(.leading, NoctisSpacing.xxs)
             LazyVGrid(
                 columns: [
-                    GridItem(.flexible(), spacing: NoctisSpacing.sm, alignment: .top),
-                    GridItem(.flexible(), spacing: NoctisSpacing.sm, alignment: .top),
+                    GridItem(.flexible(), spacing: NoctisSpacing.md, alignment: .top),
+                    GridItem(.flexible(), spacing: NoctisSpacing.md, alignment: .top),
                 ],
-                spacing: NoctisSpacing.sm
+                spacing: NoctisSpacing.md
             ) {
                 ForEach(tiles) { tile in
                     SleepDetailTileView(tile: tile)
@@ -554,28 +554,24 @@ struct SleepDetailTileView: View {
     @NoctisScaledLength(relativeTo: .body) private var minHeight: CGFloat = 148
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            NoctisIconTile(systemImage: Self.symbol(tile.id), fill: Self.fill(tile.id), foreground: NoctisAppColor.onFill, size: 40)
-                .padding(.bottom, NoctisSpacing.xxs)
-            Text(tile.title)
-                .noctisFont(13, .medium, relativeTo: .footnote)
-                .foregroundStyle(.noctisInk3)
-            NoctisMetric(tile.value, size: 28)
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-            if let note = tile.note {
-                Text(note)
-                    .noctisFont(12, relativeTo: .caption)
+        NoctisAppCard {
+            VStack(alignment: .leading, spacing: 2) {
+                NoctisIconTile(systemImage: Self.symbol(tile.id), fill: Self.fill(tile.id), foreground: NoctisAppColor.onFill, size: 40)
+                    .padding(.bottom, NoctisSpacing.xxs)
+                Text(tile.title)
+                    .noctisFont(13, .medium, relativeTo: .footnote)
                     .foregroundStyle(.noctisInk3)
+                NoctisMetric(tile.value, size: 28)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                if let note = tile.note {
+                    Text(note)
+                        .noctisFont(12, relativeTo: .caption)
+                        .foregroundStyle(.noctisInk3)
+                }
             }
+            .frame(maxWidth: .infinity, minHeight: minHeight - 2 * NoctisSpacing.lg, alignment: .topLeading)
         }
-        .padding(NoctisSpacing.md)
-        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous)
-                .fill(NoctisAppColor.surface)
-                .overlay(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
-        )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(tile.title) \(tile.value.spoken)" + (tile.note.map { ", \($0)" } ?? ""))
     }

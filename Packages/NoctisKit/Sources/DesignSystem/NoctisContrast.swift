@@ -31,6 +31,14 @@ public struct NoctisInkStyle: ShapeStyle {
     }
 
     public func resolve(in environment: EnvironmentValues) -> Color {
+        // Text inside a section field wears the field's cocoa inks.
+        if environment.noctisFieldSection != nil {
+            return switch level {
+            case .primary: NoctisFieldInkStyle(.primary).resolve(in: environment)
+            case .secondary: NoctisFieldInkStyle(.secondary).resolve(in: environment)
+            case .tertiary: NoctisFieldInkStyle(.caption).resolve(in: environment)
+            }
+        }
         let raised = environment.colorSchemeContrast == .increased
         return switch (level, raised) {
         case (.primary, _), (.secondary, true): NoctisAppColor.ink

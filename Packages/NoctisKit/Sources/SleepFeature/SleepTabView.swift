@@ -3,9 +3,10 @@ import HomeFeature
 import NoctisCore
 import SwiftUI
 
-/// The Sleep tab: "Sleep" in a large title, a segmented Day | Week | Month
-/// control, and the range's content on the paper. One scroll; reads only
-/// `SleepViewModel` (APP_RULES.md R20).
+/// The Sleep tab, on the tab scaffold: the sage field (date, "Sleep", the
+/// segmented Day | Week | Month control, and the night's hero), then the
+/// range's content on the paper. One scroll; reads only `SleepViewModel`
+/// (APP_RULES.md R20).
 public struct SleepTabView: View {
     static let contentMaxWidth: CGFloat = 680
 
@@ -13,25 +14,34 @@ public struct SleepTabView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollPosition = ScrollPosition(edge: .top)
-    @State private var fieldHeight: CGFloat = 0
 
     public init(viewModel: SleepViewModel) {
         self.viewModel = viewModel
     }
 
+    /// The first thing under the field is a card (not a dormant state), so
+    /// it rides up over the field's edge; the skeleton's blocks do too.
+    private var top: TabContentTop {
+        guard let screen = viewModel.screen else { return .overlapsField }
+        return screen.state == nil ? .overlapsField : .below(NoctisSpacing.md)
+    }
+
     public var body: some View {
         @Bindable var model = viewModel
-        ScrollView {
-            SleepContent(viewModel: viewModel, fieldHeight: $fieldHeight)
+        TabScreenScaffold(
+            .sleep,
+            header: header,
+            entrance: viewModel.fieldEntrance,
+            onEntered: { viewModel.fieldEntered() },
+            contentTop: top,
+            scrollPosition: $scrollPosition,
+            refresh: {
+                await viewModel.refresh()
+                NoctisHaptics.soft()
+            }
+        ) {
+            SleepContent(viewModel: viewModel)
         }
-        .scrollPosition($scrollPosition)
-        .scrollClipDisabled()
-        .noctisSectionStatusBar(.sleep, fieldHeight: fieldHeight)
-        .refreshable {
-            await viewModel.refresh()
-            NoctisHaptics.soft()
-        }
-        .background { PaperBackground(adaptive: true).ignoresSafeArea() }
         // Any touch during the reveal skips to its end.
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
         .task { await viewModel.onAppear() }
@@ -54,45 +64,56 @@ public struct SleepTabView: View {
                 SleepDetailSheet(detail: detail, screen: screen)
             }
         }
-        .navigationTitle("Sleep")
-        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var header: TabScreenHeader {
+        TabScreenHeader(
+            // A space while loading keeps the caption's line, so the title doesn't drop when it arrives.
+            dateCaption: viewModel.screen?.dateCaption ?? " ",
+            title: "Sleep",
+            control: viewModel.screen?.state == nil ? AnyView(rangePicker) : nil,
+            hero: viewModel.screen?.state == nil ? AnyView(SleepFieldHero(viewModel: viewModel)) : nil
+        )
+    }
+
+    private var rangePicker: some View {
+        Picker("Range", selection: rangeBinding) {
+            ForEach(SleepRange.allCases, id: \.self) { range in
+                Text(range.title).tag(range)
+            }
+        }
+        .pickerStyle(.segmented)
+        .disabled(viewModel.screen == nil)
+        .accessibilityIdentifier("sleep.range")
+    }
+
+    private var rangeBinding: Binding<SleepRange> {
+        Binding {
+            viewModel.selection?.range ?? .day
+        } set: { range in
+            NoctisHaptics.snapLight()
+            viewModel.select(range: range)
+        }
     }
 }
 
-/// The scrolling content: the sage field (date, title, control, and the day's
-/// hero), then whatever the selection shows on the paper.
+/// What the selection shows under the field, on the paper.
 struct SleepContent: View {
     let viewModel: SleepViewModel
-    @Binding var fieldHeight: CGFloat
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// The first thing under the field is a card (not a dormant state or the
-    /// skeleton's blocks), so it rides up over the field's edge.
-    private var firstIsCard: Bool {
-        guard let screen = viewModel.screen else { return true }
-        return screen.state == nil
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SleepFieldView(viewModel: viewModel, height: $fieldHeight)
-            ZStack(alignment: .top) {
-                if let screen = viewModel.screen {
-                    body(screen)
-                        .id(viewModel.revealSkips)
-                        .transition(.opacity)
-                } else {
-                    SleepSkeletonView()
-                        .transition(.opacity)
-                }
+        ZStack(alignment: .top) {
+            if let screen = viewModel.screen {
+                body(screen)
+                    .id(viewModel.revealSkips)
+                    .transition(.opacity)
+            } else {
+                SleepSkeletonView()
+                    .transition(.opacity)
             }
-            .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.screen == nil)
-            .frame(maxWidth: SleepTabView.contentMaxWidth)
-            .padding(.horizontal, NoctisSpacing.lg)
-            .padding(.top, firstIsCard ? -NoctisSectionField<EmptyView, EmptyView>.overlap : NoctisSpacing.md)
-            .padding(.bottom, NoctisSpacing.xl)
-            .frame(maxWidth: .infinity)
         }
+        .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.screen == nil)
     }
 
     @ViewBuilder
@@ -115,80 +136,34 @@ struct SleepContent: View {
     }
 }
 
-/// The sage field: the date, "Sleep", the segmented control, and on Day the
-/// night strip and the night's hero, over flat hills.
-struct SleepFieldView: View {
+/// What lives on the sage field under the control: on Day the night strip
+/// and the night's hero; on Week and Month the summary strip; then the
+/// highlights.
+struct SleepFieldHero: View {
     let viewModel: SleepViewModel
-    @Binding var height: CGFloat
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        NoctisSectionField(
-            .sleep, bottomInset: NoctisHillsMotif.height + NoctisSpacing.lg, height: $height,
-            entrance: viewModel.fieldEntrance, onEntered: { viewModel.fieldEntered() }
-        ) {
-            VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-                SleepHeaderView(viewModel: viewModel)
-                if let screen = viewModel.screen, screen.state == nil, screen.selection.range == .day {
-                    SleepNightPicker(items: screen.picker, selected: screen.selection.night) { night in
-                        NoctisHaptics.snapLight()
-                        viewModel.select(night: night)
-                    }
-                    if let day = screen.day {
-                        SleepHeroView(day: day, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
-                            .transition(.opacity)
-                    }
-                    SleepHighlightRow(highlights: screen.highlights)
-                } else if let screen = viewModel.screen, screen.state == nil, let summary = screen.summary {
-                    SleepSummaryStrip(summary: summary) { viewModel.selectedBar = $0 }
+        VStack(alignment: .leading, spacing: NoctisSpacing.md) {
+            if let screen = viewModel.screen, screen.state == nil, screen.selection.range == .day {
+                SleepNightPicker(items: screen.picker, selected: screen.selection.night) { night in
+                    NoctisHaptics.snapLight()
+                    viewModel.select(night: night)
+                }
+                if let day = screen.day {
+                    SleepHeroView(day: day, reveal: viewModel.reveal, lowPower: viewModel.isLowPower)
                         .transition(.opacity)
-                    SleepHighlightRow(highlights: screen.highlights)
-                } else if viewModel.screen == nil {
-                    SleepFieldSkeleton()
                 }
-            }
-            .animation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion), value: viewModel.screen?.selection.night)
-        } motif: {
-            NoctisHillsMotif()
-        }
-    }
-}
-
-/// Date caption, "Sleep", and the segmented control, on the field.
-struct SleepHeaderView: View {
-    let viewModel: SleepViewModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-            // A space while loading keeps the caption's line, so the title doesn't drop when it arrives.
-            NoctisCaption(viewModel.screen?.dateCaption ?? " ", style: .noctisFieldInk2)
-            Text("Sleep")
-                .noctisFont(34, .bold, relativeTo: .largeTitle)
-                .tracking(-0.6)
-                .foregroundStyle(.noctisFieldInk)
-                .accessibilityAddTraits(.isHeader)
-            if viewModel.screen?.state == nil {
-                Picker("Range", selection: rangeBinding) {
-                    ForEach(SleepRange.allCases, id: \.self) { range in
-                        Text(range.title).tag(range)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.top, NoctisSpacing.xs)
-                .disabled(viewModel.screen == nil)
-                .noctisWashOrigin()
-                .accessibilityIdentifier("sleep.range")
+                SleepHighlightRow(highlights: screen.highlights)
+            } else if let screen = viewModel.screen, screen.state == nil, let summary = screen.summary {
+                SleepSummaryStrip(summary: summary) { viewModel.selectedBar = $0 }
+                    .transition(.opacity)
+                SleepHighlightRow(highlights: screen.highlights)
+            } else if viewModel.screen == nil {
+                SleepFieldSkeleton()
             }
         }
-    }
-
-    private var rangeBinding: Binding<SleepRange> {
-        Binding {
-            viewModel.selection?.range ?? .day
-        } set: { range in
-            NoctisHaptics.snapLight()
-            viewModel.select(range: range)
-        }
+        .animation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion), value: viewModel.screen?.selection.night)
     }
 }
 
