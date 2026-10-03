@@ -27,6 +27,8 @@ public final class AppModel {
     public private(set) var insightsDestination: InsightsDestination?
     /// The question the Coach tab should open on, until it takes it.
     public private(set) var coachDestination: CoachDestination?
+    /// Whether Tonight should open the wake alarm's sheet, until it takes it.
+    public private(set) var alarmDestination: AlarmDestination?
     /// The tab whose button was pressed while it was already showing.
     public private(set) var tabRetap: TabRetap?
     private var serial = 0
@@ -69,6 +71,13 @@ public final class AppModel {
         switch route {
         case .profile: homePath = [.profile]
         case .home: homePath = []
+        case .tonight: homePath = [.tonight]
+        case .windDown(let autostart): homePath = [.tonight, .windDown(autostart: autostart)]
+        case .sounds: homePath = [.tonight, .sounds]
+        case .alarm:
+            serial += 1
+            alarmDestination = AlarmDestination(serial: serial)
+            homePath = [.tonight]
         case .sleep(let night, let range):
             serial += 1
             sleepDestination = SleepDestination(night: night, range: range, serial: serial)
@@ -89,6 +98,12 @@ public final class AppModel {
             coachDestination = CoachDestination(question: question, serial: serial)
             coachPath = []
         }
+    }
+
+    /// The alarm sheet request waiting for Tonight, once.
+    public func takeAlarmDestination() -> AlarmDestination? {
+        defer { alarmDestination = nil }
+        return alarmDestination
     }
 
     /// The Coach destination waiting for the tab, once.
@@ -128,6 +143,12 @@ public final class AppModel {
 public nonisolated struct SleepDestination: Sendable, Equatable {
     public let night: Date?
     public let range: SleepRange
+    let serial: Int
+}
+
+/// A request for Tonight to open the wake alarm's sheet. Each is distinct, so asking twice
+/// is still a change.
+public nonisolated struct AlarmDestination: Sendable, Equatable {
     let serial: Int
 }
 

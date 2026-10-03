@@ -82,6 +82,10 @@ public nonisolated enum CoachDestinationText {
         case .home: "Open Home"
         case .coach: "Open Coach"
         case .profile: "Open Profile"
+        case .tonight: "See tonight"
+        case .windDown: "Open Wind-down"
+        case .sounds: "Open Sleep sounds"
+        case .alarm: "Open the alarm"
         }
     }
 }

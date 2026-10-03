@@ -14,8 +14,8 @@ struct AppRouteTests {
             #expect(AppRoute(url: route.url) == route)
             #expect(AppRoute(name: route.name) == route)
         }
-        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach(), .profile])
-        #expect(AppRoute.destinations.map(\.name) == ["home", "sleep", "recovery", "insights", "coach", "profile"])
+        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach(), .profile, .tonight, .windDown(), .sounds, .alarm])
+        #expect(AppRoute.destinations.map { $0.name } == ["home", "sleep", "recovery", "insights", "coach", "profile", "tonight", "wind-down", "sounds", "alarm"])
     }
 
     @Test func sleepCarriesANightAndARangeThroughItsURL() throws {

@@ -354,6 +354,25 @@ struct TonightClockTests {
         #expect(TonightClock.night(containing: smallHours, in: tz) == SleepNightKey(year: 2026, month: 9, day: 30))
     }
 
+    @Test func tonightIsTheNightThatStartsThisEveningOrIsStillGoing() {
+        let tz = zone("America/New_York")
+        func tonight(_ month: Int, _ day: Int, _ hour: Int, _ minute: Int = 0) -> SleepNightKey {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = tz
+            return TonightClock.tonight(now: calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: hour, minute: minute))!, in: tz)
+        }
+        // From 6 AM to midnight, tonight is today's evening.
+        #expect(tonight(9, 30, 6) == SleepNightKey(year: 2026, month: 9, day: 30))
+        #expect(tonight(9, 30, 9) == SleepNightKey(year: 2026, month: 9, day: 30))
+        #expect(tonight(9, 30, 21) == SleepNightKey(year: 2026, month: 9, day: 30))
+        #expect(tonight(9, 30, 23, 59) == SleepNightKey(year: 2026, month: 9, day: 30))
+        // After midnight and before 6 AM, the night that started yesterday is still tonight.
+        #expect(tonight(10, 1, 0, 5) == SleepNightKey(year: 2026, month: 9, day: 30))
+        #expect(tonight(10, 1, 5, 59) == SleepNightKey(year: 2026, month: 9, day: 30))
+        // And across a month's end.
+        #expect(tonight(10, 1, 2) == SleepNightKey(year: 2026, month: 9, day: 30))
+    }
+
     @Test func anOrdinaryNightHasNoClockChange() {
         #expect(TonightClock.clockChangeMinutes(night: SleepNightKey(year: 2026, month: 9, day: 30), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("America/New_York")) == 0)
         #expect(TonightClock.clockChangeMinutes(night: SleepNightKey(year: 2026, month: 3, day: 9), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("America/New_York")) == 0)

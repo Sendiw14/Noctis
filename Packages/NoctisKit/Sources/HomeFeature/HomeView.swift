@@ -14,15 +14,19 @@ public struct HomeTabView: View {
     private let recoveryScreen: (RecoveryFactorKind?) -> AnyView
     /// A factor's detail, pushed from a capsule.
     private let recoveryFactor: (RecoveryFactorKind, RecoveryFactorRange) -> AnyView
+    /// Tonight (built by the app, which knows the Night feature): the bedtime window and the alarm.
+    private let tonightScreen: () -> AnyView
 
     public init(
         viewModel: HomeViewModel,
         recoveryScreen: @escaping (RecoveryFactorKind?) -> AnyView,
-        recoveryFactor: @escaping (RecoveryFactorKind, RecoveryFactorRange) -> AnyView
+        recoveryFactor: @escaping (RecoveryFactorKind, RecoveryFactorRange) -> AnyView,
+        tonightScreen: @escaping () -> AnyView
     ) {
         self.viewModel = viewModel
         self.recoveryScreen = recoveryScreen
         self.recoveryFactor = recoveryFactor
+        self.tonightScreen = tonightScreen
     }
 
     public var body: some View {
@@ -39,6 +43,14 @@ public struct HomeTabView: View {
                     case .profile:
                         // R19: Profile isn't built yet (ROADMAP.md).
                         NoctisComingSoonView(title: "Profile", systemImage: "person.crop.circle")
+                    case .tonight:
+                        tonightScreen()
+                    case .windDown:
+                        // R19: Wind-down isn't built yet (ROADMAP.md).
+                        NoctisComingSoonView(title: "Wind-down", systemImage: "moon.stars")
+                    case .sounds:
+                        // R19: Sleep sounds aren't built yet (ROADMAP.md).
+                        NoctisComingSoonView(title: "Sleep sounds", systemImage: "speaker.wave.2")
                     }
                 }
         }
@@ -48,6 +60,10 @@ public struct HomeTabView: View {
 /// Where Home's sections send the person, and what they can do there.
 struct HomeActions {
     var openProfile: () -> Void = {}
+    /// Tonight: the bedtime window and the wake alarm.
+    var openTonight: () -> Void = {}
+    /// Wind-down, started (the evening hero's button).
+    var openWindDown: () -> Void = {}
     /// Recovery detail, optionally scrolled to one factor.
     var openRecoveryDetail: (RecoveryFactorKind?) -> Void = { _ in }
     /// One factor's page, from its capsule on the ring.
@@ -247,6 +263,8 @@ struct HomeView: View {
     private var actions: HomeActions {
         HomeActions(
             openProfile: { model.homePath.append(.profile) },
+            openTonight: { model.open(.tonight) },
+            openWindDown: { model.open(.windDown(autostart: true)) },
             openRecoveryDetail: { model.homePath.append(.recoveryDetail(focus: $0)) },
             openRecoveryFactor: { model.homePath.append(.recoveryFactor($0, range: .fortnight)) },
             openLastNight: { model.open(.sleep(night: viewModel.lastNightMoment, range: .day)) },
@@ -276,6 +294,30 @@ struct HomeView: View {
         withAnimation(reduceMotion ? nil : NoctisMotion.flow) {
             scrollPosition.scrollTo(edge: .top)
         }
+    }
+}
+
+/// "Start wind-down" under the evening hero: R10's secondary action (44pt, ink2, no capsule),
+/// with an arrow so it reads as a way on and not as a caption.
+struct HomeWindDownButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text("Start wind-down")
+                    .noctisFont(15, .semibold, relativeTo: .subheadline)
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .accessibilityHidden(true)
+            }
+            .foregroundStyle(NoctisAppColor.ink2)
+            .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens Wind-down.")
+        .accessibilityIdentifier("home.windDown")
     }
 }
 
@@ -434,9 +476,14 @@ struct HomeContent: View {
                     .accessibilityRotorEntry(id: HomeSection.recovery, in: rotor)
                     .transition(.opacity)
             case .evening:
-                EveningHeroView(content: screen.evening, viewModel: viewModel)
-                    .accessibilityRotorEntry(id: HomeSection.tonight, in: rotor)
-                    .transition(.opacity.combined(with: .offset(y: 24)))
+                VStack(alignment: .leading, spacing: 0) {
+                    EveningHeroView(content: screen.evening, viewModel: viewModel)
+                        .accessibilityRotorEntry(id: HomeSection.tonight, in: rotor)
+                    // A secondary action, not a second hero (R10): 44pt, ink2.
+                    HomeWindDownButton(action: actions.openWindDown)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .transition(.opacity.combined(with: .offset(y: 24)))
             }
         }
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(HomeView.contentSpace)) } action: { onHeroFrame($0) }
@@ -470,9 +517,14 @@ struct HomeContent: View {
                 ))
         }
         if screen.mode == .day {
-            TonightBlockView(content: screen.tonight)
-                .accessibilityRotorEntry(id: HomeSection.tonight, in: rotor)
-                .transition(.opacity)
+            Button(action: actions.openTonight) {
+                TonightBlockView(content: screen.tonight)
+            }
+            .buttonStyle(NoctisCardButtonStyle())
+            .accessibilityHint("Opens Tonight.")
+            .accessibilityIdentifier("home.tonightBlock")
+            .accessibilityRotorEntry(id: HomeSection.tonight, in: rotor)
+            .transition(.opacity)
         }
         if let week = screen.week {
             WeekCardView(content: week, open: actions.openWeek)

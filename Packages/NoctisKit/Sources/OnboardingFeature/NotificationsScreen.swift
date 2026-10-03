@@ -35,9 +35,9 @@ private enum NotificationKind: Int, CaseIterable, Identifiable {
 
     var identifier: String {
         switch self {
-        case .morningSummary: "noctis.notification.morningSummary"
-        case .windDown: "noctis.notification.windDown"
-        case .weeklyReview: "noctis.notification.weeklyReview"
+        case .morningSummary: NoctisNotification.morningSummary
+        case .windDown: NoctisNotification.windDown
+        case .weeklyReview: NoctisNotification.weeklyReview
         }
     }
 }

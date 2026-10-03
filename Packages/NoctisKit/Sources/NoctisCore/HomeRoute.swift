@@ -10,4 +10,10 @@ public nonisolated enum HomeRoute: Sendable, Hashable {
     case recoveryFactor(RecoveryFactorKind, range: RecoveryFactorRange = .fortnight)
     /// Profile, from the avatar button ("Coming soon" until built).
     case profile
+    /// Tonight: the bedtime window, why, and the wake alarm.
+    case tonight
+    /// Wind-down, over Tonight ("Coming soon" until built).
+    case windDown(autostart: Bool)
+    /// Sleep sounds, over Tonight ("Coming soon" until built).
+    case sounds
 }

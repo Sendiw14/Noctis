@@ -2,6 +2,7 @@ import CoachFeature
 import DesignSystem
 import HomeFeature
 import InsightsFeature
+import NightFeature
 import NoctisCore
 import OnboardingFeature
 import RecoveryFeature
@@ -58,6 +59,7 @@ struct RootTabView: View {
     @Environment(RecoveryViewModel.self) private var recovery
     @Environment(InsightsViewModel.self) private var insights
     @Environment(CoachViewModel.self) private var coach
+    @Environment(TonightViewModel.self) private var tonight
     @Environment(\.scenePhase) private var scenePhase
     @State private var clock = HomeClock()
 
@@ -141,7 +143,7 @@ struct RootTabView: View {
         // no accessory rather than one that can't hide by day.
         if #available(iOS 26.1, *) {
             tabView.tabViewBottomAccessory(isEnabled: HomeBedtimeAccessory.isShown(for: home)) {
-                HomeBedtimeAccessory(viewModel: home, clock: clock) { model.open(.home) }
+                HomeBedtimeAccessory(viewModel: home, clock: clock) { model.open(.tonight) }
             }
         } else {
             tabView
@@ -155,7 +157,8 @@ struct RootTabView: View {
             HomeTabView(
                 viewModel: home,
                 recoveryScreen: { focus in AnyView(RecoveryPushedScreen(viewModel: recovery, focus: focus)) },
-                recoveryFactor: { kind, range in AnyView(RecoveryPushedFactorScreen(viewModel: recovery, kind: kind, range: range)) }
+                recoveryFactor: { kind, range in AnyView(RecoveryPushedFactorScreen(viewModel: recovery, kind: kind, range: range)) },
+                tonightScreen: { AnyView(TonightScreen(viewModel: tonight)) }
             )
             .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .sleep:

@@ -316,7 +316,15 @@ struct TonightBlockView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-            NoctisCaption("TONIGHT", style: NoctisAppColor.blockInk)
+            HStack {
+                NoctisCaption("TONIGHT", style: NoctisAppColor.blockInk)
+                Spacer(minLength: 0)
+                // The block is a button: it opens Tonight.
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(NoctisAppColor.blockInk)
+                    .accessibilityHidden(true)
+            }
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) { bedtimeLine }
                 VStack(alignment: .leading, spacing: 0) { bedtimeLine }

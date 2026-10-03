@@ -39,6 +39,16 @@ public enum TonightClock {
         SleepNightKey(containing: now, in: timeZone)
     }
 
+    /// The night "Tonight" is about: the one that starts this evening. Before 6 AM the night
+    /// that is still going counts as tonight; from 6 AM on, a night that has ended doesn't.
+    public static func tonight(now: Date, in timeZone: TimeZone) -> SleepNightKey {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let local = calendar.dateComponents([.year, .month, .day, .hour], from: now)
+        let today = SleepNightKey(year: local.year ?? 1970, month: local.month ?? 1, day: local.day ?? 1)
+        return (local.hour ?? 0) < 6 ? today.adding(days: -1) : today
+    }
+
     /// The dates of `night`'s bedtime and waking: the bedtime clock time on the night's evening
     /// (or after midnight, the next calendar day), and the first wake clock time after it.
     public static func dates(night: SleepNightKey, bedtimeMinutes: Int, wakeMinutes: Int, timeZone: TimeZone) -> (bedtime: Date, wake: Date) {

@@ -5,10 +5,13 @@ import Foundation
 import HealthProviding
 import HomeFeature
 import InsightsFeature
+import NightFeature
+import NightKit
 import NoctisCore
 import RecoveryFeature
 import SleepFeature
 import SwiftData
+import UserNotifications
 
 public struct AppContainer {
     public let model: AppModel
@@ -25,6 +28,12 @@ public struct AppContainer {
     public let coachService: AIService
     /// The Coach tab's view model.
     public let coachViewModel: CoachViewModel
+    /// The wake alarm: authorization, schedule and what the system says about it.
+    public let alarmService: AlarmService
+    /// What the Tonight screen reads.
+    public let tonightViewModel: TonightViewModel
+    /// Opens Wind-down when the evening notification is tapped.
+    private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
     public let modelContainer: ModelContainer
 
@@ -194,6 +203,27 @@ public struct AppContainer {
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() }
         )
+        // The wake alarm (R30): the record is local, the system's alarms are AlarmKit's. A mock
+        // Health scenario gets a pretend alarm system too, so a screenshot or a test never opens
+        // a system prompt; `-mockAlarm real` asks for the real one anyway.
+        let alarmStore = AlarmConfigurationStore(context: ModelContext(container))
+        #if DEBUG
+        if debug.resetState { alarmStore.erase() }
+        let alarmBackend: any AlarmBackend = debug.alarmBackend()
+        #else
+        let alarmBackend: any AlarmBackend = AlarmKitBackend()
+        #endif
+        let alarmService = AlarmService(backend: alarmBackend, store: alarmStore, defaultMinutes: { await MainActor.run { model.profile.typicalWakeMinutes } })
+        self.alarmService = alarmService
+        self.tonightViewModel = TonightViewModel(
+            sleep: sleepRepository, alarm: alarmService, profile: { model.profile },
+            format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
+        )
+        // A tap on the evening notification opens Wind-down.
+        let router = NotificationRouter(model: model)
+        self.notificationRouter = router
+        UNUserNotificationCenter.current().delegate = router
+
         #if DEBUG
         if debug.logHomeSnapshot {
             homeViewModel.debugLogsSnapshots = true
@@ -244,6 +274,10 @@ struct DebugLaunchOptions {
     let lowPowerMode: Bool
     /// `-mockAI good|misbehaving|slow|unavailable`: Coach's model plays a script.
     let mockAI: MockAIProvider.Mode?
+    /// `-mockAlarm authorized|notDetermined|willDeny|denied|unavailable|failing|limitReached`: the
+    /// alarm system plays a script; `real` is AlarmKit itself.
+    let mockAlarm: MockAlarmBackend.Mode?
+    let realAlarm: Bool
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -268,6 +302,16 @@ struct DebugLaunchOptions {
         snapshotCache = arguments.contains("-noctisSnapshotCache")
         lowPowerMode = arguments.contains("-noctisLowPowerMode")
         mockAI = value(after: "-mockAI").flatMap(MockAIProvider.Mode.init(launchValue:))
+        mockAlarm = value(after: "-mockAlarm").flatMap(MockAlarmBackend.Mode.init(launchValue:))
+        realAlarm = value(after: "-mockAlarm") == "real"
+    }
+
+    /// The alarm system for this launch: a script if asked, a permissive pretend one with a mock
+    /// Health scenario, AlarmKit otherwise.
+    func alarmBackend() -> any AlarmBackend {
+        if realAlarm { return AlarmKitBackend() }
+        if let mockAlarm { return MockAlarmBackend(mode: mockAlarm) }
+        return mockScenario == nil ? AlarmKitBackend() : MockAlarmBackend(mode: .authorized)
     }
 }
 #endif

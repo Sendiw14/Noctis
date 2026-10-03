@@ -167,22 +167,22 @@ struct BedtimeMoon: View {
 }
 
 /// The tab bar accessory in the evening, on every tab: a moon and
-/// "Bedtime 11:00 PM · in 2h 14m". Tapping it goes to Home.
+/// "Bedtime 11:00 PM · in 2h 14m". Tapping it opens Tonight.
 public struct HomeBedtimeAccessory: View {
     private let viewModel: HomeViewModel
     private let clock: HomeClock
-    private let openHome: () -> Void
+    private let openTonight: () -> Void
 
     /// The accessory is built in the tab bar's own hierarchy, so it takes
     /// the clock directly and reads the minute in its own `body`.
-    public init(viewModel: HomeViewModel, clock: HomeClock, openHome: @escaping () -> Void) {
+    public init(viewModel: HomeViewModel, clock: HomeClock, openTonight: @escaping () -> Void) {
         self.viewModel = viewModel
         self.clock = clock
-        self.openHome = openHome
+        self.openTonight = openTonight
     }
 
     public var body: some View {
-        Button(action: openHome) {
+        Button(action: openTonight) {
             HStack(spacing: NoctisSpacing.xs) {
                 BedtimeMoon()
                 Text(status)
@@ -199,7 +199,7 @@ public struct HomeBedtimeAccessory: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(status)
-        .accessibilityHint("Opens Home.")
+        .accessibilityHint("Opens Tonight.")
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.bedtimeAccessory")
     }
