@@ -35,7 +35,7 @@ public struct AppContainer {
         self.storeManager = StoreManager()
         let container: ModelContainer
         do {
-            container = try ModelContainer(for: UserProfileRecord.self)
+            container = try ModelContainer(for: UserProfileRecord.self, AlarmConfiguration.self)
         } catch {
             fatalError("Failed to initialize the local data store: \(error)")
         }

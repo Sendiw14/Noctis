@@ -196,6 +196,7 @@ public final class CoachViewModel {
     // MARK: - Asking
 
     /// A question from the hub (a card, a route): a new conversation.
+    @discardableResult
     public func startConversation(asking question: CoachQuestion) -> Bool {
         startConversation(asking: CoachQuestionText.text(question))
     }

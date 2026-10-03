@@ -31,6 +31,9 @@ let package = Package(
         .library(name: "InsightsFeature", targets: ["InsightsFeature"]),
         .library(name: "CoachKit", targets: ["CoachKit"]),
         .library(name: "CoachFeature", targets: ["CoachFeature"]),
+        .library(name: "AlarmShared", targets: ["AlarmShared"]),
+        .library(name: "NightKit", targets: ["NightKit"]),
+        .library(name: "NightFeature", targets: ["NightFeature"]),
         .library(name: "AppRoot", targets: ["AppRoot"]),
     ],
     targets: [
@@ -40,9 +43,19 @@ let package = Package(
         .target(name: "RecoveryKit", dependencies: ["HealthProviding", "SleepKit"], swiftSettings: engineSwiftSettings),
         .target(name: "InsightsKit", dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit"], swiftSettings: engineSwiftSettings),
         .target(name: "SleepAnalysisKit", dependencies: ["HealthProviding", "SleepKit", "RecoveryKit"], swiftSettings: engineSwiftSettings),
+        // What the app and its alarm widget extension both have to agree on
+        // (the alarm's metadata type). Nothing else, so the extension stays small.
+        .target(name: "AlarmShared", swiftSettings: engineSwiftSettings),
+        // Tonight's bedtime recommendation, the alarm's state machine and the
+        // service that wraps AlarmKit. No UI; nonisolated like the other engines.
+        .target(
+            name: "NightKit",
+            dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit", "AlarmShared"],
+            swiftSettings: engineSwiftSettings
+        ),
         .target(
             name: "NoctisCore",
-            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "DesignSystem"],
+            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "DesignSystem"],
             swiftSettings: noctisSwiftSettings
         ),
         .target(name: "OnboardingFeature", dependencies: ["DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
@@ -83,16 +96,27 @@ let package = Package(
             dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "InsightsKit", "HomeFeature", "CoachKit"],
             swiftSettings: noctisSwiftSettings
         ),
+        // The Tonight screen: the bedtime window, why that time, the wake alarm.
+        // It reads only `TonightViewModel` (APP_RULES.md R20, R30).
+        .target(
+            name: "NightFeature",
+            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "HomeFeature"],
+            swiftSettings: noctisSwiftSettings
+        ),
         .target(
             name: "AppRoot",
-            dependencies: ["DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature"],
+            dependencies: [
+                "DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature",
+                "InsightsFeature", "CoachKit", "CoachFeature", "NightKit", "NightFeature",
+            ],
             swiftSettings: noctisSwiftSettings
         ),
         .testTarget(
             name: "NoctisKitTests",
             dependencies: [
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
-                "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature", "AppRoot",
+                "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
+                "NightKit", "NightFeature", "AlarmShared", "AppRoot",
             ],
             swiftSettings: noctisSwiftSettings
         ),

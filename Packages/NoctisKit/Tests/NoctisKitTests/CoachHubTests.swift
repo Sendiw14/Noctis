@@ -212,7 +212,7 @@ struct CoachViewModelTests {
         let model = viewModel(snapshots: await CoachFixture.snapshots(.full))
         #expect(model.hub == nil)
         await model.onAppear()
-        let hub = try? #require(model.hub)
+        let hub = model.hub
         #expect(hub?.cards.first?.question == .recovery(.lower))
         #expect(hub?.cards.count == 6)
         #expect(hub?.state == nil)
