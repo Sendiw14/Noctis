@@ -36,6 +36,7 @@ public struct AppContainer {
     /// What the Tonight screen reads.
     public let tonightViewModel: TonightViewModel
     public let profileViewModel: ProfileViewModel
+    public let settingsViewModel: SettingsViewModel
     /// The sleep sounds: the one player that holds the audio engine, and what the Sounds screen reads.
     public let soundPlayer: SoundPlayer
     public let soundsViewModel: SoundsViewModel
@@ -294,6 +295,15 @@ public struct AppContainer {
         #endif
         let breathing = BreathingViewModel(haptics: breathingHaptics, preferences: preferences)
         self.breathingViewModel = breathing
+        // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
+        #if DEBUG
+        if let summary = debug.subscriptionSummary() { storeManager.entitlementManager.debugSet(summary) }
+        #endif
+        self.settingsViewModel = SettingsViewModel(
+            preferences: preferences, notifications: coordinator, store: storeManager, health: HealthDataStatusReader(provider: provider),
+            alarm: alarmService, profile: { model.profile }, connectHealth: { await model.requestHealthAuthorization() },
+            hapticsAvailable: { breathing.hapticsAvailable }, format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
+        )
         #if DEBUG
         let meditationAudio = debug.makeMeditationAudio(soundPlayer: soundPlayer)
         #else
@@ -399,6 +409,8 @@ struct DebugLaunchOptions {
     /// `-mockNotifications granted|denied|notDetermined|willDeny`: the notification centre plays a script
     /// (a mock Health scenario with no flag gets one that is already allowed), so the system's question never opens.
     let mockNotifications: String?
+    /// `-mockSubscription free|monthly|yearly|trial|ending|grace`: a fixed subscription state (the simulator has no purchase).
+    let mockSubscription: String?
     /// `-mockJournal empty|filled|unavailable[:journal][:draft]`: an in-memory journal, with or without entries; `:journal` opens on the list, `:draft` fills in the form.
     let mockJournal: String?
 
@@ -433,6 +445,21 @@ struct DebugLaunchOptions {
         mockMeditation = value(after: "-mockMeditation")
         mockJournal = value(after: "-mockJournal")
         mockNotifications = value(after: "-mockNotifications")
+        mockSubscription = value(after: "-mockSubscription")
+    }
+
+    /// The summary the flag names, for the Subscription page's every state.
+    func subscriptionSummary() -> SubscriptionSummary? {
+        guard let mockSubscription else { return nil }
+        let ends = Calendar.current.date(byAdding: .day, value: 23, to: Date())
+        switch mockSubscription {
+        case "monthly": return SubscriptionSummary(isPremium: true, plan: .monthly, willRenew: true, endDate: ends)
+        case "yearly": return SubscriptionSummary(isPremium: true, plan: .yearly, willRenew: true, endDate: ends)
+        case "trial": return SubscriptionSummary(isPremium: true, plan: .yearly, isTrial: true, willRenew: true, endDate: Calendar.current.date(byAdding: .day, value: 5, to: Date()))
+        case "ending": return SubscriptionSummary(isPremium: true, plan: .yearly, willRenew: false, endDate: ends)
+        case "grace": return SubscriptionSummary(isPremium: true, plan: .monthly, willRenew: true, endDate: ends, isInGracePeriod: true)
+        default: return .free
+        }
     }
 
     /// A session already in the state the flag names, so every state can be looked at.

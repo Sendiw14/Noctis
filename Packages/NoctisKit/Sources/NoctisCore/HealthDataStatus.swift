@@ -24,15 +24,21 @@ public nonisolated struct HealthKindStatus: Sendable, Equatable, Identifiable {
 public nonisolated struct HealthDataStatus: Sendable, Equatable {
     /// One per `HealthDataKind`, in the order the authorization manager lists them.
     public let kinds: [HealthKindStatus]
+    /// How far back "the last sample" looks.
+    public static let lookBackDays = 30
     /// The app that recorded last night's sleep, when the source resolver knows it; nil otherwise.
     public let lastNightSource: String?
     /// Health is not available on this device at all.
     public let isUnavailable: Bool
+    /// The system's question has not been asked yet, so "Connect Apple Health" would show it. Once it has been
+    /// asked it never shows again, and the only way to change the answer is the Health app.
+    public let canRequestAccess: Bool
 
-    public init(kinds: [HealthKindStatus], lastNightSource: String?, isUnavailable: Bool = false) {
+    public init(kinds: [HealthKindStatus], lastNightSource: String?, isUnavailable: Bool = false, canRequestAccess: Bool = false) {
         self.kinds = kinds
         self.lastNightSource = lastNightSource
         self.isUnavailable = isUnavailable
+        self.canRequestAccess = canRequestAccess
     }
 
     public var hasAnyData: Bool { kinds.contains(where: \.hasData) }
@@ -43,9 +49,6 @@ public nonisolated struct HealthDataStatus: Sendable, Equatable {
 /// Reads the status from the same provider the rest of the app reads, over the last 30 days. The provider's
 /// protocol is main-actor, so the read is too; it is one look when Profile or the Health page appears.
 public struct HealthDataStatusReader {
-    /// How far back "the last sample" looks.
-    public static let lookBackDays = 30
-
     private let provider: any HealthDataProviding
     private let resolver: any SourceResolving
 
@@ -58,7 +61,7 @@ public struct HealthDataStatusReader {
         guard provider.isHealthDataAvailable else {
             return HealthDataStatus(kinds: HealthDataKind.allCases.map { HealthKindStatus(kind: $0, lastSample: nil, couldNotCheck: true) }, lastNightSource: nil, isUnavailable: true)
         }
-        let start = calendar.date(byAdding: .day, value: -Self.lookBackDays, to: now) ?? now.addingTimeInterval(-30 * 86_400)
+        let start = calendar.date(byAdding: .day, value: -HealthDataStatus.lookBackDays, to: now) ?? now.addingTimeInterval(-30 * 86_400)
         var statuses: [HealthKindStatus] = []
         var sleepSamples: [RawSleepSample] = []
         for kind in HealthDataKind.allCases {
@@ -80,7 +83,11 @@ public struct HealthDataStatusReader {
                 statuses.append(HealthKindStatus(kind: kind, lastSample: nil, couldNotCheck: true))
             }
         }
-        return HealthDataStatus(kinds: statuses, lastNightSource: Self.lastNightSource(sleepSamples, resolver: resolver, now: now), isUnavailable: false)
+        let canRequest = await provider.authorizationStatus() == .notDetermined
+        return HealthDataStatus(
+            kinds: statuses, lastNightSource: Self.lastNightSource(sleepSamples, resolver: resolver, now: now), isUnavailable: false,
+            canRequestAccess: canRequest
+        )
     }
 
     /// The source of the newest night's asleep samples after the resolver has chosen between sources; nil when

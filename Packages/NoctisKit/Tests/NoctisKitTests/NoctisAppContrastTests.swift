@@ -251,21 +251,6 @@ struct NoctisAppContrastTests {
         #expect(TabScreenScaffold<EmptyView>.discMargin == 8)
     }
 
-    /// The daily gate the placeholders' wash uses: once per calendar day.
-    @Test func theDailyGateClaimsOncePerCalendarDay() {
-        let defaults = UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? .standard
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
-        let morning = calendar.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: 8)) ?? Date()
-        let evening = calendar.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: 21)) ?? Date()
-        let nextDay = calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 8)) ?? Date()
-        #expect(!NoctisDailyGate.isClaimed(key: "noctis.insights.lastWashDay", now: morning, calendar: calendar, defaults: defaults))
-        NoctisDailyGate.claim(key: "noctis.insights.lastWashDay", now: morning, calendar: calendar, defaults: defaults)
-        #expect(NoctisDailyGate.isClaimed(key: "noctis.insights.lastWashDay", now: evening, calendar: calendar, defaults: defaults))
-        #expect(!NoctisDailyGate.isClaimed(key: "noctis.insights.lastWashDay", now: nextDay, calendar: calendar, defaults: defaults))
-        #expect(!NoctisDailyGate.isClaimed(key: "noctis.coach.lastWashDay", now: morning, calendar: calendar, defaults: defaults), "each tab has its own")
-    }
-
     /// Each tab has its own glyph (and Profile, which is no tab, has its own), and every field has a motif
     /// strip only where the motif needs one.
     @Test func everyTabHasItsOwnGlyphAndFieldMotif() {

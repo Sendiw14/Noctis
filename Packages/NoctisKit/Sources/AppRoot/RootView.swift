@@ -68,6 +68,7 @@ struct RootTabView: View {
     @Environment(MeditationViewModel.self) private var meditation
     @Environment(JournalViewModel.self) private var journal
     @Environment(ProfileViewModel.self) private var profile
+    @Environment(SettingsViewModel.self) private var settings
     @Environment(NotificationCoordinator.self) private var notifications
     @Environment(\.scenePhase) private var scenePhase
     @State private var clock = HomeClock()
@@ -185,8 +186,7 @@ struct RootTabView: View {
                 soundsScreen: { AnyView(SoundsScreen(viewModel: sounds)) },
                 windDownScreen: { autostart in AnyView(WindDownScreen(autostart: autostart, viewModel: windDown, sounds: sounds, breathing: breathing, meditation: meditation, journal: journal)) },
                 profileScreen: { AnyView(ProfileScreen(viewModel: profile)) },
-                // Settings' pages come next (R36): until then each is a plain "Coming soon".
-                settingsScreen: { page in AnyView(NoctisComingSoonView(title: page.title, systemImage: "gearshape")) }
+                settingsScreen: { page in AnyView(SettingsScreen(page: page, viewModel: settings)) }
             )
             .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .sleep:

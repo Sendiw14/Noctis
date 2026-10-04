@@ -124,8 +124,10 @@ let package = Package(
         .target(
             name: "ProfileFeature",
             dependencies: [
-                "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "SleepAnalysisKit", "NightKit", "NightFeature", "HomeFeature",
+                "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit",
+                "NightFeature", "HomeFeature", "OnboardingFeature",
             ],
+            resources: [.process("Resources")],
             swiftSettings: noctisSwiftSettings
         ),
         .target(

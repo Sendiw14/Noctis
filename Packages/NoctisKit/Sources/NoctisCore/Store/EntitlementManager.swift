@@ -16,6 +16,12 @@ public final class EntitlementManager {
     public private(set) var isInGracePeriod = false
     public private(set) var expirationDate: Date?
     public private(set) var willAutoRenew = true
+    public private(set) var activeProductID: String?
+    public private(set) var isInTrial = false
+    #if DEBUG
+    /// `-mockSubscription`: a fixed answer for a screenshot, since the simulator's StoreKit has no purchase.
+    public private(set) var debugSummary: SubscriptionSummary?
+    #endif
 
     public init() {}
 
@@ -24,17 +30,47 @@ public final class EntitlementManager {
     /// billing grace period.
     public var hasAccess: Bool { hasActivePremium }
 
+    /// What the Subscription page shows.
+    public var summary: SubscriptionSummary {
+        #if DEBUG
+        if let debugSummary { return debugSummary }
+        #endif
+        return SubscriptionSummary(
+            isPremium: hasActivePremium, plan: activeProductID.flatMap(SubscriptionSummary.Plan.init(productID:)), isTrial: isInTrial,
+            willRenew: willAutoRenew, endDate: expirationDate, isInGracePeriod: isInGracePeriod
+        )
+    }
+
+    #if DEBUG
+    public func debugSet(_ summary: SubscriptionSummary) {
+        debugSummary = summary
+        hasActivePremium = summary.isPremium
+    }
+    #endif
+
     public func refresh() async {
+        #if DEBUG
+        if debugSummary != nil { return }
+        #endif
         var accessGranted = false
         var latestExpiration: Date?
+        var latestProduct: String?
+        var trial = false
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result else { continue }
             guard StoreProductID.all.contains(transaction.productID) else { continue }
             accessGranted = true
-            latestExpiration = transaction.expirationDate
+            // The newest period wins when more than one is current.
+            if latestExpiration == nil || (transaction.expirationDate ?? .distantPast) >= (latestExpiration ?? .distantPast) {
+                latestExpiration = transaction.expirationDate
+                latestProduct = transaction.productID
+                trial = transaction.offer?.type == .introductory && transaction.offer?.paymentMode == .freeTrial
+            }
         }
         hasActivePremium = accessGranted
         expirationDate = latestExpiration
+        activeProductID = latestProduct
+        isInTrial = accessGranted && trial
 
         guard accessGranted,
               let products = try? await Product.products(for: StoreProductID.all),

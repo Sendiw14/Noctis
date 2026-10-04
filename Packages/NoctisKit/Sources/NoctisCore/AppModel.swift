@@ -119,6 +119,17 @@ public final class AppModel {
         homePath.append(route)
     }
 
+    /// Goes back to `route` where Home's stack already holds it (Settings' "Sleep profile" row returns to
+    /// Profile), and pushes it where it doesn't.
+    public func show(_ route: HomeRoute) {
+        selectedTab = .home
+        if let index = homePath.lastIndex(of: route) {
+            homePath = Array(homePath[...index])
+        } else {
+            homePath.append(route)
+        }
+    }
+
     /// The wind-down is the screen showing: it is full-screen and dark on purpose, so nothing of the app's
     /// chrome (the tab bar, the bedtime pill above it) may sit over it.
     public var isWindDownShowing: Bool {
