@@ -119,6 +119,9 @@ targets:
     dependencies:
       - package: NoctisKit
         product: NoctisWidgetKit
+      # The intents the two controls run (R48): they name the snapshot, the sound names and nothing that plays, reads Health or stores.
+      - package: NoctisKit
+        product: NoctisIntentKit
     entitlements:
       path: NoctisWidgets/NoctisWidgets.entitlements
       properties:

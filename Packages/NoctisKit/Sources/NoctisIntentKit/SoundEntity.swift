@@ -1,6 +1,6 @@
 import AppIntents
 import Foundation
-import SoundKit
+import SoundCatalog
 
 /// A sleep sound, for Siri and Shortcuts. Made from `SoundKind.allCases`, the one list of the sounds NOCTIS ships (R31), so there is
 /// no second list to forget: a sound added there is a sound here.

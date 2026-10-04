@@ -43,6 +43,7 @@ private final class FakeIntentHost: IntentHost {
         played = kind ?? .rain
         return played ?? .rain
     }
+    func stopSleepSounds() { calls.append("stop") }
     func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome {
         calls.append("alarm \(minutes)")
         if case .set = alarmOutcome { return .set(minutes: minutes) }
@@ -325,10 +326,10 @@ struct AppShortcutsTests {
         let app = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/NoctisShortcuts.swift"), encoding: .utf8)
         #expect(app.contains("NoctisIntentKitPackage.self"))
         let kit = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Package.swift"), encoding: .utf8)
-        #expect(kit.contains(#"name: "NoctisIntentKit", dependencies: ["NoctisWidgetKit", "SoundKit"]"#), "the intents depend on the snapshot and the sound list, never on Health, SwiftData or Coach")
+        #expect(kit.contains(#"name: "NoctisIntentKit", dependencies: ["NoctisWidgetKit", "SoundCatalog"]"#), "the intents depend on the snapshot and the sound names, never on Health, SwiftData, Coach or the player")
         for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources/NoctisIntentKit"]) {
             let code = RawDefaultsTests.code(file.text)
-            for token in ["import HealthKit", "import HealthProviding", "import SwiftData", "import CoachKit", "import JournalKit", "import NoctisCore", "import SleepKit", "import RecoveryKit", "import AppRoot"] {
+            for token in ["import HealthKit", "import HealthProviding", "import SoundKit", "import SwiftData", "import CoachKit", "import JournalKit", "import NoctisCore", "import SleepKit", "import RecoveryKit", "import AppRoot"] {
                 #expect(!code.contains(token), Comment(rawValue: "\(file.path) has \(token)"))
             }
         }

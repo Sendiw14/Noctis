@@ -1,4 +1,5 @@
 import Foundation
+import SoundCatalog
 
 // The player and the three things it talks to. The protocols exist so the player's logic (what
 // plays, what fades, what the system's interruptions do) can be tested without a speaker.

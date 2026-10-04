@@ -1,7 +1,7 @@
 import AppIntents
 import Foundation
 import NoctisWidgetKit
-import SoundKit
+import SoundCatalog
 
 // The intents that do something (APP_RULES.md R47): start a wind-down, play a sleep sound, set tonight's alarm, ask Coach.
 // Each asks the running app (the host) through the one path the app has; none holds navigation or audio logic of its own.

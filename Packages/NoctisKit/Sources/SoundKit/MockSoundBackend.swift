@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import SoundCatalog
 
 // For screenshots and UI tests (`-mockSound`): the same player, the same mixer and the same six
 // sounds, but nothing reaches a speaker, so a simulator run is silent. The meter still reads the

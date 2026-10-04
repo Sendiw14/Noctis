@@ -43,6 +43,15 @@ nonisolated extension DataInventory {
                 owner: "NoctisWidgetKit/WidgetSnapshotStore.swift", holdsUserContent: false, export: .included("widgetSnapshot")
             ),
             DataCategory(
+                .sleepSoundsState, name: "Sleep sounds status",
+                summary: "A tiny file NOCTIS writes for the Sleep sounds control in Control Center, so the control can show whether a sound is playing. It exists only while a sound plays, and when a sleep timer is set it holds the time the timer ends. It holds no sound name and nothing about what you played before, and it is removed as soon as the sound stops.",
+                contents: ["That a sound is playing right now", "When the sleep timer ends, if one is set"],
+                locations: [.file(.appGroup, "SleepSoundsState.json")],
+                inBackup: false, protection: .standard,
+                deletion: .automatic("It is removed when the sound stops, and when you delete all NOCTIS data."),
+                owner: "NoctisWidgetKit/SleepSoundsState.swift", holdsUserContent: false, export: .included("sleepSoundsState")
+            ),
+            DataCategory(
                 .insightHistory, name: "Insights history",
                 summary: "The insights NOCTIS has found about your sleep and whether you have seen them: each one's type and the numbers behind it, worked out from your Health data.",
                 contents: ["Each insight's type and its numbers", "Whether it is new, seen or dismissed"],

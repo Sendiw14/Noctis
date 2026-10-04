@@ -34,6 +34,7 @@ let package = Package(
         .library(name: "AlarmShared", targets: ["AlarmShared"]),
         .library(name: "NoctisWidgetKit", targets: ["NoctisWidgetKit"]),
         .library(name: "NoctisIntentKit", targets: ["NoctisIntentKit"]),
+        .library(name: "SoundCatalog", targets: ["SoundCatalog"]),
         .library(name: "SoundKit", targets: ["SoundKit"]),
         .library(name: "NightKit", targets: ["NightKit"]),
         .library(name: "NightFeature", targets: ["NightFeature"]),
@@ -59,10 +60,13 @@ let package = Package(
         // Siri, Shortcuts, Control Center and the wind-down Live Activity's buttons (APP_RULES.md R47, R48, R49): the App Intents, their
         // entities, and what an intent asks of the running app. It depends on the widget kit (the snapshot and the spoken words) and the
         // sound list, and on nothing that reads Health, SwiftData or Coach, so the widget extension can link it for its controls.
-        .target(name: "NoctisIntentKit", dependencies: ["NoctisWidgetKit", "SoundKit"], swiftSettings: engineSwiftSettings),
+        .target(name: "NoctisIntentKit", dependencies: ["NoctisWidgetKit", "SoundCatalog"], swiftSettings: engineSwiftSettings),
+        // The names of the six sleep sounds and nothing else: no audio, no player, no storage. The intents, and the widgets extension that links
+        // them, name a sound through this; SoundKit re-exports it.
+        .target(name: "SoundCatalog", swiftSettings: engineSwiftSettings),
         // Sleep sounds: synthesized in code, played through AVAudioEngine. No audio files, no UI.
         // Nonisolated like the other engines; the player alone is main-actor (APP_RULES.md R31).
-        .target(name: "SoundKit", swiftSettings: engineSwiftSettings),
+        .target(name: "SoundKit", dependencies: ["SoundCatalog"], swiftSettings: engineSwiftSettings),
         // Tonight's bedtime recommendation, the alarm's state machine and the
         // service that wraps AlarmKit. No UI; nonisolated like the other engines.
         .target(

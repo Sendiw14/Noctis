@@ -1,4 +1,5 @@
 import Foundation
+import SoundCatalog
 
 // A voice is one sound in stereo: two channels of the same source with different seeds. The six
 // voices live together in one block of memory (`SoundVoiceBank`) that is set aside before any

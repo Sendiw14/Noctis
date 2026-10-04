@@ -105,6 +105,7 @@ public nonisolated enum DataCategoryID: String, Sendable, CaseIterable, Hashable
     case appleHealth
     case cachedSummaries
     case widgetSnapshot
+    case sleepSoundsState
     case insightHistory
     case memorySummaries
     case profile

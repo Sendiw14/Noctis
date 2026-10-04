@@ -31,13 +31,16 @@ final class AppIntentHost: IntentHost {
     private let player: SoundPlayer
     private let sounds: SoundsViewModel
     private let alarm: AlarmService
+    /// Redraws the Sleep sounds control after one asked for something (R48); nil in a test that does not look.
+    private let controls: SleepSoundsPublisher?
 
-    init(model: AppModel, preferences: AppPreferences, player: SoundPlayer, sounds: SoundsViewModel, alarm: AlarmService) {
+    init(model: AppModel, preferences: AppPreferences, player: SoundPlayer, sounds: SoundsViewModel, alarm: AlarmService, controls: SleepSoundsPublisher? = nil) {
         self.model = model
         self.preferences = preferences
         self.player = player
         self.sounds = sounds
         self.alarm = alarm
+        self.controls = controls
     }
 
     func open(_ destination: IntentDestination) {
@@ -53,7 +56,14 @@ final class AppIntentHost: IntentHost {
     func playSleepSounds(_ kind: SoundKind?) -> SoundKind {
         let chosen = kind ?? player.lastKind ?? .rain
         sounds.play(chosen)
+        controls?.started()
         return chosen
+    }
+
+    func stopSleepSounds() {
+        sounds.stopPlaying()
+        // The fade lasts a second after the control was flipped off: it shows off now and the player's own state decides after the fade.
+        controls?.stopping()
     }
 
     func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome {

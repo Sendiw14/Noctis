@@ -1,6 +1,7 @@
 import Foundation
 import NoctisWidgetKit
-import SoundKit
+import SoundCatalog
+import WidgetKit
 
 // What an intent needs from the app (APP_RULES.md R47). Intents never touch HealthKit, SwiftData or Coach: they read the widgets'
 // snapshot, and ask the running app (the host) to do the few things that need it. The host is the app's own, installed when the app starts
@@ -34,6 +35,8 @@ public protocol IntentHost: AnyObject, Sendable {
     func startWindDown(minutes: Int?)
     /// Plays `kind`, or the last sound played (Rain before any), through the sound player; returns what was started.
     func playSleepSounds(_ kind: SoundKind?) -> SoundKind
+    /// Stops what plays, with the short fade the Sounds screen uses. Nothing playing is not an error.
+    func stopSleepSounds()
     /// Sets tonight's wake alarm, only if alarm access was already given.
     func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome
     /// Opens Coach and asks `text`. The text is held in memory until Coach takes it; the intent keeps nothing.
@@ -46,15 +49,19 @@ public struct IntentEnvironment: Sendable {
     public var now: @Sendable () -> Date
     public var calendar: @Sendable () -> Calendar
     public var format: @Sendable () -> WidgetFormat
+    /// Asks the system to read a control again (`ControlKind`): what it shows is what is true now.
+    public var reloadControl: @Sendable (String) -> Void
 
     public init(
         snapshot: @escaping @Sendable () -> WidgetSnapshot?, now: @escaping @Sendable () -> Date = { Date() },
-        calendar: @escaping @Sendable () -> Calendar = { .autoupdatingCurrent }, format: @escaping @Sendable () -> WidgetFormat = { WidgetFormat() }
+        calendar: @escaping @Sendable () -> Calendar = { .autoupdatingCurrent }, format: @escaping @Sendable () -> WidgetFormat = { WidgetFormat() },
+        reloadControl: @escaping @Sendable (String) -> Void = { ControlCenter.shared.reloadControls(ofKind: $0) }
     ) {
         self.snapshot = snapshot
         self.now = now
         self.calendar = calendar
         self.format = format
+        self.reloadControl = reloadControl
     }
 
     /// The App Group's snapshot and the real clock.

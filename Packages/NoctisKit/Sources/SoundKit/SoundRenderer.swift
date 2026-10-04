@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import SoundCatalog
 import Synchronization
 
 /// What the main thread asks of the audio thread: which sound, how loud, and how to get there.

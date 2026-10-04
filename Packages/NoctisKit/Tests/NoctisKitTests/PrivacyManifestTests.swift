@@ -118,7 +118,7 @@ struct PrivacyManifestTests {
         let defaults = try #require(entries.first { $0["NSPrivacyAccessedAPIType"] as? String == RequiredReasonAPI.userDefaults.rawValue })
         #expect(defaults["NSPrivacyAccessedAPITypeReasons"] as? [String] == ["CA92.1"])
         // CA92.1 is for defaults only the app itself reads and writes; sharing defaults with an extension through an App Group is 1C8F.1.
-        // The App Group holds one file (the widgets' summary, R44) and no defaults suite: nothing is shared through UserDefaults.
+        // The App Group holds two small files (the widgets' summary, R44, and the control's status, R48) and no defaults suite: nothing is shared through UserDefaults.
         for file in appCode() {
             #expect(!file.code.contains("UserDefaults(suiteName: \"group."), Comment(rawValue: "\(file.path) shares defaults through an app group"))
             #expect(!file.code.contains("suiteName: WidgetSnapshotStore"), Comment(rawValue: "\(file.path) shares defaults through the widgets' app group"))

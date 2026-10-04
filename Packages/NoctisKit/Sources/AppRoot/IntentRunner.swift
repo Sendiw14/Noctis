@@ -27,6 +27,7 @@ private final class RecordingHost: IntentHost {
         done.append("play \(chosen.rawValue)")
         return chosen
     }
+    func stopSleepSounds() { done.append("stop sleep sounds") }
     func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome {
         guard alarmAllowed else { return .needsAuthorization }
         done.append("alarm \(minutes)")

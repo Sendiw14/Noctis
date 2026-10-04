@@ -294,11 +294,12 @@ struct DataInventoryFileTests {
         #expect(inventory.category(forFile: "com.other/x", in: .caches) == nil)
     }
 
-    /// What the simulator's App Group container held after a launch with mock data (2026-10-04), apart from the system's own
-    /// `.com.apple.mobile_container_manager.metadata.plist` and `Library` folders: the one file, and no database.
-    static let observedAppGroup = ["WidgetSnapshot.json"]
+    /// What the simulator's App Group container held (2026-10-05), apart from the system's own `.com.apple.mobile_container_manager.metadata.plist`
+    /// and `Library` folders: the widgets' summary after a launch with mock data, and the control's status while a sound played (it is gone when
+    /// the sound stops). No database.
+    static let observedAppGroup = ["WidgetSnapshot.json", "SleepSoundsState.json"]
 
-    @Test func theAppGroupHoldsTheWidgetSummaryAndNothingElse() {
+    @Test func theAppGroupHoldsTheWidgetSummaryAndTheControlStatusAndNothingElse() {
         #expect(inventory.unregistered(files: Self.observedAppGroup, in: .appGroup).isEmpty)
         #expect(inventory.category(forFile: "WidgetSnapshot.json", in: .appGroup) == .widgetSnapshot)
         // A store SwiftData put there would not be owned: the test above would fail on it.
@@ -306,6 +307,10 @@ struct DataInventoryFileTests {
         #expect(inventory.category(forFile: "default.store", in: .appGroup) == nil)
         #expect(inventory[.widgetSnapshot].locations == [.file(.appGroup, "WidgetSnapshot.json")])
         #expect(inventory[.widgetSnapshot].locations == [.file(.appGroup, WidgetSnapshotStore.fileName)])
+        #expect(inventory.category(forFile: "SleepSoundsState.json", in: .appGroup) == .sleepSoundsState)
+        #expect(inventory[.sleepSoundsState].locations == [.file(.appGroup, SleepSoundsStore.fileName)])
+        #expect(inventory[.sleepSoundsState].deletion == .automatic("It is removed when the sound stops, and when you delete all NOCTIS data."))
+        #expect(!inventory[.sleepSoundsState].holdsUserContent && !inventory[.sleepSoundsState].inBackup)
     }
 
     @Test func anExportIsWrittenToTheTemporaryFolderOnly() {

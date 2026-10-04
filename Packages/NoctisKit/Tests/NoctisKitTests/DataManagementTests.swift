@@ -108,6 +108,7 @@ final class DataBench {
     let root: URL
     let roots: DataRoots
     var calls: [String] = []
+    lazy var sleepSounds = SleepSoundsPublisher(store: SleepSoundsStore(directory: roots.url(.appGroup)), reload: { [unowned self] in calls.append("control") })
     var manager: DataManager!
     var failJournal = false
 
@@ -154,13 +155,17 @@ final class DataBench {
             afterCoachDeleted: { [unowned self] in calls.append("coachReload") },
             clearMemory: { [unowned self] in calls.append("memory") },
             forgetSoundChoices: { [unowned self] in calls.append("soundChoices") },
-            reloadWidgets: { [unowned self] in calls.append("widgets") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") },
+            reloadWidgets: { [unowned self] in calls.append("widgets") }, sleepSounds: sleepSounds,
+            reloadControls: { [unowned self] in calls.append("controls") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") },
             stopBackgroundUpdates: { [unowned self] in calls.append("background") }
         ))
     }
 
     /// The widgets' summary, in the (test) App Group.
     var widgetFile: URL { roots.url(.appGroup).appending(path: WidgetSnapshotStore.fileName, directoryHint: .notDirectory) }
+
+    /// The Sleep sounds control's status, in the (test) App Group.
+    var controlsFile: URL { roots.url(.appGroup).appending(path: SleepSoundsStore.fileName, directoryHint: .notDirectory) }
 
     /// Something in every place NOCTIS keeps anything.
     func fill() async throws {
@@ -185,6 +190,8 @@ final class DataBench {
         insightFile.save(InsightLibrary())
         try Data("{\"saved\":true}".utf8).write(to: snapshotStore.fileURL)
         try Data("{\"v\":1}".utf8).write(to: widgetFile)
+        _ = sleepSounds
+        SleepSoundsStore(directory: roots.url(.appGroup)).save(SleepSoundsState())
         try Data(count: 64).write(to: roots.url(.caches).appending(path: "com.noctis.app/com.apple.metal/functions.data"))
         try Data(count: 16).write(to: roots.url(.temporary).appending(path: DataExport.fileName))
         let schedule = ScheduledNotification(identifier: NoctisNotification.morningSummary, title: "NOCTIS", body: "x", components: DateComponents(hour: 7))
@@ -225,7 +232,7 @@ struct DataManagementIntegrationTests {
         let coachBefore = await bench.coachHistory.messageCount()
         #expect(bench.profileStore.recordCount == 1 && !bench.journal.stored.isEmpty && coachBefore == 1)
         #expect((try? Data(contentsOf: bench.snapshotStore.fileURL)) != nil && bench.insightFile.load() != nil)
-        #expect(FileManager.default.fileExists(atPath: bench.widgetFile.path))
+        #expect(FileManager.default.fileExists(atPath: bench.widgetFile.path) && FileManager.default.fileExists(atPath: bench.controlsFile.path))
         #expect(await bench.center.pendingIdentifiers().count == 4)
         #expect(await bench.alarmService.status().isOn)
 
@@ -241,7 +248,8 @@ struct DataManagementIntegrationTests {
         #expect(bench.insightFile.load() == nil && !FileManager.default.fileExists(atPath: bench.insightFile.fileURL.path))
         #expect(!FileManager.default.fileExists(atPath: bench.snapshotStore.fileURL.path))
         #expect(!FileManager.default.fileExists(atPath: bench.widgetFile.path), "the widgets' summary is deleted")
-        #expect(bench.calls.contains("widgets") && bench.calls.contains("liveActivities"), "the widgets are told to redraw and no Live Activity is left")
+        #expect(!FileManager.default.fileExists(atPath: bench.controlsFile.path), "the Sleep sounds control's status is deleted")
+        #expect(bench.calls.contains("widgets") && bench.calls.contains("controls") && bench.calls.contains("liveActivities"), "the widgets and controls are told to redraw and no Live Activity is left")
         #expect(bench.calls.contains("background"), "Health stops waking the app")
         #expect(!FileManager.default.fileExists(atPath: bench.roots.url(.caches).appending(path: "com.noctis.app").path), "iOS's cache folder is cleared")
         #expect(!FileManager.default.fileExists(atPath: bench.roots.url(.temporary).appending(path: DataExport.fileName).path))

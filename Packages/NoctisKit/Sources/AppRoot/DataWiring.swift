@@ -3,6 +3,7 @@ import Foundation
 import JournalKit
 import NightKit
 import NoctisCore
+import NoctisIntentKit
 import NoctisWidgetKit
 
 /// What Data management needs from the app: every store, and what to tell the screens once something is gone.
@@ -37,6 +38,10 @@ public struct DataWiringInputs {
     public var widgets: WidgetPublisher?
     /// Asks the system to redraw the widgets, which now have no summary and say "Open NOCTIS".
     public var reloadWidgets: @MainActor () -> Void
+    /// The Sleep sounds control's status: told to forget it, and to stop writing it (R48).
+    public var sleepSounds: SleepSoundsPublisher?
+    /// Asks the system to redraw the controls, which now say nothing is playing.
+    public var reloadControls: @MainActor () -> Void
     /// Ends every Live Activity NOCTIS has started. None is started by NOCTIS itself yet (the alarm's is AlarmKit's, ended with the alarm).
     public var endLiveActivities: @MainActor () async -> Void
     /// Stops Apple Health from waking the app in the background (R46).
@@ -50,7 +55,8 @@ public struct DataWiringInputs {
         silenceReminders: @escaping @MainActor () -> Void = {}, settleReminders: @escaping @MainActor () async -> Void = {},
         afterJournalDeleted: @escaping @MainActor () -> Void = {}, afterCoachDeleted: @escaping @MainActor () async -> Void = {},
         clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {},
-        widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {},
+        widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {},
+        sleepSounds: SleepSoundsPublisher? = nil, reloadControls: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {},
         stopBackgroundUpdates: @escaping @MainActor () async -> Void = {}
     ) {
         self.model = model
@@ -77,6 +83,8 @@ public struct DataWiringInputs {
         self.forgetSoundChoices = forgetSoundChoices
         self.widgets = widgets
         self.reloadWidgets = reloadWidgets
+        self.sleepSounds = sleepSounds
+        self.reloadControls = reloadControls
         self.endLiveActivities = endLiveActivities
         self.stopBackgroundUpdates = stopBackgroundUpdates
     }
@@ -114,6 +122,11 @@ public enum DataWiring {
                 try? FileManager.default.removeItem(at: i.roots.url(.appGroup).appending(path: WidgetSnapshotStore.fileName, directoryHint: .notDirectory))
                 i.reloadWidgets()
             },
+            .sleepSoundsState: {
+                i.sleepSounds?.forget()
+                try? FileManager.default.removeItem(at: i.roots.url(.appGroup).appending(path: SleepSoundsStore.fileName, directoryHint: .notDirectory))
+                i.reloadControls()
+            },
             .memorySummaries: { await i.clearMemory() },
             .profile: { i.profileStore.eraseAll() },
             // "Preferences and goals": the preferences back to their defaults, and the goals to Better sleep.
@@ -150,7 +163,11 @@ public enum DataWiring {
     static func deleteAllSteps(_ i: DataWiringInputs, erasers: [DataCategoryID: DataManager.Eraser], inventory: DataInventory) -> [DeleteStep] {
         var steps = [
             DeleteStep(id: "silence", title: "Pausing reminders") { i.silenceReminders() },
-            DeleteStep(id: "audio", title: "Stopping sounds") { i.stopAudio() },
+            DeleteStep(id: "audio", title: "Stopping sounds") {
+                // The control's status is not written again while everything is deleted (a sound that fades out would write it).
+                i.sleepSounds?.suspend()
+                i.stopAudio()
+            },
             DeleteStep(id: "windDown", title: "Ending any wind-down") { i.endWindDown() },
             DeleteStep(id: "cancelAlarm", title: "Cancelling your wake alarm") { _ = await i.alarmService.disable() },
         ]
@@ -180,6 +197,7 @@ public enum DataWiring {
         // The widgets redraw without their summary, and no Live Activity is left running.
         steps.append(DeleteStep(id: "widgets", title: "Updating widgets") {
             i.reloadWidgets()
+            i.reloadControls()
             await i.endLiveActivities()
         })
         // Health stops waking the app, so a deleted app does not start itself in the night.
@@ -204,6 +222,7 @@ public enum DataWiring {
                 return DataExport.fileObject(at: url)
             },
             .widgetSnapshot: { DataExport.fileObject(at: i.roots.url(.appGroup).appending(path: WidgetSnapshotStore.fileName, directoryHint: .notDirectory)) },
+            .sleepSoundsState: { DataExport.fileObject(at: i.roots.url(.appGroup).appending(path: SleepSoundsStore.fileName, directoryHint: .notDirectory)) },
             .insightHistory: { i.insightFile.load().map { (try? DataExport.object(from: $0)) ?? [String: Any]() } ?? [String: Any]() },
             .profile: {
                 let profile = i.model.profile

@@ -338,6 +338,11 @@ public struct AppContainer {
         soundPlayer.setDefaultGain(preferences.values.soundsGain)
         self.soundPlayer = soundPlayer
         self.soundsViewModel = SoundsViewModel(player: soundPlayer, defaultTimer: { preferences.values.soundsTimer })
+        // The Sleep sounds control (R48) is told what the one player does, so it shows what is true. At launch nothing plays: a record left by a
+        // process the system ended is removed by the first state it sees.
+        let sleepSoundsPublisher = SleepSoundsPublisher(store: SleepSoundsStore(), reload: { ControlCenter.shared.reloadControls(ofKind: ControlKind.sleepSounds) })
+        soundPlayer.observe { sleepSoundsPublisher.apply($0) }
+        sleepSoundsPublisher.apply(soundPlayer.state)
         let windDownStore = WindDownSessionStore(context: ModelContext(container))
         let windDown = WindDownViewModel(
             player: soundPlayer, alarm: alarmService, store: windDownStore, idle: ApplicationIdleTimer(),
@@ -392,7 +397,9 @@ public struct AppContainer {
 
         // Siri, Shortcuts and the controls (R47): the intents ask this running app, through the objects the screens use. Installed at start,
         // so an intent that launches the app in the background finds it.
-        IntentRuntime.shared.install(AppIntentHost(model: model, preferences: preferences, player: soundPlayer, sounds: self.soundsViewModel, alarm: alarmService))
+        IntentRuntime.shared.install(
+            AppIntentHost(model: model, preferences: preferences, player: soundPlayer, sounds: self.soundsViewModel, alarm: alarmService, controls: sleepSoundsPublisher)
+        )
 
         // Data management (R41, R42): every store given an eraser and an exporter, and "Delete all NOCTIS data" its steps.
         let dataManager = DataWiring.manager(DataWiringInputs(
@@ -429,6 +436,8 @@ public struct AppContainer {
             },
             widgets: widgetPublisher,
             reloadWidgets: { WidgetCenter.shared.reloadAllTimelines() },
+            sleepSounds: sleepSoundsPublisher,
+            reloadControls: { ControlCenter.shared.reloadAllControls() },
             endLiveActivities: { await LiveActivities.endAll() },
             stopBackgroundUpdates: {
                 model.onHealthAuthorizationRequested = nil
