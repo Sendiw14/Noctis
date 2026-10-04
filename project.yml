@@ -39,6 +39,8 @@ targets:
         product: AppRoot
       # The alarm's snooze countdown is drawn by this extension (see APP_RULES.md R30).
       - target: NoctisAlarmWidget
+      # The Home Screen and Lock Screen widgets (APP_RULES.md R44): they read one file the app writes into the App Group.
+      - target: NoctisWidgets
     # HealthKit, read-only (see NSHealthShareUsageDescription below). The App Group is the one place the app shares
     # a file with its widgets (APP_RULES.md R44): a small summary the app writes and the widgets read.
     entitlements:
@@ -96,6 +98,40 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.alarm
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+
+  # NOCTIS's widgets: one Home Screen widget (small, medium, large) and one Lock Screen widget. The extension reads ONLY the
+  # WidgetSnapshot file in the App Group (R44): it links NoctisWidgetKit, which depends on the design tokens and nothing that
+  # reads Health, SwiftData or Coach. No network, no HealthKit entitlement. Its own privacy manifest declares no
+  # required-reason API because it uses none.
+  NoctisWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: NoctisWidgets
+    dependencies:
+      - package: NoctisKit
+        product: NoctisWidgetKit
+    entitlements:
+      path: NoctisWidgets/NoctisWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.noctis.app
+    info:
+      path: NoctisWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: NOCTIS Widgets
+        # An extension must carry its app's version.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.widgets
+        PRODUCT_NAME: NOCTISWidgets
         SKIP_INSTALL: YES
         TARGETED_DEVICE_FAMILY: "1"
 

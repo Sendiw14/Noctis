@@ -15,11 +15,15 @@
 		1CF3D1361661BBD47921811C /* AlarmShared in Frameworks */ = {isa = PBXBuildFile; productRef = 61CABC6F041652D64F45376A /* AlarmShared */; };
 		2D174C4836CCB16E9ABF7770 /* ColorPassQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43AC80FF5F56C48B897A61B /* ColorPassQATests.swift */; };
 		3E0928328CBB9C6CED1BB7F5 /* HomeMotionQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4176437B1713187435A9E79D /* HomeMotionQATests.swift */; };
+		5719FF0C4B1AF25264084D24 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */; };
 		5D47D15860502C898689BDAF /* ScreenCatalogQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */; };
 		63A30BB69215A7159983E0DD /* NoctisAlarmWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29432FD48663BA9B7FD95CC0 /* NoctisAlarmWidget.swift */; };
+		67056F3EDBCFEEB4289B82D3 /* NoctisWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */; };
+		71361BAB55BD7C2FC66D8093 /* NoctisWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0543D94DBE7650D827B49501 /* NoctisWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		77C1193892B2A92697DBB77A /* HomeV3QATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */; };
 		7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6D414566DC2646DBC6FE09 /* QASupport.swift */; };
 		7C879FB1FC08C5D2BC6C11F2 /* InsightsQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */; };
+		8397FD19D6FA1B907AF84177 /* NoctisWidgetKit in Frameworks */ = {isa = PBXBuildFile; productRef = F201A34E1FC44DD31EEA0BBE /* NoctisWidgetKit */; };
 		8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */; };
 		8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F4213CBB03353749905D7E /* HomeQATests.swift */; };
 		98B4052A9E1C5519A27C8213 /* NoctisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */; };
@@ -33,6 +37,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		71628A3A90B00B478AF91B94 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7660C031C6EC308C3385B45D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 308A70723839F103BD35BA57;
+			remoteInfo = NoctisWidgets;
+		};
 		AEE7C2096723AAD134B5FDDB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7660C031C6EC308C3385B45D /* Project object */;
@@ -57,6 +68,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				00E4F4953101FB10C8BE6B7B /* NoctisAlarmWidget.appex in Embed Foundation Extensions */,
+				71361BAB55BD7C2FC66D8093 /* NoctisWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -65,6 +77,7 @@
 
 /* Begin PBXFileReference section */
 		04379147675C3293572F976D /* NoctisUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NoctisUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0543D94DBE7650D827B49501 /* NoctisWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoctisWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		14A364E8BF38E298E7413078 /* SleepQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQATests.swift; sourceTree = "<group>"; };
 		2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCatalogQATests.swift; sourceTree = "<group>"; };
 		2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsQATests.swift; sourceTree = "<group>"; };
@@ -76,15 +89,19 @@
 		4931DEC833E41A07AE985B2D /* Noctis.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Noctis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV3QATests.swift; sourceTree = "<group>"; };
 		4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryQATests.swift; sourceTree = "<group>"; };
+		4E894FBA97D32DE7C822CC43 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisApp.swift; sourceTree = "<group>"; };
 		62661AAACE0CDE992D6E58D4 /* NoctisAlarmWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoctisAlarmWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		811601970E5BB83FD5627B7D /* Noctis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Noctis.entitlements; sourceTree = "<group>"; };
 		85F4213CBB03353749905D7E /* HomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQATests.swift; sourceTree = "<group>"; };
 		92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabScaffoldQATests.swift; sourceTree = "<group>"; };
+		935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWidgets.swift; sourceTree = "<group>"; };
 		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
 		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
+		B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B596F2C4EB2DB5C8C3B19C1C /* HomePerformanceQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePerformanceQATests.swift; sourceTree = "<group>"; };
 		B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B98B1F217D476C8650EAE4EB /* NoctisWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoctisWidgets.entitlements; sourceTree = "<group>"; };
 		BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverQATests.swift; sourceTree = "<group>"; };
 		C43AC80FF5F56C48B897A61B /* ColorPassQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPassQATests.swift; sourceTree = "<group>"; };
 		C4CA26412CE79B13440FBA94 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -100,6 +117,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				1CF3D1361661BBD47921811C /* AlarmShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D0177C1BB5392F81EBE14A2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8397FD19D6FA1B907AF84177 /* NoctisWidgetKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,8 +162,20 @@
 				4931DEC833E41A07AE985B2D /* Noctis.app */,
 				62661AAACE0CDE992D6E58D4 /* NoctisAlarmWidget.appex */,
 				04379147675C3293572F976D /* NoctisUITests.xctest */,
+				0543D94DBE7650D827B49501 /* NoctisWidgets.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8513FF8EE58CAD1357FEEC5B /* NoctisWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				4E894FBA97D32DE7C822CC43 /* Info.plist */,
+				B98B1F217D476C8650EAE4EB /* NoctisWidgets.entitlements */,
+				935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */,
+				B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */,
+			);
+			path = NoctisWidgets;
 			sourceTree = "<group>";
 		};
 		9213F7D570ACC8E3E05A5B13 /* Preview Content */ = {
@@ -190,6 +227,7 @@
 				9714450F1C41512C1CACAF34 /* Noctis.storekit */,
 				D654F53C52B10CF49853EA55 /* App */,
 				2044BE7B0CA3196277E86BD7 /* NoctisAlarmWidget */,
+				8513FF8EE58CAD1357FEEC5B /* NoctisWidgets */,
 				07A8686EBBE9F1075DD906F0 /* Packages */,
 				A5B58CBE9E9988E40D36EC50 /* UITests */,
 				24F0EA3FEF246440BAA18D38 /* Products */,
@@ -218,6 +256,26 @@
 			productReference = 62661AAACE0CDE992D6E58D4 /* NoctisAlarmWidget.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		308A70723839F103BD35BA57 /* NoctisWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1A3EE989FD2D80ED562C484 /* Build configuration list for PBXNativeTarget "NoctisWidgets" */;
+			buildPhases = (
+				975E23F8AA3628BEB3ED7149 /* Sources */,
+				35753AF039BE193ABA25EDEB /* Resources */,
+				8D0177C1BB5392F81EBE14A2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NoctisWidgets;
+			packageProductDependencies = (
+				F201A34E1FC44DD31EEA0BBE /* NoctisWidgetKit */,
+			);
+			productName = NoctisWidgets;
+			productReference = 0543D94DBE7650D827B49501 /* NoctisWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		6035C065C12F58C1B2EEEE90 /* Noctis */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 064272BD8550513290EF9DFA /* Build configuration list for PBXNativeTarget "Noctis" */;
@@ -231,6 +289,7 @@
 			);
 			dependencies = (
 				D191CC9CE6A86029ECB9FA2F /* PBXTargetDependency */,
+				5C646F8E2940C1F5BE5C44F7 /* PBXTargetDependency */,
 			);
 			name = Noctis;
 			packageProductDependencies = (
@@ -291,12 +350,21 @@
 			targets = (
 				6035C065C12F58C1B2EEEE90 /* Noctis */,
 				0A5080F6FD7E11FEB4E16749 /* NoctisAlarmWidget */,
+				308A70723839F103BD35BA57 /* NoctisWidgets */,
 				7437630F018E5F771DD8C047 /* NoctisUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		35753AF039BE193ABA25EDEB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5719FF0C4B1AF25264084D24 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		44F5B5361A8A744BCF59F5E9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -332,6 +400,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		975E23F8AA3628BEB3ED7149 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				67056F3EDBCFEEB4289B82D3 /* NoctisWidgets.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA54445765643A84A96A8187 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -351,6 +427,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		5C646F8E2940C1F5BE5C44F7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 308A70723839F103BD35BA57 /* NoctisWidgets */;
+			targetProxy = 71628A3A90B00B478AF91B94 /* PBXContainerItemProxy */;
+		};
 		D191CC9CE6A86029ECB9FA2F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 0A5080F6FD7E11FEB4E16749 /* NoctisAlarmWidget */;
@@ -380,6 +461,25 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Noctis;
+			};
+			name = Release;
+		};
+		1139385B2A38FB0F8CD28A5D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = NoctisWidgets/NoctisWidgets.entitlements;
+				INFOPLIST_FILE = NoctisWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.noctis.app.widgets;
+				PRODUCT_NAME = NOCTISWidgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -534,6 +634,25 @@
 			};
 			name = Release;
 		};
+		AF09A6827687D6467AA15EEB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = NoctisWidgets/NoctisWidgets.entitlements;
+				INFOPLIST_FILE = NoctisWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.noctis.app.widgets;
+				PRODUCT_NAME = NOCTISWidgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 		AF42F423E40BE2D8F3016E79 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -646,6 +765,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		E1A3EE989FD2D80ED562C484 /* Build configuration list for PBXNativeTarget "NoctisWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF09A6827687D6467AA15EEB /* Debug */,
+				1139385B2A38FB0F8CD28A5D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		F1259E33041B542D89CD512C /* Build configuration list for PBXNativeTarget "NoctisUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -681,6 +809,10 @@
 		61CABC6F041652D64F45376A /* AlarmShared */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AlarmShared;
+		};
+		F201A34E1FC44DD31EEA0BBE /* NoctisWidgetKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NoctisWidgetKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

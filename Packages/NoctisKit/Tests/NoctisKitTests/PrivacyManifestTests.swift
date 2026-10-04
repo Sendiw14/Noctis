@@ -13,7 +13,7 @@ private nonisolated func root(_ path: String) -> URL { RawDefaultsTests.root.app
 
 /// The app's own code, for the scans: the package's sources, the app and the extension, comments removed.
 private nonisolated func appCode() -> [(path: String, code: String)] {
-    RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisAlarmWidget"])
+    RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisAlarmWidget", "NoctisWidgets"])
         // The inventory and the privacy words name APIs as strings; that is not a use.
         .filter { !$0.path.contains("NoctisCore/DataInventory") && !$0.path.contains("NoctisCore/Privacy") }
         .map { ($0.path, RawDefaultsTests.code($0.text)) }
@@ -123,10 +123,33 @@ struct PrivacyManifestTests {
             #expect(!file.code.contains("UserDefaults(suiteName: \"group."), Comment(rawValue: "\(file.path) shares defaults through an app group"))
             #expect(!file.code.contains("suiteName: WidgetSnapshotStore"), Comment(rawValue: "\(file.path) shares defaults through the widgets' app group"))
         }
-        // The extension reads no defaults and no timestamps: it has no manifest because it uses none.
-        for file in appCode() where file.path.hasPrefix("NoctisAlarmWidget/") {
+        // The alarm extension reads no defaults and no timestamps: it has no manifest because it uses none. The widgets' extension has
+        // one of its own, which says the same.
+        for file in appCode() where file.path.hasPrefix("NoctisAlarmWidget/") || file.path.hasPrefix("NoctisWidgets/") {
             for api in RequiredReasonAPI.allCases { #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): the extension needs its own manifest")) }
         }
+    }
+
+    @Test func theWidgetsExtensionHasItsOwnManifestAndUsesNoRequiredReasonAPI() throws {
+        let data = try Data(contentsOf: root("NoctisWidgets/PrivacyInfo.xcprivacy"))
+        let plist = try #require(try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+        #expect(plist["NSPrivacyTracking"] as? Bool == false)
+        #expect((plist["NSPrivacyTrackingDomains"] as? [Any])?.isEmpty == true && (plist["NSPrivacyCollectedDataTypes"] as? [Any])?.isEmpty == true)
+        // The kit it links is scanned with the rest of the package: nothing in it uses a category, so none is declared.
+        let declared = (plist["NSPrivacyAccessedAPITypes"] as? [[String: Any]]) ?? []
+        #expect(declared.isEmpty)
+        let kitFiles = appCode().filter { $0.path.contains("NoctisWidgetKit/") || $0.path.hasPrefix("NoctisWidgets/") }
+        #expect(kitFiles.count >= 8)
+        for api in RequiredReasonAPI.allCases {
+            for file in kitFiles { #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): declare it in NoctisWidgets/PrivacyInfo.xcprivacy")) }
+        }
+        let project = try String(contentsOf: root("Noctis.xcodeproj/project.pbxproj"), encoding: .utf8)
+        #expect(project.components(separatedBy: "PrivacyInfo.xcprivacy in Resources").count - 1 == 4, "the app's and the widgets', each as a file and in a build phase")
+        let yml = try String(contentsOf: root("project.yml"), encoding: .utf8)
+        #expect(yml.contains("NoctisWidgets:") && yml.contains("com.noctis.app.widgets"))
+        // No HealthKit, no network and no iCloud for the extension: its entitlements are the App Group alone.
+        let entitlements = try String(contentsOf: root("NoctisWidgets/NoctisWidgets.entitlements"), encoding: .utf8)
+        #expect(entitlements.contains("com.apple.security.application-groups") && !entitlements.contains("healthkit") && !entitlements.contains("icloud") && !entitlements.contains("network"))
     }
 
     @Test func theHealthUsageDescriptionNamesEverythingTheAppReadsAndThatItNeverWrites() throws {

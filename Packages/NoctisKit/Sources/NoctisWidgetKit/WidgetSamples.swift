@@ -1,0 +1,41 @@
+import Foundation
+
+/// Sample snapshots for the widget gallery's preview and for the debug-build gallery (APP_RULES.md R45): the only place invented numbers
+/// exist. A real timeline never contains one: `WidgetTimelineBuilder.build` takes a snapshot from the store, and a preview entry is
+/// marked `isPreview` and drawn with a "Sample" tag.
+public enum WidgetSamples {
+    /// A snapshot in `state`, for the day of `now`.
+    public static func snapshot(_ state: WidgetDataState, now: Date, calendar: Calendar) -> WidgetSnapshot {
+        let plan = WidgetPlan(wakeMinutes: 7 * 60, needMinutes: 8 * 60, bedtimeMinutes: 23 * 60, windowStartMinutes: 22 * 60 + 45, windowEndMinutes: 23 * 60 + 15)
+        let night = WidgetNight(asleepMinutes: 402, stages: WidgetStages(deep: 74, core: 236, rem: 92), bedtimeMinutes: 23 * 60 + 4, wakeMinutes: 6 * 60 + 52, quality: 81)
+        let fullRing = [
+            WidgetRingSegment(kind: .sleepDuration, weight: 0.35, fraction: 0.82), WidgetRingSegment(kind: .hrv, weight: 0.25, fraction: 0.64),
+            WidgetRingSegment(kind: .restingHeartRate, weight: 0.2, fraction: 0.71), WidgetRingSegment(kind: .sleepConsistency, weight: 0.2, fraction: 0.9),
+        ]
+        let sleepRing = [
+            WidgetRingSegment(kind: .sleepDuration, weight: 0.6, fraction: 0.82), WidgetRingSegment(kind: .sleepConsistency, weight: 0.4, fraction: 0.9),
+        ]
+        var snapshot = WidgetSnapshot(
+            forDay: WidgetDay.today(at: now, calendar: calendar), generatedAt: now, plan: plan, state: state,
+            alarm: WidgetAlarm(minutes: 7 * 60, isOn: true)
+        )
+        switch state {
+        case .full:
+            snapshot.recovery = WidgetRecovery(score: 70, delta: 6, confidence: .high, ring: fullRing)
+            snapshot.lastNight = night
+            snapshot.factors = WidgetFactors(hrv: 54, restingHeartRate: 52)
+        case .sleepOnly:
+            snapshot.recovery = WidgetRecovery(score: 68, delta: 2, confidence: .moderate, ring: sleepRing)
+            snapshot.lastNight = night
+        case .stale:
+            snapshot.recovery = WidgetRecovery(score: 70, delta: 6, confidence: .high, ring: fullRing)
+            snapshot.lastNight = night
+            snapshot.factors = WidgetFactors(hrv: 54, restingHeartRate: 52)
+        case .learning:
+            snapshot.lastNight = night
+        case .empty, .noPermission, .gap:
+            break
+        }
+        return snapshot
+    }
+}

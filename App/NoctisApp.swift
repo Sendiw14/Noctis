@@ -8,6 +8,21 @@ struct NoctisApp: App {
 
     var body: some Scene {
         WindowGroup {
+            #if DEBUG
+            // `-widgetGallery`: every widget family at its real size, in every state (a DEBUG screenshot aid, R45).
+            if let request = WidgetGalleryRequest(arguments: ProcessInfo.processInfo.arguments) {
+                WidgetGalleryView(request: request)
+            } else {
+                root
+            }
+            #else
+            root
+            #endif
+        }
+    }
+
+    private var root: some View {
+        Group {
             RootView(initiallyOnboarded: container.model.isOnboarded)
                 // A new container after "Delete all NOCTIS data": every screen is made again, and the app starts over at onboarding.
                 .id(container.generation)
