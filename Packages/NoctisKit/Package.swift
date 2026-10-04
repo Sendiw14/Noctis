@@ -35,6 +35,7 @@ let package = Package(
         .library(name: "SoundKit", targets: ["SoundKit"]),
         .library(name: "NightKit", targets: ["NightKit"]),
         .library(name: "NightFeature", targets: ["NightFeature"]),
+        .library(name: "JournalKit", targets: ["JournalKit"]),
         .library(name: "AppRoot", targets: ["AppRoot"]),
     ],
     targets: [
@@ -100,11 +101,19 @@ let package = Package(
             dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "InsightsKit", "HomeFeature", "CoachKit"],
             swiftSettings: noctisSwiftSettings
         ),
+        // The journal's model and store (APP_RULES.md R35): what a person chose to note about a day. Only
+        // NightFeature (the Reflect screens) and AppRoot (the wiring) depend on it, so nothing that reads
+        // sleep, recovery, insights, Coach or analytics can see it; a test holds the package to that.
+        .target(
+            name: "JournalKit",
+            dependencies: ["NoctisCore"],
+            swiftSettings: engineSwiftSettings
+        ),
         // The Tonight screen: the bedtime window, why that time, the wake alarm.
         // It reads only `TonightViewModel` (APP_RULES.md R20, R30).
         .target(
             name: "NightFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit", "HomeFeature"],
+            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit", "HomeFeature", "JournalKit"],
             resources: [.process("Resources")],
             swiftSettings: noctisSwiftSettings
         ),
@@ -112,7 +121,7 @@ let package = Package(
             name: "AppRoot",
             dependencies: [
                 "DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature",
-                "InsightsFeature", "CoachKit", "CoachFeature", "NightKit", "NightFeature", "SoundKit",
+                "InsightsFeature", "CoachKit", "CoachFeature", "NightKit", "NightFeature", "SoundKit", "JournalKit",
             ],
             swiftSettings: noctisSwiftSettings
         ),
@@ -121,7 +130,7 @@ let package = Package(
             dependencies: [
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
-                "NightKit", "NightFeature", "AlarmShared", "SoundKit", "AppRoot",
+                "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "AppRoot",
             ],
             swiftSettings: noctisSwiftSettings
         ),

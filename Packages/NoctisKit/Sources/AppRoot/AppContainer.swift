@@ -5,6 +5,7 @@ import Foundation
 import HealthProviding
 import HomeFeature
 import InsightsFeature
+import JournalKit
 import NightFeature
 import NightKit
 import NoctisCore
@@ -42,6 +43,8 @@ public struct AppContainer {
     public let breathingViewModel: BreathingViewModel
     /// The meditation, opened from the wind-down.
     public let meditationViewModel: MeditationViewModel
+    /// Reflect and the Journal: kept in a store of their own, on this device only.
+    public let journalViewModel: JournalViewModel
     /// Opens Wind-down when the evening notification is tapped.
     private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
@@ -256,11 +259,23 @@ public struct AppContainer {
         #endif
         let meditation = MeditationViewModel(audio: meditationAudio, player: soundPlayer)
         self.meditationViewModel = meditation
+        // The journal (R35): its own store, opened when first needed, and registered so Data Management reaches it.
+        #if DEBUG
+        let journalProvider = debug.makeJournalProvider()
+        let journalStore = debug.makeJournalStore(provider: journalProvider)
+        #else
+        let journalProvider = JournalContainerProvider()
+        let journalStore: any JournalStoring = JournalStore(provider: journalProvider)
+        #endif
+        NoctisDataRegistry.shared.register(JournalErasure(provider: journalProvider))
+        let journal = JournalViewModel(store: journalStore)
+        self.journalViewModel = journal
         #if DEBUG
         debug.applySoundScript(to: soundPlayer)
         debug.applyWindDownScript(to: windDown)
         debug.applyBreathingScript(to: breathing)
         debug.applyMeditationScript(to: meditation)
+        debug.applyJournalScript(to: journal)
         #endif
         // A tap on the evening notification opens Wind-down.
         let router = NotificationRouter(model: model)
@@ -330,6 +345,8 @@ struct DebugLaunchOptions {
     let mockBreathing: String?
     /// `-mockMeditation prestart[:bodyScan][:10min][:spoken]|running:bodyScan:10:80[:paused]|finished[:quietMind]`.
     let mockMeditation: String?
+    /// `-mockJournal empty|filled|unavailable[:journal][:draft]`: an in-memory journal, with or without entries; `:journal` opens on the list, `:draft` fills in the form.
+    let mockJournal: String?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -360,6 +377,7 @@ struct DebugLaunchOptions {
         mockWindDown = value(after: "-mockWindDown")
         mockBreathing = value(after: "-mockBreathing")
         mockMeditation = value(after: "-mockMeditation")
+        mockJournal = value(after: "-mockJournal")
     }
 
     /// A session already in the state the flag names, so every state can be looked at.
@@ -396,6 +414,46 @@ struct DebugLaunchOptions {
             return SilentMeditationAudio(canSpeak: mockMeditation?.split(separator: ":").contains("spoken") ?? false)
         }
         return SystemMeditationAudio(isSoundActive: { soundPlayer.state.isLoaded })
+    }
+
+    /// Memory, never disk, whenever a mock scenario or a `-mockJournal` script is on.
+    func makeJournalProvider() -> JournalContainerProvider {
+        JournalContainerProvider(inMemory: mockJournal != nil || mockScenario != nil)
+    }
+
+    @MainActor
+    func makeJournalStore(provider: JournalContainerProvider) -> any JournalStoring {
+        guard mockJournal != nil || mockScenario != nil else { return JournalStore(provider: provider) }
+        let words = mockJournal?.split(separator: ":").map(String.init) ?? []
+        let store = MemoryJournalStore(words.contains("filled") ? Self.sampleJournal() : [])
+        store.failing = words.contains("unavailable")
+        return store
+    }
+
+    /// A few entries over the last days, for a screenshot.
+    @MainActor
+    static func sampleJournal() -> [JournalEntrySnapshot] {
+        let now = Date()
+        func entry(_ daysAgo: Double, hour: Int, energy: Int?, mood: Int?, focus: Int?, _ text: String) -> JournalEntrySnapshot {
+            let day = now.addingTimeInterval(-daysAgo * 86_400)
+            let date = Calendar.current.date(bySettingHour: hour, minute: 40, second: 0, of: day) ?? day
+            return JournalEntrySnapshot(id: UUID(), date: date, energy: energy, mood: mood, focus: focus, text: text)
+        }
+        return [
+            entry(0, hour: 22, energy: 3, mood: 4, focus: 2, "A slow day. Walked in the evening."),
+            entry(1, hour: 23, energy: 2, mood: 3, focus: nil, ""),
+            entry(2, hour: 22, energy: nil, mood: nil, focus: nil, "Long day, early start tomorrow."),
+            entry(4, hour: 21, energy: 5, mood: 5, focus: 4, "Felt clear all afternoon."),
+        ]
+    }
+
+    /// The journal as the flag says.
+    @MainActor
+    func applyJournalScript(to model: JournalViewModel) {
+        guard let script = mockJournal else { return }
+        let words = script.split(separator: ":")
+        if words.contains("draft") { model.debugFillDraft() }
+        if words.contains("journal") { model.debugOpenJournal() }
     }
 
     /// A meditation already in the state the flag names.

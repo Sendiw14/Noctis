@@ -1,5 +1,6 @@
 import DesignSystem
 import HomeFeature
+import JournalKit
 import NightKit
 import NoctisCore
 import SoundKit
@@ -10,6 +11,7 @@ enum WindDownActivity: String, Identifiable, CaseIterable {
     case sounds
     case breathing
     case meditation
+    case reflect
 
     var id: String { rawValue }
 
@@ -18,6 +20,7 @@ enum WindDownActivity: String, Identifiable, CaseIterable {
         case .sounds: "Sounds"
         case .breathing: BreathingCopy.title
         case .meditation: MeditationCopy.title
+        case .reflect: ReflectCopy.title
         }
     }
 }
@@ -31,18 +34,20 @@ public struct WindDownScreen: View {
     let sounds: SoundsViewModel
     let breathing: BreathingViewModel
     let meditation: MeditationViewModel
+    let journal: JournalViewModel
     @Environment(AppModel.self) private var appModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var activity: WindDownActivity?
 
-    public init(autostart: Bool, viewModel: WindDownViewModel, sounds: SoundsViewModel, breathing: BreathingViewModel, meditation: MeditationViewModel) {
+    public init(autostart: Bool, viewModel: WindDownViewModel, sounds: SoundsViewModel, breathing: BreathingViewModel, meditation: MeditationViewModel, journal: JournalViewModel) {
         self.autostart = autostart
         self.viewModel = viewModel
         self.sounds = sounds
         self.breathing = breathing
         self.meditation = meditation
+        self.journal = journal
     }
 
     private var reduceMotion: Bool { viewModel.reducedMotionOverride ?? systemReduceMotion }
@@ -89,6 +94,7 @@ public struct WindDownScreen: View {
                 case .sounds: WindDownSoundsPanel(sounds: sounds)
                 case .breathing: BreathingPanel(viewModel: breathing, reduceMotion: reduceMotion)
                 case .meditation: MeditationPanel(viewModel: meditation, reduceMotion: reduceMotion)
+                case .reflect: ReflectPanel(viewModel: journal, reduceMotion: reduceMotion)
                 }
             }
         }
@@ -228,6 +234,7 @@ private struct WindDownSession: View {
                     WindDownActionTile(symbol: "speaker.wave.2", title: WindDownActivity.sounds.title, identifier: "windDown.action.sounds") { open(.sounds) }
                     WindDownActionTile(symbol: "wind", title: WindDownActivity.breathing.title, identifier: "windDown.action.breathing") { open(.breathing) }
                     WindDownActionTile(symbol: "figure.mind.and.body", title: WindDownActivity.meditation.title, identifier: "windDown.action.meditation") { open(.meditation) }
+                    WindDownActionTile(symbol: "square.and.pencil", title: WindDownActivity.reflect.title, identifier: "windDown.action.reflect") { open(.reflect) }
                 }
                 .transition(.opacity)
                 .padding(.bottom, NoctisSpacing.lg)

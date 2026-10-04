@@ -64,6 +64,7 @@ struct RootTabView: View {
     @Environment(WindDownViewModel.self) private var windDown
     @Environment(BreathingViewModel.self) private var breathing
     @Environment(MeditationViewModel.self) private var meditation
+    @Environment(JournalViewModel.self) private var journal
     @Environment(\.scenePhase) private var scenePhase
     @State private var clock = HomeClock()
 
@@ -164,7 +165,7 @@ struct RootTabView: View {
                 recoveryFactor: { kind, range in AnyView(RecoveryPushedFactorScreen(viewModel: recovery, kind: kind, range: range)) },
                 tonightScreen: { AnyView(TonightScreen(viewModel: tonight)) },
                 soundsScreen: { AnyView(SoundsScreen(viewModel: sounds)) },
-                windDownScreen: { autostart in AnyView(WindDownScreen(autostart: autostart, viewModel: windDown, sounds: sounds, breathing: breathing, meditation: meditation)) }
+                windDownScreen: { autostart in AnyView(WindDownScreen(autostart: autostart, viewModel: windDown, sounds: sounds, breathing: breathing, meditation: meditation, journal: journal)) }
             )
             .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .sleep:
