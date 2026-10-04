@@ -10,6 +10,7 @@ import NightKit
 import NoctisCore
 import RecoveryFeature
 import SleepFeature
+import SoundKit
 import SwiftData
 import UserNotifications
 
@@ -32,6 +33,9 @@ public struct AppContainer {
     public let alarmService: AlarmService
     /// What the Tonight screen reads.
     public let tonightViewModel: TonightViewModel
+    /// The sleep sounds: the one player that holds the audio engine, and what the Sounds screen reads.
+    public let soundPlayer: SoundPlayer
+    public let soundsViewModel: SoundsViewModel
     /// Opens Wind-down when the evening notification is tapped.
     private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
@@ -219,6 +223,18 @@ public struct AppContainer {
             sleep: sleepRepository, alarm: alarmService, profile: { model.profile },
             format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
         )
+        // Sleep sounds (R31): the real engine, or in DEBUG a silent one that still renders the real
+        // sounds for the meter, so a screenshot or a UI test makes no noise.
+        #if DEBUG
+        let soundPlayer = debug.makeSoundPlayer()
+        #else
+        let soundPlayer = SoundPlayer(engine: AVSoundEngineDriver(), session: AVSoundSession(), nowPlaying: MediaNowPlaying())
+        #endif
+        self.soundPlayer = soundPlayer
+        self.soundsViewModel = SoundsViewModel(player: soundPlayer)
+        #if DEBUG
+        debug.applySoundScript(to: soundPlayer)
+        #endif
         // A tap on the evening notification opens Wind-down.
         let router = NotificationRouter(model: model)
         self.notificationRouter = router
@@ -278,6 +294,8 @@ struct DebugLaunchOptions {
     /// alarm system plays a script; `real` is AlarmKit itself.
     let mockAlarm: MockAlarmBackend.Mode?
     let realAlarm: Bool
+    /// `-mockSound silent|playing:rain|interrupted:ocean|timer:rain:30|real:wind`.
+    let mockSound: MockSoundScript?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -304,6 +322,41 @@ struct DebugLaunchOptions {
         mockAI = value(after: "-mockAI").flatMap(MockAIProvider.Mode.init(launchValue:))
         mockAlarm = value(after: "-mockAlarm").flatMap(MockAlarmBackend.Mode.init(launchValue:))
         realAlarm = value(after: "-mockAlarm") == "real"
+        mockSound = value(after: "-mockSound").flatMap(MockSoundScript.init(argument:))
+    }
+
+    /// The silent engine unless `-mockSound real:` asked for the real one; with a mock Health
+    /// scenario and no flag it is silent too.
+    @MainActor
+    func makeSoundPlayer() -> SoundPlayer {
+        let useReal = mockSound?.mode == .real || (mockSound == nil && mockScenario == nil)
+        let defaults = UserDefaults.standard
+        if useReal {
+            return SoundPlayer(engine: AVSoundEngineDriver(), session: AVSoundSession(), nowPlaying: MediaNowPlaying(), defaults: defaults)
+        }
+        return SoundPlayer(engine: SilentSoundEngine(), session: SilentSoundSession(), nowPlaying: SilentNowPlaying(), defaults: defaults)
+    }
+
+    /// Starts what the script says: a sound playing, interrupted, on a timer, or the real engine at a whisper.
+    @MainActor
+    func applySoundScript(to player: SoundPlayer) {
+        guard let script = mockSound else { return }
+        switch script.mode {
+        case .silent:
+            break
+        case .playing:
+            player.play(script.kind)
+        case .interrupted:
+            player.play(script.kind)
+            player.simulateInterruption()
+        case .timer:
+            player.play(script.kind)
+            player.setTimer(SleepTimerChoice(rawValue: script.minutes) ?? .minutes30)
+        case .real:
+            // A whisper: this is for looking at the process's CPU, not for hearing.
+            player.setGain(0.02, for: script.kind)
+            player.play(script.kind)
+        }
     }
 
     /// The alarm system for this launch: a script if asked, a permissive pretend one with a mock

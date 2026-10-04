@@ -16,17 +16,21 @@ public struct HomeTabView: View {
     private let recoveryFactor: (RecoveryFactorKind, RecoveryFactorRange) -> AnyView
     /// Tonight (built by the app, which knows the Night feature): the bedtime window and the alarm.
     private let tonightScreen: () -> AnyView
+    /// Sleep sounds, pushed over Tonight.
+    private let soundsScreen: () -> AnyView
 
     public init(
         viewModel: HomeViewModel,
         recoveryScreen: @escaping (RecoveryFactorKind?) -> AnyView,
         recoveryFactor: @escaping (RecoveryFactorKind, RecoveryFactorRange) -> AnyView,
-        tonightScreen: @escaping () -> AnyView
+        tonightScreen: @escaping () -> AnyView,
+        soundsScreen: @escaping () -> AnyView
     ) {
         self.viewModel = viewModel
         self.recoveryScreen = recoveryScreen
         self.recoveryFactor = recoveryFactor
         self.tonightScreen = tonightScreen
+        self.soundsScreen = soundsScreen
     }
 
     public var body: some View {
@@ -49,8 +53,7 @@ public struct HomeTabView: View {
                         // R19: Wind-down isn't built yet (ROADMAP.md).
                         NoctisComingSoonView(title: "Wind-down", systemImage: "moon.stars")
                     case .sounds:
-                        // R19: Sleep sounds aren't built yet (ROADMAP.md).
-                        NoctisComingSoonView(title: "Sleep sounds", systemImage: "speaker.wave.2")
+                        soundsScreen()
                     }
                 }
         }

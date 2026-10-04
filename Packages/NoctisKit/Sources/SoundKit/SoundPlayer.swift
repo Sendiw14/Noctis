@@ -393,3 +393,12 @@ public final class SoundPlayer {
         defaults.set(Dictionary(uniqueKeysWithValues: gains.map { ($0.key.rawValue, Double($0.value)) }), forKey: gainsKey)
     }
 }
+
+#if DEBUG
+extension SoundPlayer {
+    /// A call comes in (for `-mockSound interrupted:`): the same path the system's notification takes.
+    public func simulateInterruption() {
+        handle(.interruptionBegan)
+    }
+}
+#endif

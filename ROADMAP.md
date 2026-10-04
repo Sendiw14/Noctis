@@ -5,7 +5,6 @@ Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reac
 - Free vs Premium gating for Sleep: Month, the quality factors and the 14-night picker. All of Sleep is open until the paywall decides.
 - Sleep share card. Home's "Share this night" card stays the only share.
 - Wind-down. Tonight's "Start wind-down", Home's evening "Start wind-down" and the evening notification (which opens it without starting it) open a "Coming soon" screen (`AppRoute.windDown(autostart:)`). The reminder itself already works: it is scheduled in onboarding, 20 minutes before bedtime, with generic words.
-- Sleep sounds. Tonight's "Sleep sounds" row opens a "Coming soon" screen (`AppRoute.sounds`).
 - Data Management (Profile). One place to erase what NOCTIS keeps. `NoctisDataRegistry.shared.eraseAll()` already reaches everything registered: the saved Home snapshot (`home-snapshot.json`, the last launch's derived Home data, used to draw Home in its first frame), the insight history and the stored insights (`insights.json`: every generated insight's typed numbers and whether it is new, seen or dismissed, with complete file protection and excluded from backups). Before release the profile store, the alarm's own record (`AlarmConfiguration`: the wake time, its days and snooze, beside the profile; erasing it must also cancel the alarm in AlarmKit) and the onboarding state must register too, and nothing that keeps Health-derived data may sit outside the registry (R23).
 - Free vs Premium gating for Recovery: free is Today and 7D; premium is 30D, 90D and each factor's history. All of Recovery is open until the paywall decides.
 - Recovery share card. Home's "Share this night" card stays the only share.
@@ -24,3 +23,6 @@ Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reac
 - Free vs Premium gating for the alarm. Advanced alarm features (repeat days, snooze) are open until the paywall decides.
 - Smart Wake and haptic wake. NOCTIS has no sleep-stage wake-up and the copy never claims one: it needs the Apple Watch.
 - Live Activity for the wake window. The only Live Activity is the alarm's own snooze countdown, drawn by `NoctisAlarmWidget` for AlarmKit.
+- Needs licensed recordings. Forest and Night sounds: they can't be synthesized convincingly, so they wait for real recordings (and their licences). Every sound that is in the app is made in code (R31).
+- Premium sound packs. Free vs Premium gating for Sleep sounds: all six are open until the paywall decides.
+- Control Center control and the Play Sleep Sounds intent. Starting and stopping a sound from Control Center, Siri and Shortcuts (App Intents), and a Home tab accessory for the sound that is playing (a system pass).
