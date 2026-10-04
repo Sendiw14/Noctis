@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// The wake alarm: authorization, schedule, update, cancel, and what the system says
 /// about it afterwards. It wraps an `AlarmBackend` (AlarmKit in the app), keeps the
@@ -230,8 +231,10 @@ public actor AlarmService {
         do {
             try await backend.schedule(id: id, settings: next)
         } catch AlarmBackendError.limitReached {
+            Self.log.error("alarm schedule refused: limit reached")
             return await finish(.scheduleFailed, failure: .limitReached)
         } catch {
+            Self.log.error("alarm schedule failed")
             return await finish(.scheduleFailed, failure: .scheduleFailed)
         }
         next.alarmKitID = id
@@ -242,10 +245,15 @@ public actor AlarmService {
     }
 
     private func apply(_ event: AlarmEvent) {
+        let before = state
         let transition = AlarmStateMachine.reduce(state, event)
         state = transition.state
         settings?.lastState = state
+        // The state and the event, by name: nothing about the person or their nights.
+        if transition.changed { Self.log.notice("alarm \(before.rawValue, privacy: .public) -> \(self.state.rawValue, privacy: .public) on \(String(describing: event), privacy: .public)") }
     }
+
+    private static let log = Logger(subsystem: "com.noctis.app", category: "alarm")
 
     private func finish(_ event: AlarmEvent, failure new: AlarmFailure? = nil) async -> AlarmStatus {
         failure = new

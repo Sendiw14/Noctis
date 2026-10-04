@@ -3,6 +3,7 @@ import AlarmKit
 import AlarmShared
 import Foundation
 import SwiftUI
+import os
 
 /// The real alarm system. Everything here was checked against the iOS SDK's AlarmKit
 /// interface (see APP_RULES.md R30 for what differs from what one would assume):
@@ -36,6 +37,8 @@ public struct AlarmKitBackend: AlarmBackend {
         } catch let error as AlarmManager.AlarmError where error == .maximumLimitReached {
             throw AlarmBackendError.limitReached
         } catch {
+            // The system's own description (a domain and a code), never the person's data.
+            Logger(subsystem: "com.noctis.app", category: "alarm").error("AlarmKit schedule threw \(String(describing: error), privacy: .public)")
             throw AlarmBackendError.failed
         }
     }

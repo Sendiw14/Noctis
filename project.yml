@@ -37,6 +37,8 @@ targets:
     dependencies:
       - package: NoctisKit
         product: AppRoot
+      # The alarm's snooze countdown is drawn by this extension (see APP_RULES.md R30).
+      - target: NoctisAlarmWidget
     # HealthKit, read-only (see NSHealthShareUsageDescription below).
     entitlements:
       path: App/Noctis.entitlements
@@ -55,6 +57,11 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_CFBundleDisplayName: NOCTIS
         INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
+        # NSAlarmKitUsageDescription (AlarmKit refuses to schedule without it) has no build setting:
+        # it is in App/Info.plist, which Xcode merges with the plist it generates.
+        INFOPLIST_FILE: App/Info.plist
+        # The snooze countdown is a Live Activity the system starts for the alarm.
+        INFOPLIST_KEY_NSSupportsLiveActivities: YES
         INFOPLIST_KEY_NSHealthShareUsageDescription: "NOCTIS reads your sleep, heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health."
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleDefault
@@ -62,6 +69,32 @@ targets:
         DEVELOPMENT_ASSET_PATHS: "\"App/Preview Content\""
         ENABLE_PREVIEWS: YES
         GENERATE_INFOPLIST_FILE: YES
+
+  # The alarm's own screen for the one state AlarmKit leaves to the app: the countdown after
+  # Snooze. It starts nothing, reads no data and has no network access.
+  NoctisAlarmWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: NoctisAlarmWidget
+    dependencies:
+      - package: NoctisKit
+        product: AlarmShared
+    info:
+      path: NoctisAlarmWidget/Info.plist
+      properties:
+        CFBundleDisplayName: NOCTIS Alarm
+        # An extension must carry its app's version.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.alarm
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
 
   NoctisUITests:
     type: bundle.ui-testing

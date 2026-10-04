@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- What the system shows under its own question about alarms. AlarmKit refuses to schedule
+	     without it. Xcode has no build setting for this key, so it lives here and is merged
+	     with the Info.plist Xcode generates for everything else (project.yml). -->
+	<key>NSAlarmKitUsageDescription</key>
+	<string>NOCTIS uses an alarm to wake you at the time you set. It can sound and appear on screen even when a Focus is on.</string>
+</dict>
+</plist>
