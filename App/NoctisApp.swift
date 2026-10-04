@@ -18,6 +18,7 @@ struct NoctisApp: App {
                 .environment(container.soundsViewModel)
                 .environment(container.windDownViewModel)
                 .environment(container.breathingViewModel)
+                .environment(container.meditationViewModel)
                 .environment(container.storeManager)
         }
     }

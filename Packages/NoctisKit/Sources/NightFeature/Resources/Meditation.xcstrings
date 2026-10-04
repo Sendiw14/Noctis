@@ -1,0 +1,644 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "meditation.bodyScan.01": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring your attention to the top of your head."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.02": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel your forehead and your eyes."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.03": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soften your face, your cheeks and your jaw."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.04": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice your neck and your throat."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.05": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel your shoulders, and let them rest."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.06": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move your attention down your arms to your hands."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.07": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel your chest, rising and falling."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.08": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice your belly, soft and loose."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.09": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel your back against the surface beneath you."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.10": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring your attention to your hips and your legs."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.11": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice your knees, your calves and your ankles."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.12": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel your feet, all the way to your toes."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attention moves from head to toe, in even steps."
+          }
+        }
+      }
+    },
+    "meditation.bodyScan.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body scan"
+          }
+        }
+      }
+    },
+    "meditation.breathing.01": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring your attention to your breathing."
+          }
+        }
+      }
+    },
+    "meditation.breathing.02": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel the air at the tip of your nose."
+          }
+        }
+      }
+    },
+    "meditation.breathing.03": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice the breath in, and the breath out."
+          }
+        }
+      }
+    },
+    "meditation.breathing.04": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no need to change it."
+          }
+        }
+      }
+    },
+    "meditation.breathing.05": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel your chest rise and fall."
+          }
+        }
+      }
+    },
+    "meditation.breathing.06": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When your mind wanders, gently come back."
+          }
+        }
+      }
+    },
+    "meditation.breathing.07": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice the pause between one breath and the next."
+          }
+        }
+      }
+    },
+    "meditation.breathing.08": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow one breath all the way in, and all the way out."
+          }
+        }
+      }
+    },
+    "meditation.breathing.09": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel the breath moving in your belly."
+          }
+        }
+      }
+    },
+    "meditation.breathing.10": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let each out-breath be a little longer."
+          }
+        }
+      }
+    },
+    "meditation.breathing.11": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stay with the rhythm of breathing."
+          }
+        }
+      }
+    },
+    "meditation.breathing.12": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take one more slow breath, and rest."
+          }
+        }
+      }
+    },
+    "meditation.breathing.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attention on the breath, nothing more."
+          }
+        }
+      }
+    },
+    "meditation.breathing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Breathing"
+          }
+        }
+      }
+    },
+    "meditation.quietMind.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No words: a slow ring and a few soft chimes."
+          }
+        }
+      }
+    },
+    "meditation.quietMind.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet mind"
+          }
+        }
+      }
+    },
+    "meditation.relax.01": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find a comfortable position."
+          }
+        }
+      }
+    },
+    "meditation.relax.02": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a slow breath in, and let it go."
+          }
+        }
+      }
+    },
+    "meditation.relax.03": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice where you are holding tension, without judging it."
+          }
+        }
+      }
+    },
+    "meditation.relax.04": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let your forehead smooth out."
+          }
+        }
+      }
+    },
+    "meditation.relax.05": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let your shoulders sink away from your ears."
+          }
+        }
+      }
+    },
+    "meditation.relax.06": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unclench your hands, and let them open."
+          }
+        }
+      }
+    },
+    "meditation.relax.07": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel your belly rise and fall."
+          }
+        }
+      }
+    },
+    "meditation.relax.08": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let the next breath be a little slower."
+          }
+        }
+      }
+    },
+    "meditation.relax.09": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice the sounds around you, near and far."
+          }
+        }
+      }
+    },
+    "meditation.relax.10": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let go of the day, one breath at a time."
+          }
+        }
+      }
+    },
+    "meditation.relax.11": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rest your attention on the feeling of breathing."
+          }
+        }
+      }
+    },
+    "meditation.relax.12": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a last slow breath, and stay as you are."
+          }
+        }
+      }
+    },
+    "meditation.relax.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A gentle winding down, line by line."
+          }
+        }
+      }
+    },
+    "meditation.relax.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relax"
+          }
+        }
+      }
+    },
+    "meditation.sleep.01": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settle in. There is nothing you need to do."
+          }
+        }
+      }
+    },
+    "meditation.sleep.02": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let your eyes rest, and let your jaw soften."
+          }
+        }
+      }
+    },
+    "meditation.sleep.03": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice the weight of your body where it rests."
+          }
+        }
+      }
+    },
+    "meditation.sleep.04": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let each breath come and go on its own."
+          }
+        }
+      }
+    },
+    "meditation.sleep.05": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If a thought arrives, let it pass by like a cloud."
+          }
+        }
+      }
+    },
+    "meditation.sleep.06": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let your shoulders drop, just a little."
+          }
+        }
+      }
+    },
+    "meditation.sleep.07": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel the pillow and the mattress holding you."
+          }
+        }
+      }
+    },
+    "meditation.sleep.08": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to fix. Nothing to work out."
+          }
+        }
+      }
+    },
+    "meditation.sleep.09": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let your breathing be slow and easy."
+          }
+        }
+      }
+    },
+    "meditation.sleep.10": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let your hands be heavy and still."
+          }
+        }
+      }
+    },
+    "meditation.sleep.11": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stay with the quiet, for as long as you like."
+          }
+        }
+      }
+    },
+    "meditation.sleep.12": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you are ready, simply rest here."
+          }
+        }
+      }
+    },
+    "meditation.sleep.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slow, quiet lines for lying in bed."
+          }
+        }
+      }
+    },
+    "meditation.sleep.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -40,6 +40,8 @@ public struct AppContainer {
     public let windDownViewModel: WindDownViewModel
     /// The breathing exercise, opened from the wind-down.
     public let breathingViewModel: BreathingViewModel
+    /// The meditation, opened from the wind-down.
+    public let meditationViewModel: MeditationViewModel
     /// Opens Wind-down when the evening notification is tapped.
     private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
@@ -248,9 +250,17 @@ public struct AppContainer {
         let breathing = BreathingViewModel(haptics: breathingHaptics)
         self.breathingViewModel = breathing
         #if DEBUG
+        let meditationAudio = debug.makeMeditationAudio(soundPlayer: soundPlayer)
+        #else
+        let meditationAudio: any MeditationAudioPlaying = SystemMeditationAudio(isSoundActive: { soundPlayer.state.isLoaded })
+        #endif
+        let meditation = MeditationViewModel(audio: meditationAudio, player: soundPlayer)
+        self.meditationViewModel = meditation
+        #if DEBUG
         debug.applySoundScript(to: soundPlayer)
         debug.applyWindDownScript(to: windDown)
         debug.applyBreathingScript(to: breathing)
+        debug.applyMeditationScript(to: meditation)
         #endif
         // A tap on the evening notification opens Wind-down.
         let router = NotificationRouter(model: model)
@@ -318,6 +328,8 @@ struct DebugLaunchOptions {
     let mockWindDown: String?
     /// `-mockBreathing prestart[:box][:haptics]|running:calm:5[:paused][:2min][:haptics]|finished`.
     let mockBreathing: String?
+    /// `-mockMeditation prestart[:bodyScan][:10min][:spoken]|running:bodyScan:10:80[:paused]|finished[:quietMind]`.
+    let mockMeditation: String?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -347,6 +359,7 @@ struct DebugLaunchOptions {
         mockSound = value(after: "-mockSound").flatMap(MockSoundScript.init(argument:))
         mockWindDown = value(after: "-mockWindDown")
         mockBreathing = value(after: "-mockBreathing")
+        mockMeditation = value(after: "-mockMeditation")
     }
 
     /// A session already in the state the flag names, so every state can be looked at.
@@ -373,6 +386,37 @@ struct DebugLaunchOptions {
     func makeBreathingHaptics() -> any BreathingHapticsPlaying {
         if let script = mockBreathing, script.split(separator: ":").contains("haptics") { return SilentBreathingHaptics(available: true) }
         return CoreHapticsBreathing()
+    }
+
+    /// Silent whenever a mock scenario or a `-mockMeditation` script is on, so a screenshot or a UI test makes no
+    /// sound; `spoken` in the script says there is a voice to offer.
+    @MainActor
+    func makeMeditationAudio(soundPlayer: SoundPlayer) -> any MeditationAudioPlaying {
+        if mockMeditation != nil || mockScenario != nil {
+            return SilentMeditationAudio(canSpeak: mockMeditation?.split(separator: ":").contains("spoken") ?? false)
+        }
+        return SystemMeditationAudio(isSoundActive: { soundPlayer.state.isLoaded })
+    }
+
+    /// A meditation already in the state the flag names.
+    @MainActor
+    func applyMeditationScript(to model: MeditationViewModel) {
+        guard let script = mockMeditation else { return }
+        let parts = script.split(separator: ":").map(String.init)
+        let category = parts.compactMap(MeditationCategory.init(rawValue:)).first ?? .bodyScan
+        let minutes = parts.compactMap { $0.hasSuffix("min") ? Int($0.dropLast(3)) : nil }.first
+        switch parts.first {
+        case "running":
+            let numbers = parts.compactMap(Double.init)
+            model.debugBegin(category: category, minutes: Int(numbers.first ?? 10), seconds: numbers.dropFirst().first ?? 0, paused: parts.contains("paused"))
+        case "finished":
+            model.debugBegin(category: category, minutes: minutes ?? 5, seconds: 100_000)
+        case "prestart":
+            model.choose(category: category)
+            if let minutes { model.choose(minutes: minutes) }
+        default:
+            break
+        }
     }
 
     /// An exercise already in the state the flag names.

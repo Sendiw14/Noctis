@@ -9,6 +9,7 @@ import SwiftUI
 enum WindDownActivity: String, Identifiable, CaseIterable {
     case sounds
     case breathing
+    case meditation
 
     var id: String { rawValue }
 
@@ -16,6 +17,7 @@ enum WindDownActivity: String, Identifiable, CaseIterable {
         switch self {
         case .sounds: "Sounds"
         case .breathing: BreathingCopy.title
+        case .meditation: MeditationCopy.title
         }
     }
 }
@@ -28,17 +30,19 @@ public struct WindDownScreen: View {
     let viewModel: WindDownViewModel
     let sounds: SoundsViewModel
     let breathing: BreathingViewModel
+    let meditation: MeditationViewModel
     @Environment(AppModel.self) private var appModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var activity: WindDownActivity?
 
-    public init(autostart: Bool, viewModel: WindDownViewModel, sounds: SoundsViewModel, breathing: BreathingViewModel) {
+    public init(autostart: Bool, viewModel: WindDownViewModel, sounds: SoundsViewModel, breathing: BreathingViewModel, meditation: MeditationViewModel) {
         self.autostart = autostart
         self.viewModel = viewModel
         self.sounds = sounds
         self.breathing = breathing
+        self.meditation = meditation
     }
 
     private var reduceMotion: Bool { viewModel.reducedMotionOverride ?? systemReduceMotion }
@@ -84,6 +88,7 @@ public struct WindDownScreen: View {
                 switch item {
                 case .sounds: WindDownSoundsPanel(sounds: sounds)
                 case .breathing: BreathingPanel(viewModel: breathing, reduceMotion: reduceMotion)
+                case .meditation: MeditationPanel(viewModel: meditation, reduceMotion: reduceMotion)
                 }
             }
         }
@@ -219,9 +224,10 @@ private struct WindDownSession: View {
             }
             Spacer()
             if stage == .full {
-                HStack(spacing: NoctisSpacing.lg) {
+                HStack(spacing: NoctisSpacing.md) {
                     WindDownActionTile(symbol: "speaker.wave.2", title: WindDownActivity.sounds.title, identifier: "windDown.action.sounds") { open(.sounds) }
                     WindDownActionTile(symbol: "wind", title: WindDownActivity.breathing.title, identifier: "windDown.action.breathing") { open(.breathing) }
+                    WindDownActionTile(symbol: "figure.mind.and.body", title: WindDownActivity.meditation.title, identifier: "windDown.action.meditation") { open(.meditation) }
                 }
                 .transition(.opacity)
                 .padding(.bottom, NoctisSpacing.lg)

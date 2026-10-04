@@ -105,6 +105,7 @@ let package = Package(
         .target(
             name: "NightFeature",
             dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit", "HomeFeature"],
+            resources: [.process("Resources")],
             swiftSettings: noctisSwiftSettings
         ),
         .target(
