@@ -278,6 +278,15 @@ struct HealthDataStatusTests {
         #expect(status.kinds.filter { $0.kind != .sleepAnalysis }.allSatisfy { !$0.couldNotCheck && $0.hasData })
     }
 
+    @Test func aQuestionNotYetAskedIsNoDataAndCanBeAskedNotAFailure() async {
+        let provider = MockHealthKitProvider(scenario: .full, referenceDate: profileNow, calendar: Fixture.calendar(), startAuthorized: false)
+        let status = await HealthDataStatusReader(provider: provider).read(now: profileNow, calendar: Fixture.calendar())
+        #expect(!status.hasAnyData && status.kinds.allSatisfy { !$0.couldNotCheck })
+        #expect(status.canRequestAccess, "Connect Apple Health would still show the system's question")
+        let asked = await read(.full)
+        #expect(!asked.canRequestAccess)
+    }
+
     @Test func healthBeingUnavailableIsItsOwnState() async {
         let status = await read(.full, available: false)
         #expect(status.isUnavailable && !status.hasAnyData)

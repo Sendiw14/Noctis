@@ -79,6 +79,10 @@ public struct HealthDataStatusReader {
                 case .respiratoryRate:
                     statuses.append(HealthKindStatus(kind: kind, lastSample: try await provider.fetchRespiratorySamples(from: start, to: now).map(\.date).max()))
                 }
+            } catch HealthProviderError.unauthorized {
+                // The system's question has not been asked (a read that was declined returns nothing instead):
+                // there is no data to be found, and nothing went wrong.
+                statuses.append(HealthKindStatus(kind: kind, lastSample: nil))
             } catch {
                 statuses.append(HealthKindStatus(kind: kind, lastSample: nil, couldNotCheck: true))
             }

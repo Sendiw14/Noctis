@@ -295,7 +295,7 @@ struct HealthKindRow: View {
         HStack(alignment: .top, spacing: NoctisSpacing.sm) {
             NoctisIconTile(
                 systemImage: status.hasData ? "checkmark" : "minus", fill: status.hasData ? NoctisAppColor.blockSage : NoctisAppColor.track,
-                foreground: NoctisAppColor.blockInk, size: NoctisRow<EmptyView>.tile
+                foreground: status.hasData ? NoctisAppColor.blockInk : NoctisAppColor.ink2, size: NoctisRow<EmptyView>.tile
             )
             VStack(alignment: .leading, spacing: 2) {
                 Text(status.kind.displayName)
@@ -356,7 +356,7 @@ struct AppearanceSettingsView: View {
     private var preferences: AppPreferences { viewModel.preferences }
 
     var body: some View {
-        SettingsPageScaffold(.appearance, summary: "How NOCTIS looks, and how it feels.") {
+        SettingsPageScaffold(.appearance, summary: viewModel.offersHaptics ? "How NOCTIS looks, and how it feels." : "How NOCTIS looks.") {
             SettingsGroup("LOOK") {
                 NoctisRowCard {
                     ForEach(Array(AppAppearance.allCases.enumerated()), id: \.element) { index, appearance in

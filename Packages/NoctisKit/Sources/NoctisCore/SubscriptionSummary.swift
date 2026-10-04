@@ -49,7 +49,7 @@ public nonisolated struct SubscriptionSummary: Sendable, Equatable {
 
     /// The one line under the headline. Nothing about price: the store, not NOCTIS, knows what was charged.
     public func detail(calendar: Calendar = .autoupdatingCurrent, locale: Locale = .autoupdatingCurrent) -> String {
-        guard isPremium else { return "You're on the free plan. Premium unlocks everything else in NOCTIS." }
+        guard isPremium else { return "You can upgrade to Premium at any time." }
         let date = endDate.map { $0.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).month(.abbreviated).day().year()) }
         if isInGracePeriod {
             return "Your last payment didn't go through. Premium continues while the App Store tries again; check your payment method in Manage subscription."

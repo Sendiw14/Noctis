@@ -60,7 +60,7 @@ struct SubscriptionSummaryTests {
     @Test func freeSaysFreeAndNothingAboutAPrice() {
         let free = SubscriptionSummary.free
         #expect(free.title == "Free" && free.headline == "Free")
-        #expect(detail(free) == "You're on the free plan. Premium unlocks everything else in NOCTIS.")
+        #expect(detail(free) == "You can upgrade to Premium at any time.", "nothing is claimed to be locked: gating isn't built (ROADMAP.md)")
     }
 
     @Test func premiumNamesThePlanAndWhenItRenews() {

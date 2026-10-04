@@ -53,7 +53,8 @@ struct SettingsPageScaffold<Content: View>: View {
                 dateCaption: "SETTINGS", title: page.title, showsTitle: false,
                 summary: AnyView(Text(summary).accessibilityIdentifier("settings.summary"))
             ),
-            contentTop: .overlapsField,
+            // Below the field, not over its edge: a group's caption is text on the paper, and over the sand it would not read.
+            contentTop: .below(NoctisSpacing.md),
             scrollPosition: $scrollPosition
         ) {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
@@ -188,7 +189,7 @@ struct SettingsRootView: View {
                     ) { model.push(.settings(.help)) }
                     NoctisRowDivider()
                     NoctisLinkRow(
-                        systemImage: "envelope", fill: NoctisAppColor.blockSage, title: "Contact support", value: StoreLegalLinks.supportEmail,
+                        systemImage: "envelope", fill: NoctisAppColor.blockSage, title: "Contact support", detail: StoreLegalLinks.supportEmail,
                         hint: "Starts an email to support.", identifier: "settings.row.contact"
                     ) { contactSupport() }
                     NoctisRowDivider()
