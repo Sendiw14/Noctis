@@ -47,6 +47,9 @@ public nonisolated enum DataDestination: Sendable, Equatable {
     case apple(String)
     /// Only if the person sends it themselves.
     case onlyIfYouSend(String)
+    /// To a company that is not Apple. NOCTIS has no such destination: if one is ever added, "Nothing is sold or shared" and
+    /// "Your data is stored on this iPhone" stop being said until the inventory is changed on purpose.
+    case thirdParty(String)
 }
 
 /// What Coach can see of a category: the kinds of facts, never their values.
@@ -228,6 +231,26 @@ public nonisolated struct DeletableGroup: Sendable, Identifiable, Equatable {
     public let from: String
 }
 
+/// Facts about the app that are not about one category; each is held to the code by a test.
+public nonisolated struct DataInventoryFacts: Sendable, Equatable {
+    public enum HealthAccess: Sendable, Equatable { case readOnly, readWrite }
+
+    public let healthAccess: HealthAccess
+    /// Whether the app has an account of any kind (a sign-in, a profile on a server).
+    public let hasAccount: Bool
+    /// Whether a model that runs off this iPhone can be asked to write Coach's answers.
+    public let coachUsesRemoteModel: Bool
+    /// What Coach never sees, in words that follow "It never sees".
+    public let coachNeverSees: [String]
+
+    public init(healthAccess: HealthAccess, hasAccount: Bool, coachUsesRemoteModel: Bool, coachNeverSees: [String]) {
+        self.healthAccess = healthAccess
+        self.hasAccount = hasAccount
+        self.coachUsesRemoteModel = coachUsesRemoteModel
+        self.coachNeverSees = coachNeverSees
+    }
+}
+
 public nonisolated struct DataInventory: Sendable {
     public let categories: [DataCategory]
     public let flows: [DataFlow]
@@ -235,6 +258,19 @@ public nonisolated struct DataInventory: Sendable {
     public let groups: [DeletableGroup]
     /// Defaults keys the code removes without ever writing (older versions' keys).
     public let retiredKeys: [String]
+    public let facts: DataInventoryFacts
+
+    public init(
+        categories: [DataCategory], flows: [DataFlow], networkUses: [NetworkUse], groups: [DeletableGroup], retiredKeys: [String],
+        facts: DataInventoryFacts
+    ) {
+        self.categories = categories
+        self.flows = flows
+        self.networkUses = networkUses
+        self.groups = groups
+        self.retiredKeys = retiredKeys
+        self.facts = facts
+    }
 
     public subscript(_ id: DataCategoryID) -> DataCategory {
         guard let category = categories.first(where: { $0.id == id }) else { preconditionFailure("\(id) is not in the inventory") }
@@ -251,8 +287,10 @@ public nonisolated struct DataInventory: Sendable {
     /// Whether anything is said to leave the device by itself (not only if the person sends it).
     public var anythingLeavesByItself: Bool {
         categories.contains { category in
-            if case .apple = category.destination { return true }
-            return false
+            switch category.destination {
+            case .apple, .thirdParty: true
+            case .never, .onlyIfYouSend: false
+            }
         }
     }
 

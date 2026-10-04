@@ -330,7 +330,7 @@ struct DataInventoryNetworkTests {
     @Test func everyUseOfANetworkCapableAPIIsListedInTheInventory() {
         var usedBy: [String: Set<String>] = [:]
         // The inventory names these APIs as strings; that is not a use.
-        for file in sources() where !relative(file.path).hasPrefix("NoctisCore/DataInventory") {
+        for file in sources() where !relative(file.path).hasPrefix("NoctisCore/DataInventory") && !relative(file.path).hasPrefix("NoctisCore/Privacy") {
             for token in Self.tokens where file.code.contains(token) { usedBy[token, default: []].insert(relative(file.path)) }
         }
         for (token, files) in usedBy {
@@ -353,6 +353,8 @@ struct DataInventoryNetworkTests {
                 #expect(inventory.networkUses.contains { $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) goes to Apple with no API listed"))
             case .onlyIfYouSend:
                 #expect(inventory.flows.contains { $0.trigger == .onlyWhenYouChoose && $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) is sent by the person, with no flow listed"))
+            case .thirdParty:
+                Issue.record(Comment(rawValue: "\(category.id) goes to a third party: NOCTIS has no such destination"))
             }
         }
         // And nothing syncs.

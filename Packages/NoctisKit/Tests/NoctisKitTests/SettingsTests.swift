@@ -166,7 +166,7 @@ struct LanguageRowTests {
 // MARK: - Help
 
 struct HelpCatalogTests {
-    private func answer(_ key: String) -> String { HelpCatalog.string("help.\(key).a") }
+    private func answer(_ key: String) -> String { HelpCatalog.answer(key) }
 
     @Test func thereAreEightQuestionsEachWithAnAnswerFromTheCatalog() {
         let entries = HelpCatalog.entries

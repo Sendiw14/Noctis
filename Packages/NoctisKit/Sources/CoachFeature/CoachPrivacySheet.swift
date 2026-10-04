@@ -1,4 +1,5 @@
 import DesignSystem
+import NoctisCore
 import SwiftUI
 
 /// "How Coach uses your data": plain words, not values. Which kinds of facts
@@ -7,20 +8,15 @@ import SwiftUI
 struct CoachPrivacySheet: View {
     @Environment(\.dismiss) private var dismiss
 
-    /// The kinds of facts (never their values) a question can see.
-    static let sees = [
-        "Your recovery score today and what it's built from: sleep, HRV, resting heart rate and bedtime consistency.",
-        "Last night's sleep: how long, how well, and the share of deep and REM sleep.",
-        "Your usual bedtime and wake time, and the bedtime that fits your sleep need.",
-        "This week's average night, your sleep balance and how much your bedtime varies.",
-        "The insights NOCTIS has already found, as numbers.",
-    ]
+    /// The kinds of facts (never their values) a question can see: from the data inventory (APP_RULES.md R41).
+    static var sees: [String] { PrivacyStatements.coachSees(.shared) }
 
-    static let neverSees = "It never sees your name, your Apple Account, individual Health readings or when they were taken, or which app or device recorded them."
+    static var neverSees: String { PrivacyStatements.coachNeverSees(.shared) }
 
-    static let written = "Answers are written on your iPhone by Apple Intelligence when it's available. Otherwise NOCTIS builds them from your data with no model at all. Nothing you ask and nothing about your health is sent to a server."
+    /// Nil, and the section hidden, if the inventory ever says a remote model can write an answer.
+    static var written: String? { PrivacyStatements.coachWritten(.shared) }
 
-    static let stored = "Your questions and Coach's answers are kept on this iPhone only. They aren't synced, aren't in backups and are protected while your iPhone is locked. Delete one conversation, or all of them, from History."
+    static var stored: String { PrivacyStatements.coachStored(.shared) }
 
     static let notAdvice = "Coach shares patterns from your data. It isn't medical advice, and it can't diagnose anything. If something about your sleep or health worries you, a doctor is the right person to ask."
 
@@ -39,7 +35,7 @@ struct CoachPrivacySheet: View {
                             paragraph(Self.neverSees).padding(.top, NoctisSpacing.xxs)
                         }
                     }
-                    section("WHERE ANSWERS ARE WRITTEN") { paragraph(Self.written) }
+                    if let written = Self.written { section("WHERE ANSWERS ARE WRITTEN") { paragraph(written) } }
                     section("WHAT IS KEPT") { paragraph(Self.stored) }
                     section("NOT MEDICAL ADVICE") { paragraph(Self.notAdvice) }
                 }

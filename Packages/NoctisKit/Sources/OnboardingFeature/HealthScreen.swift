@@ -213,7 +213,7 @@ struct HealthScreen: View {
             Image(systemName: "lock.fill")
                 .noctisIcon(12, relativeTo: .footnote)
                 .accessibilityHidden(true)
-            Text("Read-only. You control access in the Health app at any time.")
+            Text(PrivacyStatements.readOnlyNote(.shared) ?? "You control access in the Health app at any time.")
                 .noctisFont(13, relativeTo: .footnote)
                 .multilineTextAlignment(.leading)
         }

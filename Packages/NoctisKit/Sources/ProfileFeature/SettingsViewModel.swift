@@ -20,6 +20,8 @@ public final class SettingsViewModel {
     public private(set) var restoreMessage: String?
     public private(set) var isRestoring = false
     public private(set) var isConnectingHealth = false
+    /// The Privacy Center, made from the inventory (R41); made again whenever the page appears, for the sizes.
+    public private(set) var privacy: PrivacyCenterContent
     /// "Manage subscription" is the system's sheet over the page.
     public var showsManageSubscription = false
     public var showsPaywall = false
@@ -40,6 +42,10 @@ public final class SettingsViewModel {
     private let bundle: Bundle
     private let preferredLanguages: () -> [String]
     private let clock: () -> Date
+    public let inventory: DataInventory
+    /// Whether Settings has a Data management page.
+    static let hasDataManagement = false
+    private let roots: DataRoots
 
     public init(
         preferences: AppPreferences, notifications: NotificationCoordinator, store: StoreManager, health: HealthDataStatusReader,
@@ -47,8 +53,12 @@ public final class SettingsViewModel {
         hapticsAvailable: @escaping () -> Bool, format: HomeFormat, bundle: Bundle = .main,
         preferredLanguages: @escaping () -> [String] = { Locale.preferredLanguages },
         openSettings: @escaping @MainActor () -> Void = SettingsViewModel.openAppSettings,
-        openHealth: @escaping @MainActor () -> Void = SettingsViewModel.openHealthApp, clock: @escaping () -> Date = { Date() }
+        openHealth: @escaping @MainActor () -> Void = SettingsViewModel.openHealthApp, clock: @escaping () -> Date = { Date() },
+        inventory: DataInventory = .shared, roots: DataRoots = DataRoots()
     ) {
+        self.inventory = inventory
+        self.roots = roots
+        self.privacy = PrivacyCenterBuilder.content(inventory, roots: roots, dataManagement: Self.hasDataManagement)
         self.preferences = preferences
         self.notifications = notifications
         self.entitlements = store.entitlementManager
@@ -105,6 +115,17 @@ public final class SettingsViewModel {
 
     public var wakeMinutes: Int { profile().typicalWakeMinutes }
     public var needMinutes: Int { profile().needMinutes }
+
+    // MARK: Privacy
+
+    /// Looks at the sizes again.
+    public func refreshPrivacy() {
+        privacy = PrivacyCenterBuilder.content(inventory, roots: roots, dataManagement: Self.hasDataManagement)
+    }
+
+    public func categoryContent(_ id: DataCategoryID) -> PrivacyCategoryContent {
+        PrivacyCategoryContent.make(inventory[id], in: inventory, roots: roots)
+    }
 
     // MARK: Rows that exist only sometimes (R36)
 

@@ -186,7 +186,8 @@ struct RootTabView: View {
                 soundsScreen: { AnyView(SoundsScreen(viewModel: sounds)) },
                 windDownScreen: { autostart in AnyView(WindDownScreen(autostart: autostart, viewModel: windDown, sounds: sounds, breathing: breathing, meditation: meditation, journal: journal)) },
                 profileScreen: { AnyView(ProfileScreen(viewModel: profile)) },
-                settingsScreen: { page in AnyView(SettingsScreen(page: page, viewModel: settings)) }
+                settingsScreen: { page in AnyView(SettingsScreen(page: page, viewModel: settings)) },
+                dataCategoryScreen: { id in AnyView(PrivacyCategoryView(id: id, viewModel: settings)) }
             )
             .onAppear { NoctisSignpost.endAfterNextFrame(.tabSwitch) }
         case .sleep:

@@ -1,4 +1,5 @@
 import Foundation
+import NoctisCore
 import JournalKit
 
 /// Reflect's and the Journal's words (APP_RULES.md R35). Plain and kind: everything is optional, nothing is
@@ -18,7 +19,8 @@ public nonisolated enum ReflectCopy {
     public static let scaleHint = "Swipe up or down to change it, from low to high."
     public static let clear = "Clear"
 
-    public static let privacyLine = "Kept only on this iPhone, and locked when it is. Not synced, not backed up, and never used by Coach or your insights."
+    /// From the data inventory (APP_RULES.md R41).
+    public static var privacyLine: String { PrivacyStatements.journalLine(.shared) ?? "" }
     public static let emptyTitle = "No entries yet."
     public static let emptyLine = "What you save from Reflect appears here."
     public static let unavailable = "The journal can't be opened right now. Try again once your iPhone is unlocked."

@@ -96,12 +96,14 @@ private struct ProfileSections: View {
                 }
             }
             .noctisRise(index: 2)
-            Text("Your name stays on this device. NOCTIS never sends it anywhere.")
-                .noctisFont(13, relativeTo: .footnote)
-                .foregroundStyle(.noctisInk3)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, NoctisSpacing.xs)
-                .noctisRise(index: 3)
+            if let note = PrivacyStatements.nameStays(.shared) {
+                Text(note)
+                    .noctisFont(13, relativeTo: .footnote)
+                    .foregroundStyle(.noctisInk3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, NoctisSpacing.xs)
+                    .noctisRise(index: 3)
+            }
         }
     }
 

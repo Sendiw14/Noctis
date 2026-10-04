@@ -1,6 +1,6 @@
 import Foundation
 
-extension DataInventory {
+nonisolated extension DataInventory {
     /// What NOCTIS keeps. Hand-written, and held to the code by `DataInventoryTests` (APP_RULES.md R41): add a store, a
     /// defaults key or a network API and a test fails until it is described here.
     public static let shared = DataInventory(
@@ -255,6 +255,13 @@ extension DataInventory {
                 keeps: "Your name, sleep need, wake time, alarm, Journal and the rest of NOCTIS are kept.", from: "this iPhone"
             ),
         ],
-        retiredKeys: ["noctis.insights.history"]
+        retiredKeys: ["noctis.insights.history"],
+        facts: DataInventoryFacts(
+            healthAccess: .readOnly, hasAccount: false, coachUsesRemoteModel: false,
+            coachNeverSees: [
+                "your name", "your Apple Account", "individual Health readings or when they were taken",
+                "which app or device recorded them", "what you wrote in the Journal",
+            ]
+        )
     )
 }

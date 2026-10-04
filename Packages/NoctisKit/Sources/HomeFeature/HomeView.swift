@@ -24,6 +24,8 @@ public struct HomeTabView: View {
     private let profileScreen: () -> AnyView
     /// Settings, or one of its pages, from Profile's gear and status rows.
     private let settingsScreen: (SettingsPage) -> AnyView
+    /// One kind of data's page in the Privacy Center.
+    private let dataCategoryScreen: (DataCategoryID) -> AnyView
 
     public init(
         viewModel: HomeViewModel,
@@ -33,7 +35,8 @@ public struct HomeTabView: View {
         soundsScreen: @escaping () -> AnyView,
         windDownScreen: @escaping (Bool) -> AnyView,
         profileScreen: @escaping () -> AnyView,
-        settingsScreen: @escaping (SettingsPage) -> AnyView
+        settingsScreen: @escaping (SettingsPage) -> AnyView,
+        dataCategoryScreen: @escaping (DataCategoryID) -> AnyView
     ) {
         self.viewModel = viewModel
         self.recoveryScreen = recoveryScreen
@@ -43,6 +46,7 @@ public struct HomeTabView: View {
         self.windDownScreen = windDownScreen
         self.profileScreen = profileScreen
         self.settingsScreen = settingsScreen
+        self.dataCategoryScreen = dataCategoryScreen
     }
 
     public var body: some View {
@@ -60,6 +64,8 @@ public struct HomeTabView: View {
                         profileScreen()
                     case .settings(let page):
                         settingsScreen(page)
+                    case .dataCategory(let id):
+                        dataCategoryScreen(id)
                     case .tonight:
                         tonightScreen()
                     case .windDown(let autostart):

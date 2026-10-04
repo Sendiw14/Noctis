@@ -14,6 +14,8 @@ public nonisolated enum SettingsPage: String, Sendable, Hashable, CaseIterable, 
     case sounds
     case help
     case about
+    case privacyCenter = "privacy-center"
+    case dataManagement = "data-management"
 
     /// The page's name in a URL or a launch argument: `noctis://settings?section=notifications`.
     public var token: String { rawValue }
@@ -36,6 +38,8 @@ public nonisolated enum SettingsPage: String, Sendable, Hashable, CaseIterable, 
         case .sounds: "Sleep sounds"
         case .help: "Help"
         case .about: "About"
+        case .privacyCenter: "Privacy Center"
+        case .dataManagement: "Data management"
         }
     }
 }

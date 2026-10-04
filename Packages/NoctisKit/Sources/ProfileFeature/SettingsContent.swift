@@ -27,7 +27,19 @@ public nonisolated enum HelpCatalog {
     }
 
     public static var entries: [HelpEntry] {
-        keys.map { HelpEntry(key: $0, question: string("help.\($0).q"), answer: string("help.\($0).a")) }
+        keys.map { HelpEntry(key: $0, question: string("help.\($0).q"), answer: answer($0)) }
+    }
+
+    /// An answer: the catalog's words, with the sentences about privacy made from the data inventory (APP_RULES.md R41).
+    static func answer(_ key: String, inventory: DataInventory = .shared) -> String {
+        switch key {
+        case "storage": PrivacyStatements.helpStorage(inventory)
+        case "coach":
+            string("help.coach.a")
+                .replacingOccurrences(of: "{written}", with: PrivacyStatements.coachShort(inventory))
+                .replacingOccurrences(of: "{neverSees}", with: PrivacyStatements.coachNeverSees(inventory))
+        default: string("help.\(key).a")
+        }
     }
 }
 
@@ -84,7 +96,7 @@ public nonisolated enum NotificationsCopy {
     /// The switches work only where the system lets NOCTIS send anything.
     public static func switchesAreEnabled(_ authorization: NotificationAuthorization) -> Bool { authorization != .denied }
 
-    public static let privacyNote = "Reminders never carry a number from your Health data."
+    public static var privacyNote: String { PrivacyStatements.remindersGeneric(.shared) }
 
     /// What the notification says, word for word.
     public static let morningSays = NotificationPlan.morningBody
@@ -129,11 +141,11 @@ public nonisolated enum HealthCopy {
     public static let openHealthButton = "Open Health"
     public static let howAccessWorksButton = "How access works"
 
-    public static let howAccessWorks = [
+    public static var howAccessWorks: [String] { [
         "Apple Health lets you choose, for each kind of data, whether NOCTIS may read it. NOCTIS asks once; Apple never asks again, and never tells an app which kinds you declined. They just look empty.",
         "To change what NOCTIS can read, open the Health app, tap your picture at the top, and look for NOCTIS under Apps.",
-        "NOCTIS only reads. It never writes to Health, and it keeps only numbers worked out from it, on this iPhone.",
-    ]
+        PrivacyStatements.healthKeeps(.shared) ?? "You can change what NOCTIS may read in the Health app at any time.",
+    ] }
 }
 
 // MARK: - Subscription

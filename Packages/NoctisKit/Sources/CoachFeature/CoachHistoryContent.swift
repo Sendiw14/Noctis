@@ -1,5 +1,6 @@
 import CoachKit
 import Foundation
+import NoctisCore
 import HomeFeature
 
 /// One stored conversation in the list.
@@ -26,7 +27,8 @@ public nonisolated struct CoachHistoryContent: Sendable, Equatable {
     public let days: [CoachHistoryDay]
 
     public static let emptyTitle = "No conversations yet"
-    public static let emptyMessage = "What you ask Coach, and the answers built from your data, are kept here on this iPhone only."
+    /// From the data inventory (APP_RULES.md R41).
+    public static var emptyMessage: String { PrivacyStatements.coachHistoryKept(.shared) ?? "Your conversations with Coach appear here." }
     public static let deleteAllTitle = "Delete all conversations"
     public static let deleteAllMessage = "Every question and answer Coach has kept is removed from this iPhone. This can't be undone. Your sleep data and the rest of NOCTIS are not affected."
 

@@ -26,6 +26,8 @@ public struct SettingsScreen: View {
         case .sounds: SoundsSettingsView(viewModel: viewModel)
         case .help: HelpView()
         case .about: AboutView(viewModel: viewModel)
+        case .privacyCenter: PrivacyCenterView(viewModel: viewModel)
+        case .dataManagement: EmptyView()
         }
     }
 }
@@ -177,7 +179,12 @@ struct SettingsRootView: View {
             }
             .noctisRise(index: 2)
             SettingsGroup("PRIVACY AND DATA") {
-                ComingSoonCard(title: "Privacy Center", detail: "One place to see what NOCTIS keeps, and how it is protected.", identifier: "settings.comingSoon.privacy")
+                NoctisRowCard {
+                    NoctisLinkRow(
+                        systemImage: "lock.shield", fill: NoctisAppColor.blockLavender, title: "Privacy Center",
+                        detail: "What NOCTIS keeps, where, and who can see it.", hint: "Opens the Privacy Center.", identifier: "settings.row.privacyCenter"
+                    ) { model.push(.settings(.privacyCenter)) }
+                }
                 ComingSoonCard(title: "Data management", detail: "One place to erase what NOCTIS keeps.", identifier: "settings.comingSoon.data")
             }
             .noctisRise(index: 3)

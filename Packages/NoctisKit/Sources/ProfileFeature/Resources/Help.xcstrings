@@ -106,7 +106,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coach answers questions about your own sleep and recovery in plain words: why today's score is what it is, how last night compared with your usual, when to go to bed. It works from numbers NOCTIS has already worked out, never from individual Health readings, and it never sees your name. Answers are written on your iPhone, and nothing you ask is sent to a server. Coach isn't medical advice and can't diagnose anything or say whether something is wrong with you. If something about your sleep or health worries you, a doctor is the right person to ask."
+            "value": "Coach answers questions about your own sleep and recovery in plain words: why today's score is what it is, how last night compared with your usual, when to go to bed. It works from numbers NOCTIS has already worked out. {neverSees} {written} Coach isn't medical advice and can't diagnose anything or say whether something is wrong with you. If something about your sleep or health worries you, a doctor is the right person to ask."
           }
         }
       }
@@ -150,7 +150,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On this iPhone. NOCTIS has no account and doesn't send your sleep or Health data anywhere. It reads Apple Health when you open the app and keeps only numbers worked out from it, such as your insights and the last numbers Home showed, plus your profile, your alarm, your wind-down sessions, your Coach conversations and your journal. None of that is synced to iCloud."
+            "value": "{generated}"
           }
         }
       }

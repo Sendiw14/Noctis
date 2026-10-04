@@ -75,7 +75,7 @@ private struct NameEditor: View {
                         .accessibilityIdentifier("profile.editor.nameField")
                 }
             }
-            Text("Optional. Your name stays on this device and appears only on this page. To remove it, clear the field and Save.")
+            Text("Optional. \(PrivacyStatements.nameStays(.shared) ?? "") It appears only on this page. To remove it, clear the field and Save.")
                 .noctisFont(13, relativeTo: .footnote)
                 .foregroundStyle(.noctisInk3)
                 .fixedSize(horizontal: false, vertical: true)

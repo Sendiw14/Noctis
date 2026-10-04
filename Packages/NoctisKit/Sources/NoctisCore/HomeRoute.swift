@@ -12,6 +12,8 @@ public nonisolated enum HomeRoute: Sendable, Hashable {
     case profile
     /// Settings, from Profile's gear (the list), or one of its pages.
     case settings(SettingsPage)
+    /// One kind of data's page in the Privacy Center.
+    case dataCategory(DataCategoryID)
     /// Tonight: the bedtime window, why, and the wake alarm.
     case tonight
     /// The wind-down session: `autostart` begins it as it opens, otherwise it opens at the pre-start state.

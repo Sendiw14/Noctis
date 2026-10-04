@@ -26,7 +26,7 @@ public nonisolated enum DataSize: Sendable, Equatable {
     case notStored
 }
 
-extension DataInventory {
+nonisolated extension DataInventory {
     // MARK: Files
 
     /// The bytes of the file at `url`, or of everything under it when it is a folder; 0 when it is not there.
