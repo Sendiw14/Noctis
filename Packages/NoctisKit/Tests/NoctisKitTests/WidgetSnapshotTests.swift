@@ -90,7 +90,7 @@ struct WidgetSnapshotShapeTests {
             if let array = value as? [Any] { array.forEach(collect) }
         }
         collect(object)
-        let allowed: Set<String> = ["v", "day", "at", "p", "st", "rec", "n", "f", "al", "w", "ws", "we", "b", "s", "d", "c", "r", "k", "a", "q", "hrv", "rhr", "m", "on", "deep", "core", "rem"]
+        let allowed: Set<String> = ["v", "day", "at", "p", "st", "rec", "n", "f", "al", "w", "ws", "we", "b", "s", "d", "c", "r", "k", "a", "q", "hrv", "rhr", "m", "on", "deep", "core", "rem", "rf", "nh", "de"]
         #expect(keys.isSubset(of: allowed), "unexpected keys: \(keys.subtracting(allowed).sorted())")
         // And the type's own source names none of them either.
         let source = (try? String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift"), encoding: .utf8)) ?? ""

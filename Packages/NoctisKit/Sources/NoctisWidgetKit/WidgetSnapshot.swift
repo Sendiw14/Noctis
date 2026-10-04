@@ -225,6 +225,36 @@ public struct WidgetFactors: Codable, Equatable, Sendable {
     enum CodingKeys: String, CodingKey { case hrv, restingHeartRate = "rhr" }
 }
 
+/// Where a heart factor sits against the person's own normal range (by value, not by goodness): the iPhone's `RecoveryRange`.
+public enum WidgetFactorRange: Int, Codable, Sendable, Equatable {
+    case below = -1
+    case within = 0
+    case above = 1
+}
+
+/// One of the four recovery factors as the iPhone scored it, for the Watch (snapshot v2). Only the factors that exist are present.
+public struct WidgetRecoveryFactor: Codable, Equatable, Sendable {
+    public var kind: WidgetFactorKind
+    /// 0...100.
+    public var score: Int
+    /// Last night's value: minutes asleep; minutes bedtime and wake were off usual; HRV in ms; resting heart rate in bpm.
+    public var value: Double
+    /// What `value` is compared with; nil when there is none yet (and for sleep consistency, which is already a distance).
+    public var baseline: Double?
+    /// Against the normal range: HRV and resting heart rate only, so the Watch uses the iPhone's words and never works the range out.
+    public var range: WidgetFactorRange?
+
+    public init(kind: WidgetFactorKind, score: Int, value: Double, baseline: Double?, range: WidgetFactorRange? = nil) {
+        self.kind = kind
+        self.score = min(max(score, 0), 100)
+        self.value = (value * 10).rounded() / 10
+        self.baseline = baseline.map { ($0 * 10).rounded() / 10 }
+        self.range = range
+    }
+
+    enum CodingKeys: String, CodingKey { case kind = "k", score = "s", value = "v", baseline = "b", range = "r" }
+}
+
 /// What decides which surface is showing and when it changes.
 public struct WidgetPlan: Codable, Equatable, Sendable {
     /// The usual wake time, minutes since midnight.
@@ -264,12 +294,13 @@ public struct WidgetAlarm: Codable, Equatable, Sendable {
     enum CodingKeys: String, CodingKey { case minutes = "m", isOn = "on" }
 }
 
-/// Everything the widgets draw, versioned and under 2 KB.
+/// Everything the widgets and the Apple Watch draw, versioned and under 3 KB.
 public struct WidgetSnapshot: Codable, Equatable, Sendable {
-    /// Bump when a change would break an older reader. A reader that sees another version shows "Open NOCTIS".
-    public static let currentVersion = 1
-    /// The most the store will write.
-    public static let maximumBytes = 2048
+    /// Bump when a change would break an older reader. A reader that sees another version shows "Open NOCTIS". Version 2 added the four
+    /// recovery factors, the nights of history and the data epoch, for the Watch (APP_RULES.md R50).
+    public static let currentVersion = 2
+    /// The most the store will write (a snapshot is well under half of it).
+    public static let maximumBytes = 3072
     /// Nights of sleep before a recovery score (the model's `learningNights`; a test holds the two together).
     public static let learningNights = 5
 
@@ -283,10 +314,17 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     public var lastNight: WidgetNight?
     public var factors: WidgetFactors?
     public var alarm: WidgetAlarm?
+    /// The four recovery factors that were scored, with their values and baselines (v2; empty when there is no score).
+    public var recoveryFactors: [WidgetRecoveryFactor]
+    /// Nights of sleep in the baseline window, 0...14 (v2).
+    public var nightsOfHistory: Int
+    /// Unix seconds of the last "Delete all NOCTIS data", 0 if never (v2). A Watch that sees a greater one than it holds wipes its copy.
+    public var dataEpoch: Int64
 
     public init(
         version: Int = WidgetSnapshot.currentVersion, forDay: WidgetDay, generatedAt: Date, plan: WidgetPlan, state: WidgetDataState,
-        recovery: WidgetRecovery? = nil, lastNight: WidgetNight? = nil, factors: WidgetFactors? = nil, alarm: WidgetAlarm? = nil
+        recovery: WidgetRecovery? = nil, lastNight: WidgetNight? = nil, factors: WidgetFactors? = nil, alarm: WidgetAlarm? = nil,
+        recoveryFactors: [WidgetRecoveryFactor] = [], nightsOfHistory: Int = 0, dataEpoch: Int64 = 0
     ) {
         self.version = version
         self.forDay = forDay
@@ -297,10 +335,35 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
         self.lastNight = lastNight
         self.factors = factors
         self.alarm = alarm
+        self.recoveryFactors = recoveryFactors
+        self.nightsOfHistory = min(max(nightsOfHistory, 0), 14)
+        self.dataEpoch = max(dataEpoch, 0)
     }
 
     enum CodingKeys: String, CodingKey {
         case version = "v", forDay = "day", generatedAt = "at", plan = "p", state = "st", recovery = "rec", lastNight = "n", factors = "f", alarm = "al"
+        case recoveryFactors = "rf", nightsOfHistory = "nh", dataEpoch = "de"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            version: try values.decode(Int.self, forKey: .version), forDay: try values.decode(WidgetDay.self, forKey: .forDay),
+            generatedAt: try values.decode(Date.self, forKey: .generatedAt), plan: try values.decode(WidgetPlan.self, forKey: .plan),
+            state: try values.decode(WidgetDataState.self, forKey: .state), recovery: try values.decodeIfPresent(WidgetRecovery.self, forKey: .recovery),
+            lastNight: try values.decodeIfPresent(WidgetNight.self, forKey: .lastNight), factors: try values.decodeIfPresent(WidgetFactors.self, forKey: .factors),
+            alarm: try values.decodeIfPresent(WidgetAlarm.self, forKey: .alarm),
+            recoveryFactors: try values.decodeIfPresent([WidgetRecoveryFactor].self, forKey: .recoveryFactors) ?? [],
+            nightsOfHistory: try values.decodeIfPresent(Int.self, forKey: .nightsOfHistory) ?? 0,
+            dataEpoch: try values.decodeIfPresent(Int64.self, forKey: .dataEpoch) ?? 0
+        )
+    }
+
+    /// The same snapshot for the next epoch (delete-all), with everything else as it was: used only to stamp a snapshot.
+    public func stamped(epoch: Int64) -> WidgetSnapshot {
+        var copy = self
+        copy.dataEpoch = max(epoch, 0)
+        return copy
     }
 
     // MARK: Coding

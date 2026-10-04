@@ -1,3 +1,4 @@
+#if os(iOS)
 import ActivityKit
 import Foundation
 
@@ -99,3 +100,4 @@ public nonisolated enum WindDownActivityCopy {
         return state.isPaused ? "\(title). \(paused). \(left)." : "\(title). \(left)."
     }
 }
+#endif

@@ -418,9 +418,11 @@ struct ControlExtensionTests {
         let project = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("project.yml"), encoding: .utf8)
         let section = try #require(project.range(of: "  NoctisWidgets:\n"))
         let tail = String(project[section.upperBound...])
-        let block = String(tail[..<(tail.range(of: "\n  NoctisUITests:")?.lowerBound ?? tail.endIndex)])
+        let block = String(tail[..<(tail.range(of: "\n  [A-Za-z]+:\n", options: .regularExpression)?.lowerBound ?? tail.endIndex)])
         #expect(block.contains("product: NoctisWidgetKit") && block.contains("product: NoctisIntentKit"))
-        #expect(!block.contains("product: SoundKit") && !block.contains("HealthKit"))
+        // (comment lines belong to the next target)
+        let lines = block.components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#") }.joined(separator: "\n")
+        #expect(!lines.contains("product: SoundKit") && !lines.contains("HealthKit"))
         let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NoctisWidgets/NoctisWidgets.entitlements"), encoding: .utf8)
         #expect(entitlements.components(separatedBy: "<string>").count - 1 == 1, "the App Group and nothing else")
     }

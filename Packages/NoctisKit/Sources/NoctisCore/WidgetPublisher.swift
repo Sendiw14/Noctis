@@ -38,6 +38,11 @@ public actor WidgetPublisher {
     private let reload: @Sendable () -> Void
     private let clock: @Sendable () -> Date
     private let calendar: Calendar
+    /// The data epoch every snapshot carries (the time of the last "Delete all NOCTIS data"; 0 if never), so the Apple Watch can tell.
+    private let epoch: @Sendable () -> Int64
+    /// Told after a snapshot was written (the Apple Watch is sent it), and after the summary was deleted (the Watch is told to drop its copy).
+    private let afterWrite: @Sendable (WidgetSnapshot) async -> Void
+    private let afterForget: @Sendable () async -> Void
     private var latest: HomeSnapshot?
     private var written: WidgetSnapshot?
     private var suspended = false
@@ -45,13 +50,18 @@ public actor WidgetPublisher {
     /// `store` is nil where the App Group is not available; the publisher then does nothing.
     public init(
         store: WidgetSnapshotStore?, inputs: WidgetInputSource, reload: @escaping @Sendable () -> Void = {},
-        clock: @escaping @Sendable () -> Date = { Date() }, calendar: Calendar = .autoupdatingCurrent
+        clock: @escaping @Sendable () -> Date = { Date() }, calendar: Calendar = .autoupdatingCurrent,
+        epoch: @escaping @Sendable () -> Int64 = { 0 }, afterWrite: @escaping @Sendable (WidgetSnapshot) async -> Void = { _ in },
+        afterForget: @escaping @Sendable () async -> Void = {}
     ) {
         self.store = store
         self.inputs = inputs
         self.reload = reload
         self.clock = clock
         self.calendar = calendar
+        self.epoch = epoch
+        self.afterWrite = afterWrite
+        self.afterForget = afterForget
         written = store?.load()
     }
 
@@ -68,11 +78,12 @@ public actor WidgetPublisher {
     }
 
     /// Deletes the file and forgets what was held (Data management).
-    public func forget() {
+    public func forget() async {
         latest = nil
         written = nil
         store?.delete()
         reload()
+        await afterForget()
     }
 
     /// Stops writing, for good: the app is deleting its data and will start over.
@@ -87,13 +98,14 @@ public actor WidgetPublisher {
         let now = clock()
         let current = await inputs.current()
         guard let snapshot = WidgetSnapshotMaker.make(
-            home: home, profile: current.profile, bedtime: current.bedtime, alarm: current.alarm, now: now, calendar: calendar
+            home: home, profile: current.profile, bedtime: current.bedtime, alarm: current.alarm, now: now, calendar: calendar, dataEpoch: epoch()
         ) else { return }
         // Nothing the widgets draw has changed: leave the file, and the system's budget, alone.
         if let written, Self.sameContent(written, snapshot) { return }
         guard !suspended, store.save(snapshot) else { return }
         written = snapshot
         reload()
+        await afterWrite(snapshot)
     }
 
     /// Equal but for the time it was made.

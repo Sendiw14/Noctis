@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The Watch's own copy of the summary lives in its App Group, shared with its complications (the iPhone's group is a separate container
+	     on another device; the identifier is the same). No Health entitlement of any kind: the Watch app reads no Health (APP_RULES.md R50). -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.noctis.app</string>
+	</array>
+</dict>
+</plist>

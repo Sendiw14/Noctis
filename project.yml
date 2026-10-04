@@ -44,6 +44,8 @@ targets:
       - target: NoctisAlarmWidget
       # The Home Screen and Lock Screen widgets (APP_RULES.md R44): they read one file the app writes into the App Group.
       - target: NoctisWidgets
+      # The Apple Watch app (APP_RULES.md R50): embedded here, installed from the Watch app on the iPhone.
+      - target: NOCTISWatch
     # HealthKit, read-only (see NSHealthShareUsageDescription below). The App Group is the one place the app shares
     # a file with its widgets (APP_RULES.md R44): a small summary the app writes and the widgets read.
     entitlements:
@@ -142,6 +144,77 @@ targets:
         PRODUCT_NAME: NOCTISWidgets
         SKIP_INSTALL: YES
         TARGETED_DEVICE_FAMILY: "1"
+
+  # The Apple Watch app (APP_RULES.md R50, R51, R52): a companion of NOCTIS that shows the summary the iPhone sends. It reads NO HealthKit and runs NO
+  # engines: no HealthKit entitlement, no usage string, and it links the design tokens, the widget kit (the snapshot and its rules) and the Watch kit.
+  # Its own copy of the summary lives in its App Group, shared with its complications.
+  NOCTISWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: NOCTISWatch
+    dependencies:
+      - package: NoctisKit
+        product: NoctisWatchKit
+      - package: NoctisKit
+        product: NoctisWidgetKit
+      - package: NoctisKit
+        product: DesignSystem
+      # The complications (part 2 of the Watch work).
+      - target: NOCTISWatchWidgets
+    entitlements:
+      path: NOCTISWatch/NOCTISWatch.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.noctis.app
+    info:
+      path: NOCTISWatch/Info.plist
+      properties:
+        CFBundleDisplayName: NOCTIS
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.noctis.app
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.watchkitapp
+        PRODUCT_NAME: NOCTISWatch
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SKIP_INSTALL: NO
+        TARGETED_DEVICE_FAMILY: "4"
+
+  # The Watch's complications (built in part 2): they will read the Watch's copy of the summary and draw it. The target is empty for now.
+  NOCTISWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: NOCTISWatchWidgets
+    dependencies:
+      - package: NoctisKit
+        product: NoctisWatchKit
+      - package: NoctisKit
+        product: NoctisWidgetKit
+    entitlements:
+      path: NOCTISWatchWidgets/NOCTISWatchWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.noctis.app
+    info:
+      path: NOCTISWatchWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: NOCTIS
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.watchkitapp.widgets
+        PRODUCT_NAME: NOCTISWatchWidgets
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "4"
 
   NoctisUITests:
     type: bundle.ui-testing

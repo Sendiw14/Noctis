@@ -66,6 +66,16 @@ public nonisolated enum PrivacyStatements {
         return PrivacyStatement(id: "nothingSoldOrShared", text: "Nothing is sold or shared.", evidence: inventory.categories.map(\.id))
     }
 
+    /// "A summary of your recovery and sleep is sent to your Apple Watch." Returned only while a category goes to the paired Watch.
+    public static func sentToWatch(_ inventory: DataInventory) -> PrivacyStatement? {
+        let carried = inventory.categories.filter { category in
+            if case .pairedWatch = category.destination { return true }
+            return false
+        }
+        guard !carried.isEmpty, !hasThirdParty(inventory) else { return nil }
+        return PrivacyStatement(id: "sentToWatch", text: "A summary of your recovery and sleep is sent to your Apple Watch.", evidence: carried.map(\.id))
+    }
+
     /// "Nothing syncs between devices."
     public static func noSync(_ inventory: DataInventory) -> PrivacyStatement? {
         guard neverSyncs(inventory) else { return nil }
@@ -78,9 +88,9 @@ public nonisolated enum PrivacyStatements {
         return PrivacyStatement(id: "noAccount", text: "NOCTIS has no account, so there is no account to delete.", evidence: [])
     }
 
-    /// The four at the top of the Privacy Center, in order, each only if the inventory backs it.
+    /// The statements at the top of the Privacy Center, in order, each only if the inventory backs it.
     public static func headline(_ inventory: DataInventory) -> [PrivacyStatement] {
-        [healthReadOnly(inventory), storedOnDevice(inventory), coachLocal(inventory), nothingSoldOrShared(inventory)].compactMap { $0 }
+        [healthReadOnly(inventory), storedOnDevice(inventory), sentToWatch(inventory), coachLocal(inventory), nothingSoldOrShared(inventory)].compactMap { $0 }
     }
 
     // MARK: Words built from the inventory

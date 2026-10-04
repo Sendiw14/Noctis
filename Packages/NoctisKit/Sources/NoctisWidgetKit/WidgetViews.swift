@@ -1,3 +1,4 @@
+#if os(iOS)
 import DesignSystem
 import SwiftUI
 import WidgetKit
@@ -551,3 +552,4 @@ public struct NoctisLockWidgetView: View {
         }
     }
 }
+#endif

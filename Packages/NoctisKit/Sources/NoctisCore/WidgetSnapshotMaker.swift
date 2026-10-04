@@ -10,7 +10,8 @@ import SleepKit
 public nonisolated enum WidgetSnapshotMaker {
     /// The snapshot for `home`, or nil when there is nothing true to say (a failed read leaves the last snapshot as it was).
     public static func make(
-        home: HomeSnapshot, profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, now: Date, calendar: Calendar
+        home: HomeSnapshot, profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, now: Date, calendar: Calendar,
+        dataEpoch: Int64 = 0
     ) -> WidgetSnapshot? {
         guard let state = state(of: home, now: now) else { return nil }
 
@@ -23,6 +24,8 @@ public nonisolated enum WidgetSnapshotMaker {
 
         var recovery: WidgetRecovery?
         var factors: WidgetFactors?
+        var recoveryFactors: [WidgetRecoveryFactor] = []
+        var nightsOfHistory = 0
         if state.showsScore, case .scored(let result)? = home.recovery {
             recovery = WidgetRecovery(
                 score: min(max(result.score, 0), 100), delta: result.comparison.delta, confidence: confidence(result.confidence),
@@ -32,6 +35,13 @@ public nonisolated enum WidgetSnapshotMaker {
                 hrv: result.factor(.hrv).map { Int($0.value.rounded()) }, restingHeartRate: result.factor(.restingHeartRate).map { Int($0.value.rounded()) }
             )
             factors = heart.isEmpty ? nil : heart
+            // The four factors the iPhone scored, in ring order, for the Watch: only those that exist.
+            recoveryFactors = WidgetFactorKind.allCases.compactMap { kind in
+                result.factors.first { factorKind($0.kind) == kind }.map {
+                    WidgetRecoveryFactor(kind: kind, score: $0.score, value: $0.value, baseline: $0.baseline, range: range($0.range))
+                }
+            }
+            nightsOfHistory = result.baselineNights
         }
 
         // Last night, or on a stale snapshot the newest night on record (it is labelled as old, never as last night).
@@ -48,7 +58,8 @@ public nonisolated enum WidgetSnapshotMaker {
         }
 
         return WidgetSnapshot(
-            forDay: forDay, generatedAt: now, plan: plan, state: state, recovery: recovery, lastNight: night, factors: factors, alarm: alarm
+            forDay: forDay, generatedAt: now, plan: plan, state: state, recovery: recovery, lastNight: night, factors: factors, alarm: alarm,
+            recoveryFactors: recoveryFactors, nightsOfHistory: nightsOfHistory, dataEpoch: dataEpoch
         )
     }
 
@@ -96,6 +107,15 @@ public nonisolated enum WidgetSnapshotMaker {
         case .hrv: .hrv
         case .restingHeartRate: .restingHeartRate
         case .sleepConsistency: .sleepConsistency
+        }
+    }
+
+    static func range(_ range: RecoveryRange?) -> WidgetFactorRange? {
+        switch range {
+        case .within?: .within
+        case .above?: .above
+        case .below?: .below
+        case nil: nil
         }
     }
 

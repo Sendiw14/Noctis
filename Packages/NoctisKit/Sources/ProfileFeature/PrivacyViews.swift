@@ -25,13 +25,14 @@ extension DataCategoryID {
         case .systemFiles: "internaldrive"
         case .exportFile: "square.and.arrow.up"
         case .widgetSnapshot: "rectangle.on.rectangle"
+        case .watchSync: "applewatch"
         case .sleepSoundsState: "waveform"
         }
     }
 
     var fill: Color {
         switch self {
-        case .appleHealth, .cachedSummaries, .widgetSnapshot, .sleepSoundsState, .memorySummaries, .systemFiles: NoctisAppColor.blockSage
+        case .appleHealth, .cachedSummaries, .widgetSnapshot, .watchSync, .sleepSoundsState, .memorySummaries, .systemFiles: NoctisAppColor.blockSage
         case .insightHistory, .preferences, .soundSettings, .appState, .reminders: NoctisAppColor.blockButter
         case .journal, .coachHistory, .profile, .exportFile: NoctisAppColor.blockLavender
         case .alarm, .windDownHistory, .diagnosticLog, .purchases: NoctisAppColor.fieldSand
@@ -182,6 +183,10 @@ struct PrivacyCenterView: View {
                         .noctisFont(15, .semibold, relativeTo: .subheadline)
                         .foregroundStyle(NoctisAppColor.ink)
                         .fixedSize(horizontal: false, vertical: true)
+                    if !content.leavesToWatch.isEmpty {
+                        NoctisCaption("TO YOUR APPLE WATCH", style: .noctisInk3)
+                        ForEach(content.leavesToWatch) { flow($0) }
+                    }
                     if !content.leavesIfYouSend.isEmpty {
                         NoctisCaption("ONLY IF YOU SEND IT", style: .noctisInk3)
                         ForEach(content.leavesIfYouSend) { flow($0) }

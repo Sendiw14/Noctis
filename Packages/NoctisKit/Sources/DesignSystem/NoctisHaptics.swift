@@ -1,4 +1,4 @@
-#if canImport(UIKit)
+#if canImport(UIKit) && !os(watchOS)
 import UIKit
 #endif
 #if canImport(CoreHaptics)
@@ -13,42 +13,42 @@ public enum NoctisHaptics {
 
     public static func selection() {
         guard isEnabled else { return }
-        #if canImport(UIKit)
+        #if canImport(UIKit) && !os(watchOS)
         UISelectionFeedbackGenerator().selectionChanged()
         #endif
     }
 
     public static func soft() {
         guard isEnabled else { return }
-        #if canImport(UIKit)
+        #if canImport(UIKit) && !os(watchOS)
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         #endif
     }
 
     public static func light() {
         guard isEnabled else { return }
-        #if canImport(UIKit)
+        #if canImport(UIKit) && !os(watchOS)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         #endif
     }
 
     public static func medium() {
         guard isEnabled else { return }
-        #if canImport(UIKit)
+        #if canImport(UIKit) && !os(watchOS)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         #endif
     }
 
     public static func success() {
         guard isEnabled else { return }
-        #if canImport(UIKit)
+        #if canImport(UIKit) && !os(watchOS)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         #endif
     }
 
     public static func warning() {
         guard isEnabled else { return }
-        #if canImport(UIKit)
+        #if canImport(UIKit) && !os(watchOS)
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
         #endif
     }
@@ -84,7 +84,7 @@ public enum NoctisHaptics {
     /// Hit the edge of a valid range (minimum/maximum clamp).
     public static func limit() {
         guard isEnabled else { return }
-        #if canImport(UIKit)
+        #if canImport(UIKit) && !os(watchOS)
         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
         #endif
     }

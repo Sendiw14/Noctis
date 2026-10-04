@@ -33,14 +33,25 @@ nonisolated extension DataInventory {
             ),
             DataCategory(
                 .widgetSnapshot, name: "Widget summary",
-                summary: "A small file NOCTIS writes for its widgets, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked.",
+                summary: "A small file NOCTIS writes for its widgets and for your Apple Watch, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked. If you have an Apple Watch with NOCTIS on it, the same summary is sent to it, and only to it.",
                 contents: [
-                    "Your recovery score, how it compares with your usual, and the four arcs of its ring", "Last night's sleep: how long, its stages and when it began and ended",
-                    "Your resting heart rate and heart rate variability for last night", "Tonight's bedtime and your usual wake time", "Your wake alarm's time, and whether it is on",
+                    "Your recovery score, how it compares with your usual, and the four arcs of its ring", "How each of the four recovery factors scored, its value last night and your usual for it",
+                    "Last night's sleep: how long, its stages and when it began and ended", "Your resting heart rate and heart rate variability for last night",
+                    "Tonight's bedtime and your usual wake time", "Your wake alarm's time, and whether it is on",
+                    "How many nights your usual is built from, and the time of your last \"Delete all NOCTIS data\"",
                 ],
                 locations: [.file(.appGroup, "WidgetSnapshot.json")],
+                destination: .pairedWatch("to your own paired Apple Watch, over Bluetooth or Wi-Fi, through Apple's WatchConnectivity. It is never sent to a server."),
                 inBackup: false, protection: .standard, deletion: .button("Cached summaries"),
                 owner: "NoctisWidgetKit/WidgetSnapshotStore.swift", holdsUserContent: false, export: .included("widgetSnapshot")
+            ),
+            DataCategory(
+                .watchSync, name: "Apple Watch status",
+                summary: "Two small notes NOCTIS keeps about sending to your Apple Watch: when it last sent the summary, and the day your Watch face's complication was last refreshed for. They hold no Health value.",
+                contents: ["When the summary was last sent to your Apple Watch", "Which day, and whether it had a recovery, the complication was last refreshed for"],
+                locations: [.defaults([WatchSyncDefaults.lastSentAtKey, WatchSyncDefaults.complicationMarkKey])],
+                inBackup: true, protection: .standard, deletion: .button("Cached summaries"),
+                owner: "NoctisCore/WatchSync/WatchSyncDefaults.swift", holdsUserContent: false, export: .included("watchSync")
             ),
             DataCategory(
                 .sleepSoundsState, name: "Sleep sounds status",
@@ -224,6 +235,11 @@ nonisolated extension DataInventory {
                 trigger: .byApple, categories: [.purchases]
             ),
             DataFlow(
+                id: "appleWatch", title: "Apple Watch",
+                detail: "A summary of your recovery and sleep is sent to your Apple Watch, if you have one with NOCTIS on it: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your alarm. It goes over Bluetooth or Wi-Fi to your own Watch, through Apple's WatchConnectivity, and never to a server. \"Delete all NOCTIS data\" wipes it from the Watch too.",
+                trigger: .toYourWatch, categories: [.widgetSnapshot]
+            ),
+            DataFlow(
                 id: "deviceBackup", title: "Device backups",
                 detail: "If you back up this iPhone to iCloud or a computer, Apple's backup may include your profile, preferences, alarm and wind-down history. Cached summaries, insights, the Journal and Coach conversations are left out of backups.",
                 trigger: .byApple, categories: [.profile, .preferences, .soundSettings, .appState, .alarm, .windDownHistory]
@@ -237,6 +253,10 @@ nonisolated extension DataInventory {
                     "ProfileFeature/SettingsPages.swift", "ProfileFeature/SettingsScreens.swift", "ProfileFeature/DataManagementViews.swift",
                 ],
                 categories: [.purchases]
+            ),
+            NetworkUse(
+                token: "import WatchConnectivity", purpose: "Sending the summary to your own paired Apple Watch, and nowhere else: the Watch asks for an update, and the iPhone answers it.",
+                files: ["NoctisCore/WatchSync/WCSessionDriver.swift", "NOCTISWatch/WatchSnapshotReceiver.swift"], categories: [.widgetSnapshot]
             ),
             NetworkUse(
                 token: "import MessageUI", purpose: "The mail composer behind Contact support: it sends only if you send the email.",
@@ -269,8 +289,8 @@ nonisolated extension DataInventory {
                 question: "Delete wind-down history?", confirm: "Delete wind-down history", done: "Wind-down history deleted."
             ),
             DeletableGroup(
-                id: "cache", title: "Cached summaries", verb: .delete, categories: [.cachedSummaries, .widgetSnapshot, .memorySummaries],
-                removes: "The saved summary Home draws when it opens, the summary your widgets draw, and the summaries the app holds in memory. They are rebuilt from Apple Health.",
+                id: "cache", title: "Cached summaries", verb: .delete, categories: [.cachedSummaries, .widgetSnapshot, .watchSync, .memorySummaries],
+                removes: "The saved summary Home draws when it opens, the summary your widgets and your Apple Watch draw, and the summaries the app holds in memory. They are rebuilt from Apple Health.",
                 keeps: "Your Health data is untouched, and so is the rest of NOCTIS.", from: "this iPhone",
                 question: "Delete cached summaries?", confirm: "Delete cached summaries", done: "Cached summaries deleted."
             ),
@@ -287,6 +307,12 @@ nonisolated extension DataInventory {
             coachNeverSees: [
                 "your name", "your Apple Account", "individual Health readings or when they were taken",
                 "which app or device recorded them", "what you wrote in the Journal",
+            ],
+            survivesDeleteAll: [
+                .init(
+                    key: WatchSyncDefaults.dataEpochKey, what: "The time of your last \"Delete all NOCTIS data\", as one number.",
+                    why: "So an Apple Watch that was away when you deleted can tell, when it connects again, that its copy is older than the delete and must be wiped. It holds nothing else."
+                ),
             ],
             readsHealthInBackground: true
         )

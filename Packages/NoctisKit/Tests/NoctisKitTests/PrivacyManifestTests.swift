@@ -13,7 +13,7 @@ private nonisolated func root(_ path: String) -> URL { RawDefaultsTests.root.app
 
 /// The app's own code, for the scans: the package's sources, the app and the extension, comments removed.
 private nonisolated func appCode() -> [(path: String, code: String)] {
-    RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisAlarmWidget", "NoctisWidgets"])
+    RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisAlarmWidget", "NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets"])
         // The inventory and the privacy words name APIs as strings; that is not a use.
         .filter { !$0.path.contains("NoctisCore/DataInventory") && !$0.path.contains("NoctisCore/Privacy") }
         .map { ($0.path, RawDefaultsTests.code($0.text)) }
@@ -86,12 +86,12 @@ struct PrivacyManifestTests {
             return false
         }
         #expect(leaves.isEmpty, "a category goes to a third party: add NSPrivacyCollectedDataTypes entries for it")
-        #expect(inventory.flows.allSatisfy { $0.trigger == .onlyWhenYouChoose || $0.trigger == .byApple })
+        #expect(inventory.flows.allSatisfy { $0.trigger == .onlyWhenYouChoose || $0.trigger == .byApple || $0.trigger == .toYourWatch })
         #expect(!inventory.facts.coachUsesRemoteModel)
         #expect(!inventory.facts.hasAccount)
         if leaves.isEmpty && !inventory.facts.coachUsesRemoteModel { #expect(collected.isEmpty) }
         // No code of NOCTIS's own reaches a network: the only network-capable APIs are the listed system ones.
-        for use in inventory.networkUses { #expect(["import StoreKit", "import MessageUI"].contains(use.token), Comment(rawValue: "\(use.token) needs a decision in PRIVACY_REPORT.md")) }
+        for use in inventory.networkUses { #expect(["import StoreKit", "import MessageUI", "import WatchConnectivity"].contains(use.token), Comment(rawValue: "\(use.token) needs a decision in PRIVACY_REPORT.md")) }
     }
 
     @Test func everyRequiredReasonAPIInTheCodeIsDeclaredAndNothingElseIs() throws {
@@ -144,7 +144,7 @@ struct PrivacyManifestTests {
             for file in kitFiles { #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): declare it in NoctisWidgets/PrivacyInfo.xcprivacy")) }
         }
         let project = try String(contentsOf: root("Noctis.xcodeproj/project.pbxproj"), encoding: .utf8)
-        #expect(project.components(separatedBy: "PrivacyInfo.xcprivacy in Resources").count - 1 == 4, "the app's and the widgets', each as a file and in a build phase")
+        #expect(project.components(separatedBy: "PrivacyInfo.xcprivacy in Resources").count - 1 == 8, "the app's, the widgets' and the two Watch targets', each as a file and in a build phase")
         let yml = try String(contentsOf: root("project.yml"), encoding: .utf8)
         #expect(yml.contains("NoctisWidgets:") && yml.contains("com.noctis.app.widgets"))
         // No HealthKit, no network and no iCloud for the extension: its entitlements are the App Group alone.

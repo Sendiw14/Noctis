@@ -191,7 +191,10 @@ public nonisolated enum NoctisAppColor {
     /// `nonisolated`: UIKit resolves dynamic colors on whatever thread is
     /// rendering, including SwiftUI's background renderer (see NoctisColor).
     nonisolated private static func adaptive(_ token: KeyPath<NoctisAppPalette, String>) -> Color {
-        #if canImport(UIKit)
+        #if os(watchOS)
+        // The Watch app is dark only (black, for the OLED) and has no dynamic UIColor: it takes the dark value.
+        return noctisHexColor(NoctisAppPalette.dark[keyPath: token])
+        #elseif canImport(UIKit)
         let light = noctisHexComponents(NoctisAppPalette.light[keyPath: token])
         let dark = noctisHexComponents(NoctisAppPalette.dark[keyPath: token])
         return Color(uiColor: UIColor { traits in

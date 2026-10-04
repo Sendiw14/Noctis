@@ -38,6 +38,8 @@ public struct DataWiringInputs {
     public var widgets: WidgetPublisher?
     /// Asks the system to redraw the widgets, which now have no summary and say "Open NOCTIS".
     public var reloadWidgets: @MainActor () -> Void
+    /// The Apple Watch's link: told to wipe the Watch's copy and bump the data epoch (R52).
+    public var watch: WatchSyncService?
     /// The Sleep sounds control's status: told to forget it, and to stop writing it (R48).
     public var sleepSounds: SleepSoundsPublisher?
     /// Asks the system to redraw the controls, which now say nothing is playing.
@@ -56,7 +58,7 @@ public struct DataWiringInputs {
         afterJournalDeleted: @escaping @MainActor () -> Void = {}, afterCoachDeleted: @escaping @MainActor () async -> Void = {},
         clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {},
         widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {},
-        sleepSounds: SleepSoundsPublisher? = nil, reloadControls: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {},
+        watch: WatchSyncService? = nil, sleepSounds: SleepSoundsPublisher? = nil, reloadControls: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {},
         stopBackgroundUpdates: @escaping @MainActor () async -> Void = {}
     ) {
         self.model = model
@@ -83,11 +85,18 @@ public struct DataWiringInputs {
         self.forgetSoundChoices = forgetSoundChoices
         self.widgets = widgets
         self.reloadWidgets = reloadWidgets
+        self.watch = watch
         self.sleepSounds = sleepSounds
         self.reloadControls = reloadControls
         self.endLiveActivities = endLiveActivities
         self.stopBackgroundUpdates = stopBackgroundUpdates
     }
+}
+
+/// What the Watch step said, for the sheet's line under it.
+@MainActor
+private final class WatchLineBox {
+    var text: String?
 }
 
 /// Wires Data management to the app's stores (APP_RULES.md R41, R42). An eraser and an exporter for each inventory category, and the
@@ -126,6 +135,10 @@ public enum DataWiring {
                 i.sleepSounds?.forget()
                 try? FileManager.default.removeItem(at: i.roots.url(.appGroup).appending(path: SleepSoundsStore.fileName, directoryHint: .notDirectory))
                 i.reloadControls()
+            },
+            .watchSync: {
+                await i.watch?.forget()
+                remove(keys: inventory[.watchSync].defaultsKeys)
             },
             .memorySummaries: { await i.clearMemory() },
             .profile: { i.profileStore.eraseAll() },
@@ -178,6 +191,12 @@ public enum DataWiring {
             guard let eraser = erasers[category.id] else { continue }
             steps.append(DeleteStep(id: category.id.rawValue, title: "Deleting \(category.name.lowercasedFirst)", run: eraser))
         }
+        // The Apple Watch: the data epoch becomes now (the one value that stays) and the Watch is sent it with nothing else, so it wipes its copy; if it is
+        // away, it wipes when it connects. The sheet says which.
+        let watchLine = WatchLineBox()
+        steps.append(DeleteStep(id: "watch", title: "Telling your Apple Watch", note: { watchLine.text }) {
+            watchLine.text = await i.watch?.wipe().line
+        })
         // The database files themselves, so what the rows held is not left behind in a file's free pages.
         steps.append(DeleteStep(id: "databases", title: "Removing database files") {
             for category in inventory.categories {
@@ -223,6 +242,11 @@ public enum DataWiring {
             },
             .widgetSnapshot: { DataExport.fileObject(at: i.roots.url(.appGroup).appending(path: WidgetSnapshotStore.fileName, directoryHint: .notDirectory)) },
             .sleepSoundsState: { DataExport.fileObject(at: i.roots.url(.appGroup).appending(path: SleepSoundsStore.fileName, directoryHint: .notDirectory)) },
+            .watchSync: {
+                var object: [String: Any] = [:]
+                if let sent = WatchSyncDefaults(defaults: i.defaults).lastSentAt { object["lastSentAt"] = ISO8601DateFormatter().string(from: sent) }
+                return object
+            },
             .insightHistory: { i.insightFile.load().map { (try? DataExport.object(from: $0)) ?? [String: Any]() } ?? [String: Any]() },
             .profile: {
                 let profile = i.model.profile

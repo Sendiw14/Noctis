@@ -8,10 +8,21 @@ public struct DeleteStep {
     /// "Stopping sounds": what the sheet says while it runs.
     public let title: String
     public let run: @MainActor () async throws -> Void
+    /// A sentence to show under the step once it has worked ("Apple Watch: wipe sent"); nil for none.
+    public let note: (@MainActor () -> String?)?
 
     public init(id: String, title: String, run: @escaping @MainActor () async throws -> Void) {
         self.id = id
         self.title = title
+        self.note = nil
+        self.run = run
+    }
+
+    /// A step that says something about itself once it has worked.
+    public init(id: String, title: String, note: @escaping @MainActor () -> String?, run: @escaping @MainActor () async throws -> Void) {
+        self.id = id
+        self.title = title
+        self.note = note
         self.run = run
     }
 }
@@ -75,6 +86,8 @@ public final class DataManager {
     public private(set) var lastDeleted: DeletableGroup?
     /// The delete-all's steps and where each stands.
     public private(set) var steps: [(id: String, title: String, state: StepState)] = []
+    /// What a finished step said about itself, by step id (the Watch's "wipe sent" or "will apply when your Watch connects").
+    public private(set) var stepNotes: [String: String] = [:]
     public private(set) var deleteAllReport: DeletionReport?
 
     @ObservationIgnored private let roots: DataRoots
@@ -145,10 +158,12 @@ public final class DataManager {
         isWorking = true
         defer { isWorking = false }
         steps = deleteAllSteps.map { ($0.id, $0.title, .waiting) }
+        stepNotes = [:]
         deleteAllReport = nil
         let report = await DeletionRunner.run(deleteAllSteps) { [weak self] id, finished, failure in
             guard let self, let index = self.steps.firstIndex(where: { $0.id == id }) else { return }
             self.steps[index].state = finished ? (failure.map { .failed($0) } ?? .done) : .running
+            if finished, failure == nil, let note = self.deleteAllSteps.first(where: { $0.id == id })?.note?() { self.stepNotes[id] = note }
         }
         deleteAllReport = report
         return report
@@ -157,6 +172,7 @@ public final class DataManager {
     /// Forgets the delete-all's progress (the sheet was closed before it ran).
     public func resetDeleteAll() {
         steps = []
+        stepNotes = [:]
         deleteAllReport = nil
     }
 

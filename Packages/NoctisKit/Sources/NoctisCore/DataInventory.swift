@@ -46,12 +46,18 @@ public nonisolated enum DataLocation: Sendable, Equatable {
 
 /// Whether a category's data goes anywhere.
 public nonisolated enum DataDestination: Sendable, Equatable {
+    public var isPairedWatch: Bool {
+        if case .pairedWatch = self { true } else { false }
+    }
+
     /// Nowhere: it stays on this iPhone.
     case never
     /// To an Apple service, as a part of what that service is for (the App Store, for a purchase).
     case apple(String)
     /// Only if the person sends it themselves.
     case onlyIfYouSend(String)
+    /// To the person's own paired Apple Watch, over WatchConnectivity, and to nothing else: never to a server (APP_RULES.md R52).
+    case pairedWatch(String)
     /// To a company that is not Apple. NOCTIS has no such destination: if one is ever added, "Nothing is sold or shared" and
     /// "Your data is stored on this iPhone" stop being said until the inventory is changed on purpose.
     case thirdParty(String)
@@ -105,6 +111,7 @@ public nonisolated enum DataCategoryID: String, Sendable, CaseIterable, Hashable
     case appleHealth
     case cachedSummaries
     case widgetSnapshot
+    case watchSync
     case sleepSoundsState
     case insightHistory
     case memorySummaries
@@ -200,6 +207,8 @@ public nonisolated struct DataFlow: Sendable, Identifiable, Equatable {
         case onlyWhenYouChoose
         /// By Apple, not by NOCTIS, if the person uses the Apple service.
         case byApple
+        /// By NOCTIS, to the person's own paired Apple Watch and nowhere else, whenever the summary changes.
+        case toYourWatch
     }
 
     public let id: String
@@ -255,15 +264,35 @@ public nonisolated struct DataInventoryFacts: Sendable, Equatable {
     public let coachUsesRemoteModel: Bool
     /// What Coach never sees, in words that follow "It never sees".
     public let coachNeverSees: [String]
+    /// Values that survive "Delete all NOCTIS data" on purpose, with what they are and why they stay (APP_RULES.md R52). A test holds each to its
+    /// key: it is not under `noctis.`, no category lists it, and delete-all leaves it.
+    public let survivesDeleteAll: [SurvivingValue]
     /// Whether Apple Health wakes the app in the background when new sleep data arrives, so NOCTIS reads it outside the app being open
     /// (HealthKit background delivery: the entitlement and the code, which a test holds this to).
     public let readsHealthInBackground: Bool
 
-    public init(healthAccess: HealthAccess, hasAccount: Bool, coachUsesRemoteModel: Bool, coachNeverSees: [String], readsHealthInBackground: Bool = false) {
+    /// One value that is kept after delete-all.
+    public struct SurvivingValue: Sendable, Equatable {
+        public let key: String
+        public let what: String
+        public let why: String
+
+        public init(key: String, what: String, why: String) {
+            self.key = key
+            self.what = what
+            self.why = why
+        }
+    }
+
+    public init(
+        healthAccess: HealthAccess, hasAccount: Bool, coachUsesRemoteModel: Bool, coachNeverSees: [String], survivesDeleteAll: [SurvivingValue] = [],
+        readsHealthInBackground: Bool = false
+    ) {
         self.healthAccess = healthAccess
         self.hasAccount = hasAccount
         self.coachUsesRemoteModel = coachUsesRemoteModel
         self.coachNeverSees = coachNeverSees
+        self.survivesDeleteAll = survivesDeleteAll
         self.readsHealthInBackground = readsHealthInBackground
     }
 }
@@ -305,7 +334,7 @@ public nonisolated struct DataInventory: Sendable {
     public var anythingLeavesByItself: Bool {
         categories.contains { category in
             switch category.destination {
-            case .apple, .thirdParty: true
+            case .apple, .thirdParty, .pairedWatch: true
             case .never, .onlyIfYouSend: false
             }
         }

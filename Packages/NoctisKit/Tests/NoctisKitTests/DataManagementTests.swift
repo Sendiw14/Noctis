@@ -108,6 +108,8 @@ final class DataBench {
     let root: URL
     let roots: DataRoots
     var calls: [String] = []
+    let watchSession = FakeWatchSession()
+    lazy var watch = WatchSyncService(session: watchSession, defaults: WatchSyncDefaults(defaults: defaults), clock: { Date(timeIntervalSince1970: 1_790_100_000) })
     lazy var sleepSounds = SleepSoundsPublisher(store: SleepSoundsStore(directory: roots.url(.appGroup)), reload: { [unowned self] in calls.append("control") })
     var manager: DataManager!
     var failJournal = false
@@ -155,7 +157,7 @@ final class DataBench {
             afterCoachDeleted: { [unowned self] in calls.append("coachReload") },
             clearMemory: { [unowned self] in calls.append("memory") },
             forgetSoundChoices: { [unowned self] in calls.append("soundChoices") },
-            reloadWidgets: { [unowned self] in calls.append("widgets") }, sleepSounds: sleepSounds,
+            reloadWidgets: { [unowned self] in calls.append("widgets") }, watch: watch, sleepSounds: sleepSounds,
             reloadControls: { [unowned self] in calls.append("controls") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") },
             stopBackgroundUpdates: { [unowned self] in calls.append("background") }
         ))
@@ -192,6 +194,10 @@ final class DataBench {
         try Data("{\"v\":1}".utf8).write(to: widgetFile)
         _ = sleepSounds
         SleepSoundsStore(directory: roots.url(.appGroup)).save(SleepSoundsState())
+        let sync = WatchSyncDefaults(defaults: defaults)
+        sync.lastSentAt = Date(timeIntervalSince1970: 1_790_000_000)
+        sync.complicationMark = "2026-09-24:1"
+        sync.dataEpoch = 1_000
         try Data(count: 64).write(to: roots.url(.caches).appending(path: "com.noctis.app/com.apple.metal/functions.data"))
         try Data(count: 16).write(to: roots.url(.temporary).appending(path: DataExport.fileName))
         let schedule = ScheduledNotification(identifier: NoctisNotification.morningSummary, title: "NOCTIS", body: "x", components: DateComponents(hour: 7))
@@ -251,6 +257,13 @@ struct DataManagementIntegrationTests {
         #expect(!FileManager.default.fileExists(atPath: bench.controlsFile.path), "the Sleep sounds control's status is deleted")
         #expect(bench.calls.contains("widgets") && bench.calls.contains("controls") && bench.calls.contains("liveActivities"), "the widgets and controls are told to redraw and no Live Activity is left")
         #expect(bench.calls.contains("background"), "Health stops waking the app")
+        // The Watch: told to wipe with a greater epoch and no snapshot; the epoch is the one value that stays, the status notes go.
+        let sync = WatchSyncDefaults(defaults: bench.defaults)
+        let wipe = try #require(bench.watchSession.contexts.last.flatMap { WatchContext(dictionary: $0) })
+        #expect(wipe.snapshot == nil && wipe.epoch == 1_790_100_000 && sync.dataEpoch == 1_790_100_000 && sync.dataEpoch > 1_000, "the epoch is now, and it stays")
+        #expect(sync.lastSentAt == nil && sync.complicationMark == nil && bench.defaults.object(forKey: WatchSyncDefaults.lastSentAtKey) == nil)
+        #expect(bench.manager.stepNotes["watch"] == "Apple Watch: wipe sent")
+        #expect(report.entries.contains { $0.id == "watch" && $0.failure == nil })
         #expect(!FileManager.default.fileExists(atPath: bench.roots.url(.caches).appending(path: "com.noctis.app").path), "iOS's cache folder is cleared")
         #expect(!FileManager.default.fileExists(atPath: bench.roots.url(.temporary).appending(path: DataExport.fileName).path))
         #expect(bench.windDownStore.sessions().isEmpty)

@@ -31,11 +31,12 @@ private func with(_ category: DataCategory, destination: DataDestination? = nil,
 // MARK: - The statements
 
 struct PrivacyStatementTests {
-    @Test func theFourHeadlineStatementsAreTheOnesThatAreTrue() {
+    @Test func theHeadlineStatementsAreTheOnesThatAreTrue() {
         let texts = PrivacyStatements.headline(shared).map(\.text)
         #expect(texts == [
             "NOCTIS reads your sleep and heart data from Apple Health. It never writes to Health.",
             "Your data is stored on this iPhone.",
+            "A summary of your recovery and sleep is sent to your Apple Watch.",
             "Coach answers are made on your iPhone or built from your data.",
             "Nothing is sold or shared.",
         ])
@@ -130,7 +131,7 @@ struct PrivacyCenterContentTests {
     private let content = PrivacyCenterBuilder.content(shared)
 
     @Test func theSectionsAreWhatTheInventorySays() {
-        #expect(content.headline.count == 4)
+        #expect(content.headline.count == 5)
         #expect(content.reads.map(\.title) == HealthDataKind.allCases.map(\.displayName), "one line for each kind NOCTIS reads")
         #expect(content.reads.allSatisfy { $0.detail?.isEmpty == false })
         #expect(content.readsNote?.hasPrefix("NOCTIS only reads.") == true)
@@ -150,7 +151,8 @@ struct PrivacyCenterContentTests {
     @Test func whatMayLeaveIsTheFlowsSplitByWhoMakesItLeave() {
         #expect(content.leavesIfYouSend.map(\.id) == ["supportEmail", "exportFile", "shareCard"])
         #expect(content.leavesThroughApple.map(\.id) == ["appStore", "deviceBackup"])
-        #expect(content.leavesNote.hasPrefix("NOCTIS sends nothing anywhere by itself."))
+        #expect(content.leavesToWatch.map(\.id) == ["appleWatch"])
+        #expect(content.leavesNote.hasPrefix("NOCTIS sends a summary to your own Apple Watch by itself, and nothing anywhere else."))
         let sold = changed { $0.id == .insightHistory ? with($0, destination: .thirdParty("a company")) : $0 }
         #expect(PrivacyCenterBuilder.content(sold).leavesNote == "Some of your data goes to others. It is listed here.")
     }

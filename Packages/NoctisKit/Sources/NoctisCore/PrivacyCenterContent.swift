@@ -21,6 +21,8 @@ public nonisolated struct PrivacyCenterContent: Sendable, Equatable {
     public let staysNote: String
     /// What happens through Apple, when the person uses an Apple service.
     public let leavesThroughApple: [Line]
+    /// What NOCTIS sends to the person's own Apple Watch by itself.
+    public let leavesToWatch: [Line]
     /// What leaves only if the person sends it.
     public let leavesIfYouSend: [Line]
     public let leavesNote: String
@@ -38,10 +40,11 @@ public nonisolated enum PrivacyCenterBuilder {
     /// `dataManagement`: whether the app has a Data management page to point at.
     public static func content(_ inventory: DataInventory, roots: DataRoots = DataRoots(), dataManagement: Bool = false) -> PrivacyCenterContent {
         let reads = HealthDataKind.allCases.map { PrivacyCenterContent.Line(id: $0.rawValue, title: $0.displayName, detail: $0.benefit, value: nil, category: nil) }
-        let stays = inventory.categories.filter { $0.destination == .never }.map { category in
+        let stays = inventory.categories.filter { $0.destination == .never || $0.destination.isPairedWatch }.map { category in
             PrivacyCenterContent.Line(id: category.id.rawValue, title: category.name, detail: protectionLine(category), value: nil, category: category.id)
         }
         let byApple = inventory.flows.filter { $0.trigger == .byApple }.map(line(for:))
+        let toWatch = inventory.flows.filter { $0.trigger == .toYourWatch }.map(line(for:))
         let ifYouSend = inventory.flows.filter { $0.trigger == .onlyWhenYouChoose }.map(line(for:))
         let sizes = inventory.categories.compactMap { category -> PrivacyCenterContent.Line? in
             let size = inventory.size(of: category, roots: roots)
@@ -64,6 +67,7 @@ public nonisolated enum PrivacyCenterBuilder {
                 ? "Here is everything NOCTIS keeps, and where."
                 : "All of this is stored on this iPhone. Tap a kind of data to see what it holds and how to delete it.",
             leavesThroughApple: byApple,
+            leavesToWatch: toWatch,
             leavesIfYouSend: ifYouSend,
             leavesNote: leavesNote(inventory),
             coachSees: PrivacyStatements.coachSees(inventory),
@@ -86,6 +90,9 @@ public nonisolated enum PrivacyCenterBuilder {
     static func leavesNote(_ inventory: DataInventory) -> String {
         if inventory.flows.isEmpty { return "Nothing leaves this iPhone." }
         if PrivacyStatements.nothingSoldOrShared(inventory) == nil { return "Some of your data goes to others. It is listed here." }
+        if inventory.flows.contains(where: { $0.trigger == .toYourWatch }) {
+            return "NOCTIS sends a summary to your own Apple Watch by itself, and nothing anywhere else. This is everything that can leave, and what makes it leave."
+        }
         return "NOCTIS sends nothing anywhere by itself. This is everything that can leave, and what makes it leave."
     }
 
@@ -158,6 +165,7 @@ public nonisolated struct PrivacyCategoryContent: Sendable, Equatable {
         case .never: "No. NOCTIS sends it nowhere."
         case .apple(let service): "Only through \(service), which is Apple's, as part of what it does for you."
         case .onlyIfYouSend(let where_): "Only if you send it: \(where_)."
+        case .pairedWatch(let detail): "Yes, \(detail)"
         case .thirdParty(let who): "Yes, to \(who)."
         }
     }

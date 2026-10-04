@@ -135,10 +135,12 @@ func scaledSize(_ style: NoctisTextStyle, _ dynamicTypeSize: DynamicTypeSize) ->
     // the same values `@ScaledMetric` produces — computed from the
     // environment value so the per-word title reveal stays free of
     // `@ScaledMetric` (see `dynamicTypeMultiplier`).
+    #if !os(watchOS)
     if let anchor = style.paperAnchor {
         let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize))
         return UIFontMetrics(forTextStyle: anchor).scaledValue(for: style.baseSize, compatibleWith: traits)
     }
+    #endif
     let multiplier = dynamicTypeMultiplier(dynamicTypeSize)
     let eased = 1.0 + (multiplier - 1.0) * style.growthFactor
     return style.baseSize * eased

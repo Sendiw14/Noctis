@@ -39,6 +39,18 @@ public nonisolated enum NoctisSignpost {
         case backgroundRefresh = "BackgroundRefresh"
     }
 
+    /// Single moments worth a mark, with a number and never any content (the budget of complication transfers left, APP_RULES.md R52).
+    public enum Event: String, CaseIterable, Sendable {
+        case watchComplicationBudget = "WatchComplicationBudget"
+    }
+
+    /// Marks `event` with `number` (a count, never content).
+    public static func emit(_ event: Event, number: Int) {
+        switch event {
+        case .watchComplicationBudget: signposter.emitEvent("WatchComplicationBudget", "remaining \(number, privacy: .public)")
+        }
+    }
+
     private static let signposter = OSSignposter(subsystem: subsystem, category: category)
     private static let running = Running()
 
@@ -88,12 +100,18 @@ public nonisolated enum NoctisSignpost {
     /// content), not just until it was built.
     @MainActor
     public static func endAfterNextFrame(_ interval: Interval) {
+        #if os(watchOS)
+        // No display link on the Watch: the end of the next run-loop turn is as close as it gets.
+        DispatchQueue.main.async { end(interval) }
+        #else
         FrameTick.once { end(interval) }
+        #endif
     }
 
     /// The intervals running now (tests).
     public static var active: Set<Interval> { running.active }
 
+    #if !os(watchOS)
     /// A one-shot display link.
     @MainActor
     private final class FrameTick: NSObject {
@@ -118,6 +136,7 @@ public nonisolated enum NoctisSignpost {
             work()
         }
     }
+    #endif
 
     /// Which intervals are open, and their signpost states.
     private final class Running: @unchecked Sendable {

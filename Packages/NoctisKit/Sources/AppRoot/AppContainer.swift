@@ -179,7 +179,12 @@ public struct AppContainer {
         if debug.resetState && !restarted { widgetStore?.delete() }
         #endif
         let widgetInputs = WidgetInputSource(profile: { await MainActor.run { model.profile } })
-        let widgetPublisher = WidgetPublisher(store: widgetStore, inputs: widgetInputs, reload: { WidgetCenter.shared.reloadAllTimelines() })
+        // The Apple Watch (R50, R52): the same summary is queued for the person's own Watch after every write, and a delete-all wipes it.
+        let watchSync = WatchSyncService(session: WCSessionDriver())
+        let widgetPublisher = WidgetPublisher(
+            store: widgetStore, inputs: widgetInputs, reload: { WidgetCenter.shared.reloadAllTimelines() },
+            epoch: { watchSync.dataEpoch }, afterWrite: { await watchSync.publish($0) }, afterForget: { await watchSync.forget() }
+        )
         // The repositories the tabs read: Coach reads the same snapshots (R20).
         let homeRepository = HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore, widgets: widgetPublisher)
         let sleepRepository = SleepRepository(provider: provider)
@@ -295,6 +300,10 @@ public struct AppContainer {
             isAuthorized: { await provider.authorizationStatus() == .authorized },
             refresh: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) }
         )
+        // Activates the Watch link at launch; the Watch's "Ask iPhone to update" makes the same refresh a Health wake does.
+        Task {
+            await watchSync.activate(onUpdateRequested: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) })
+        }
         let background = provider as? any HealthBackgroundDelivering
         let startBackgroundUpdates: @Sendable () async -> Void = {
             await background?.startBackgroundDelivery { done in
@@ -443,6 +452,7 @@ public struct AppContainer {
             },
             widgets: widgetPublisher,
             reloadWidgets: { WidgetCenter.shared.reloadAllTimelines() },
+            watch: watchSync,
             sleepSounds: sleepSoundsPublisher,
             reloadControls: { ControlCenter.shared.reloadAllControls() },
             endLiveActivities: { await LiveActivities.endAll() },

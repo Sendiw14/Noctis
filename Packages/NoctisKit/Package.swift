@@ -15,7 +15,7 @@ let engineSwiftSettings: [SwiftSetting] = [
 let package = Package(
     name: "NoctisKit",
     defaultLocalization: "en",
-    platforms: [.iOS(.v26)],
+    platforms: [.iOS(.v26), .watchOS(.v26)],
     products: [
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
         .library(name: "HealthProviding", targets: ["HealthProviding"]),
@@ -33,6 +33,7 @@ let package = Package(
         .library(name: "CoachFeature", targets: ["CoachFeature"]),
         .library(name: "AlarmShared", targets: ["AlarmShared"]),
         .library(name: "NoctisWidgetKit", targets: ["NoctisWidgetKit"]),
+        .library(name: "NoctisWatchKit", targets: ["NoctisWatchKit"]),
         .library(name: "NoctisIntentKit", targets: ["NoctisIntentKit"]),
         .library(name: "SoundCatalog", targets: ["SoundCatalog"]),
         .library(name: "SoundKit", targets: ["SoundKit"]),
@@ -57,6 +58,10 @@ let package = Package(
         // nothing that reads Health, SwiftData or Coach, so a widget extension (and a Watch app later) can link it and
         // cannot reach them. Nonisolated like the engines; the views are main-actor through `View`.
         .target(name: "NoctisWidgetKit", dependencies: ["DesignSystem"], swiftSettings: engineSwiftSettings),
+        // What the Apple Watch app does with what the iPhone sends (APP_RULES.md R50, R51): the inbox that stores the snapshot and applies the data
+        // epoch, and the pure builders of every page and state. It builds for watchOS and iOS (the tests run on iOS), depends on the widget kit
+        // (the snapshot and its rules) and the design tokens through it, and on nothing that reads Health, SwiftData or Coach: the Watch runs no engines.
+        .target(name: "NoctisWatchKit", dependencies: ["NoctisWidgetKit"], swiftSettings: engineSwiftSettings),
         // Siri, Shortcuts, Control Center and the wind-down Live Activity's buttons (APP_RULES.md R47, R48, R49): the App Intents, their
         // entities, and what an intent asks of the running app. It depends on the widget kit (the snapshot and the spoken words) and the
         // sound list, and on nothing that reads Health, SwiftData or Coach, so the widget extension can link it for its controls.
@@ -159,7 +164,7 @@ let package = Package(
             dependencies: [
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
-                "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot", "NoctisWidgetKit", "NoctisIntentKit",
+                "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot", "NoctisWidgetKit", "NoctisIntentKit", "NoctisWatchKit",
             ],
             swiftSettings: noctisSwiftSettings
         ),

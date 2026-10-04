@@ -13,7 +13,7 @@ private let inventory = DataInventory.shared
 
 /// The code, for the scans: every Swift file under the package's sources and the app, comments removed.
 private nonisolated func sources() -> [(path: String, code: String)] {
-    RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App"]).map { ($0.path, RawDefaultsTests.code($0.text)) }
+    RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NOCTISWatch", "NOCTISWatchWidgets"]).map { ($0.path, RawDefaultsTests.code($0.text)) }
 }
 
 private nonisolated func relative(_ path: String) -> String {
@@ -351,7 +351,7 @@ struct DataInventoryNetworkTests {
         "URLSession", "URLRequest", "import CloudKit", "CKContainer", "NSUbiquitousKeyValueStore", "NWConnection", "NWPathMonitor", "import Network",
         "WKWebView", "import WebKit", "SFSafariViewController", "import SafariServices", "ASWebAuthenticationSession", "import AuthenticationServices",
         "import AdSupport", "import AppTrackingTransparency", "ATTrackingManager", "import StoreKit", "import MessageUI", "import FirebaseCore",
-        "import Sentry", "import Amplitude", "import Mixpanel", "CFNetwork", "import CoreTelephony",
+        "import Sentry", "import Amplitude", "import Mixpanel", "CFNetwork", "import CoreTelephony", "import WatchConnectivity",
     ]
 
     @Test func everyUseOfANetworkCapableAPIIsListedInTheInventory() {
@@ -380,6 +380,9 @@ struct DataInventoryNetworkTests {
                 #expect(inventory.networkUses.contains { $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) goes to Apple with no API listed"))
             case .onlyIfYouSend:
                 #expect(inventory.flows.contains { $0.trigger == .onlyWhenYouChoose && $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) is sent by the person, with no flow listed"))
+            case .pairedWatch:
+                #expect(inventory.networkUses.contains { $0.token == "import WatchConnectivity" && $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) goes to the Watch with no API listed"))
+                #expect(inventory.flows.contains { $0.trigger == .toYourWatch && $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) goes to the Watch with no flow listed"))
             case .thirdParty:
                 Issue.record(Comment(rawValue: "\(category.id) goes to a third party: NOCTIS has no such destination"))
             }

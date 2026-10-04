@@ -11,7 +11,10 @@ public enum NoctisColor {
     /// isolation caused a real crash (Swift concurrency's runtime isolation
     /// check trapping when UIKit called it off the main actor).
     nonisolated private static func dynamic(light: (Double, Double, Double), dark: (Double, Double, Double)) -> Color {
-        #if canImport(UIKit)
+        #if os(watchOS)
+        // The Watch app is dark only and has no dynamic UIColor: it takes the dark value.
+        Color(red: dark.0, green: dark.1, blue: dark.2)
+        #elseif canImport(UIKit)
         Color(uiColor: UIColor { traits in
             let (r, g, b) = traits.userInterfaceStyle == .dark ? dark : light
             return UIColor(red: r, green: g, blue: b, alpha: 1)

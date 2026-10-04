@@ -1,3 +1,4 @@
+#if os(iOS)
 import DesignSystem
 import SwiftUI
 
@@ -245,3 +246,4 @@ public enum WindDownActivityStyle {
     public static var foreground: Color { NoctisNight.ivory }
     public static var tint: Color { NoctisNight.lavender }
 }
+#endif
