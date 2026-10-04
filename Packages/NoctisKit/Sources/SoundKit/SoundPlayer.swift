@@ -160,6 +160,24 @@ public final class SoundPlayer {
         updateMeter()
     }
 
+    /// Fades the sound out over `seconds`, then stops it cleanly (the end of a wind-down): the same
+    /// stop as `stop()`, with a longer fade. A sleep timer is moot once this has begun.
+    public func fadeOutAndStop(over seconds: Double) {
+        guard state.isLoaded else { return }
+        guard state.phase == .playing, seconds > 0 else {
+            stop()
+            return
+        }
+        cancelTimer()
+        send(fader: 0, faderSeconds: seconds, crossfade: 0)
+        let mine = bump()
+        Task { [weak self, sleeper] in
+            await sleeper(seconds + 0.05)
+            guard let self, token == mine, state.isLoaded else { return }
+            stop()
+        }
+    }
+
     public func setGain(_ gain: Float, for kind: SoundKind) {
         let value = min(max(gain, 0), 1)
         state.gains[kind] = value
