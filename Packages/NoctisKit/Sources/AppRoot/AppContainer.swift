@@ -38,6 +38,8 @@ public struct AppContainer {
     public let soundsViewModel: SoundsViewModel
     /// The wind-down session.
     public let windDownViewModel: WindDownViewModel
+    /// The breathing exercise, opened from the wind-down.
+    public let breathingViewModel: BreathingViewModel
     /// Opens Wind-down when the evening notification is tapped.
     private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
@@ -239,8 +241,16 @@ public struct AppContainer {
         )
         self.windDownViewModel = windDown
         #if DEBUG
+        let breathingHaptics = debug.makeBreathingHaptics()
+        #else
+        let breathingHaptics: any BreathingHapticsPlaying = CoreHapticsBreathing()
+        #endif
+        let breathing = BreathingViewModel(haptics: breathingHaptics)
+        self.breathingViewModel = breathing
+        #if DEBUG
         debug.applySoundScript(to: soundPlayer)
         debug.applyWindDownScript(to: windDown)
+        debug.applyBreathingScript(to: breathing)
         #endif
         // A tap on the evening notification opens Wind-down.
         let router = NotificationRouter(model: model)
@@ -303,8 +313,11 @@ struct DebugLaunchOptions {
     let realAlarm: Bool
     /// `-mockSound silent|playing:rain|interrupted:ocean|timer:rain:30|real:wind`.
     let mockSound: MockSoundScript?
-    /// `-mockWindDown prestart|running:0.3|running:0.5:reduce|finished`.
+    /// `-mockWindDown prestart|running:0.3|running:0.5:reduce|finished`, and `:sounds` or `:breathing` on
+    /// the end of a `running` one opens that over the session.
     let mockWindDown: String?
+    /// `-mockBreathing prestart[:box][:haptics]|running:calm:5[:paused][:2min][:haptics]|finished`.
+    let mockBreathing: String?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -333,6 +346,7 @@ struct DebugLaunchOptions {
         realAlarm = value(after: "-mockAlarm") == "real"
         mockSound = value(after: "-mockSound").flatMap(MockSoundScript.init(argument:))
         mockWindDown = value(after: "-mockWindDown")
+        mockBreathing = value(after: "-mockBreathing")
     }
 
     /// A session already in the state the flag names, so every state can be looked at.
@@ -342,9 +356,41 @@ struct DebugLaunchOptions {
         let parts = script.split(separator: ":").map(String.init)
         switch parts.first {
         case "running":
-            model.debugBegin(progress: parts.dropFirst().first.flatMap(Double.init) ?? 0, reducedMotion: parts.contains("reduce"))
+            model.debugBegin(
+                progress: parts.dropFirst().first.flatMap(Double.init) ?? 0, reducedMotion: parts.contains("reduce"),
+                opening: parts
+            )
         case "finished":
             model.debugFinish()
+        default:
+            break
+        }
+    }
+
+    /// Real Core Haptics, or (with `:haptics`) a silent stand-in that says it has them, so the switch can
+    /// be looked at on a simulator.
+    @MainActor
+    func makeBreathingHaptics() -> any BreathingHapticsPlaying {
+        if let script = mockBreathing, script.split(separator: ":").contains("haptics") { return SilentBreathingHaptics(available: true) }
+        return CoreHapticsBreathing()
+    }
+
+    /// An exercise already in the state the flag names.
+    @MainActor
+    func applyBreathingScript(to model: BreathingViewModel) {
+        guard let script = mockBreathing else { return }
+        let parts = script.split(separator: ":").map(String.init)
+        let pattern = parts.compactMap(BreathingPattern.ID.init(rawValue:)).first
+        let minutes = parts.compactMap { $0.hasSuffix("min") ? Int($0.dropLast(3)) : nil }.first ?? BreathingSchedule.defaultMinutes
+        switch parts.first {
+        case "running":
+            let seconds = parts.dropFirst(2).first.flatMap(Double.init) ?? 0
+            model.debugBegin(pattern: pattern ?? .calm, seconds: seconds, minutes: minutes, paused: parts.contains("paused"))
+        case "finished":
+            model.debugBegin(pattern: pattern ?? .calm, seconds: 100_000, minutes: minutes)
+        case "prestart":
+            if let pattern { model.choose(pattern: pattern) }
+            model.choose(minutes: minutes)
         default:
             break
         }

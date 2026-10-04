@@ -44,6 +44,10 @@ public final class WindDownViewModel {
     @ObservationIgnored private var sessionID: UUID?
     @ObservationIgnored private var storeTask: Task<Void, Never>?
     @ObservationIgnored var reducedMotionOverride: Bool?
+    #if DEBUG
+    /// For `-mockWindDown running:0.1:breathing`: an activity to open as the screen appears.
+    @ObservationIgnored var debugOpensActivity: WindDownActivity?
+    #endif
 
     public init(
         player: SoundPlayer, alarm: AlarmService, store: any WindDownSessionStoring, idle: any IdleTimerControlling,
@@ -239,8 +243,9 @@ public final class WindDownViewModel {
 #if DEBUG
 extension WindDownViewModel {
     /// For `-mockWindDown running:0.3`: a session that began `progress` of its time ago.
-    public func debugBegin(progress: Double, reducedMotion: Bool = false) {
+    public func debugBegin(progress: Double, reducedMotion: Bool = false, opening words: [String] = []) {
         guard state == .idle else { return }
+        debugOpensActivity = words.compactMap(WindDownActivity.init(rawValue:)).first
         begin()
         clock = WindDownClock(minutes: plannedMinutes)
         clock.start(at: now().addingTimeInterval(-progress * clock.plannedSeconds))

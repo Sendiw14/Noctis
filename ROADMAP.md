@@ -4,7 +4,7 @@ Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reac
 - Profile. The avatar button at the top right of Home, and `noctis://profile`, open a "Coming soon" screen.
 - Free vs Premium gating for Sleep: Month, the quality factors and the 14-night picker. All of Sleep is open until the paywall decides.
 - Sleep share card. Home's "Share this night" card stays the only share.
-- Wind-down actions. The running screen's action row has Sounds only. Breathing, Meditation and Reflect appear in it, each as a 56pt tile, as each one is built.
+- Wind-down actions. The running screen's action row has Sounds and Breathing. Meditation and Reflect appear in it, each as a 56pt tile, as each one is built.
 - Data Management (Profile). One place to erase what NOCTIS keeps. `NoctisDataRegistry.shared.eraseAll()` already reaches everything registered: the saved Home snapshot (`home-snapshot.json`, the last launch's derived Home data, used to draw Home in its first frame), the insight history and the stored insights (`insights.json`: every generated insight's typed numbers and whether it is new, seen or dismissed, with complete file protection and excluded from backups). Before release the profile store, the alarm's own record (`AlarmConfiguration`: the wake time, its days and snooze, beside the profile; erasing it must also cancel the alarm in AlarmKit) and the onboarding state must register too, and nothing that keeps Health-derived data may sit outside the registry (R23).
 - Free vs Premium gating for Recovery: free is Today and 7D; premium is 30D, 90D and each factor's history. All of Recovery is open until the paywall decides.
 - Recovery share card. Home's "Share this night" card stays the only share.

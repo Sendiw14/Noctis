@@ -6,10 +6,18 @@ import SoundKit
 import SwiftUI
 
 /// What can be opened from the session, over the same night.
-enum WindDownActivity: String, Identifiable {
+enum WindDownActivity: String, Identifiable, CaseIterable {
     case sounds
+    case breathing
 
     var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .sounds: "Sounds"
+        case .breathing: BreathingCopy.title
+        }
+    }
 }
 
 /// Wind-down: full screen, no scaffold, the one place the app goes dark on purpose (APP_RULES.md
@@ -19,16 +27,18 @@ public struct WindDownScreen: View {
     let autostart: Bool
     let viewModel: WindDownViewModel
     let sounds: SoundsViewModel
+    let breathing: BreathingViewModel
     @Environment(AppModel.self) private var appModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var activity: WindDownActivity?
 
-    public init(autostart: Bool, viewModel: WindDownViewModel, sounds: SoundsViewModel) {
+    public init(autostart: Bool, viewModel: WindDownViewModel, sounds: SoundsViewModel, breathing: BreathingViewModel) {
         self.autostart = autostart
         self.viewModel = viewModel
         self.sounds = sounds
+        self.breathing = breathing
     }
 
     private var reduceMotion: Bool { viewModel.reducedMotionOverride ?? systemReduceMotion }
@@ -53,7 +63,15 @@ public struct WindDownScreen: View {
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .navigationBarBackButtonHidden(true)
-        .task { viewModel.prepare(autostart: autostart) }
+        .task {
+            viewModel.prepare(autostart: autostart)
+            #if DEBUG
+            if let opening = viewModel.debugOpensActivity {
+                viewModel.debugOpensActivity = nil
+                activity = opening
+            }
+            #endif
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { viewModel.sceneBecameActive() }
         }
@@ -62,9 +80,10 @@ public struct WindDownScreen: View {
             if state == .ending || state == .finished { activity = nil }
         }
         .fullScreenCover(item: $activity) { item in
-            WindDownActivityHost(progress: displayProgress, reduceMotion: reduceMotion, title: "Sounds") {
+            WindDownActivityHost(progress: displayProgress, reduceMotion: reduceMotion, title: item.title) {
                 switch item {
                 case .sounds: WindDownSoundsPanel(sounds: sounds)
+                case .breathing: BreathingPanel(viewModel: breathing, reduceMotion: reduceMotion)
                 }
             }
         }
@@ -201,7 +220,8 @@ private struct WindDownSession: View {
             Spacer()
             if stage == .full {
                 HStack(spacing: NoctisSpacing.lg) {
-                    WindDownActionTile(symbol: "speaker.wave.2", title: "Sounds", identifier: "windDown.action.sounds") { open(.sounds) }
+                    WindDownActionTile(symbol: "speaker.wave.2", title: WindDownActivity.sounds.title, identifier: "windDown.action.sounds") { open(.sounds) }
+                    WindDownActionTile(symbol: "wind", title: WindDownActivity.breathing.title, identifier: "windDown.action.breathing") { open(.breathing) }
                 }
                 .transition(.opacity)
                 .padding(.bottom, NoctisSpacing.lg)
@@ -305,7 +325,7 @@ struct WindDownActivityHost<Content: View>: View {
 
     var body: some View {
         ZStack {
-            WindDownScene(progress: progress)
+            WindDownScene(progress: progress, backdrop: true)
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
                 Button { dismiss() } label: {
                     HStack(spacing: 6) {
@@ -376,129 +396,6 @@ struct WindDownSoundsPanel: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Night controls
-
-/// The one main action: a 58pt ivory capsule with night ink. Fixed colors: this screen is dark in
-/// both modes.
-private struct NightPrimaryButton: View {
-    let title: String
-    let symbol: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Text(title).noctisFont(17, .semibold, relativeTo: .body)
-                Image(systemName: symbol).font(.system(size: 16, weight: .semibold)).accessibilityHidden(true)
-            }
-            .foregroundStyle(NoctisNight.night)
-            .frame(maxWidth: .infinity, minHeight: 58)
-            .background(NoctisNight.ivory, in: Capsule())
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-/// A quiet 44pt text action.
-private struct NightQuietButton: View {
-    let title: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .noctisFont(15, .medium, relativeTo: .subheadline)
-                .foregroundStyle(NoctisNight.ivory2)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private struct NightCaption: View {
-    let text: String
-
-    init(_ text: String) { self.text = text }
-
-    var body: some View {
-        Text(text)
-            .noctisFont(13, .semibold, relativeTo: .footnote)
-            .tracking(1)
-            .foregroundStyle(NoctisNight.ivory2)
-    }
-}
-
-/// A choice: ivory when chosen, a quiet ivory wash when not. 44pt.
-private struct NightChip: View {
-    let title: String
-    let isSelected: Bool
-    let identifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .noctisFont(15, .semibold, relativeTo: .subheadline)
-                .foregroundStyle(isSelected ? NoctisNight.night : NoctisNight.ivory)
-                .padding(.horizontal, NoctisSpacing.md)
-                .frame(minHeight: 44)
-                .background(isSelected ? NoctisNight.ivory : NoctisNight.ivory.opacity(0.12), in: Capsule())
-                .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-        .accessibilityIdentifier(identifier)
-    }
-}
-
-private struct NightPill: View {
-    let title: String
-    let symbol: String?
-    let identifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                if let symbol {
-                    Image(systemName: symbol).font(.system(size: 14, weight: .semibold)).accessibilityHidden(true)
-                }
-                Text(title).noctisFont(15, .semibold, relativeTo: .subheadline)
-            }
-            .foregroundStyle(NoctisNight.ivory)
-            .padding(.horizontal, NoctisSpacing.md)
-            .frame(minHeight: 44)
-            .background(NoctisNight.ivory.opacity(0.12), in: Capsule())
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier(identifier)
-    }
-}
-
-private struct NightIconButton: View {
-    let symbol: String
-    let label: String
-    let identifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(NoctisNight.ivory)
-                .frame(width: 44, height: 44)
-                .background(NoctisNight.ivory.opacity(0.12), in: Circle())
-                .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label)
-        .accessibilityIdentifier(identifier)
     }
 }
 

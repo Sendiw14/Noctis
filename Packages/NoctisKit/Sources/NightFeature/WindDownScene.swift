@@ -10,6 +10,15 @@ import SwiftUI
 struct WindDownScene: View {
     /// The progress to draw (already snapped to a checkpoint under Reduce Motion).
     let progress: Double
+    /// Behind something opened over the session (Sounds, Breathing, ...): the same sky color and hills,
+    /// the moon at rest in the top corner beside the way back, and stars only in the strip above it, so
+    /// nothing is drawn behind the words and controls that fill the rest of the screen.
+    var backdrop = false
+
+    /// Where the moon rests in a backdrop: the top-right, level with the back button.
+    static let backdropMoon = (x: 0.86, y: 0.105)
+    /// Stars in a backdrop stay above this fraction of the height.
+    static let backdropStarLimit = 0.1
 
     struct Star: Sendable {
         let x: Double
@@ -55,6 +64,7 @@ struct WindDownScene: View {
             // Stars: a star past the twelfth fades in over the 4% of the session before it counts.
             let count = WindDownVisuals.starCount(p)
             for (index, star) in Self.stars.enumerated() {
+                if backdrop, star.y >= Self.backdropStarLimit { continue }
                 var alpha = star.alpha
                 if index >= WindDownVisuals.starsAtStart {
                     let arrives = Double(index - WindDownVisuals.starsAtStart + 1) / Double(WindDownVisuals.starsAtEnd - WindDownVisuals.starsAtStart)
@@ -69,7 +79,7 @@ struct WindDownScene: View {
             }
 
             // The moon: a 64pt ivory crescent along its arc.
-            let moon = WindDownVisuals.moon(p)
+            let moon = backdrop ? Self.backdropMoon : WindDownVisuals.moon(p)
             let center = CGPoint(x: moon.x * size.width, y: moon.y * size.height)
             let radius: CGFloat = 32
             let disc = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
