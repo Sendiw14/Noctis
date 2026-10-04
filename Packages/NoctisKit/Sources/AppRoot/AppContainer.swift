@@ -9,6 +9,7 @@ import JournalKit
 import NightFeature
 import NightKit
 import NoctisCore
+import ProfileFeature
 import RecoveryFeature
 import SleepFeature
 import SoundKit
@@ -34,6 +35,7 @@ public struct AppContainer {
     public let alarmService: AlarmService
     /// What the Tonight screen reads.
     public let tonightViewModel: TonightViewModel
+    public let profileViewModel: ProfileViewModel
     /// The sleep sounds: the one player that holds the audio engine, and what the Sounds screen reads.
     public let soundPlayer: SoundPlayer
     public let soundsViewModel: SoundsViewModel
@@ -262,6 +264,12 @@ public struct AppContainer {
         )
         self.notificationCoordinator = coordinator
         model.onProfileChange = { coordinator.reschedule() }
+        // Profile (R36): the person's own words about their sleep, and the state of Health, reminders and the plan.
+        self.profileViewModel = ProfileViewModel(
+            sleep: sleepRepository, alarm: alarmService, health: HealthDataStatusReader(provider: provider), profile: { model.profile },
+            edit: { model.apply($0) }, notifications: coordinator, preferences: preferences,
+            entitlements: storeManager.entitlementManager, format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
+        )
         // Sleep sounds (R31): the real engine, or in DEBUG a silent one that still renders the real
         // sounds for the meter, so a screenshot or a UI test makes no noise.
         #if DEBUG

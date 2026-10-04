@@ -36,6 +36,7 @@ let package = Package(
         .library(name: "NightKit", targets: ["NightKit"]),
         .library(name: "NightFeature", targets: ["NightFeature"]),
         .library(name: "JournalKit", targets: ["JournalKit"]),
+        .library(name: "ProfileFeature", targets: ["ProfileFeature"]),
         .library(name: "AppRoot", targets: ["AppRoot"]),
     ],
     targets: [
@@ -117,11 +118,21 @@ let package = Package(
             resources: [.process("Resources")],
             swiftSettings: noctisSwiftSettings
         ),
+        // Profile (and, next to it, Settings): what the person told NOCTIS about their sleep, the status of Health,
+        // notifications and the subscription, and every setting that works (APP_RULES.md R36). It edits the profile
+        // and the preferences; it never reads Health samples beyond the one status check.
+        .target(
+            name: "ProfileFeature",
+            dependencies: [
+                "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "SleepAnalysisKit", "NightKit", "NightFeature", "HomeFeature",
+            ],
+            swiftSettings: noctisSwiftSettings
+        ),
         .target(
             name: "AppRoot",
             dependencies: [
                 "DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature",
-                "InsightsFeature", "CoachKit", "CoachFeature", "NightKit", "NightFeature", "SoundKit", "JournalKit",
+                "InsightsFeature", "CoachKit", "CoachFeature", "NightKit", "NightFeature", "SoundKit", "JournalKit", "ProfileFeature",
             ],
             swiftSettings: noctisSwiftSettings
         ),
@@ -130,7 +141,7 @@ let package = Package(
             dependencies: [
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
-                "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "AppRoot",
+                "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot",
             ],
             swiftSettings: noctisSwiftSettings
         ),

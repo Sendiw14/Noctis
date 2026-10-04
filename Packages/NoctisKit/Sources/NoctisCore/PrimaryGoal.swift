@@ -1,6 +1,6 @@
 import Foundation
 
-public enum PrimaryGoal: String, Sendable, CaseIterable, Codable {
+public nonisolated enum PrimaryGoal: String, Sendable, CaseIterable, Codable {
     case betterSleep
     case moreEnergy
     case betterRecovery

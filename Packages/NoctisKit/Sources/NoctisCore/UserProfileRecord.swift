@@ -24,12 +24,19 @@ public final class UserProfileRecord {
         healthAuthorizationRequested = snapshot.healthAuthorizationRequested
     }
 
+    /// The record keeps the sleep need as hours and the goals as a primary and a secondary; the snapshot's
+    /// `needMinutes` and `selectedGoals` are derived from them here, so what Tonight and the reminders read
+    /// after a relaunch is what was chosen (they used to come back as 8 hours and no goals).
     public var snapshot: UserProfileSnapshot {
-        UserProfileSnapshot(
+        let primary = PrimaryGoal(rawValue: primaryGoalRaw) ?? .betterSleep
+        let secondary = secondaryGoalRaw.flatMap(PrimaryGoal.init(rawValue:))
+        return UserProfileSnapshot(
             name: name,
-            primaryGoal: PrimaryGoal(rawValue: primaryGoalRaw) ?? .betterSleep,
-            secondaryGoal: secondaryGoalRaw.flatMap(PrimaryGoal.init(rawValue:)),
+            primaryGoal: primary,
+            secondaryGoal: secondary,
+            selectedGoals: [primary] + (secondary.map { [$0] } ?? []),
             typicalWakeMinutes: typicalWakeMinutes,
+            needMinutes: Int((sleepGoalHours * 60).rounded()),
             sleepGoalHours: sleepGoalHours,
             onboardingComplete: onboardingComplete,
             healthAuthorizationRequested: healthAuthorizationRequested

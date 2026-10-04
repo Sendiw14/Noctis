@@ -68,6 +68,11 @@ public final class AppModel {
         onProfileChange?()
     }
 
+    /// One edit from Profile: the name, the sleep need, the wake time or the goals.
+    public func apply(_ edit: ProfileEdit) {
+        updateProfile { edit.apply(to: &$0) }
+    }
+
     /// Shows `route`: selects its tab. Profile opens on Home's stack, as
     /// it does from the avatar button; Sleep is handed the night and range.
     public func open(_ route: AppRoute) {

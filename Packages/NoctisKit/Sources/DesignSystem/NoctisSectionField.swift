@@ -8,6 +8,8 @@ public nonisolated enum NoctisSection: Sendable, CaseIterable {
     case recovery
     case insights
     case coach
+    /// Not a tab: the Profile page pushed from Home's avatar.
+    case profile
 
     /// The field's fill.
     public var fill: Color {
@@ -17,6 +19,7 @@ public nonisolated enum NoctisSection: Sendable, CaseIterable {
         case .recovery: NoctisAppColor.blockLavender
         case .insights: NoctisAppColor.blockButter
         case .coach: NoctisAppColor.fieldRose
+        case .profile: NoctisAppColor.fieldSand
         }
     }
 
@@ -28,6 +31,7 @@ public nonisolated enum NoctisSection: Sendable, CaseIterable {
         case .recovery: NoctisAppColor.sectionLavender
         case .insights: NoctisAppColor.sectionButter
         case .coach: NoctisAppColor.sectionRose
+        case .profile: NoctisAppColor.sectionSand
         }
     }
 
@@ -38,6 +42,7 @@ public nonisolated enum NoctisSection: Sendable, CaseIterable {
         case .recovery: palette.blockLavender
         case .insights: palette.blockButter
         case .coach: palette.fieldRose
+        case .profile: palette.fieldSand
         }
     }
 
@@ -48,6 +53,7 @@ public nonisolated enum NoctisSection: Sendable, CaseIterable {
         case .recovery: palette.sectionLavender
         case .insights: palette.sectionButter
         case .coach: palette.sectionRose
+        case .profile: palette.sectionSand
         }
     }
 
@@ -59,6 +65,7 @@ public nonisolated enum NoctisSection: Sendable, CaseIterable {
         case .recovery: "heart"
         case .insights: "lightbulb"
         case .coach: "sparkles"
+        case .profile: "person"
         }
     }
 
@@ -369,7 +376,7 @@ public struct NoctisSectionMotif: View {
         switch section {
         case .sleep: NoctisHillsMotif.height
         case .home: NoctisHorizonMotif.height
-        case .recovery, .insights, .coach: 0
+        case .recovery, .insights, .coach, .profile: 0
         }
     }
 
@@ -380,6 +387,8 @@ public struct NoctisSectionMotif: View {
         case .recovery: NoctisArcsMotif()
         case .insights: NoctisDotsMotif()
         case .coach: NoctisCirclesMotif()
+        // A page with a gear in the corner and no motif: the sand is quiet on its own.
+        case .profile: EmptyView()
         }
     }
 }

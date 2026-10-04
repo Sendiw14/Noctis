@@ -4,7 +4,7 @@ import RecoveryKit
 import SwiftUI
 
 /// The Home tab: Home in a navigation stack that pushes Recovery (zooming
-/// out of the ring) and Profile.
+/// out of the ring), Profile and Settings.
 public struct HomeTabView: View {
     @Environment(AppModel.self) private var model
     @Namespace private var zoom
@@ -20,6 +20,10 @@ public struct HomeTabView: View {
     private let soundsScreen: () -> AnyView
     /// Wind-down, pushed over Tonight; true starts the session as it opens.
     private let windDownScreen: (Bool) -> AnyView
+    /// Profile (built by the app, which knows the Profile feature), from the avatar.
+    private let profileScreen: () -> AnyView
+    /// Settings, or one of its pages, from Profile's gear and status rows.
+    private let settingsScreen: (SettingsPage) -> AnyView
 
     public init(
         viewModel: HomeViewModel,
@@ -27,7 +31,9 @@ public struct HomeTabView: View {
         recoveryFactor: @escaping (RecoveryFactorKind, RecoveryFactorRange) -> AnyView,
         tonightScreen: @escaping () -> AnyView,
         soundsScreen: @escaping () -> AnyView,
-        windDownScreen: @escaping (Bool) -> AnyView
+        windDownScreen: @escaping (Bool) -> AnyView,
+        profileScreen: @escaping () -> AnyView,
+        settingsScreen: @escaping (SettingsPage) -> AnyView
     ) {
         self.viewModel = viewModel
         self.recoveryScreen = recoveryScreen
@@ -35,6 +41,8 @@ public struct HomeTabView: View {
         self.tonightScreen = tonightScreen
         self.soundsScreen = soundsScreen
         self.windDownScreen = windDownScreen
+        self.profileScreen = profileScreen
+        self.settingsScreen = settingsScreen
     }
 
     public var body: some View {
@@ -49,8 +57,9 @@ public struct HomeTabView: View {
                     case .recoveryFactor(let kind, let range):
                         recoveryFactor(kind, range)
                     case .profile:
-                        // R19: Profile isn't built yet (ROADMAP.md).
-                        NoctisComingSoonView(title: "Profile", systemImage: "person.crop.circle")
+                        profileScreen()
+                    case .settings(let page):
+                        settingsScreen(page)
                     case .tonight:
                         tonightScreen()
                     case .windDown(let autostart):
@@ -268,7 +277,7 @@ struct HomeView: View {
 
     private var actions: HomeActions {
         HomeActions(
-            openProfile: { model.homePath.append(.profile) },
+            openProfile: { model.push(.profile) },
             openTonight: { model.open(.tonight) },
             openWindDown: { model.push(.windDown(autostart: false)) },
             openRecoveryDetail: { model.homePath.append(.recoveryDetail(focus: $0)) },

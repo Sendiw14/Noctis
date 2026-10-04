@@ -74,6 +74,9 @@ public nonisolated struct NoctisAppPalette: Sendable {
     public let fieldRose: String
     public let sectionApricot: String
     public let sectionRose: String
+    /// Profile's sand field and its glyph ink (cocoa ink on the field).
+    public let fieldSand: String
+    public let sectionSand: String
 
     public static let light = NoctisAppPalette(
         bg: "F8F5EE", surface: "FFFFFF", hairline: "E9E3D8", track: "ECE6DA",
@@ -85,7 +88,8 @@ public nonisolated struct NoctisAppPalette: Sendable {
         ringTrack: "ECE6DA", weekHighlight: "4A2F22", lavenderText: "7B63D6",
         dusk: "E6E0EE", eveningPaper: "F2EDEF", eveningInk3: "78695C", nightDeep: "8C7AE6", blockCocoa: "4A2F22", progressDot: "4A2F22",
         blockSage: "A9BC84", coreTint: "EDA877", sectionSage: "6B8A3E", sectionLavender: "6B55C4", sectionButter: "8A6A1F",
-        fieldApricot: "F0B27F", fieldRose: "EBA79E", sectionApricot: "B4622A", sectionRose: "A4524A"
+        fieldApricot: "F0B27F", fieldRose: "EBA79E", sectionApricot: "B4622A", sectionRose: "A4524A",
+        fieldSand: "E6D9BF", sectionSand: "7F6535"
     )
 
     public static let dark = NoctisAppPalette(
@@ -102,7 +106,8 @@ public nonisolated struct NoctisAppPalette: Sendable {
         ringTrack: "2A211B", weekHighlight: "9A87E6", lavenderText: "A897F0",
         dusk: "120E17", eveningPaper: "150F13", eveningInk3: "9C8C7B", nightDeep: "9A87E6", blockCocoa: "4A2F22", progressDot: "9A87E6",
         blockSage: "8FA366", coreTint: "D08850", sectionSage: "8FA366", sectionLavender: "8E7BDC", sectionButter: "E0B955",
-        fieldApricot: "D48A55", fieldRose: "C98580", sectionApricot: "D48A55", sectionRose: "C98580"
+        fieldApricot: "D48A55", fieldRose: "C98580", sectionApricot: "D48A55", sectionRose: "C98580",
+        fieldSand: "BFA97F", sectionSand: "BFA97F"
     )
 }
 
@@ -167,6 +172,8 @@ public nonisolated enum NoctisAppColor {
     public static let fieldRose = adaptive(\.fieldRose)
     public static let sectionApricot = adaptive(\.sectionApricot)
     public static let sectionRose = adaptive(\.sectionRose)
+    public static let fieldSand = adaptive(\.fieldSand)
+    public static let sectionSand = adaptive(\.sectionSand)
 
     // MARK: Sleep stages
 

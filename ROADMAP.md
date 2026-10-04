@@ -1,7 +1,7 @@
 # ROADMAP.md
 Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reachable until built. This file must be empty before release.
 
-- Profile. The avatar button at the top right of Home, and `noctis://profile`, open a "Coming soon" screen.
+- Name in Home's greeting. The name set on Profile is shown on Profile only; Home's greeting does not use it yet.
 - Free vs Premium gating for Sleep: Month, the quality factors and the 14-night picker. All of Sleep is open until the paywall decides.
 - Sleep share card. Home's "Share this night" card stays the only share.
 - Recorded, voice-guided meditations. Meditation reads its lines in the system voice, and only if asked. Recorded guides need recordings (and the rights to a voice) and are a decision of their own: R31 keeps audio files out of the sleep sounds, and a recording is a different thing from a sound.

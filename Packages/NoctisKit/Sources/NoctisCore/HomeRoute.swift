@@ -8,8 +8,10 @@ public nonisolated enum HomeRoute: Sendable, Hashable {
     case recoveryDetail(focus: RecoveryFactorKind? = nil)
     /// One factor's detail, from a factor capsule or a card.
     case recoveryFactor(RecoveryFactorKind, range: RecoveryFactorRange = .fortnight)
-    /// Profile, from the avatar button ("Coming soon" until built).
+    /// Profile, from the avatar button.
     case profile
+    /// Settings, from Profile's gear (the list), or one of its pages.
+    case settings(SettingsPage)
     /// Tonight: the bedtime window, why, and the wake alarm.
     case tonight
     /// The wind-down session: `autostart` begins it as it opens, otherwise it opens at the pre-start state.

@@ -154,7 +154,7 @@ struct NoctisAppContrastTests {
     }
 
     /// The tab glyphs' section inks: 3:1 as graphics on the paper and the
-    /// card, in both modes, for all five tabs.
+    /// card, in both modes, for every section.
     @Test(arguments: modes)
     func sectionInksStandOutAsGraphics(_ mode: String, _ palette: NoctisAppPalette) {
         for section in NoctisSection.allCases {
@@ -215,6 +215,17 @@ struct NoctisAppContrastTests {
         #expect(dark.sectionApricot == "D48A55")
     }
 
+    /// Profile's sand field: #E6D9BF in Light, #BFA97F in Dark, with cocoa ink (the block ink) on both.
+    @Test func profilesSandFieldIsTheSpecifiedColor() {
+        let light = NoctisAppPalette.light, dark = NoctisAppPalette.dark
+        #expect(NoctisSection.profile.fillHex(light) == "E6D9BF")
+        #expect(NoctisSection.profile.fillHex(dark) == "BFA97F")
+        #expect(ratio(light.blockInk, light.fieldSand) >= 4.5, "Light cocoa ink on sand \(ratio(light.blockInk, light.fieldSand))")
+        #expect(ratio(dark.blockInk, dark.fieldSand) >= 4.5, "Dark cocoa ink on sand \(ratio(dark.blockInk, dark.fieldSand))")
+        // Sand is the lightest field in Light, so the quieter inks need no lift there.
+        #expect(NoctisSection.profile.quietOpacity(target: NoctisFieldInkStyle.captionOpacity, dark: false) == NoctisFieldInkStyle.captionOpacity)
+    }
+
     /// The field runs under the status bar only where the system's status-bar
     /// text (black in Light, white in Dark) clears 3:1 over it; a field that
     /// can't starts below the safe area.
@@ -255,12 +266,13 @@ struct NoctisAppContrastTests {
         #expect(!NoctisDailyGate.isClaimed(key: "noctis.coach.lastWashDay", now: morning, calendar: calendar, defaults: defaults), "each tab has its own")
     }
 
-    /// Each tab has its own glyph, and every field has a motif strip only
-    /// where the motif needs one.
+    /// Each tab has its own glyph (and Profile, which is no tab, has its own), and every field has a motif
+    /// strip only where the motif needs one.
     @Test func everyTabHasItsOwnGlyphAndFieldMotif() {
-        #expect(Set(NoctisSection.allCases.map(\.systemImage)).count == 5)
+        #expect(Set(NoctisSection.allCases.map(\.systemImage)).count == NoctisSection.allCases.count)
+        #expect(NoctisSection.allCases.count == 6)
         #expect(NoctisSectionMotif.bottomStrip(.sleep) == 52 && NoctisSectionMotif.bottomStrip(.home) == 32)
-        #expect([NoctisSection.recovery, .insights, .coach].allSatisfy { NoctisSectionMotif.bottomStrip($0) == 0 })
+        #expect([NoctisSection.recovery, .insights, .coach, .profile].allSatisfy { NoctisSectionMotif.bottomStrip($0) == 0 })
     }
 
     @Test func theDarkCardIsTheApprovedValue() {
