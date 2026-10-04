@@ -385,6 +385,11 @@ nonisolated struct JournalPrivacyTests {
         }.joined(separator: "\n")
     }
 
+    /// The data inventory (APP_RULES.md R41) describes every store, the Journal's included, so it names it, in strings:
+    /// the category's words, its entity and its owner. It holds no entry and has no way to read one: only the target's
+    /// dependencies decide that, and `onlyTheReflectScreensAndTheAppDependOnTheJournalTarget` still holds them.
+    static let catalogue: Set<String> = ["NoctisCore/DataInventory+Shared.swift"]
+
     static func journalFiles(_ path: String) -> Bool {
         path.hasPrefix("JournalKit/") || path.hasPrefix("NightFeature/Journal") || path.hasPrefix("NightFeature/Reflect")
     }
@@ -425,7 +430,7 @@ nonisolated struct JournalPrivacyTests {
         let files = Self.sourceFiles()
         #expect(files.count > 100, "the scan found the sources")
         let names = ["JournalKit", "JournalEntry", "JournalStore", "JournalDraft", "JournalViewModel", "JournalErasure", "JournalContainer", "Journal"]
-        for file in files where !Self.journalFiles(file.path) && !Self.wiring.contains(file.path) {
+        for file in files where !Self.journalFiles(file.path) && !Self.wiring.contains(file.path) && !Self.catalogue.contains(file.path) {
             let code = Self.code(file.text)
             for name in names {
                 #expect(!code.contains(name), Comment(rawValue: "\(file.path) names \(name)"))
