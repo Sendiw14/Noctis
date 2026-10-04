@@ -270,7 +270,7 @@ struct HomeView: View {
         HomeActions(
             openProfile: { model.homePath.append(.profile) },
             openTonight: { model.open(.tonight) },
-            openWindDown: { model.open(.windDown(autostart: false)) },
+            openWindDown: { model.push(.windDown(autostart: false)) },
             openRecoveryDetail: { model.homePath.append(.recoveryDetail(focus: $0)) },
             openRecoveryFactor: { model.homePath.append(.recoveryFactor($0, range: .fortnight)) },
             openLastNight: { model.open(.sleep(night: viewModel.lastNightMoment, range: .day)) },

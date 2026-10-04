@@ -71,7 +71,7 @@ private struct TonightSections: View {
             TonightWhyCard(content: content)
                 .noctisRise(index: 1)
             NoctisCTA("Start wind-down", icon: "arrow.right", adaptive: true) {
-                model.open(.windDown(autostart: false))
+                model.push(.windDown(autostart: false))
             }
             .accessibilityIdentifier("tonight.windDown")
             .accessibilityHint("Opens Wind-down.")

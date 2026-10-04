@@ -100,6 +100,23 @@ public final class AppModel {
         }
     }
 
+    /// Stacks `route` on whatever Home's stack is showing, so a screen's own way out returns to where the
+    /// person was: the wind-down opened from Home goes back to Home, and from Tonight to Tonight. Unlike
+    /// `open`, which builds the destination's own path (what a deep link or a notification wants). A second
+    /// tap on the same route does nothing.
+    public func push(_ route: HomeRoute) {
+        selectedTab = .home
+        guard homePath.last != route else { return }
+        homePath.append(route)
+    }
+
+    /// The wind-down is the screen showing: it is full-screen and dark on purpose, so nothing of the app's
+    /// chrome (the tab bar, the bedtime pill above it) may sit over it.
+    public var isWindDownShowing: Bool {
+        guard selectedTab == .home, case .windDown? = homePath.last else { return false }
+        return true
+    }
+
     /// The alarm sheet request waiting for Tonight, once.
     public func takeAlarmDestination() -> AlarmDestination? {
         defer { alarmDestination = nil }
