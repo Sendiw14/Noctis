@@ -117,11 +117,11 @@ struct PrivacyManifestTests {
         let entries = try #require(manifest["NSPrivacyAccessedAPITypes"] as? [[String: Any]])
         let defaults = try #require(entries.first { $0["NSPrivacyAccessedAPIType"] as? String == RequiredReasonAPI.userDefaults.rawValue })
         #expect(defaults["NSPrivacyAccessedAPITypeReasons"] as? [String] == ["CA92.1"])
-        // CA92.1 is for defaults only the app itself reads and writes; sharing with an extension or app group is 1C8F.1.
-        let entitlements = try String(contentsOf: root("App/Noctis.entitlements"), encoding: .utf8)
-        #expect(!entitlements.contains("com.apple.security.application-groups"))
+        // CA92.1 is for defaults only the app itself reads and writes; sharing defaults with an extension through an App Group is 1C8F.1.
+        // The App Group holds one file (the widgets' summary, R44) and no defaults suite: nothing is shared through UserDefaults.
         for file in appCode() {
             #expect(!file.code.contains("UserDefaults(suiteName: \"group."), Comment(rawValue: "\(file.path) shares defaults through an app group"))
+            #expect(!file.code.contains("suiteName: WidgetSnapshotStore"), Comment(rawValue: "\(file.path) shares defaults through the widgets' app group"))
         }
         // The extension reads no defaults and no timestamps: it has no manifest because it uses none.
         for file in appCode() where file.path.hasPrefix("NoctisAlarmWidget/") {

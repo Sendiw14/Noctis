@@ -24,12 +24,13 @@ extension DataCategoryID {
         case .purchases: "star"
         case .systemFiles: "internaldrive"
         case .exportFile: "square.and.arrow.up"
+        case .widgetSnapshot: "rectangle.on.rectangle"
         }
     }
 
     var fill: Color {
         switch self {
-        case .appleHealth, .cachedSummaries, .memorySummaries, .systemFiles: NoctisAppColor.blockSage
+        case .appleHealth, .cachedSummaries, .widgetSnapshot, .memorySummaries, .systemFiles: NoctisAppColor.blockSage
         case .insightHistory, .preferences, .soundSettings, .appState, .reminders: NoctisAppColor.blockButter
         case .journal, .coachHistory, .profile, .exportFile: NoctisAppColor.blockLavender
         case .alarm, .windDownHistory, .diagnosticLog, .purchases: NoctisAppColor.fieldSand

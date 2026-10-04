@@ -9,12 +9,14 @@ import JournalKit
 import NightFeature
 import NightKit
 import NoctisCore
+import NoctisWidgetKit
 import ProfileFeature
 import RecoveryFeature
 import SleepFeature
 import SoundKit
 import SwiftData
 import UserNotifications
+import WidgetKit
 
 public struct AppContainer {
     public let model: AppModel
@@ -73,7 +75,7 @@ public struct AppContainer {
             // Never synced: the profile, the alarm and the wind-down record stay on this device.
             container = try ModelContainer(
                 for: UserProfileRecord.self, AlarmConfiguration.self, WindDownSession.self,
-                configurations: ModelConfiguration(cloudKitDatabase: .none)
+                configurations: ModelConfiguration(groupContainer: .none, cloudKitDatabase: .none)
             )
         } catch {
             fatalError("Failed to initialize the local data store: \(error)")
@@ -169,8 +171,16 @@ public struct AppContainer {
         self.insightStore = insightStore
         let insightsRepo = InsightsRepository(provider: provider, store: insightStore)
         self.insightsRepository = insightsRepo
+        // The widgets' summary (R44): one small file in the App Group, written after every refresh of Home's data. It is
+        // erased with the rest; UI tests start without one.
+        let widgetStore = WidgetSnapshotStore()
+        #if DEBUG
+        if debug.resetState && !restarted { widgetStore?.delete() }
+        #endif
+        let widgetInputs = WidgetInputSource(profile: { await MainActor.run { model.profile } })
+        let widgetPublisher = WidgetPublisher(store: widgetStore, inputs: widgetInputs, reload: { WidgetCenter.shared.reloadAllTimelines() })
         // The repositories the tabs read: Coach reads the same snapshots (R20).
-        let homeRepository = HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore)
+        let homeRepository = HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore, widgets: widgetPublisher)
         let sleepRepository = SleepRepository(provider: provider)
         let recoveryRepository = RecoveryRepository(provider: provider)
         self.homeViewModel = HomeViewModel(
@@ -273,7 +283,23 @@ public struct AppContainer {
             }
         )
         self.notificationCoordinator = coordinator
-        model.onProfileChange = { coordinator.reschedule() }
+        model.onProfileChange = {
+            coordinator.reschedule()
+            Task { await widgetPublisher.republish() }
+        }
+        // The widgets show tonight's bedtime and the alarm: the recommendation Tonight shows (from the Sleep tab's last
+        // numbers, so no extra read of Health) and the alarm as it stands, redrawn when either changes.
+        widgetInputs.setBedtime { profile in
+            guard let snapshot = await sleepRepository.cachedSnapshot else { return nil }
+            return BedtimeInputsBuilder.recommendation(
+                wakeMinutes: profile.typicalWakeMinutes, needMinutes: profile.needMinutes, timing: snapshot.timing, balance: snapshot.balance,
+                consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent
+            )
+        }
+        widgetInputs.setAlarm { WidgetSnapshotMaker.alarm(await alarmService.status().settings) }
+        Task {
+            for await _ in await alarmService.updates() { await widgetPublisher.republish() }
+        }
         // Profile (R36): the person's own words about their sleep, and the state of Health, reminders and the plan.
         self.profileViewModel = ProfileViewModel(
             sleep: sleepRepository, alarm: alarmService, health: HealthDataStatusReader(provider: provider), profile: { model.profile },
@@ -362,6 +388,7 @@ public struct AppContainer {
             silenceReminders: {
                 preferences.onChange = nil
                 model.onProfileChange = nil
+                Task { await widgetPublisher.suspend() }
             },
             settleReminders: { await coordinator.settled() },
             afterJournalDeleted: { journal.load() },
@@ -375,7 +402,10 @@ public struct AppContainer {
             forgetSoundChoices: {
                 soundPlayer.forgetSavedGains()
                 meditation.forgetChoices()
-            }
+            },
+            widgets: widgetPublisher,
+            reloadWidgets: { WidgetCenter.shared.reloadAllTimelines() },
+            endLiveActivities: { await LiveActivities.endAll() }
         ))
         self.dataManager = dataManager
         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.

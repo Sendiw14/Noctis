@@ -32,6 +32,7 @@ let package = Package(
         .library(name: "CoachKit", targets: ["CoachKit"]),
         .library(name: "CoachFeature", targets: ["CoachFeature"]),
         .library(name: "AlarmShared", targets: ["AlarmShared"]),
+        .library(name: "NoctisWidgetKit", targets: ["NoctisWidgetKit"]),
         .library(name: "SoundKit", targets: ["SoundKit"]),
         .library(name: "NightKit", targets: ["NightKit"]),
         .library(name: "NightFeature", targets: ["NightFeature"]),
@@ -49,6 +50,11 @@ let package = Package(
         // What the app and its alarm widget extension both have to agree on
         // (the alarm's metadata type). Nothing else, so the extension stays small.
         .target(name: "AlarmShared", swiftSettings: engineSwiftSettings),
+        // What the widgets read and draw (APP_RULES.md R44, R45): the `WidgetSnapshot` the app writes into the App Group, its
+        // store, the pure timeline and display builders and the flat widget views. It depends on the design tokens and on
+        // nothing that reads Health, SwiftData or Coach, so a widget extension (and a Watch app later) can link it and
+        // cannot reach them. Nonisolated like the engines; the views are main-actor through `View`.
+        .target(name: "NoctisWidgetKit", dependencies: ["DesignSystem"], swiftSettings: engineSwiftSettings),
         // Sleep sounds: synthesized in code, played through AVAudioEngine. No audio files, no UI.
         // Nonisolated like the other engines; the player alone is main-actor (APP_RULES.md R31).
         .target(name: "SoundKit", swiftSettings: engineSwiftSettings),
@@ -61,7 +67,7 @@ let package = Package(
         ),
         .target(
             name: "NoctisCore",
-            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "SoundKit", "DesignSystem"],
+            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "SoundKit", "DesignSystem", "NoctisWidgetKit"],
             swiftSettings: noctisSwiftSettings
         ),
         .target(name: "OnboardingFeature", dependencies: ["DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
@@ -143,7 +149,7 @@ let package = Package(
             dependencies: [
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
-                "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot",
+                "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot", "NoctisWidgetKit",
             ],
             swiftSettings: noctisSwiftSettings
         ),

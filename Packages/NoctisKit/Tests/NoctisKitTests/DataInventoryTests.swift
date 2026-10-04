@@ -7,6 +7,7 @@ import Testing
 @testable import InsightsKit
 @testable import JournalKit
 @testable import NoctisCore
+@testable import NoctisWidgetKit
 
 private let inventory = DataInventory.shared
 
@@ -119,6 +120,13 @@ struct DataInventoryEntityTests {
             while let found = file.code.range(of: "ModelConfiguration(", range: searchRange) {
                 let call = file.code[found.lowerBound...].prefix(260)
                 #expect(call.contains("cloudKitDatabase: .none") || call.contains("isStoredInMemoryOnly: true, cloudKitDatabase"), Comment(rawValue: "\(file.path) opens a store that might sync"))
+                // And none lands in the App Group container: with an App Group entitlement SwiftData's default store moves there
+                // (found by listing the group's container after the entitlement was added, 2026-10-04), where the widgets could
+                // open it and an existing person's data would no longer be found. A store is in memory, at a URL, or opts out.
+                #expect(
+                    call.contains("groupContainer: .none") || call.contains("url:") || call.contains("isStoredInMemoryOnly: true"),
+                    Comment(rawValue: "\(file.path) opens a store that SwiftData may put in the App Group")
+                )
                 searchRange = found.upperBound..<file.code.endIndex
             }
         }
@@ -286,9 +294,23 @@ struct DataInventoryFileTests {
         #expect(inventory.category(forFile: "com.other/x", in: .caches) == nil)
     }
 
+    /// What the simulator's App Group container held after a launch with mock data (2026-10-04), apart from the system's own
+    /// `.com.apple.mobile_container_manager.metadata.plist` and `Library` folders: the one file, and no database.
+    static let observedAppGroup = ["WidgetSnapshot.json"]
+
+    @Test func theAppGroupHoldsTheWidgetSummaryAndNothingElse() {
+        #expect(inventory.unregistered(files: Self.observedAppGroup, in: .appGroup).isEmpty)
+        #expect(inventory.category(forFile: "WidgetSnapshot.json", in: .appGroup) == .widgetSnapshot)
+        // A store SwiftData put there would not be owned: the test above would fail on it.
+        #expect(inventory.category(forFile: "Library/Application Support/default.store", in: .appGroup) == nil)
+        #expect(inventory.category(forFile: "default.store", in: .appGroup) == nil)
+        #expect(inventory[.widgetSnapshot].locations == [.file(.appGroup, "WidgetSnapshot.json")])
+        #expect(inventory[.widgetSnapshot].locations == [.file(.appGroup, WidgetSnapshotStore.fileName)])
+    }
+
     @Test func anExportIsWrittenToTheTemporaryFolderOnly() {
         #expect(inventory[.exportFile].locations == [.file(.temporary, "NOCTIS-export.json")])
-        #expect(DataDirectory.allCases.count == 4)
+        #expect(DataDirectory.allCases.count == 5, "the App Group is the fifth place")
     }
 
     @Test func sizesAreFileSizesAndASharedStoreIsOneSize() throws {

@@ -32,6 +32,17 @@ nonisolated extension DataInventory {
                 owner: "NoctisCore/HomeSnapshotStore.swift", holdsUserContent: false, export: .included("cachedSummaries")
             ),
             DataCategory(
+                .widgetSnapshot, name: "Widget summary",
+                summary: "A small file NOCTIS writes for its widgets, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked.",
+                contents: [
+                    "Your recovery score, how it compares with your usual, and the four arcs of its ring", "Last night's sleep: how long, its stages and when it began and ended",
+                    "Your resting heart rate and heart rate variability for last night", "Tonight's bedtime and your usual wake time", "Your wake alarm's time, and whether it is on",
+                ],
+                locations: [.file(.appGroup, "WidgetSnapshot.json")],
+                inBackup: false, protection: .standard, deletion: .button("Cached summaries"),
+                owner: "NoctisWidgetKit/WidgetSnapshotStore.swift", holdsUserContent: false, export: .included("widgetSnapshot")
+            ),
+            DataCategory(
                 .insightHistory, name: "Insights history",
                 summary: "The insights NOCTIS has found about your sleep and whether you have seen them: each one's type and the numbers behind it, worked out from your Health data.",
                 contents: ["Each insight's type and its numbers", "Whether it is new, seen or dismissed"],
@@ -249,8 +260,8 @@ nonisolated extension DataInventory {
                 question: "Delete wind-down history?", confirm: "Delete wind-down history", done: "Wind-down history deleted."
             ),
             DeletableGroup(
-                id: "cache", title: "Cached summaries", verb: .delete, categories: [.cachedSummaries, .memorySummaries],
-                removes: "The saved summary Home draws when it opens, and the summaries the app holds in memory. They are rebuilt from Apple Health.",
+                id: "cache", title: "Cached summaries", verb: .delete, categories: [.cachedSummaries, .widgetSnapshot, .memorySummaries],
+                removes: "The saved summary Home draws when it opens, the summary your widgets draw, and the summaries the app holds in memory. They are rebuilt from Apple Health.",
                 keeps: "Your Health data is untouched, and so is the rest of NOCTIS.", from: "this iPhone",
                 question: "Delete cached summaries?", confirm: "Delete cached summaries", done: "Cached summaries deleted."
             ),

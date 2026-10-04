@@ -1,4 +1,5 @@
 import Foundation
+import NoctisWidgetKit
 
 // The one list of what NOCTIS keeps (APP_RULES.md R41). Every privacy statement the app shows (the Privacy Center, Data
 // management, Coach's "How Coach uses your data", Help) is generated from this list, and tests hold the list to the code:
@@ -11,6 +12,8 @@ public nonisolated enum DataDirectory: String, Sendable, CaseIterable {
     case caches
     case documents
     case temporary
+    /// The App Group's container: the one place the app shares a file with its widgets (APP_RULES.md R44).
+    case appGroup
 
     /// The directory on this device.
     public var url: URL {
@@ -19,6 +22,8 @@ public nonisolated enum DataDirectory: String, Sendable, CaseIterable {
         case .caches: URL.cachesDirectory
         case .documents: URL.documentsDirectory
         case .temporary: URL.temporaryDirectory
+        // Where the group is not available (a unit test, an unsigned build) this points at a folder that is not there.
+        case .appGroup: WidgetSnapshotStore.containerURL ?? URL.temporaryDirectory.appending(path: "noctis-no-app-group", directoryHint: .isDirectory)
         }
     }
 }
@@ -99,6 +104,7 @@ public nonisolated enum DataExportRule: Sendable, Equatable {
 public nonisolated enum DataCategoryID: String, Sendable, CaseIterable, Hashable, Codable, Identifiable {
     case appleHealth
     case cachedSummaries
+    case widgetSnapshot
     case insightHistory
     case memorySummaries
     case profile

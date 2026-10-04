@@ -3,6 +3,7 @@ import Foundation
 import JournalKit
 import NightKit
 import NoctisCore
+import NoctisWidgetKit
 
 /// What Data management needs from the app: every store, and what to tell the screens once something is gone.
 public struct DataWiringInputs {
@@ -32,6 +33,12 @@ public struct DataWiringInputs {
     public var afterCoachDeleted: @MainActor () async -> Void
     public var clearMemory: @MainActor () async -> Void
     public var forgetSoundChoices: @MainActor () -> Void
+    /// The widgets' summary: told to forget it (the file is removed by the inventory's own location as well).
+    public var widgets: WidgetPublisher?
+    /// Asks the system to redraw the widgets, which now have no summary and say "Open NOCTIS".
+    public var reloadWidgets: @MainActor () -> Void
+    /// Ends every Live Activity NOCTIS has started. None is started by NOCTIS itself yet (the alarm's is AlarmKit's, ended with the alarm).
+    public var endLiveActivities: @MainActor () async -> Void
 
     public init(
         model: AppModel, preferences: AppPreferences, defaults: UserDefaults, profileStore: ProfileStore, alarmService: AlarmService,
@@ -40,7 +47,8 @@ public struct DataWiringInputs {
         appVersion: @escaping () -> String = { "NOCTIS" }, stopAudio: @escaping @MainActor () -> Void = {}, endWindDown: @escaping @MainActor () -> Void = {},
         silenceReminders: @escaping @MainActor () -> Void = {}, settleReminders: @escaping @MainActor () async -> Void = {},
         afterJournalDeleted: @escaping @MainActor () -> Void = {}, afterCoachDeleted: @escaping @MainActor () async -> Void = {},
-        clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {}
+        clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {},
+        widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {}
     ) {
         self.model = model
         self.preferences = preferences
@@ -64,6 +72,9 @@ public struct DataWiringInputs {
         self.afterCoachDeleted = afterCoachDeleted
         self.clearMemory = clearMemory
         self.forgetSoundChoices = forgetSoundChoices
+        self.widgets = widgets
+        self.reloadWidgets = reloadWidgets
+        self.endLiveActivities = endLiveActivities
     }
 }
 
@@ -94,6 +105,11 @@ public enum DataWiring {
             },
             .insightHistory: { i.insightFile.erase() },
             .cachedSummaries: { i.snapshotStore?.erase() },
+            .widgetSnapshot: {
+                await i.widgets?.forget()
+                try? FileManager.default.removeItem(at: i.roots.url(.appGroup).appending(path: WidgetSnapshotStore.fileName, directoryHint: .notDirectory))
+                i.reloadWidgets()
+            },
             .memorySummaries: { await i.clearMemory() },
             .profile: { i.profileStore.eraseAll() },
             // "Preferences and goals": the preferences back to their defaults, and the goals to Better sleep.
@@ -157,6 +173,11 @@ public enum DataWiring {
                 }
             }
         })
+        // The widgets redraw without their summary, and no Live Activity is left running.
+        steps.append(DeleteStep(id: "widgets", title: "Updating widgets") {
+            i.reloadWidgets()
+            await i.endLiveActivities()
+        })
         steps.append(DeleteStep(id: "preferences", title: "Clearing preferences") {
             i.preferences.reset()
             for id in [DataCategoryID.preferences, .soundSettings, .appState] { for key in inventory[id].defaultsKeys { i.defaults.removeObject(forKey: key) } }
@@ -176,6 +197,7 @@ public enum DataWiring {
                 guard let url = i.snapshotStore?.fileURL else { return [String: Any]() }
                 return DataExport.fileObject(at: url)
             },
+            .widgetSnapshot: { DataExport.fileObject(at: i.roots.url(.appGroup).appending(path: WidgetSnapshotStore.fileName, directoryHint: .notDirectory)) },
             .insightHistory: { i.insightFile.load().map { (try? DataExport.object(from: $0)) ?? [String: Any]() } ?? [String: Any]() },
             .profile: {
                 let profile = i.model.profile

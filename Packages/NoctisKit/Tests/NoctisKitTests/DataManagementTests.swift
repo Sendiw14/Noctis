@@ -11,6 +11,7 @@ import Testing
 @testable import JournalKit
 @testable import NightKit
 @testable import NoctisCore
+@testable import NoctisWidgetKit
 @testable import ProfileFeature
 
 private let shared = DataInventory.shared
@@ -115,11 +116,12 @@ final class DataBench {
         let support = root.appending(path: "support", directoryHint: .isDirectory)
         let caches = root.appending(path: "caches", directoryHint: .isDirectory)
         let temporary = root.appending(path: "tmp", directoryHint: .isDirectory)
-        for folder in [support.appending(path: "Noctis"), caches.appending(path: "com.noctis.app/com.apple.metal"), temporary] {
+        let group = root.appending(path: "group", directoryHint: .isDirectory)
+        for folder in [support.appending(path: "Noctis"), caches.appending(path: "com.noctis.app/com.apple.metal"), temporary, group] {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         }
         defaults = UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? NoctisUserDefaults.standard
-        roots = DataRoots(directories: [.applicationSupport: support, .caches: caches, .temporary: temporary], defaults: defaults)
+        roots = DataRoots(directories: [.applicationSupport: support, .caches: caches, .temporary: temporary, .appGroup: group], defaults: defaults)
         container = try ModelContainer(
             for: UserProfileRecord.self, AlarmConfiguration.self, WindDownSession.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
@@ -151,9 +153,13 @@ final class DataBench {
             afterJournalDeleted: { [unowned self] in calls.append("journalReload") },
             afterCoachDeleted: { [unowned self] in calls.append("coachReload") },
             clearMemory: { [unowned self] in calls.append("memory") },
-            forgetSoundChoices: { [unowned self] in calls.append("soundChoices") }
+            forgetSoundChoices: { [unowned self] in calls.append("soundChoices") },
+            reloadWidgets: { [unowned self] in calls.append("widgets") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") }
         ))
     }
+
+    /// The widgets' summary, in the (test) App Group.
+    var widgetFile: URL { roots.url(.appGroup).appending(path: WidgetSnapshotStore.fileName, directoryHint: .notDirectory) }
 
     /// Something in every place NOCTIS keeps anything.
     func fill() async throws {
@@ -177,6 +183,7 @@ final class DataBench {
         await coachHistory.append(question: "How did I sleep?", answer: CoachFixtureAnswer.storable, to: conversation)
         insightFile.save(InsightLibrary())
         try Data("{\"saved\":true}".utf8).write(to: snapshotStore.fileURL)
+        try Data("{\"v\":1}".utf8).write(to: widgetFile)
         try Data(count: 64).write(to: roots.url(.caches).appending(path: "com.noctis.app/com.apple.metal/functions.data"))
         try Data(count: 16).write(to: roots.url(.temporary).appending(path: DataExport.fileName))
         let schedule = ScheduledNotification(identifier: NoctisNotification.morningSummary, title: "NOCTIS", body: "x", components: DateComponents(hour: 7))
@@ -217,6 +224,7 @@ struct DataManagementIntegrationTests {
         let coachBefore = await bench.coachHistory.messageCount()
         #expect(bench.profileStore.recordCount == 1 && !bench.journal.stored.isEmpty && coachBefore == 1)
         #expect((try? Data(contentsOf: bench.snapshotStore.fileURL)) != nil && bench.insightFile.load() != nil)
+        #expect(FileManager.default.fileExists(atPath: bench.widgetFile.path))
         #expect(await bench.center.pendingIdentifiers().count == 4)
         #expect(await bench.alarmService.status().isOn)
 
@@ -231,6 +239,8 @@ struct DataManagementIntegrationTests {
         #expect(coachAfter == 0 && conversationsAfter.isEmpty)
         #expect(bench.insightFile.load() == nil && !FileManager.default.fileExists(atPath: bench.insightFile.fileURL.path))
         #expect(!FileManager.default.fileExists(atPath: bench.snapshotStore.fileURL.path))
+        #expect(!FileManager.default.fileExists(atPath: bench.widgetFile.path), "the widgets' summary is deleted")
+        #expect(bench.calls.contains("widgets") && bench.calls.contains("liveActivities"), "the widgets are told to redraw and no Live Activity is left")
         #expect(!FileManager.default.fileExists(atPath: bench.roots.url(.caches).appending(path: "com.noctis.app").path), "iOS's cache folder is cleared")
         #expect(!FileManager.default.fileExists(atPath: bench.roots.url(.temporary).appending(path: DataExport.fileName).path))
         #expect(bench.windDownStore.sessions().isEmpty)

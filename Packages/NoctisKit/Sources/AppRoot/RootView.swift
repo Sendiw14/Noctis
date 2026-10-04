@@ -40,7 +40,8 @@ public struct RootView: View {
         }
         .preferredColorScheme(AppAppearance.scheme(showingMain: showMain, appearance: preferences.values.appearance))
         .onOpenURL { url in
-            if let route = AppRoute(url: url) { model.open(route) }
+            // A URL from outside: only a widget's own links open anything (WidgetURLRouter, R44).
+            if let route = WidgetURLRouter.route(for: url) { model.open(route) }
         }
     }
 }

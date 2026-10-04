@@ -5,7 +5,7 @@ Status: **draft for owner review**. It was written from an audit of the code at 
 
 ## 1. Short version
 
-- NOCTIS has no server, no account, no sign-in, no analytics service, no advertising and no third-party code (no Swift package outside the repo). It has no iCloud, push or network entitlement.
+- NOCTIS has no server, no account, no sign-in, no analytics service, no advertising and no third-party code (no Swift package outside the repo). It has no iCloud, push or network entitlement. Its one shared storage is an App Group holding a single small file for its widgets (R44); no defaults are shared.
 - It reads sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health, on the iPhone. It never writes to Health (`toShare: []`, no write permission asked, `com.apple.developer.healthkit.access` empty). It keeps no copy of the readings, only numbers worked out from them.
 - The only network-capable system APIs it imports are StoreKit (Apple's App Store, for Premium) and MessageUI (the Contact support mail composer, which sends only if the person sends the email).
 - The only required-reason API its own code calls is `UserDefaults`.
@@ -19,6 +19,7 @@ Status: **draft for owner review**. It was written from an audit of the code at 
 | --- | --- | --- | --- | --- | --- | --- |
 | Apple Health data | Apple Health (NOCTIS keeps no copy) | No: read on the iPhone, read-only | Facts worked out from it (recovery today, last night, usual bedtime and wake, week's average), never raw readings | n/a | Apple-managed | In Apple's Health app |
 | Cached summaries | `Application Support/Noctis/home-snapshot.json` | No | No | No | Complete while locked | Data management, Delete |
+| Widget summary | `WidgetSnapshot.json` in the App Group container (`group.com.noctis.app`), written by the app, read by the widgets | No: it stays on this iPhone, shared between the app and its widgets only | No | No | Readable after first unlock (set on purpose: a locked iPhone's widgets must read it) | Data management, Delete cached summaries |
 | Insights history | `Application Support/Noctis/insights.json` | No | Insights already found, as numbers | No | Complete while locked | Data management, Delete |
 | Summaries in memory | Memory only | No | No | n/a | Not on disk | When the app closes, and with Cached summaries |
 | Your profile | SwiftData `default.store` (`UserProfileRecord`) | No | Sleep need, wake time, goals; never the name | Yes | Standard | Delete all NOCTIS data |

@@ -152,6 +152,8 @@ public actor HomeRepository {
     private let clock: @Sendable () -> Date
     private let insights: InsightsRepository
     private let store: HomeSnapshotStore?
+    /// Told after every refresh, so the widgets draw what Home draws (APP_RULES.md R44).
+    private let widgets: WidgetPublisher?
     private var inFlight: Task<HomeSnapshot, Never>?
 
     /// The last snapshot built (or restored), if any.
@@ -171,13 +173,15 @@ public actor HomeRepository {
         timeZone: TimeZone = .autoupdatingCurrent,
         clock: @escaping @Sendable () -> Date = { Date() },
         insights: InsightsRepository? = nil,
-        store: HomeSnapshotStore? = nil
+        store: HomeSnapshotStore? = nil,
+        widgets: WidgetPublisher? = nil
     ) {
         self.provider = provider
         self.timeZone = timeZone
         self.clock = clock
         self.insights = insights ?? InsightsRepository(provider: provider, timeZone: timeZone, clock: clock)
         self.store = store
+        self.widgets = widgets
         let restored = store?.load()
         restoredSnapshot = restored
         cachedSnapshot = restored
@@ -191,6 +195,7 @@ public actor HomeRepository {
         inFlight = nil
         cachedSnapshot = snapshot
         store?.save(snapshot)
+        await widgets?.publish(snapshot)
         return snapshot
     }
 

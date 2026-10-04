@@ -39,12 +39,15 @@ targets:
         product: AppRoot
       # The alarm's snooze countdown is drawn by this extension (see APP_RULES.md R30).
       - target: NoctisAlarmWidget
-    # HealthKit, read-only (see NSHealthShareUsageDescription below).
+    # HealthKit, read-only (see NSHealthShareUsageDescription below). The App Group is the one place the app shares
+    # a file with its widgets (APP_RULES.md R44): a small summary the app writes and the widgets read.
     entitlements:
       path: App/Noctis.entitlements
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+        com.apple.security.application-groups:
+          - group.com.noctis.app
     scheme:
       testTargets:
         - NoctisUITests
