@@ -119,6 +119,15 @@ public final class AppModel {
         }
     }
 
+    /// Opens Coach on a question given as text (an App Intent): the same path as `open(.coach)`, with the words held in memory until the
+    /// tab takes them. Coach's own limit on a question's length applies there; nothing here keeps the text.
+    public func askCoach(_ text: String) {
+        selectedTab = AppRoute.coach().tab
+        serial += 1
+        coachDestination = CoachDestination(question: nil, text: text, serial: serial)
+        coachPath = []
+    }
+
     /// Stacks `route` on whatever Home's stack is showing, so a screen's own way out returns to where the
     /// person was: the wind-down opened from Home goes back to Home, and from Tonight to Tonight. Unlike
     /// `open`, which builds the destination's own path (what a deep link or a notification wants). A second

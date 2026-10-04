@@ -91,11 +91,28 @@ public final class SoundPlayer {
     /// A fade in or out of a pause, a stop or a play: long enough not to click.
     public static let rampSeconds: Double = 0.3
     static let gainsKey = "noctis.sounds.gains"
+    static let lastKindKey = "noctis.sounds.last"
 
     public private(set) var state: SoundPlayerState {
-        didSet { if state != oldValue { onChange?(state) } }
+        didSet {
+            guard state != oldValue else { return }
+            onChange?(state)
+            for observer in observers { observer(state) }
+        }
     }
     public var onChange: ((SoundPlayerState) -> Void)?
+    private var observers: [(SoundPlayerState) -> Void] = []
+
+    /// Another listener for every change of state, beside `onChange` (the screen's own). The system's Sleep sounds control is told the real
+    /// state through one (APP_RULES.md R48).
+    public func observe(_ handler: @escaping (SoundPlayerState) -> Void) {
+        observers.append(handler)
+    }
+
+    /// The sound the person played last, kept so a control or Siri can start "my sound" without a screen (`nil` before any was played).
+    public var lastKind: SoundKind? {
+        defaults.string(forKey: Self.lastKindKey).flatMap(SoundKind.init(rawValue:))
+    }
     /// A level from the meter, at 15 Hz while the meter is on.
     public var onLevel: ((Float) -> Void)?
     /// The timer ran out (a soft haptic, once).
@@ -134,6 +151,7 @@ public final class SoundPlayer {
 
     /// Plays `kind`: from nothing, from a pause, or crossing from the sound that is playing.
     public func play(_ kind: SoundKind) {
+        defaults.set(kind.rawValue, forKey: Self.lastKindKey)
         let switching = state.kind != nil && state.kind != kind
         if state.phase == .playing, switching {
             token += 1
@@ -196,6 +214,7 @@ public final class SoundPlayer {
     public func forgetSavedGains() {
         state.gains = [:]
         defaults.removeObject(forKey: Self.gainsKey)
+        defaults.removeObject(forKey: Self.lastKindKey)
     }
 
     public func setGain(_ gain: Float, for kind: SoundKind) {

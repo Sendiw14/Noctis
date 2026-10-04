@@ -37,6 +37,9 @@ targets:
     dependencies:
       - package: NoctisKit
         product: AppRoot
+      # The App Shortcuts provider names the intents' package (APP_RULES.md R47).
+      - package: NoctisKit
+        product: NoctisIntentKit
       # The alarm's snooze countdown is drawn by this extension (see APP_RULES.md R30).
       - target: NoctisAlarmWidget
       # The Home Screen and Lock Screen widgets (APP_RULES.md R44): they read one file the app writes into the App Group.

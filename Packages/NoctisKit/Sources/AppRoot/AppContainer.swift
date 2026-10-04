@@ -9,6 +9,7 @@ import JournalKit
 import NightFeature
 import NightKit
 import NoctisCore
+import NoctisIntentKit
 import NoctisWidgetKit
 import ProfileFeature
 import RecoveryFeature
@@ -388,6 +389,10 @@ public struct AppContainer {
         let router = NotificationRouter(model: model)
         self.notificationRouter = router
         UNUserNotificationCenter.current().delegate = router
+
+        // Siri, Shortcuts and the controls (R47): the intents ask this running app, through the objects the screens use. Installed at start,
+        // so an intent that launches the app in the background finds it.
+        IntentRuntime.shared.install(AppIntentHost(model: model, preferences: preferences, player: soundPlayer, sounds: self.soundsViewModel, alarm: alarmService))
 
         // Data management (R41, R42): every store given an eraser and an exporter, and "Delete all NOCTIS data" its steps.
         let dataManager = DataWiring.manager(DataWiringInputs(

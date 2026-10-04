@@ -64,6 +64,9 @@ public struct CoachTabView: View {
         guard let destination = appModel.takeCoachDestination() else { return }
         if let question = destination.question, viewModel.startConversation(asking: question) {
             appModel.coachPath = [.conversation]
+        } else if let text = destination.text, viewModel.startConversation(asking: text) {
+            // A question from Siri or Shortcuts is asked like a typed one: Coach's own checks, its own history.
+            appModel.coachPath = [.conversation]
         }
     }
 }

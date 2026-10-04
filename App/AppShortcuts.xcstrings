@@ -1,0 +1,72 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Show my recovery in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show my recovery in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Show my sleep in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show my sleep in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Start my wind-down in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start my wind-down in ${applicationName}"
+          }
+        }
+      }
+    },
+    "What time should I sleep in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What time should I sleep in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Start my sleep sounds in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start my sleep sounds in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Ask Coach in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask Coach in ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

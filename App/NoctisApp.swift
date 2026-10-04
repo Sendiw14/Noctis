@@ -12,6 +12,9 @@ struct NoctisApp: App {
             // `-widgetGallery`: every widget family at its real size, in every state (a DEBUG screenshot aid, R45).
             if let request = WidgetGalleryRequest(arguments: ProcessInfo.processInfo.arguments) {
                 WidgetGalleryView(request: request)
+            } else if IntentRunnerRequest.requested(ProcessInfo.processInfo.arguments) {
+                // `-intentRunner`: what each intent says and does, for each data state (R47).
+                IntentRunnerView()
             } else {
                 root
             }

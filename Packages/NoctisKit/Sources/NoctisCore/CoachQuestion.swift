@@ -94,5 +94,13 @@ public nonisolated enum CoachPage: Sendable, Hashable {
 /// distinct, so asking the same question twice is still a change.
 public nonisolated struct CoachDestination: Sendable, Equatable {
     public let question: CoachQuestion?
+    /// A question typed or spoken (Siri and Shortcuts): asked as typed text. Held in memory until the tab takes it, and nowhere else.
+    public let text: String?
     let serial: Int
+
+    init(question: CoachQuestion?, text: String? = nil, serial: Int) {
+        self.question = question
+        self.text = text
+        self.serial = serial
+    }
 }

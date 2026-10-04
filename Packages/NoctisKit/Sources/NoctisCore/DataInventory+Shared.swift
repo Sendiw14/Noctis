@@ -88,10 +88,10 @@ nonisolated extension DataInventory {
             ),
             DataCategory(
                 .soundSettings, name: "Sound and meditation choices",
-                summary: "The volume you last used for each sleep sound, and what you last chose in Meditation.",
-                contents: ["Each sound's volume", "The last meditation category, length and sound", "Whether spoken guidance is on"],
+                summary: "The volume you last used for each sleep sound, the sound you played last, and what you last chose in Meditation.",
+                contents: ["Each sound's volume", "The sleep sound you played last", "The last meditation category, length and sound", "Whether spoken guidance is on"],
                 locations: [.defaults([
-                    "noctis.sounds.gains", "noctis.meditation.category", "noctis.meditation.minutes", "noctis.meditation.sound", "noctis.meditation.spoken",
+                    "noctis.sounds.gains", "noctis.sounds.last", "noctis.meditation.category", "noctis.meditation.minutes", "noctis.meditation.sound", "noctis.meditation.spoken",
                 ])],
                 inBackup: true, protection: .standard, deletion: .button("Preferences and goals"),
                 owner: "SoundKit/SoundPlayer.swift", holdsUserContent: true, export: .included("soundSettings")

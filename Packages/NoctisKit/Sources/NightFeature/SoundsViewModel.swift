@@ -76,6 +76,27 @@ public final class SoundsViewModel {
         NoctisHaptics.selection()
     }
 
+    /// Plays `kind` and never pauses it: a request from Siri, Shortcuts or a control, where "play" must not stop a sound that is playing. A sound
+    /// that begins from silence takes the default timer, as a tile does; nothing is felt (the phone may be locked).
+    public func play(_ kind: SoundKind) {
+        let startsFromSilence = state.phase == .stopped
+        switch (state.kind == kind, state.phase) {
+        case (true, .playing): return
+        case (true, .paused), (true, .interrupted): player.resume()
+        default: player.play(kind)
+        }
+        if startsFromSilence, player.state.phase != .stopped {
+            let timer = defaultTimer()
+            if timer != .off { player.setTimer(timer) }
+        }
+    }
+
+    /// Stops what plays, with the short fade the Sounds screen uses: a request from a control.
+    public func stopPlaying() {
+        guard player.state.isLoaded else { return }
+        player.fadeOutAndStop(over: 1)
+    }
+
     public func togglePlayPause() {
         switch state.phase {
         case .playing: player.pause()
