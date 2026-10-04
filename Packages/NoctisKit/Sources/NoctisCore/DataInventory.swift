@@ -254,12 +254,16 @@ public nonisolated struct DataInventoryFacts: Sendable, Equatable {
     public let coachUsesRemoteModel: Bool
     /// What Coach never sees, in words that follow "It never sees".
     public let coachNeverSees: [String]
+    /// Whether Apple Health wakes the app in the background when new sleep data arrives, so NOCTIS reads it outside the app being open
+    /// (HealthKit background delivery: the entitlement and the code, which a test holds this to).
+    public let readsHealthInBackground: Bool
 
-    public init(healthAccess: HealthAccess, hasAccount: Bool, coachUsesRemoteModel: Bool, coachNeverSees: [String]) {
+    public init(healthAccess: HealthAccess, hasAccount: Bool, coachUsesRemoteModel: Bool, coachNeverSees: [String], readsHealthInBackground: Bool = false) {
         self.healthAccess = healthAccess
         self.hasAccount = hasAccount
         self.coachUsesRemoteModel = coachUsesRemoteModel
         self.coachNeverSees = coachNeverSees
+        self.readsHealthInBackground = readsHealthInBackground
     }
 }
 

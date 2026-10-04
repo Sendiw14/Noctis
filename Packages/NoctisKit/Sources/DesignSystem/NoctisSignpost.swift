@@ -35,6 +35,8 @@ public nonisolated enum NoctisSignpost {
         case recoveryLoad = "RecoveryLoad"
         /// Building the render model for one Recovery selection.
         case recoveryModel = "RecoveryModel"
+        /// A background wake from Apple Health: the refresh that keeps the widgets true (APP_RULES.md R46).
+        case backgroundRefresh = "BackgroundRefresh"
     }
 
     private static let signposter = OSSignposter(subsystem: subsystem, category: category)
@@ -56,6 +58,7 @@ public nonisolated enum NoctisSignpost {
             case .sleepModel: signposter.beginInterval("SleepModel")
             case .recoveryLoad: signposter.beginInterval("RecoveryLoad")
             case .recoveryModel: signposter.beginInterval("RecoveryModel")
+            case .backgroundRefresh: signposter.beginInterval("BackgroundRefresh")
             }
         }
     }
@@ -75,6 +78,7 @@ public nonisolated enum NoctisSignpost {
             case .sleepModel: signposter.endInterval("SleepModel", state)
             case .recoveryLoad: signposter.endInterval("RecoveryLoad", state)
             case .recoveryModel: signposter.endInterval("RecoveryModel", state)
+            case .backgroundRefresh: signposter.endInterval("BackgroundRefresh", state)
             }
         }
     }

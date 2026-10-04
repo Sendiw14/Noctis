@@ -154,7 +154,8 @@ final class DataBench {
             afterCoachDeleted: { [unowned self] in calls.append("coachReload") },
             clearMemory: { [unowned self] in calls.append("memory") },
             forgetSoundChoices: { [unowned self] in calls.append("soundChoices") },
-            reloadWidgets: { [unowned self] in calls.append("widgets") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") }
+            reloadWidgets: { [unowned self] in calls.append("widgets") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") },
+            stopBackgroundUpdates: { [unowned self] in calls.append("background") }
         ))
     }
 
@@ -241,6 +242,7 @@ struct DataManagementIntegrationTests {
         #expect(!FileManager.default.fileExists(atPath: bench.snapshotStore.fileURL.path))
         #expect(!FileManager.default.fileExists(atPath: bench.widgetFile.path), "the widgets' summary is deleted")
         #expect(bench.calls.contains("widgets") && bench.calls.contains("liveActivities"), "the widgets are told to redraw and no Live Activity is left")
+        #expect(bench.calls.contains("background"), "Health stops waking the app")
         #expect(!FileManager.default.fileExists(atPath: bench.roots.url(.caches).appending(path: "com.noctis.app").path), "iOS's cache folder is cleared")
         #expect(!FileManager.default.fileExists(atPath: bench.roots.url(.temporary).appending(path: DataExport.fileName).path))
         #expect(bench.windDownStore.sessions().isEmpty)

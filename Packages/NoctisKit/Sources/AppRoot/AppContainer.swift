@@ -287,6 +287,25 @@ public struct AppContainer {
             coordinator.reschedule()
             Task { await widgetPublisher.republish() }
         }
+        // Background updates (R46): Apple Health wakes the app when new sleep data arrives; the refresh writes the widgets' summary
+        // and reloads their timelines. Best-effort: iOS decides when. Nothing runs before setup is finished or without access.
+        let backgroundRefresher = BackgroundRefresher(
+            isOnboarded: { await MainActor.run { model.profile.onboardingComplete } },
+            isAuthorized: { await provider.authorizationStatus() == .authorized },
+            refresh: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) }
+        )
+        let background = provider as? any HealthBackgroundDelivering
+        let startBackgroundUpdates: @Sendable () async -> Void = {
+            await background?.startBackgroundDelivery { done in
+                Task {
+                    _ = await backgroundRefresher.handleWake()
+                    done()
+                }
+            }
+        }
+        model.onHealthAuthorizationRequested = { await startBackgroundUpdates() }
+        // A launch (including one Health started in the background) registers again: the observers live only as long as the process.
+        if model.profile.onboardingComplete { Task { await startBackgroundUpdates() } }
         // The widgets show tonight's bedtime and the alarm: the recommendation Tonight shows (from the Sleep tab's last
         // numbers, so no extra read of Health) and the alarm as it stands, redrawn when either changes.
         widgetInputs.setBedtime { profile in
@@ -405,7 +424,11 @@ public struct AppContainer {
             },
             widgets: widgetPublisher,
             reloadWidgets: { WidgetCenter.shared.reloadAllTimelines() },
-            endLiveActivities: { await LiveActivities.endAll() }
+            endLiveActivities: { await LiveActivities.endAll() },
+            stopBackgroundUpdates: {
+                model.onHealthAuthorizationRequested = nil
+                await background?.stopBackgroundDelivery()
+            }
         ))
         self.dataManager = dataManager
         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.

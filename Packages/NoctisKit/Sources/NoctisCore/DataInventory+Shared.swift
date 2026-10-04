@@ -278,7 +278,8 @@ nonisolated extension DataInventory {
             coachNeverSees: [
                 "your name", "your Apple Account", "individual Health readings or when they were taken",
                 "which app or device recorded them", "what you wrote in the Journal",
-            ]
+            ],
+            readsHealthInBackground: true
         )
     )
 }

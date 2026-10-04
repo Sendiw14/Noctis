@@ -14,6 +14,8 @@ public final class HealthKitProvider: HealthDataProviding {
     public let sourceName = "Apple Health"
 
     private let store = HKHealthStore()
+    /// The observer queries behind background delivery (not the foreground `sampleChanges()` ones).
+    private var backgroundObservers: BackgroundObservers?
 
     public init() {}
 
@@ -185,4 +187,70 @@ private nonisolated final class ObserverQueries: @unchecked Sendable {
     func stop(on store: HKHealthStore) {
         queries.forEach(store.stop)
     }
+}
+
+
+// MARK: - Background delivery (APP_RULES.md R46)
+
+extension HealthKitProvider: HealthBackgroundDelivering {
+    public func startBackgroundDelivery(wake: @escaping @Sendable (_ done: @escaping @Sendable () -> Void) -> Void) async {
+        guard isHealthDataAvailable else { return }
+        backgroundObservers?.stop(on: store)
+        for entry in HealthBackgroundPlan.observed {
+            guard let type = Self.readTypes(for: [entry.kind]).first as? HKSampleType else { continue }
+            let frequency: HKUpdateFrequency = entry.frequency == .hourly ? .hourly : .daily
+            // A failure (no entitlement in this build, access not yet asked) leaves the foreground observers working.
+            try? await store.enableBackgroundDelivery(for: type, frequency: frequency)
+        }
+        let observers = BackgroundObservers(wake: wake)
+        observers.run(on: store)
+        backgroundObservers = observers
+    }
+
+    public func stopBackgroundDelivery() async {
+        backgroundObservers?.stop(on: store)
+        backgroundObservers = nil
+        try? await store.disableAllBackgroundDelivery()
+    }
+}
+
+/// One observer query for each kind in `HealthBackgroundPlan`. HealthKit calls the handler on its own queue when the app is woken or
+/// running; the handler's `completionHandler` is given to `wake` as `done`, and called here on every path (an error included), so
+/// HealthKit is never left waiting.
+private nonisolated final class BackgroundObservers: @unchecked Sendable {
+    private let queries: [HKObserverQuery]
+
+    init(wake: @escaping @Sendable (_ done: @escaping @Sendable () -> Void) -> Void) {
+        let types: [HKSampleType] = HealthBackgroundPlan.observed.compactMap { entry in
+            switch entry.kind {
+            case .sleepAnalysis: HKCategoryType(.sleepAnalysis)
+            case .hrv: HKQuantityType(.heartRateVariabilitySDNN)
+            case .restingHeartRate: HKQuantityType(.restingHeartRate)
+            case .heartRate, .respiratoryRate: nil
+            }
+        }
+        queries = types.map { type in
+            HKObserverQuery(sampleType: type, predicate: nil) { _, completionHandler, error in
+                let completion = Completion(call: completionHandler)
+                if error == nil {
+                    wake { completion.call() }
+                } else {
+                    completion.call()
+                }
+            }
+        }
+    }
+
+    func run(on store: HKHealthStore) {
+        queries.forEach(store.execute)
+    }
+
+    func stop(on store: HKHealthStore) {
+        queries.forEach(store.stop)
+    }
+}
+
+/// HealthKit's completion handler, which it documents as callable from any queue, passed to code that runs elsewhere.
+private nonisolated struct Completion: @unchecked Sendable {
+    let call: () -> Void
 }

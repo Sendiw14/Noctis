@@ -168,8 +168,35 @@ public final class MockHealthKitProvider: HealthDataProviding {
         AsyncStream { $0.finish() }
     }
 
+    // MARK: Background delivery (a script, for tests and DEBUG runs)
+
+    /// How many times background delivery was started and stopped, and the handler it was given.
+    public private(set) var backgroundStarts = 0
+    public private(set) var backgroundStops = 0
+    private var wakeHandler: (@Sendable (_ done: @escaping @Sendable () -> Void) -> Void)?
+
+    /// Plays one delivery from Apple Health: calls the handler with `done`, as HealthKit would. False when delivery is not started.
+    @discardableResult
+    public func simulateWake(done: @escaping @Sendable () -> Void) -> Bool {
+        guard let wakeHandler else { return false }
+        wakeHandler(done)
+        return true
+    }
+
     private func requireAuthorized() throws {
         guard status == .authorized else { throw HealthProviderError.unauthorized }
+    }
+}
+
+extension MockHealthKitProvider: HealthBackgroundDelivering {
+    public func startBackgroundDelivery(wake: @escaping @Sendable (_ done: @escaping @Sendable () -> Void) -> Void) async {
+        backgroundStarts += 1
+        wakeHandler = wake
+    }
+
+    public func stopBackgroundDelivery() async {
+        backgroundStops += 1
+        wakeHandler = nil
     }
 }
 #endif

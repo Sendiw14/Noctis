@@ -56,7 +56,9 @@ public nonisolated enum PrivacyCenterBuilder {
         return PrivacyCenterContent(
             headline: PrivacyStatements.headline(inventory),
             reads: reads,
-            readsNote: PrivacyStatements.healthReadOnly(inventory) == nil ? nil : "NOCTIS only reads. It keeps no copy of these readings: only numbers worked out from them, which are listed below.",
+            readsNote: PrivacyStatements.healthReadOnly(inventory) == nil
+                ? nil
+                : "NOCTIS only reads. It keeps no copy of these readings: only numbers worked out from them, which are listed below. \(PrivacyStatements.whenHealthIsRead(inventory))",
             stays: stays,
             staysNote: PrivacyStatements.storedOnDevice(inventory) == nil
                 ? "Here is everything NOCTIS keeps, and where."

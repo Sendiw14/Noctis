@@ -39,6 +39,8 @@ public struct DataWiringInputs {
     public var reloadWidgets: @MainActor () -> Void
     /// Ends every Live Activity NOCTIS has started. None is started by NOCTIS itself yet (the alarm's is AlarmKit's, ended with the alarm).
     public var endLiveActivities: @MainActor () async -> Void
+    /// Stops Apple Health from waking the app in the background (R46).
+    public var stopBackgroundUpdates: @MainActor () async -> Void
 
     public init(
         model: AppModel, preferences: AppPreferences, defaults: UserDefaults, profileStore: ProfileStore, alarmService: AlarmService,
@@ -48,7 +50,8 @@ public struct DataWiringInputs {
         silenceReminders: @escaping @MainActor () -> Void = {}, settleReminders: @escaping @MainActor () async -> Void = {},
         afterJournalDeleted: @escaping @MainActor () -> Void = {}, afterCoachDeleted: @escaping @MainActor () async -> Void = {},
         clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {},
-        widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {}
+        widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {},
+        stopBackgroundUpdates: @escaping @MainActor () async -> Void = {}
     ) {
         self.model = model
         self.preferences = preferences
@@ -75,6 +78,7 @@ public struct DataWiringInputs {
         self.widgets = widgets
         self.reloadWidgets = reloadWidgets
         self.endLiveActivities = endLiveActivities
+        self.stopBackgroundUpdates = stopBackgroundUpdates
     }
 }
 
@@ -178,6 +182,8 @@ public enum DataWiring {
             i.reloadWidgets()
             await i.endLiveActivities()
         })
+        // Health stops waking the app, so a deleted app does not start itself in the night.
+        steps.append(DeleteStep(id: "backgroundUpdates", title: "Stopping background updates") { await i.stopBackgroundUpdates() })
         steps.append(DeleteStep(id: "preferences", title: "Clearing preferences") {
             i.preferences.reset()
             for id in [DataCategoryID.preferences, .soundSettings, .appState] { for key in inventory[id].defaultsKeys { i.defaults.removeObject(forKey: key) } }

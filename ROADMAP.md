@@ -41,4 +41,5 @@ Unbuilt features (APP_RULES.md R19). Each one shows "Coming soon" or is not reac
 - Free vs Premium gating pass. One pass over the whole app to decide, screen by screen, what is free and what is Premium (Sleep: Month and the quality factors, Recovery: 30D and 90D, Insights, Coach's daily questions, the wind-down, the alarm's advanced features, the sound packs), and then gate them with one entitlement check and one paywall wording. Everything is open until it is done.
 - Free vs Premium gating for widgets. Proposal: free is the small Home Screen widget; premium is medium, large and the Lock Screen widgets. All of them are open until the paywall decides.
 - Widget configuration and interaction. The widgets are static: no choice of what they show, no buttons, no Control Center control. Larger families (extra large on iPad, StandBy tuning) are not designed.
+- Verify background delivery on a real iPhone. HealthKit background delivery is best-effort and cannot be exercised in the simulator: confirm an overnight sleep sample refreshes the morning widget without opening the app, with and without a paired Apple Watch, and read the `BackgroundRefresh` signposts.
 

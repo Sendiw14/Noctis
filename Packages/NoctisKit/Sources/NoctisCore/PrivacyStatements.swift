@@ -160,6 +160,13 @@ public nonisolated enum PrivacyStatements {
         return "Reminders never carry a number from your Health data."
     }
 
+    /// When NOCTIS reads Apple Health: when the app is open and, if the inventory says Health wakes it, in the background for new sleep data.
+    public static func whenHealthIsRead(_ inventory: DataInventory) -> String {
+        inventory.facts.readsHealthInBackground
+            ? "It reads Apple Health when you open the app, and in the background when Apple Health has new sleep data (iOS decides when), to keep your widgets up to date."
+            : "It reads Apple Health when you open the app."
+    }
+
     // MARK: Help
 
     /// Help's "Where is my data kept?", built from the inventory.
@@ -168,7 +175,7 @@ public nonisolated enum PrivacyStatements {
         if let stored = storedOnDevice(inventory) { parts.append(stored.text) }
         if let account = noAccount(inventory) { parts.append(account.text.replacingOccurrences(of: ", so there is no account to delete", with: "")) }
         if nothingSoldOrShared(inventory) != nil { parts.append("It sends your sleep and Health data nowhere.") }
-        parts.append("It reads Apple Health when you open the app and keeps only numbers worked out from it, plus what you set or write.")
+        parts.append("\(whenHealthIsRead(inventory)) It keeps only numbers worked out from it, plus what you set or write.")
         if let sync = noSync(inventory) { parts.append(sync.text) }
         if let backup = inventory.flows.first(where: { $0.id == "deviceBackup" }) { parts.append(backup.detail) }
         parts.append("The Privacy Center, in Settings, lists everything NOCTIS keeps and what each part holds.")

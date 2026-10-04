@@ -599,7 +599,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NOCTIS;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan, show your recovery trends and keep your widgets up to date. It never writes to Health.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -665,7 +665,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NOCTIS;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan, show your recovery trends and keep your widgets up to date. It never writes to Health.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;

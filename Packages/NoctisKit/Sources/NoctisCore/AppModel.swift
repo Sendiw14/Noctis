@@ -34,6 +34,8 @@ public final class AppModel {
     private var serial = 0
     /// Told after the profile changes (the wake time or the need moves the reminders).
     @ObservationIgnored public var onProfileChange: (() -> Void)?
+    /// Told after the person has answered Apple Health's question, so background delivery can start (APP_RULES.md R46).
+    @ObservationIgnored public var onHealthAuthorizationRequested: (() async -> Void)?
 
     let healthProvider: any HealthDataProviding
     private let profileStore: ProfileStore
@@ -52,6 +54,7 @@ public final class AppModel {
         healthAuthorization = await healthProvider.requestAuthorization(for: kinds)
         profile.healthAuthorizationRequested = true
         profileStore.save(profile)
+        await onHealthAuthorizationRequested?()
     }
 
     public func completeOnboarding(_ snapshot: UserProfileSnapshot) async {
