@@ -76,17 +76,11 @@ public final class TonightViewModel {
         let current = profile()
         let snapshot = await sleep.refresh(profile: current)
         let now = clock()
-        let wake = current.typicalWakeMinutes
-        let need = current.needMinutes
-        let base = BedtimeClock.wrap(wake - need)
-        let change = TonightClock.clockChangeMinutes(
-            night: TonightClock.tonight(now: now, in: timeZone), bedtimeMinutes: base, wakeMinutes: wake, timeZone: timeZone
+        let recommendation = BedtimeInputsBuilder.recommendation(
+            wakeMinutes: current.typicalWakeMinutes, needMinutes: current.needMinutes, timing: snapshot.timing, balance: snapshot.balance,
+            consistency: snapshot.consistency, now: now, timeZone: timeZone
         )
-        let inputs = BedtimeInputsBuilder.inputs(
-            wakeMinutes: wake, needMinutes: need, timing: snapshot.timing, balance: snapshot.balance,
-            consistency: snapshot.consistency, clockChangeMinutes: change
-        )
-        content = TonightBuilder.content(for: BedtimeRecommendationEngine.recommend(inputs), now: now, timeZone: timeZone, format: format)
+        content = TonightBuilder.content(for: recommendation, now: now, timeZone: timeZone, format: format)
     }
 
     public func refreshAlarm() async {

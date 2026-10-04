@@ -54,17 +54,23 @@ public struct SoundPlayerState: Sendable, Equatable {
     public var timer: SleepTimerPlan?
     /// The timer ran out and the sound faded to nothing: "Sleep well".
     public var timerFinished: Bool
+    /// Where a sound's gain starts until its own slider moves (a preference; 40% until the person says otherwise).
+    public var defaultGain: Float
 
-    public init(kind: SoundKind? = nil, phase: SoundPlaybackPhase = .stopped, gains: [SoundKind: Float] = [:], timer: SleepTimerPlan? = nil, timerFinished: Bool = false) {
+    public init(
+        kind: SoundKind? = nil, phase: SoundPlaybackPhase = .stopped, gains: [SoundKind: Float] = [:], timer: SleepTimerPlan? = nil,
+        timerFinished: Bool = false, defaultGain: Float = soundDefaultGain
+    ) {
         self.kind = kind
         self.phase = phase
         self.gains = gains
         self.timer = timer
         self.timerFinished = timerFinished
+        self.defaultGain = defaultGain
     }
 
     public func gain(for kind: SoundKind) -> Float {
-        gains[kind] ?? soundDefaultGain
+        gains[kind] ?? defaultGain
     }
 
     public var isPlaying: Bool { phase == .playing }
@@ -110,7 +116,7 @@ public final class SoundPlayer {
 
     public init(
         engine: any SoundEngineDriving, session: any SoundSessionDriving, nowPlaying: any SoundNowPlayingDriving,
-        defaults: UserDefaults = .standard, now: @escaping () -> Date = { Date() },
+        defaults: UserDefaults, now: @escaping () -> Date = { Date() },
         sleeper: @escaping @Sendable (TimeInterval) async -> Void = { seconds in try? await Task.sleep(for: .seconds(seconds)) }
     ) {
         self.engine = engine
@@ -175,6 +181,14 @@ public final class SoundPlayer {
             await sleeper(seconds + 0.05)
             guard let self, token == mine, state.isLoaded else { return }
             stop()
+        }
+    }
+
+    /// Where a sound's volume starts until its own slider moves: 0...1. A sound playing at its default follows.
+    public func setDefaultGain(_ gain: Float) {
+        state.defaultGain = min(max(gain, 0), 1)
+        if let kind = state.kind, state.phase != .stopped, state.gains[kind] == nil {
+            send(fader: nil, faderSeconds: 0, crossfade: 0)
         }
     }
 

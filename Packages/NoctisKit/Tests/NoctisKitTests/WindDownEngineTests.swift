@@ -3,6 +3,7 @@ import Testing
 
 @testable import NightFeature
 @testable import NightKit
+@testable import NoctisCore
 @testable import SoundKit
 
 // The wind-down session's engine (APP_RULES.md R32): the clock, the state machine, the numbers the
@@ -256,7 +257,7 @@ struct WindDownViewModelTests {
         let alarm = AlarmService(backend: backend, store: MemoryAlarmStore(), defaultMinutes: { 7 * 60 })
         let time = player.time
         let model = WindDownViewModel(
-            player: player.player, alarm: alarm, store: store, idle: idle, defaults: defaults, now: { time.now },
+            player: player.player, alarm: alarm, store: store, idle: idle, preferences: AppPreferences(defaults: defaults), now: { time.now },
             haptic: { haptics.count += 1 }, sleeper: { await time.sleep($0) }
         )
         return Bench(model: model, player: player, idle: idle, store: store, haptics: haptics, alarmBackend: backend)
@@ -480,9 +481,34 @@ struct WindDownViewModelTests {
         #expect(defaults.integer(forKey: WindDownViewModel.minutesKey) == 30)
         #expect(defaults.string(forKey: WindDownViewModel.soundKey) == "fireplace")
         let player = PlayerBench.make()
-        let again = WindDownViewModel(player: player.player, alarm: AlarmService(backend: MockAlarmBackend(), store: MemoryAlarmStore(), defaultMinutes: { 420 }), store: FakeSessionStore(), idle: FakeIdleTimer(), defaults: defaults)
+        let again = WindDownViewModel(player: player.player, alarm: AlarmService(backend: MockAlarmBackend(), store: MemoryAlarmStore(), defaultMinutes: { 420 }), store: FakeSessionStore(), idle: FakeIdleTimer(), preferences: AppPreferences(defaults: defaults))
         #expect(again.plannedMinutes == 30 && again.sound == .fireplace)
         defaults.removePersistentDomain(forName: suite)
+    }
+
+    @Test func settingsChangesShowWhenTheScreenNextOpens() {
+        let suite = "winddown-settings-test"
+        let defaults = UserDefaults(suiteName: suite) ?? .standard
+        defaults.removePersistentDomain(forName: suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let preferences = AppPreferences(defaults: defaults)
+        let player = PlayerBench.make()
+        let model = WindDownViewModel(
+            player: player.player, alarm: AlarmService(backend: MockAlarmBackend(), store: MemoryAlarmStore(), defaultMinutes: { 420 }),
+            store: FakeSessionStore(), idle: FakeIdleTimer(), preferences: preferences
+        )
+        #expect(model.plannedMinutes == 20 && model.sound == nil)
+        preferences.update {
+            $0.windDownMinutes = 10
+            $0.windDownSound = .rain
+        }
+        #expect(model.plannedMinutes == 20, "nothing moves under an open screen until it is opened again")
+        model.prepare(autostart: false)
+        #expect(model.plannedMinutes == 10 && model.sound == .rain && model.remaining == 600)
+        model.begin()
+        preferences.update { $0.windDownMinutes = 30 }
+        model.prepare(autostart: false)
+        #expect(model.plannedMinutes == 10, "a session under way is left alone")
     }
 
     @Test func nothingTicksOnceItIsOver() async {

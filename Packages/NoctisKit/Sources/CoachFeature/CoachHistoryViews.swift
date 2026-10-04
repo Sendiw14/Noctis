@@ -89,7 +89,7 @@ struct CoachHistoryScreen: View {
                             .listRowInsets(EdgeInsets(top: 6, leading: NoctisSpacing.lg, bottom: 6, trailing: NoctisSpacing.lg))
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
                                     Task { await viewModel.deleteConversation(row.id) }
                                 } label: {

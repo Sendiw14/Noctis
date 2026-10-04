@@ -30,6 +30,7 @@ struct BreathingPanel: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { viewModel.sceneBecameActive() }
         }
+        .onAppear { viewModel.refreshFromPreferences() }
         .onDisappear { viewModel.leave() }
         .accessibilityIdentifier("breathing.panel")
     }

@@ -32,6 +32,8 @@ public final class AppModel {
     /// The tab whose button was pressed while it was already showing.
     public private(set) var tabRetap: TabRetap?
     private var serial = 0
+    /// Told after the profile changes (the wake time or the need moves the reminders).
+    @ObservationIgnored public var onProfileChange: (() -> Void)?
 
     let healthProvider: any HealthDataProviding
     private let profileStore: ProfileStore
@@ -57,11 +59,13 @@ public final class AppModel {
         updated.onboardingComplete = true
         profile = updated
         profileStore.save(updated)
+        onProfileChange?()
     }
 
     public func updateProfile(_ transform: (inout UserProfileSnapshot) -> Void) {
         transform(&profile)
         profileStore.save(profile)
+        onProfileChange?()
     }
 
     /// Shows `route`: selects its tab. Profile opens on Home's stack, as

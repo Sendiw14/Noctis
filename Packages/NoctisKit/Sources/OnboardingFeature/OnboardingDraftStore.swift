@@ -14,7 +14,7 @@ enum OnboardingDraftStore {
     private static let sleepHoursKey = "noctis.onboarding.sleepGoalHours"
 
     static func load() -> (step: OnboardingStep, draft: UserProfileSnapshot) {
-        let defaults = UserDefaults.standard
+        let defaults = NoctisUserDefaults.standard
         var draft = UserProfileSnapshot()
         if let goalsRaw = defaults.string(forKey: selectedGoalsKey) {
             draft.selectedGoals = goalsRaw.split(separator: ",").compactMap { PrimaryGoal(rawValue: String($0)) }
@@ -38,7 +38,7 @@ enum OnboardingDraftStore {
     }
 
     static func save(step: OnboardingStep, draft: UserProfileSnapshot) {
-        let defaults = UserDefaults.standard
+        let defaults = NoctisUserDefaults.standard
         defaults.set(step.rawValue, forKey: stepKey)
         defaults.set(draft.selectedGoals.map(\.rawValue).joined(separator: ","), forKey: selectedGoalsKey)
         defaults.set(draft.typicalWakeMinutes, forKey: wakeKey)
@@ -49,7 +49,7 @@ enum OnboardingDraftStore {
     /// Called once onboarding actually completes — the draft is no longer
     /// meaningful once the real `UserProfileRecord` exists.
     static func clear() {
-        let defaults = UserDefaults.standard
+        let defaults = NoctisUserDefaults.standard
         [stepKey, selectedGoalsKey, wakeKey, needKey, sleepHoursKey].forEach { defaults.removeObject(forKey: $0) }
     }
 }

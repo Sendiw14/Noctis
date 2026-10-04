@@ -6,37 +6,48 @@ import CoreHaptics
 #endif
 
 public enum NoctisHaptics {
+    /// The app's own haptics (a tap, a confirmation, a snapped value) on or off, from Settings. It can only
+    /// quiet them: the generators below already follow the system's haptics setting, and nothing here
+    /// ever plays one the system has turned off.
+    public static var isEnabled = true
+
     public static func selection() {
+        guard isEnabled else { return }
         #if canImport(UIKit)
         UISelectionFeedbackGenerator().selectionChanged()
         #endif
     }
 
     public static func soft() {
+        guard isEnabled else { return }
         #if canImport(UIKit)
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         #endif
     }
 
     public static func light() {
+        guard isEnabled else { return }
         #if canImport(UIKit)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         #endif
     }
 
     public static func medium() {
+        guard isEnabled else { return }
         #if canImport(UIKit)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         #endif
     }
 
     public static func success() {
+        guard isEnabled else { return }
         #if canImport(UIKit)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         #endif
     }
 
     public static func warning() {
+        guard isEnabled else { return }
         #if canImport(UIKit)
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
         #endif
@@ -72,6 +83,7 @@ public enum NoctisHaptics {
 
     /// Hit the edge of a valid range (minimum/maximum clamp).
     public static func limit() {
+        guard isEnabled else { return }
         #if canImport(UIKit)
         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
         #endif
@@ -84,6 +96,7 @@ public enum NoctisHaptics {
     /// so this silently no-ops there rather than crashing, and engine
     /// creation/start errors are caught rather than thrown.
     public static func swell() {
+        guard isEnabled else { return }
         #if canImport(CoreHaptics)
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
         do {

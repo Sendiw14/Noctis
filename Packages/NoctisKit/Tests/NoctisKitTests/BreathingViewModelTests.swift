@@ -3,6 +3,7 @@ import Testing
 
 @testable import NightFeature
 @testable import NightKit
+@testable import NoctisCore
 
 // The breathing exercise's view model (APP_RULES.md R33): driven by the clock, a phase at a time,
 // with haptics and announcements that follow the phases and stop when the exercise does.
@@ -84,7 +85,7 @@ struct BreathingViewModelTests {
         defaults.removePersistentDomain(forName: suite)
         seed?(defaults)
         let model = BreathingViewModel(
-            haptics: silent, defaults: defaults, now: { time.now.addingTimeInterval(away.seconds) }, sleeper: { await time.sleep($0) },
+            haptics: silent, preferences: AppPreferences(defaults: defaults), now: { time.now.addingTimeInterval(away.seconds) }, sleeper: { await time.sleep($0) },
             announce: { log.announcements.append($0) }, completion: { log.completions += 1 }
         )
         return Bench(model: model, time: time, haptics: silent, log: log, away: away, defaults: defaults)
@@ -114,11 +115,25 @@ struct BreathingViewModelTests {
         bench.model.end()
 
         let defaults = bench.defaults
-        let again = BreathingViewModel(haptics: SilentBreathingHaptics(available: true), defaults: defaults)
+        let again = BreathingViewModel(haptics: SilentBreathingHaptics(available: true), preferences: AppPreferences(defaults: defaults))
         #expect(again.patternID == .box && again.minutes == 10 && again.hapticsOn)
 
         let bad = Self.make(seed: { $0.set("nonsense", forKey: BreathingViewModel.patternKey); $0.set(3, forKey: BreathingViewModel.minutesKey) })
         #expect(bad.model.patternID == .calm && bad.model.minutes == 5)
+    }
+
+    @Test func settingsChangesShowInTheSetupWhenItOpens() {
+        let bench = Self.make()
+        let preferences = AppPreferences(defaults: bench.defaults)
+        let model = BreathingViewModel(haptics: SilentBreathingHaptics(available: true), preferences: preferences)
+        #expect(model.patternID == .calm && model.minutes == 5 && !model.hapticsOn)
+        preferences.update {
+            $0.breathingPattern = .relax
+            $0.breathingMinutes = 10
+            $0.breathingHaptics = true
+        }
+        model.refreshFromPreferences()
+        #expect(model.patternID == .relax && model.minutes == 10 && model.hapticsOn && model.remaining == 608)
     }
 
     @Test func hapticsCannotBeOnWhereTheDeviceHasNone() {

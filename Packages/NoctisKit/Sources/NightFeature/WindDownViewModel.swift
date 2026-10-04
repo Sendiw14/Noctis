@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import NightKit
+import NoctisCore
 import Observation
 import SoundKit
 import UIKit
@@ -27,15 +28,15 @@ public final class WindDownViewModel {
 
     public static let soundFadeSeconds = 4.0
     public static let endingSeconds = 2.5
-    static let minutesKey = "noctis.winddown.minutes"
-    static let soundKey = "noctis.winddown.sound"
+    static let minutesKey = AppPreferences.Key.windDownMinutes
+    static let soundKey = AppPreferences.Key.windDownSound
 
     @ObservationIgnored private var clock: WindDownClock
     @ObservationIgnored private let player: SoundPlayer
     @ObservationIgnored private let alarmService: AlarmService
     @ObservationIgnored private let store: any WindDownSessionStoring
     @ObservationIgnored private let idle: any IdleTimerControlling
-    @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let preferences: AppPreferences
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let sleeper: @Sendable (TimeInterval) async -> Void
     @ObservationIgnored private let haptic: () -> Void
@@ -51,21 +52,20 @@ public final class WindDownViewModel {
 
     public init(
         player: SoundPlayer, alarm: AlarmService, store: any WindDownSessionStoring, idle: any IdleTimerControlling,
-        defaults: UserDefaults = .standard, now: @escaping () -> Date = { Date() }, haptic: @escaping () -> Void = { NoctisHaptics.soft() },
+        preferences: AppPreferences, now: @escaping () -> Date = { Date() }, haptic: @escaping () -> Void = { NoctisHaptics.soft() },
         sleeper: @escaping @Sendable (TimeInterval) async -> Void = { seconds in try? await Task.sleep(for: .seconds(seconds)) }
     ) {
         self.player = player
         self.alarmService = alarm
         self.store = store
         self.idle = idle
-        self.defaults = defaults
+        self.preferences = preferences
         self.now = now
         self.haptic = haptic
         self.sleeper = sleeper
-        let saved = defaults.integer(forKey: Self.minutesKey)
-        let minutes = WindDownClock.options.contains(saved) ? saved : WindDownClock.defaultMinutes
+        let minutes = preferences.values.windDownMinutes
         plannedMinutes = minutes
-        sound = defaults.string(forKey: Self.soundKey).flatMap(SoundKind.init(rawValue:))
+        sound = preferences.values.windDownSound
         clock = WindDownClock(minutes: minutes)
         remaining = clock.plannedSeconds
     }
@@ -82,7 +82,18 @@ public final class WindDownViewModel {
     /// under way is left as it is, and a finished one starts over.
     public func prepare(autostart: Bool) {
         if state == .finished { reset() }
+        // Settings may have changed the defaults since the last time the screen opened.
+        if state == .idle { refreshFromPreferences() }
         if autostart, state == .idle { begin() }
+    }
+
+    /// The length and the sound the wind-down starts with: the person's last choice, or what Settings says.
+    func refreshFromPreferences() {
+        let minutes = preferences.values.windDownMinutes
+        plannedMinutes = minutes
+        sound = preferences.values.windDownSound
+        clock = WindDownClock(minutes: minutes)
+        remaining = clock.plannedSeconds
     }
 
     public func choose(minutes: Int) {
@@ -108,8 +119,10 @@ public final class WindDownViewModel {
         remaining = clock.plannedSeconds
         endedEarly = false
         idle.setDisabled(true)
-        defaults.set(plannedMinutes, forKey: Self.minutesKey)
-        defaults.set(sound?.rawValue ?? "none", forKey: Self.soundKey)
+        preferences.update {
+            $0.windDownMinutes = plannedMinutes
+            $0.windDownSound = sound
+        }
         haptic()
         if let sound {
             player.play(sound)

@@ -17,7 +17,7 @@ enum HomePreview {
     ) -> some View {
         let provider = MockHealthKitProvider(scenario: scenario, startAuthorized: authorized, failsQueries: fails, latency: latency)
         let model = makeModel(provider)
-        let defaults = UserDefaults(suiteName: "noctis.preview") ?? .standard
+        let defaults = UserDefaults(suiteName: "noctis.preview") ?? NoctisUserDefaults.standard
         defaults.removeObject(forKey: HomeIntroGate.defaultsKey)
         let viewModel = HomeViewModel(
             repository: HomeRepository(provider: provider),

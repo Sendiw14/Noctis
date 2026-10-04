@@ -45,6 +45,9 @@ public struct AppContainer {
     public let meditationViewModel: MeditationViewModel
     /// Reflect and the Journal: kept in a store of their own, on this device only.
     public let journalViewModel: JournalViewModel
+    /// The typed preferences (R38) and the reminders built from them.
+    public let preferences: AppPreferences
+    public let notificationCoordinator: NotificationCoordinator
     /// Opens Wind-down when the evening notification is tapped.
     private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
@@ -57,7 +60,11 @@ public struct AppContainer {
         self.storeManager = StoreManager()
         let container: ModelContainer
         do {
-            container = try ModelContainer(for: UserProfileRecord.self, AlarmConfiguration.self, WindDownSession.self)
+            // Never synced: the profile, the alarm and the wind-down record stay on this device.
+            container = try ModelContainer(
+                for: UserProfileRecord.self, AlarmConfiguration.self, WindDownSession.self,
+                configurations: ModelConfiguration(cloudKitDatabase: .none)
+            )
         } catch {
             fatalError("Failed to initialize the local data store: \(error)")
         }
@@ -91,7 +98,7 @@ public struct AppContainer {
         // UI tests: behave like a fresh install (no onboarding draft, no
         // finished profile) without reinstalling the app between runs.
         if debug.resetState {
-            let defaults = UserDefaults.standard
+            let defaults = NoctisUserDefaults.standard
             for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("noctis.") {
                 defaults.removeObject(forKey: key)
             }
@@ -127,7 +134,7 @@ public struct AppContainer {
         if debug.lowPowerMode { HomeViewModel.debugForcesLowPower = true }
         #endif
         // The v1 insight history (UserDefaults) is gone: the stored insights hold it now.
-        UserDefaults.standard.removeObject(forKey: "noctis.insights.history")
+        NoctisUserDefaults.standard.removeObject(forKey: "noctis.insights.history")
         #if DEBUG
         let keepsSnapshot = debug.mockScenario == nil || debug.snapshotCache
         let snapshotStore: HomeSnapshotStore? = keepsSnapshot ? HomeSnapshotStore() : nil
@@ -232,17 +239,44 @@ public struct AppContainer {
             sleep: sleepRepository, alarm: alarmService, profile: { model.profile },
             format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
         )
+        // The preferences (R38). Read after `-noctisResetState` has cleared what a fresh install would not have.
+        let preferences = AppPreferences()
+        self.preferences = preferences
+        NoctisHaptics.isEnabled = preferences.values.appHaptics
+        // The reminders: the system's centre (a scripted one in DEBUG when a mock scenario or flag asks), the
+        // bedtime engine's centre for the wind-down reminder, rebuilt whenever something they depend on changes.
+        #if DEBUG
+        let notificationCenter: any NotificationCentering = debug.makeNotificationCenter()
+        #else
+        let notificationCenter: any NotificationCentering = SystemNotificationCenter()
+        #endif
+        let coordinator = NotificationCoordinator(
+            scheduler: NotificationScheduler(center: notificationCenter), preferences: preferences, profile: { model.profile },
+            bedtimeCenter: { wake, need in
+                let snapshot = await sleepRepository.refresh(profile: model.profile)
+                return BedtimeInputsBuilder.recommendation(
+                    wakeMinutes: wake, needMinutes: need, timing: snapshot.timing, balance: snapshot.balance,
+                    consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent
+                ).centerMinutes
+            }
+        )
+        self.notificationCoordinator = coordinator
+        model.onProfileChange = { coordinator.reschedule() }
         // Sleep sounds (R31): the real engine, or in DEBUG a silent one that still renders the real
         // sounds for the meter, so a screenshot or a UI test makes no noise.
         #if DEBUG
         let soundPlayer = debug.makeSoundPlayer()
         #else
-        let soundPlayer = SoundPlayer(engine: AVSoundEngineDriver(), session: AVSoundSession(), nowPlaying: MediaNowPlaying())
+        let soundPlayer = SoundPlayer(
+            engine: AVSoundEngineDriver(), session: AVSoundSession(), nowPlaying: MediaNowPlaying(), defaults: NoctisUserDefaults.standard
+        )
         #endif
+        soundPlayer.setDefaultGain(preferences.values.soundsGain)
         self.soundPlayer = soundPlayer
-        self.soundsViewModel = SoundsViewModel(player: soundPlayer)
+        self.soundsViewModel = SoundsViewModel(player: soundPlayer, defaultTimer: { preferences.values.soundsTimer })
         let windDown = WindDownViewModel(
-            player: soundPlayer, alarm: alarmService, store: WindDownSessionStore(context: ModelContext(container)), idle: ApplicationIdleTimer()
+            player: soundPlayer, alarm: alarmService, store: WindDownSessionStore(context: ModelContext(container)), idle: ApplicationIdleTimer(),
+            preferences: preferences
         )
         self.windDownViewModel = windDown
         #if DEBUG
@@ -250,7 +284,7 @@ public struct AppContainer {
         #else
         let breathingHaptics: any BreathingHapticsPlaying = CoreHapticsBreathing()
         #endif
-        let breathing = BreathingViewModel(haptics: breathingHaptics)
+        let breathing = BreathingViewModel(haptics: breathingHaptics, preferences: preferences)
         self.breathingViewModel = breathing
         #if DEBUG
         let meditationAudio = debug.makeMeditationAudio(soundPlayer: soundPlayer)
@@ -277,6 +311,15 @@ public struct AppContainer {
         debug.applyMeditationScript(to: meditation)
         debug.applyJournalScript(to: journal)
         #endif
+        // What a change of preference has to touch.
+        preferences.onChange = { change in
+            switch change {
+            case .notifications: coordinator.reschedule()
+            case .haptics: NoctisHaptics.isEnabled = preferences.values.appHaptics
+            case .sounds: soundPlayer.setDefaultGain(preferences.values.soundsGain)
+            case .appearance, .windDown, .breathing: break
+            }
+        }
         // A tap on the evening notification opens Wind-down.
         let router = NotificationRouter(model: model)
         self.notificationRouter = router
@@ -345,6 +388,9 @@ struct DebugLaunchOptions {
     let mockBreathing: String?
     /// `-mockMeditation prestart[:bodyScan][:10min][:spoken]|running:bodyScan:10:80[:paused]|finished[:quietMind]`.
     let mockMeditation: String?
+    /// `-mockNotifications granted|denied|notDetermined|willDeny`: the notification centre plays a script
+    /// (a mock Health scenario with no flag gets one that is already allowed), so the system's question never opens.
+    let mockNotifications: String?
     /// `-mockJournal empty|filled|unavailable[:journal][:draft]`: an in-memory journal, with or without entries; `:journal` opens on the list, `:draft` fills in the form.
     let mockJournal: String?
 
@@ -378,6 +424,7 @@ struct DebugLaunchOptions {
         mockBreathing = value(after: "-mockBreathing")
         mockMeditation = value(after: "-mockMeditation")
         mockJournal = value(after: "-mockJournal")
+        mockNotifications = value(after: "-mockNotifications")
     }
 
     /// A session already in the state the flag names, so every state can be looked at.
@@ -414,6 +461,17 @@ struct DebugLaunchOptions {
             return SilentMeditationAudio(canSpeak: mockMeditation?.split(separator: ":").contains("spoken") ?? false)
         }
         return SystemMeditationAudio(isSoundActive: { soundPlayer.state.isLoaded })
+    }
+
+    /// The notification centre: the system's, or a scripted one in memory.
+    func makeNotificationCenter() -> any NotificationCentering {
+        guard mockNotifications != nil || mockScenario != nil else { return SystemNotificationCenter() }
+        switch mockNotifications {
+        case "denied": return InMemoryNotificationCenter(authorization: .denied)
+        case "notDetermined": return InMemoryNotificationCenter(authorization: .notDetermined)
+        case "willDeny": return InMemoryNotificationCenter(authorization: .notDetermined, answer: false)
+        default: return InMemoryNotificationCenter(authorization: .allowed)
+        }
     }
 
     /// Memory, never disk, whenever a mock scenario or a `-mockJournal` script is on.
@@ -503,7 +561,7 @@ struct DebugLaunchOptions {
     @MainActor
     func makeSoundPlayer() -> SoundPlayer {
         let useReal = mockSound?.mode == .real || (mockSound == nil && mockScenario == nil)
-        let defaults = UserDefaults.standard
+        let defaults = NoctisUserDefaults.standard
         if useReal {
             return SoundPlayer(engine: AVSoundEngineDriver(), session: AVSoundSession(), nowPlaying: MediaNowPlaying(), defaults: defaults)
         }

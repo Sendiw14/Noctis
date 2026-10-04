@@ -17,16 +17,20 @@ public final class SoundsViewModel {
 
     @ObservationIgnored private let player: SoundPlayer
     @ObservationIgnored private let now: () -> Date
+    /// The timer a sound starts with when it begins from silence (a preference; off unless Settings says).
+    @ObservationIgnored private let defaultTimer: () -> SleepTimerChoice
     @ObservationIgnored private let sleeper: @Sendable (TimeInterval) async -> Void
     @ObservationIgnored private var isVisible = false
     @ObservationIgnored private var ticker: Task<Void, Never>?
 
     public init(
         player: SoundPlayer, now: @escaping () -> Date = { Date() }, haptic: @escaping () -> Void = { NoctisHaptics.soft() },
+        defaultTimer: @escaping () -> SleepTimerChoice = { .off },
         sleeper: @escaping @Sendable (TimeInterval) async -> Void = { seconds in try? await Task.sleep(for: .seconds(seconds)) }
     ) {
         self.player = player
         self.now = now
+        self.defaultTimer = defaultTimer
         self.sleeper = sleeper
         state = player.state
         player.onChange = { [weak self] state in self?.apply(state) }
@@ -51,6 +55,15 @@ public final class SoundsViewModel {
 
     /// A tile: plays that sound, or pauses it if it is the one playing, or plays it again if it is paused.
     public func tap(_ kind: SoundKind) {
+        let startsFromSilence = state.phase == .stopped
+        defer {
+            // A sound that begins from silence takes the timer Settings says it should; one that takes
+            // over from another keeps the timer that is running.
+            if startsFromSilence, player.state.phase != .stopped {
+                let timer = defaultTimer()
+                if timer != .off { player.setTimer(timer) }
+            }
+        }
         if state.kind == kind, state.phase != .stopped {
             switch state.phase {
             case .playing: player.pause()

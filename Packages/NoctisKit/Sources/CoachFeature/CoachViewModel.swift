@@ -46,7 +46,7 @@ public final class CoachFirstRunGate {
     public static let key = "noctis.coach.firstRunSeen"
     private let defaults: UserDefaults
 
-    public init(defaults: UserDefaults = .standard) {
+    public init(defaults: UserDefaults = NoctisUserDefaults.standard) {
         self.defaults = defaults
     }
 

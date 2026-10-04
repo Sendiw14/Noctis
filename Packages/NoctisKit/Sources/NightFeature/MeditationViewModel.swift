@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import NightKit
+import NoctisCore
 import Observation
 import SoundKit
 import SwiftUI
@@ -63,7 +64,7 @@ public final class MeditationViewModel {
     @ObservationIgnored private var savedGain: (kind: SoundKind, gain: Float)?
 
     public init(
-        audio: any MeditationAudioPlaying, player: SoundPlayer, defaults: UserDefaults = .standard, now: @escaping () -> Date = { Date() },
+        audio: any MeditationAudioPlaying, player: SoundPlayer, defaults: UserDefaults = NoctisUserDefaults.standard, now: @escaping () -> Date = { Date() },
         sleeper: @escaping @Sendable (TimeInterval) async -> Void = { seconds in try? await Task.sleep(for: .seconds(seconds)) },
         announce: @escaping (String) -> Void = { AccessibilityNotification.Announcement($0).post() },
         completion: @escaping () -> Void = { NoctisHaptics.soft() },

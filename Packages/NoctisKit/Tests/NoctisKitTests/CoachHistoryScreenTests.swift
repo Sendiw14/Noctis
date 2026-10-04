@@ -53,6 +53,7 @@ struct CoachHistoryBuilderTests {
         #expect(CoachHistoryContent.emptyTitle == "No conversations yet")
         #expect(CoachHistoryContent.deleteAllTitle == "Delete all conversations")
         #expect(CoachHistoryContent.deleteAllMessage.contains("can't be undone"))
+        #expect(CoachHistoryContent.deleteAllMessage.contains("not affected"), "R37: it says what is not deleted too")
         #expect(CoachHistoryContent.emptyMessage.contains("this iPhone only"))
     }
 }

@@ -421,7 +421,7 @@ public final class HomeIntroGate {
 
     /// `key` names the tab whose reveal this gates ("noctis.<tab>.lastIntroDay"):
     /// each tab plays its reveal once per calendar day.
-    public init(defaults: UserDefaults = .standard, key: String = HomeIntroGate.defaultsKey) {
+    public init(defaults: UserDefaults = NoctisUserDefaults.standard, key: String = HomeIntroGate.defaultsKey) {
         self.defaults = defaults
         self.key = key
     }

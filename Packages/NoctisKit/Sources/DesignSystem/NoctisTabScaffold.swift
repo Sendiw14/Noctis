@@ -440,19 +440,25 @@ public struct NoctisTabPlaceholder: View {
     private let dateCaption: String
     private let presentation: TabScreenPresentation
     private let washKey: String?
+    private let washDefaults: UserDefaults?
     @State private var scrollPosition = ScrollPosition(edge: .top)
     @State private var entrance: NoctisFieldEntrance
 
     /// `washKey` ("noctis.insights.lastWashDay") makes the tab-entry wash play
     /// once per day like every tab's; a pushed placeholder has none.
-    public init(_ section: NoctisSection, title: String, dateCaption: String = "", presentation: TabScreenPresentation = .tab) {
+    public init(
+        _ section: NoctisSection, title: String, dateCaption: String = "", presentation: TabScreenPresentation = .tab,
+        washDefaults: UserDefaults? = nil
+    ) {
         self.section = section
         self.title = title
         self.dateCaption = dateCaption
         self.presentation = presentation
-        let key = presentation == .tab ? "noctis.\(title.lowercased()).lastWashDay" : nil
+        // Only a tab given somewhere to remember it washes.
+        let key = presentation == .tab && washDefaults != nil ? "noctis.\(title.lowercased()).lastWashDay" : nil
         self.washKey = key
-        _entrance = State(initialValue: key.map { NoctisDailyGate.isClaimed(key: $0) ? .fade : .wash } ?? .none)
+        self.washDefaults = washDefaults
+        _entrance = State(initialValue: key.map { key in washDefaults.map { NoctisDailyGate.isClaimed(key: key, defaults: $0) } == true ? .fade : .wash } ?? .none)
     }
 
     public var body: some View {
@@ -462,7 +468,7 @@ public struct NoctisTabPlaceholder: View {
             header: TabScreenHeader(dateCaption: dateCaption, title: title),
             entrance: entrance,
             onEntered: {
-                if let washKey { NoctisDailyGate.claim(key: washKey) }
+                if let washKey, let washDefaults { NoctisDailyGate.claim(key: washKey, defaults: washDefaults) }
                 entrance = .none
             },
             contentTop: .overlapsField,
@@ -496,11 +502,11 @@ public struct NoctisTabPlaceholder: View {
 /// A once-a-calendar-day flag in `UserDefaults`, for a tab that has no view
 /// model (the placeholders): "noctis.<tab>.lastWashDay".
 public enum NoctisDailyGate {
-    public static func isClaimed(key: String, now: Date = Date(), calendar: Calendar = .autoupdatingCurrent, defaults: UserDefaults = .standard) -> Bool {
+    public static func isClaimed(key: String, now: Date = Date(), calendar: Calendar = .autoupdatingCurrent, defaults: UserDefaults) -> Bool {
         defaults.string(forKey: key) == day(now, calendar)
     }
 
-    public static func claim(key: String, now: Date = Date(), calendar: Calendar = .autoupdatingCurrent, defaults: UserDefaults = .standard) {
+    public static func claim(key: String, now: Date = Date(), calendar: Calendar = .autoupdatingCurrent, defaults: UserDefaults) {
         defaults.set(day(now, calendar), forKey: key)
     }
 

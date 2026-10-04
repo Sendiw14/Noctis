@@ -63,6 +63,9 @@ struct NotificationsScreen: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// Where the choices are kept, and what keeps the reminders matching them (R38). Nil in a preview.
+    @Environment(\.appPreferences) private var preferences
+    @Environment(\.notificationCoordinator) private var coordinator
 
     @State private var enabledStates: [Bool] = NotificationKind.allCases.map { _ in true }
     @State private var cardsAppeared = false
@@ -252,15 +255,21 @@ struct NotificationsScreen: View {
     private func requestPermission() {
         NoctisHaptics.softImpact()
         outcome = .requesting
+        rememberChoices()
         Task {
-            let center = UNUserNotificationCenter.current()
-            let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+            let granted: Bool
+            if let coordinator {
+                granted = await coordinator.requestAuthorization()
+            } else {
+                granted = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+            }
             guard granted else {
                 outcome = .denied
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { onNext() }
                 return
             }
-            await scheduleNotifications(center: center)
+            // The profile doesn't hold this wake time and need yet; the reminders are built from these.
+            coordinator?.reschedule(wakeMinutes: wakeMinutes, needMinutes: needMinutes)
             outcome = .granted
             withAnimation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion)) {
                 cardsSettling = true
@@ -275,47 +284,22 @@ struct NotificationsScreen: View {
         }
     }
 
-    private func scheduleNotifications(center: UNUserNotificationCenter) async {
-        center.removePendingNotificationRequests(withIdentifiers: NotificationKind.allCases.map(\.identifier))
-        for kind in NotificationKind.allCases where enabledStates[kind.rawValue] {
-            let content = UNMutableNotificationContent()
-            content.title = "NOCTIS"
-            content.body = kind.previewBody
-            content.sound = .default
-            let trigger = UNCalendarNotificationTrigger(dateMatching: triggerComponents(for: kind), repeats: true)
-            let request = UNNotificationRequest(identifier: kind.identifier, content: content, trigger: trigger)
-            try? await center.add(request)
+    /// The three switches, kept as the person left them: they are what Settings shows and what the
+    /// reminders are built from, whenever (and if ever) the system allows them.
+    private func rememberChoices() {
+        preferences?.update { values in
+            values.notifications.morningIsOn = enabledStates[NotificationKind.morningSummary.rawValue]
+            values.notifications.windDownIsOn = enabledStates[NotificationKind.windDown.rawValue]
+            values.notifications.weeklyIsOn = enabledStates[NotificationKind.weeklyReview.rawValue]
         }
-    }
-
-    private func triggerComponents(for kind: NotificationKind) -> DateComponents {
-        switch kind {
-        case .morningSummary:
-            return clockComponents(minutesSinceMidnight: wakeMinutes + 15)
-        case .windDown:
-            let bedtime = noctisBedtimeMinutes(wakeMinutes: wakeMinutes, needMinutes: needMinutes)
-            return clockComponents(minutesSinceMidnight: bedtime - 20)
-        case .weeklyReview:
-            var components = DateComponents()
-            components.weekday = 1 // Sunday
-            components.hour = 9
-            components.minute = 0
-            return components
-        }
-    }
-
-    private func clockComponents(minutesSinceMidnight: Int) -> DateComponents {
-        let normalized = ((minutesSinceMidnight % 1440) + 1440) % 1440
-        var components = DateComponents()
-        components.hour = normalized / 60
-        components.minute = normalized % 60
-        return components
     }
 
     // MARK: - Not now
 
     private func dismissWithoutAsking() {
         guard !dismissing else { return }
+        // Nobody opted in: nothing is on until they turn it on in Settings.
+        preferences?.update { $0.notifications = .allOff }
         withAnimation(NoctisMotion.adaptive(.easeIn(duration: 0.3), reduceMotion: reduceMotion)) {
             dismissing = true
         }

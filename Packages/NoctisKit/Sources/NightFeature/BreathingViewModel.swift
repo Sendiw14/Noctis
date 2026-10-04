@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import NightKit
+import NoctisCore
 import Observation
 import SwiftUI
 import UIKit
@@ -47,15 +48,15 @@ public final class BreathingViewModel {
     public private(set) var finishedPattern: BreathingPattern?
     public private(set) var finishedMinutes = 0
 
-    static let patternKey = "noctis.breathing.pattern"
-    static let minutesKey = "noctis.breathing.minutes"
-    static let hapticsKey = "noctis.breathing.haptics"
+    static let patternKey = AppPreferences.Key.breathingPattern
+    static let minutesKey = AppPreferences.Key.breathingMinutes
+    static let hapticsKey = AppPreferences.Key.breathingHaptics
 
     @ObservationIgnored private var schedule: BreathingSchedule
     @ObservationIgnored private var clock: SessionClock
     @ObservationIgnored private var lastPhase: Int?
     @ObservationIgnored private let haptics: any BreathingHapticsPlaying
-    @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let preferences: AppPreferences
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let sleeper: @Sendable (TimeInterval) async -> Void
     @ObservationIgnored private let announce: (String) -> Void
@@ -63,24 +64,23 @@ public final class BreathingViewModel {
     @ObservationIgnored private var ticker: Task<Void, Never>?
 
     public init(
-        haptics: any BreathingHapticsPlaying, defaults: UserDefaults = .standard, now: @escaping () -> Date = { Date() },
+        haptics: any BreathingHapticsPlaying, preferences: AppPreferences, now: @escaping () -> Date = { Date() },
         sleeper: @escaping @Sendable (TimeInterval) async -> Void = { seconds in try? await Task.sleep(for: .seconds(seconds)) },
         announce: @escaping (String) -> Void = { AccessibilityNotification.Announcement($0).post() },
         completion: @escaping () -> Void = { NoctisHaptics.soft() }
     ) {
         self.haptics = haptics
-        self.defaults = defaults
+        self.preferences = preferences
         self.now = now
         self.sleeper = sleeper
         self.announce = announce
         self.completion = completion
-        let id = defaults.string(forKey: Self.patternKey).flatMap(BreathingPattern.ID.init(rawValue:)) ?? BreathingPattern.defaultID
-        let saved = defaults.integer(forKey: Self.minutesKey)
-        let length = BreathingSchedule.durations.contains(saved) ? saved : BreathingSchedule.defaultMinutes
+        let id = preferences.values.breathingPattern
+        let length = preferences.values.breathingMinutes
         patternID = id
         minutes = length
         hapticsAvailable = haptics.isAvailable
-        hapticsOn = haptics.isAvailable && defaults.bool(forKey: Self.hapticsKey)
+        hapticsOn = haptics.isAvailable && preferences.values.breathingHaptics
         let planned = BreathingSchedule(pattern: .pattern(id), minutes: length)
         schedule = planned
         clock = SessionClock(seconds: Double(planned.totalSeconds))
@@ -96,6 +96,15 @@ public final class BreathingViewModel {
     public var countdown: Int { moment?.countdown ?? 0 }
 
     // MARK: Before beginning
+
+    /// The setup shows what Settings says: the pattern, the length and whether haptics are on.
+    public func refreshFromPreferences() {
+        guard state == .setup else { return }
+        patternID = preferences.values.breathingPattern
+        minutes = preferences.values.breathingMinutes
+        hapticsOn = hapticsAvailable && preferences.values.breathingHaptics
+        prepareSchedule()
+    }
 
     public func choose(pattern id: BreathingPattern.ID) {
         guard state == .setup || state == .finished else { return }
@@ -113,7 +122,7 @@ public final class BreathingViewModel {
     public func setHaptics(_ on: Bool) {
         let allowed = on && hapticsAvailable
         hapticsOn = allowed
-        defaults.set(allowed, forKey: Self.hapticsKey)
+        preferences.update { $0.breathingHaptics = allowed }
         guard state == .running, let moment else { return }
         if allowed { playHaptic(for: moment) } else { haptics.stop() }
     }
@@ -129,8 +138,10 @@ public final class BreathingViewModel {
     public func begin() {
         guard state == .setup || state == .finished else { return }
         prepareSchedule()
-        defaults.set(patternID.rawValue, forKey: Self.patternKey)
-        defaults.set(minutes, forKey: Self.minutesKey)
+        preferences.update {
+            $0.breathingPattern = patternID
+            $0.breathingMinutes = minutes
+        }
         clock.start(at: now())
         state = .running
         lastPhase = nil

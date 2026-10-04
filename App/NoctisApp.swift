@@ -20,6 +20,10 @@ struct NoctisApp: App {
                 .environment(container.breathingViewModel)
                 .environment(container.meditationViewModel)
                 .environment(container.journalViewModel)
+                .environment(container.preferences)
+                .environment(\.appPreferences, container.preferences)
+                .environment(container.notificationCoordinator)
+                .environment(\.notificationCoordinator, container.notificationCoordinator)
                 .environment(container.storeManager)
         }
     }

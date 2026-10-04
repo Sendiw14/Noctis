@@ -10,10 +10,11 @@ import SleepFeature
 import SwiftUI
 
 /// Onboarding until it's complete, then the main app — on every later
-/// launch too. Onboarding is light-only; the main app follows the system
-/// Light/Dark setting (APP_RULES.md R5).
+/// launch too. Onboarding is light-only; the main app follows the person's
+/// choice (System, Light or Dark: APP_RULES.md R5, R38), at once.
 public struct RootView: View {
     @Environment(AppModel.self) private var model
+    @Environment(AppPreferences.self) private var preferences
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showMain: Bool
 
@@ -36,7 +37,7 @@ public struct RootView: View {
                 .transition(.opacity)
             }
         }
-        .preferredColorScheme(showMain ? nil : .light)
+        .preferredColorScheme(AppAppearance.scheme(showingMain: showMain, appearance: preferences.values.appearance))
         .onOpenURL { url in
             if let route = AppRoute(url: url) { model.open(route) }
         }
@@ -65,12 +66,18 @@ struct RootTabView: View {
     @Environment(BreathingViewModel.self) private var breathing
     @Environment(MeditationViewModel.self) private var meditation
     @Environment(JournalViewModel.self) private var journal
+    @Environment(NotificationCoordinator.self) private var notifications
     @Environment(\.scenePhase) private var scenePhase
     @State private var clock = HomeClock()
 
     var body: some View {
         tabs
             .environment(\.homeClock, clock)
+            .task {
+                // The reminders match the preferences, the wake time and the bedtime engine from the start.
+                await notifications.refreshAuthorization()
+                notifications.reschedule()
+            }
             .task {
                 clock.start()
                 // A deep link that arrived before this view existed.
@@ -93,6 +100,14 @@ struct RootTabView: View {
             .onChange(of: scenePhase) { _, phase in
                 // Ticks only while the app is up; catches up on return.
                 if phase == .active { clock.start() } else { clock.stop() }
+                // Back at the front: the system's answer may have changed in Settings, and the bedtime's
+                // centre moves a little as nights come in.
+                if phase == .active {
+                    Task {
+                        await notifications.refreshAuthorization()
+                        notifications.reschedule()
+                    }
+                }
             }
             .onChange(of: model.selectedTab) {
                 // A tab switch runs until the first frame after the new

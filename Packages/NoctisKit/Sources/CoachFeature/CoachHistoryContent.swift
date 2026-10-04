@@ -28,7 +28,7 @@ public nonisolated struct CoachHistoryContent: Sendable, Equatable {
     public static let emptyTitle = "No conversations yet"
     public static let emptyMessage = "What you ask Coach, and the answers built from your data, are kept here on this iPhone only."
     public static let deleteAllTitle = "Delete all conversations"
-    public static let deleteAllMessage = "Every question and answer Coach has kept is removed from this iPhone. This can't be undone."
+    public static let deleteAllMessage = "Every question and answer Coach has kept is removed from this iPhone. This can't be undone. Your sleep data and the rest of NOCTIS are not affected."
 
     public var isEmpty: Bool { days.isEmpty }
     public var conversationCount: Int { days.reduce(0) { $0 + $1.rows.count } }

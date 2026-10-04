@@ -24,6 +24,23 @@ public enum BedtimeInputsBuilder {
         )
     }
 
+    /// Tonight's recommendation: the base bedtime (wake less need), the clock change across the night
+    /// (daylight saving), the inputs from the engines, and the model. The one path Tonight, the evening
+    /// reminder and Profile all take, so they can never disagree about the bedtime.
+    public static func recommendation(
+        wakeMinutes: Int, needMinutes: Int, timing: SleepTimingResult?, balance: SleepBalanceResult?,
+        consistency: ConsistencyResult?, now: Date, timeZone: TimeZone
+    ) -> BedtimeRecommendation {
+        let base = BedtimeClock.wrap(wakeMinutes - needMinutes)
+        let change = TonightClock.clockChangeMinutes(
+            night: TonightClock.tonight(now: now, in: timeZone), bedtimeMinutes: base, wakeMinutes: wakeMinutes, timeZone: timeZone
+        )
+        return BedtimeRecommendationEngine.recommend(inputs(
+            wakeMinutes: wakeMinutes, needMinutes: needMinutes, timing: timing, balance: balance, consistency: consistency,
+            clockChangeMinutes: change
+        ))
+    }
+
     /// Engines count clock times in minutes after noon (11:00 PM is 660); the recommendation
     /// counts from midnight (11:00 PM is 1380).
     public static func sinceMidnight(minutesAfterNoon: Double) -> Int {
