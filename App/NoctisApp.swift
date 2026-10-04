@@ -16,6 +16,7 @@ struct NoctisApp: App {
                 .environment(container.coachViewModel)
                 .environment(container.tonightViewModel)
                 .environment(container.soundsViewModel)
+                .environment(container.windDownViewModel)
                 .environment(container.storeManager)
         }
     }

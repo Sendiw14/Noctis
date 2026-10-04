@@ -12,8 +12,8 @@ public nonisolated enum HomeRoute: Sendable, Hashable {
     case profile
     /// Tonight: the bedtime window, why, and the wake alarm.
     case tonight
-    /// Wind-down, over Tonight ("Coming soon" until built).
+    /// The wind-down session: `autostart` begins it as it opens, otherwise it opens at the pre-start state.
     case windDown(autostart: Bool)
-    /// Sleep sounds, over Tonight ("Coming soon" until built).
+    /// Sleep sounds, over Tonight.
     case sounds
 }

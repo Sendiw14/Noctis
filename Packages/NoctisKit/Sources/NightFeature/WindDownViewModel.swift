@@ -18,7 +18,7 @@ public final class WindDownViewModel {
     public var plannedMinutes: Int
     /// The sound chosen before beginning; nil for none.
     public var sound: SoundKind?
-    /// The sound is on (playing) during the session.
+    /// A sound was started for this session (the toggle's last word; the player knows what plays).
     public private(set) var soundIsOn = false
     /// The person ended it before its time.
     public private(set) var endedEarly = false
@@ -140,7 +140,8 @@ public final class WindDownViewModel {
     }
 
     public func toggleSound() {
-        if soundIsOn {
+        // The player knows what is playing (the person may have changed it in the Sounds panel).
+        if player.state.phase == .playing {
             player.fadeOutAndStop(over: 1)
             soundIsOn = false
         } else {
@@ -216,7 +217,7 @@ public final class WindDownViewModel {
         }
         // A soft haptic, the sound fading, the screen free to sleep again.
         haptic()
-        if soundIsOn { player.fadeOutAndStop(over: Self.soundFadeSeconds) }
+        if player.state.isLoaded { player.fadeOutAndStop(over: Self.soundFadeSeconds) }
         soundIsOn = false
         idle.setDisabled(false)
         ending = Task { [weak self, sleeper] in
@@ -234,6 +235,26 @@ public final class WindDownViewModel {
         alarm = await alarmService.status()
     }
 }
+
+#if DEBUG
+extension WindDownViewModel {
+    /// For `-mockWindDown running:0.3`: a session that began `progress` of its time ago.
+    public func debugBegin(progress: Double, reducedMotion: Bool = false) {
+        guard state == .idle else { return }
+        begin()
+        clock = WindDownClock(minutes: plannedMinutes)
+        clock.start(at: now().addingTimeInterval(-progress * clock.plannedSeconds))
+        reducedMotionOverride = reducedMotion ? true : nil
+        refresh()
+    }
+
+    /// For `-mockWindDown finished`: a session that has just ended early.
+    public func debugFinish() {
+        begin()
+        end()
+    }
+}
+#endif
 
 /// The real idle timer.
 public struct ApplicationIdleTimer: IdleTimerControlling {

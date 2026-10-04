@@ -18,19 +18,23 @@ public struct HomeTabView: View {
     private let tonightScreen: () -> AnyView
     /// Sleep sounds, pushed over Tonight.
     private let soundsScreen: () -> AnyView
+    /// Wind-down, pushed over Tonight; true starts the session as it opens.
+    private let windDownScreen: (Bool) -> AnyView
 
     public init(
         viewModel: HomeViewModel,
         recoveryScreen: @escaping (RecoveryFactorKind?) -> AnyView,
         recoveryFactor: @escaping (RecoveryFactorKind, RecoveryFactorRange) -> AnyView,
         tonightScreen: @escaping () -> AnyView,
-        soundsScreen: @escaping () -> AnyView
+        soundsScreen: @escaping () -> AnyView,
+        windDownScreen: @escaping (Bool) -> AnyView
     ) {
         self.viewModel = viewModel
         self.recoveryScreen = recoveryScreen
         self.recoveryFactor = recoveryFactor
         self.tonightScreen = tonightScreen
         self.soundsScreen = soundsScreen
+        self.windDownScreen = windDownScreen
     }
 
     public var body: some View {
@@ -49,9 +53,8 @@ public struct HomeTabView: View {
                         NoctisComingSoonView(title: "Profile", systemImage: "person.crop.circle")
                     case .tonight:
                         tonightScreen()
-                    case .windDown:
-                        // R19: Wind-down isn't built yet (ROADMAP.md).
-                        NoctisComingSoonView(title: "Wind-down", systemImage: "moon.stars")
+                    case .windDown(let autostart):
+                        windDownScreen(autostart)
                     case .sounds:
                         soundsScreen()
                     }
@@ -267,7 +270,7 @@ struct HomeView: View {
         HomeActions(
             openProfile: { model.homePath.append(.profile) },
             openTonight: { model.open(.tonight) },
-            openWindDown: { model.open(.windDown(autostart: true)) },
+            openWindDown: { model.open(.windDown(autostart: false)) },
             openRecoveryDetail: { model.homePath.append(.recoveryDetail(focus: $0)) },
             openRecoveryFactor: { model.homePath.append(.recoveryFactor($0, range: .fortnight)) },
             openLastNight: { model.open(.sleep(night: viewModel.lastNightMoment, range: .day)) },

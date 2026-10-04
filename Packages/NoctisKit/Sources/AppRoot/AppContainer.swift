@@ -36,6 +36,8 @@ public struct AppContainer {
     /// The sleep sounds: the one player that holds the audio engine, and what the Sounds screen reads.
     public let soundPlayer: SoundPlayer
     public let soundsViewModel: SoundsViewModel
+    /// The wind-down session.
+    public let windDownViewModel: WindDownViewModel
     /// Opens Wind-down when the evening notification is tapped.
     private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
@@ -232,8 +234,13 @@ public struct AppContainer {
         #endif
         self.soundPlayer = soundPlayer
         self.soundsViewModel = SoundsViewModel(player: soundPlayer)
+        let windDown = WindDownViewModel(
+            player: soundPlayer, alarm: alarmService, store: WindDownSessionStore(context: ModelContext(container)), idle: ApplicationIdleTimer()
+        )
+        self.windDownViewModel = windDown
         #if DEBUG
         debug.applySoundScript(to: soundPlayer)
+        debug.applyWindDownScript(to: windDown)
         #endif
         // A tap on the evening notification opens Wind-down.
         let router = NotificationRouter(model: model)
@@ -296,6 +303,8 @@ struct DebugLaunchOptions {
     let realAlarm: Bool
     /// `-mockSound silent|playing:rain|interrupted:ocean|timer:rain:30|real:wind`.
     let mockSound: MockSoundScript?
+    /// `-mockWindDown prestart|running:0.3|running:0.5:reduce|finished`.
+    let mockWindDown: String?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -323,6 +332,22 @@ struct DebugLaunchOptions {
         mockAlarm = value(after: "-mockAlarm").flatMap(MockAlarmBackend.Mode.init(launchValue:))
         realAlarm = value(after: "-mockAlarm") == "real"
         mockSound = value(after: "-mockSound").flatMap(MockSoundScript.init(argument:))
+        mockWindDown = value(after: "-mockWindDown")
+    }
+
+    /// A session already in the state the flag names, so every state can be looked at.
+    @MainActor
+    func applyWindDownScript(to model: WindDownViewModel) {
+        guard let script = mockWindDown else { return }
+        let parts = script.split(separator: ":").map(String.init)
+        switch parts.first {
+        case "running":
+            model.debugBegin(progress: parts.dropFirst().first.flatMap(Double.init) ?? 0, reducedMotion: parts.contains("reduce"))
+        case "finished":
+            model.debugFinish()
+        default:
+            break
+        }
     }
 
     /// The silent engine unless `-mockSound real:` asked for the real one; with a mock Health

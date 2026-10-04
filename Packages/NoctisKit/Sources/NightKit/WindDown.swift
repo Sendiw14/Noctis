@@ -139,9 +139,10 @@ public enum WindDownVisuals {
 
     /// The moon along a gentle arc, as fractions of the sky's width and height from its
     /// top-left: it rises from the left, tops the arc in the middle, and settles at the right.
+    /// The arc stays under the header (its peak is 22% down) and clear of the choices below it.
     public static func moon(_ p: Double) -> (x: Double, y: Double) {
         let t = clamp(p)
-        return (0.16 + 0.68 * t, 0.36 - 0.14 * sin(Double.pi * t))
+        return (0.16 + 0.68 * t, 0.30 - 0.08 * sin(Double.pi * t))
     }
 
     /// 0 = the night color, 1 = the deep color.
