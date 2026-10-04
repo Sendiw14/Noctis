@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Written from an audit of the code, not from a template (PRIVACY_REPORT.md lists every flow and the reason for every line;
+	     PrivacyManifestTests holds each entry to the code). -->
+
+	<!-- NOCTIS has no advertising, no tracking SDK and no data broker: nothing it holds is combined with another company's data. -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+
+	<!-- Nothing NOCTIS collects leaves the iPhone to NOCTIS or to a partner: there is no server, no account and no analytics service
+	     (the app's one event log is Apple's own, on the device). Apple Health is read on the device and never written or copied off it.
+	     StoreKit purchases are handled by Apple; the developer receives no record from the app. See PRIVACY_REPORT.md for the one
+	     optional, person-initiated flow (the support email) and the owner's decision about it. -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+
+	<!-- Required-reason APIs the app's own code (including its local Swift package) calls. -->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<!-- UserDefaults: NOCTIS's preferences, goals, sound choices and small flags, read and written by the app itself and
+		     never shared with another app or an extension (no App Group). -->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

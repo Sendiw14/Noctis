@@ -361,6 +361,15 @@ struct DataExportTests {
         return try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
     }
 
+    @Test func anExportLeftBehindByAnEarlierRunIsRemovedWhenTheAppStarts() throws {
+        let bench = try DataBench()
+        let leftover = bench.roots.url(.temporary).appending(path: DataExport.fileName, directoryHint: .notDirectory)
+        try Data("{}".utf8).write(to: leftover)
+        #expect(FileManager.default.fileExists(atPath: leftover.path))
+        bench.wire()
+        #expect(!FileManager.default.fileExists(atPath: leftover.path), "the inventory says the export is deleted the next time NOCTIS starts")
+    }
+
     @Test func theExportHoldsEveryCategoryThatHoldsUserContentAndWhatIsDerived() async throws {
         let bench = try DataBench()
         bench.wire()

@@ -178,7 +178,7 @@ nonisolated extension DataInventory {
                 locations: [.file(.temporary, "NOCTIS-export.json")],
                 destination: .onlyIfYouSend("wherever you choose to share it"),
                 inBackup: false, protection: .standard, deletion: .automatic("NOCTIS deletes it when you leave Data management, and the next time it starts."),
-                owner: "NoctisCore/DataInventory.swift", holdsUserContent: false,
+                owner: "NoctisCore/DataExport.swift", holdsUserContent: false,
                 export: .notStored("It is the export itself.")
             ),
         ],

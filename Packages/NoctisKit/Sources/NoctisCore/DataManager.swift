@@ -96,6 +96,8 @@ public final class DataManager {
         self.deleteAllSteps = deleteAllSteps
         self.appVersion = appVersion
         self.clock = clock
+        // An export the last run left behind (the app was closed while the share sheet was up) goes at the start, as the inventory says.
+        discardExport()
     }
 
     // MARK: Sizes

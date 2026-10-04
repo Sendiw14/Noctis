@@ -26,6 +26,7 @@
 		B88BAE63AC69365D3DD5E6E9 /* SleepQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A364E8BF38E298E7413078 /* SleepQATests.swift */; };
 		C4E097F8552FBF47761B4A59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4435E6B1989CC790CE6F0F65 /* Assets.xcassets */; };
 		C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */; };
+		CEDFB186607DE853D2A577B7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */; };
 		EA7DA501DAE317EC1028F0CD /* RecoveryQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */; };
 		F432F7BBD5A4F6990A6BA96C /* AppRoot in Frameworks */ = {isa = PBXBuildFile; productRef = 17C413CE67E2BAD13B2C2447 /* AppRoot */; };
 		F44796F3FE12B39F7FCDC5C0 /* TabScaffoldQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */; };
@@ -83,6 +84,7 @@
 		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
 		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
 		B596F2C4EB2DB5C8C3B19C1C /* HomePerformanceQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePerformanceQATests.swift; sourceTree = "<group>"; };
+		B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverQATests.swift; sourceTree = "<group>"; };
 		C43AC80FF5F56C48B897A61B /* ColorPassQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPassQATests.swift; sourceTree = "<group>"; };
 		C4CA26412CE79B13440FBA94 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -176,6 +178,7 @@
 				2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */,
 				811601970E5BB83FD5627B7D /* Noctis.entitlements */,
 				5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */,
+				B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */,
 				9213F7D570ACC8E3E05A5B13 /* Preview Content */,
 			);
 			path = App;
@@ -301,6 +304,7 @@
 				C4E097F8552FBF47761B4A59 /* Assets.xcassets in Resources */,
 				0CB4B988606AB038E0A61E84 /* LaunchScreen.storyboard in Resources */,
 				C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */,
+				CEDFB186607DE853D2A577B7 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -495,7 +499,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NOCTIS;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -542,7 +546,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NOCTIS;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "NOCTIS reads your sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan and show your recovery trends. It never writes to Health.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
