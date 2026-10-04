@@ -50,6 +50,7 @@ struct RecoveryStateView: View {
                             connecting = false
                         }
                     }
+                    HealthDataSettingsLink()
                 }
             case .noSleepData(let title, let message):
                 DormantTextView(title: title, detail: message, titleSize: 22)
@@ -57,6 +58,7 @@ struct RecoveryStateView: View {
                     NoctisTextButton("Open Health", adaptive: true) { openURL(health) }
                         .accessibilityHint("Opens the Health app.")
                 }
+                HealthDataSettingsLink()
             case .failed(let message):
                 DormantTextView(title: message, detail: nil)
                 NoctisCTA("Try again", icon: "arrow.clockwise", adaptive: true) {

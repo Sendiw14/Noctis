@@ -565,6 +565,7 @@ struct InsightsStateView: View {
                             connecting = false
                         }
                     }
+                    HealthDataSettingsLink()
                 }
             case .noSleepData(let title, let message):
                 text(title, message)
@@ -572,6 +573,7 @@ struct InsightsStateView: View {
                     NoctisTextButton("Open Health", adaptive: true) { openURL(health) }
                         .accessibilityHint("Opens the Health app.")
                 }
+                HealthDataSettingsLink()
             case .failed(let message):
                 text(message, nil)
                 NoctisCTA("Try again", icon: "arrow.clockwise", adaptive: true) {

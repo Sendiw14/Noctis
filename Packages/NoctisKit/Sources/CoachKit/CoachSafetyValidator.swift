@@ -123,14 +123,24 @@ public enum CoachSafetyValidator {
         // A pattern must hedge.
         if let pattern = draft.pattern, !hedges.contains(where: pattern.lowercased().contains) { add(.patternWithoutHedge) }
 
-        // Destinations are routes the app has.
+        // Destinations are screens about the person's data that the app has: never Settings, which Coach has nothing to say about.
         if draft.destinations.count > maxDestinations { add(.tooManyDestinations) }
-        for name in draft.destinations where AppRoute(name: name) == nil { add(.unknownDestination(name)) }
+        for name in draft.destinations where AppRoute.coachDestination(named: name) == nil { add(.unknownDestination(name)) }
         return failures
     }
 
     /// The first reason, or nil when the draft is fine.
     public static func validate(_ draft: CoachAnswerDraft, context: CoachContext) -> CoachValidationFailure? {
         failures(draft, context: context).first
+    }
+}
+
+extension AppRoute {
+    /// The route a name stands for, if Coach may point at it: any screen but Settings (Coach answers about sleep and
+    /// recovery; it never sends anyone to change a setting).
+    public static func coachDestination(named name: String) -> AppRoute? {
+        guard let route = AppRoute(name: name) else { return nil }
+        if case .settings = route { return nil }
+        return route
     }
 }

@@ -11,6 +11,9 @@ import RecoveryKit
 /// page is `noctis://insight?id=sleepDurationShift-3fa9c2d1`.
 /// Tonight, Wind-down, Sounds and the alarm are pages pushed over Home:
 /// `noctis://tonight`, `noctis://wind-down?autostart=1`, `noctis://sounds`, `noctis://alarm`.
+/// Profile is `noctis://profile`; Settings is `noctis://settings`, or one of its pages:
+/// `noctis://settings?section=notifications` (also `health-data`, `appearance`, `subscription`, `wind-down`,
+/// `sounds`, `help`, `about`).
 public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     case home
     /// Sleep on `range`, ending on the night that contains `night` (any
@@ -28,6 +31,8 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     /// Coach, on a question when given: the conversation opens with it asked.
     case coach(question: CoachQuestion? = nil)
     case profile
+    /// Settings, on its list or on one of its pages, pushed over Profile over Home.
+    case settings(section: SettingsPage = .root)
     /// Tonight's bedtime window, why that time, and the wake alarm, pushed over Home.
     case tonight
     /// Wind-down, over Tonight; `autostart` begins it as it opens (a button), not when it was
@@ -41,7 +46,7 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     public static let urlScheme = "noctis"
 
     /// Every destination, Sleep on its newest night.
-    public static let destinations: [AppRoute] = [.home, .sleep(), .recovery(), .insights(), .coach(), .profile, .tonight, .windDown(), .sounds, .alarm]
+    public static let destinations: [AppRoute] = [.home, .sleep(), .recovery(), .insights(), .coach(), .profile, .settings(), .tonight, .windDown(), .sounds, .alarm]
 
     /// "home", "sleep", "recovery"…: the URL's host.
     public var name: String {
@@ -53,6 +58,7 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
         case .insight: "insight"
         case .coach: "coach"
         case .profile: "profile"
+        case .settings: "settings"
         case .tonight: "tonight"
         case .windDown: "wind-down"
         case .sounds: "sounds"
@@ -76,6 +82,7 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
             self = .insight(id: argument)
         case "coach": self = .coach(question: argument.flatMap(CoachQuestion.init(token:)))
         case "profile": self = .profile
+        case "settings": self = .settings(section: parts.dropFirst().first.flatMap(SettingsPage.init(token:)) ?? .root)
         case "tonight": self = .tonight
         case "wind-down", "winddown": self = .windDown(autostart: Self.isTrue(argument))
         case "sounds": self = .sounds
@@ -120,6 +127,8 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
             self = .coach(question: value("question").flatMap(CoachQuestion.init(token:)))
         case .windDown:
             self = .windDown(autostart: Self.isTrue(value("autostart")))
+        case .settings:
+            self = .settings(section: value("section").flatMap(SettingsPage.init(token:)) ?? .root)
         default:
             self = route
         }
@@ -145,6 +154,8 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
             items.append(URLQueryItem(name: "id", value: id))
         case .windDown(let autostart):
             if autostart { items.append(URLQueryItem(name: "autostart", value: "1")) }
+        case .settings(let section):
+            if section != .root { items.append(URLQueryItem(name: "section", value: section.token)) }
         default:
             break
         }
@@ -153,10 +164,10 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     }
 
     /// The tab that shows this route. Profile opens from Home's avatar
-    /// button, so it lands on Home.
+    /// button, and Settings from Profile's gear, so both land on Home.
     public var tab: AppTab {
         switch self {
-        case .home, .profile, .tonight, .windDown, .sounds, .alarm: .home
+        case .home, .profile, .settings, .tonight, .windDown, .sounds, .alarm: .home
         case .sleep: .sleep
         case .recovery: .recovery
         case .insights, .insight: .insights

@@ -14,8 +14,8 @@ struct AppRouteTests {
             #expect(AppRoute(url: route.url) == route)
             #expect(AppRoute(name: route.name) == route)
         }
-        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach(), .profile, .tonight, .windDown(), .sounds, .alarm])
-        #expect(AppRoute.destinations.map { $0.name } == ["home", "sleep", "recovery", "insights", "coach", "profile", "tonight", "wind-down", "sounds", "alarm"])
+        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach(), .profile, .settings(), .tonight, .windDown(), .sounds, .alarm])
+        #expect(AppRoute.destinations.map { $0.name } == ["home", "sleep", "recovery", "insights", "coach", "profile", "settings", "tonight", "wind-down", "sounds", "alarm"])
     }
 
     @Test func sleepCarriesANightAndARangeThroughItsURL() throws {
@@ -81,11 +81,11 @@ struct AppRouteTests {
         #expect(AppRoute(name: "sleep:week") == .sleep(night: nil, range: .week))
         #expect(AppRoute(name: "Sleep:Month") == .sleep(night: nil, range: .month))
         #expect(AppRoute(name: "sleep:decade") == .sleep(night: nil, range: .day))
-        #expect(AppRoute(name: "settings") == nil)
+        #expect(AppRoute(name: "paywall") == nil)
     }
 
     @Test func foreignOrUnknownURLsAreNotRoutes() throws {
-        #expect(AppRoute(url: try #require(URL(string: "noctis://settings"))) == nil)
+        #expect(AppRoute(url: try #require(URL(string: "noctis://paywall"))) == nil)
         #expect(AppRoute(url: try #require(URL(string: "https://example.com/home"))) == nil)
         #expect(AppRoute(url: try #require(URL(string: "NOCTIS://Recovery"))) == .recovery())
     }

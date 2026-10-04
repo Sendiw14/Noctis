@@ -509,11 +509,13 @@ struct DormantActionView: View {
                     connecting = false
                 }
             }
+            HealthDataSettingsLink()
         case .openHealth:
             if let health = URL(string: "x-apple-health://") {
                 NoctisTextButton("Open Health", adaptive: true) { openURL(health) }
                     .accessibilityHint("Opens the Health app.")
             }
+            HealthDataSettingsLink()
         }
     }
 }

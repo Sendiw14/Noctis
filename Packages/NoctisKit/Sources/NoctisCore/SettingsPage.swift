@@ -15,7 +15,7 @@ public nonisolated enum SettingsPage: String, Sendable, Hashable, CaseIterable, 
     case help
     case about
 
-    /// The page's name in a URL or a launch argument: `noctis://settings?page=notifications`.
+    /// The page's name in a URL or a launch argument: `noctis://settings?section=notifications`.
     public var token: String { rawValue }
 
     public init?(token: String) {

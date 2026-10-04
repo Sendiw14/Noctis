@@ -306,6 +306,14 @@ struct CoachValidatorTests {
 
     // MARK: - Destinations
 
+    @Test func coachNeverPointsAtSettings() {
+        for name in ["settings", "settings:notifications", "settings:health-data"] {
+            #expect(AppRoute.coachDestination(named: name) == nil, Comment(rawValue: name))
+        }
+        #expect(AppRoute.coachDestination(named: "profile") == .profile)
+        #expect(AppRoute.coachDestination(named: "sleep:week") == .sleep(night: nil, range: .week))
+    }
+
     @Test(arguments: ["settings", "settings:secrets", "insight", "insight:not an id", "http://evil.example", "noctis://recovery", "", "paywall", "export"])
     func aDestinationThatIsNotARouteIsRejected(_ name: String) {
         var draft = good()

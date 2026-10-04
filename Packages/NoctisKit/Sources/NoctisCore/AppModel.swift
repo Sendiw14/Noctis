@@ -79,6 +79,8 @@ public final class AppModel {
         selectedTab = route.tab
         switch route {
         case .profile: homePath = [.profile]
+        // Back from a page goes to Settings, then Profile, then Home.
+        case .settings(let section): homePath = section == .root ? [.profile, .settings(.root)] : [.profile, .settings(.root), .settings(section)]
         case .home: homePath = []
         case .tonight: homePath = [.tonight]
         case .windDown(let autostart): homePath = [.tonight, .windDown(autostart: autostart)]

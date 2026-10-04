@@ -72,7 +72,7 @@ public enum CoachAnswerAssembler {
             confidence: confidence,
             confidenceLine: confidenceLine(confidence, nights: context.nightsOfHistory, locale: locale, copy: copy),
             caution: caution,
-            destinations: draft.destinations.compactMap { AppRoute(name: $0) },
+            destinations: draft.destinations.compactMap { AppRoute.coachDestination(named: $0) },
             footer: copy("coach.footer")
         )
     }
