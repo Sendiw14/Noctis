@@ -31,6 +31,7 @@
 		8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F4213CBB03353749905D7E /* HomeQATests.swift */; };
 		98B4052A9E1C5519A27C8213 /* NoctisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */; };
 		B88BAE63AC69365D3DD5E6E9 /* SleepQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A364E8BF38E298E7413078 /* SleepQATests.swift */; };
+		B8FFA63EFEF05E0F2C634743 /* NoctisWindDownActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4BB76A5775516EE2CDC3DE0 /* NoctisWindDownActivity.swift */; };
 		C4E097F8552FBF47761B4A59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4435E6B1989CC790CE6F0F65 /* Assets.xcassets */; };
 		C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */; };
 		CEDFB186607DE853D2A577B7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */; };
@@ -82,7 +83,7 @@
 
 /* Begin PBXFileReference section */
 		04379147675C3293572F976D /* NoctisUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NoctisUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		0543D94DBE7650D827B49501 /* NoctisWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.extensionkit-extension"; name = NoctisWidgets.appex; path = NOCTISWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0543D94DBE7650D827B49501 /* NoctisWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoctisWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		14A364E8BF38E298E7413078 /* SleepQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQATests.swift; sourceTree = "<group>"; };
 		2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCatalogQATests.swift; sourceTree = "<group>"; };
 		2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsQATests.swift; sourceTree = "<group>"; };
@@ -91,7 +92,7 @@
 		3B85D922D7533E3338F79684 /* NoctisKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NoctisKit; path = Packages/NoctisKit; sourceTree = SOURCE_ROOT; };
 		4176437B1713187435A9E79D /* HomeMotionQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeMotionQATests.swift; sourceTree = "<group>"; };
 		4435E6B1989CC790CE6F0F65 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		4931DEC833E41A07AE985B2D /* NOCTIS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NOCTIS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4931DEC833E41A07AE985B2D /* Noctis.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Noctis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV3QATests.swift; sourceTree = "<group>"; };
 		4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryQATests.swift; sourceTree = "<group>"; };
 		4E894FBA97D32DE7C822CC43 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -101,12 +102,13 @@
 		85F4213CBB03353749905D7E /* HomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQATests.swift; sourceTree = "<group>"; };
 		92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabScaffoldQATests.swift; sourceTree = "<group>"; };
 		935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWidgets.swift; sourceTree = "<group>"; };
-		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Noctis.storekit; sourceTree = "<group>"; };
+		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
 		9A10A8BEADCAC2F10DCF9B93 /* NoctisShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisShortcuts.swift; sourceTree = "<group>"; };
+		A4BB76A5775516EE2CDC3DE0 /* NoctisWindDownActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWindDownActivity.swift; sourceTree = "<group>"; };
 		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
-		B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B596F2C4EB2DB5C8C3B19C1C /* HomePerformanceQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePerformanceQATests.swift; sourceTree = "<group>"; };
-		B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B98B1F217D476C8650EAE4EB /* NoctisWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoctisWidgets.entitlements; sourceTree = "<group>"; };
 		BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverQATests.swift; sourceTree = "<group>"; };
 		C43AC80FF5F56C48B897A61B /* ColorPassQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPassQATests.swift; sourceTree = "<group>"; };
@@ -169,7 +171,7 @@
 		24F0EA3FEF246440BAA18D38 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4931DEC833E41A07AE985B2D /* NOCTIS.app */,
+				4931DEC833E41A07AE985B2D /* Noctis.app */,
 				62661AAACE0CDE992D6E58D4 /* NoctisAlarmWidget.appex */,
 				04379147675C3293572F976D /* NoctisUITests.xctest */,
 				0543D94DBE7650D827B49501 /* NoctisWidgets.appex */,
@@ -184,6 +186,7 @@
 				D231D5FD73E2A07D95198B5F /* NoctisControls.swift */,
 				B98B1F217D476C8650EAE4EB /* NoctisWidgets.entitlements */,
 				935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */,
+				A4BB76A5775516EE2CDC3DE0 /* NoctisWindDownActivity.swift */,
 				B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */,
 			);
 			path = NoctisWidgets;
@@ -311,7 +314,7 @@
 				5A839DD9F8FF334F1E8C81D3 /* NoctisIntentKit */,
 			);
 			productName = Noctis;
-			productReference = 4931DEC833E41A07AE985B2D /* NOCTIS.app */;
+			productReference = 4931DEC833E41A07AE985B2D /* Noctis.app */;
 			productType = "com.apple.product-type.application";
 		};
 		7437630F018E5F771DD8C047 /* NoctisUITests */ = {
@@ -422,6 +425,7 @@
 			files = (
 				206DD7A23ABCAA85FC6CA867 /* NoctisControls.swift in Sources */,
 				67056F3EDBCFEEB4289B82D3 /* NoctisWidgets.swift in Sources */,
+				B8FFA63EFEF05E0F2C634743 /* NoctisWindDownActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -623,7 +627,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -689,7 +693,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

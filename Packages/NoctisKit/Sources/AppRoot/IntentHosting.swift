@@ -31,15 +31,18 @@ final class AppIntentHost: IntentHost {
     private let player: SoundPlayer
     private let sounds: SoundsViewModel
     private let alarm: AlarmService
+    /// The session the End button of the Live Activity ends (R49); nil in a test that does not look.
+    private let windDown: WindDownViewModel?
     /// Redraws the Sleep sounds control after one asked for something (R48); nil in a test that does not look.
     private let controls: SleepSoundsPublisher?
 
-    init(model: AppModel, preferences: AppPreferences, player: SoundPlayer, sounds: SoundsViewModel, alarm: AlarmService, controls: SleepSoundsPublisher? = nil) {
+    init(model: AppModel, preferences: AppPreferences, player: SoundPlayer, sounds: SoundsViewModel, alarm: AlarmService, windDown: WindDownViewModel? = nil, controls: SleepSoundsPublisher? = nil) {
         self.model = model
         self.preferences = preferences
         self.player = player
         self.sounds = sounds
         self.alarm = alarm
+        self.windDown = windDown
         self.controls = controls
     }
 
@@ -64,6 +67,10 @@ final class AppIntentHost: IntentHost {
         sounds.stopPlaying()
         // The fade lasts a second after the control was flipped off: it shows off now and the player's own state decides after the fade.
         controls?.stopping()
+    }
+
+    func endWindDown() {
+        windDown?.end()
     }
 
     func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome {

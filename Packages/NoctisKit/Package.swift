@@ -129,7 +129,7 @@ let package = Package(
         // It reads only `TonightViewModel` (APP_RULES.md R20, R30).
         .target(
             name: "NightFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit", "HomeFeature", "JournalKit"],
+            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit", "HomeFeature", "JournalKit", "NoctisWidgetKit"],
             resources: [.process("Resources")],
             swiftSettings: noctisSwiftSettings
         ),

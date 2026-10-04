@@ -3,8 +3,8 @@ import RelevanceKit
 import SwiftUI
 import WidgetKit
 
-/// NOCTIS's widgets (APP_RULES.md R44, R45): one Home Screen widget and one Lock Screen widget, and its two controls (R48, in
-/// `NoctisControls.swift`). The widgets read ONLY the `WidgetSnapshot` file the
+/// NOCTIS's widgets (APP_RULES.md R44, R45): one Home Screen widget and one Lock Screen widget, and its two controls and the wind-down's Live Activity (R48, R49, in
+/// `NoctisControls.swift` and `NoctisWindDownActivity.swift`). The widgets read ONLY the `WidgetSnapshot` file the
 /// app writes into the App Group: no HealthKit, no SwiftData, no Coach, no network. Not configurable in this pass.
 @main
 struct NoctisWidgetsBundle: WidgetBundle {
@@ -13,6 +13,7 @@ struct NoctisWidgetsBundle: WidgetBundle {
         NoctisLockWidget()
         NoctisWindDownControl()
         NoctisSleepSoundsControl()
+        NoctisWindDownLiveActivity()
     }
 }
 

@@ -18,6 +18,9 @@ struct NoctisApp: App {
             // `-widgetGallery`: every widget family at its real size, in every state (a DEBUG screenshot aid, R45).
             if let request = WidgetGalleryRequest(arguments: ProcessInfo.processInfo.arguments) {
                 WidgetGalleryView(request: request)
+            } else if let part = ActivityGalleryRequest.requested(ProcessInfo.processInfo.arguments) {
+                // `-activityGallery`: the wind-down Live Activity's Lock Screen and Dynamic Island presentations (R49).
+                WindDownActivityGalleryView(part: part)
             } else if IntentRunnerRequest.requested(ProcessInfo.processInfo.arguments) {
                 // `-intentRunner`: what each intent says and does, for each data state (R47).
                 IntentRunnerView()

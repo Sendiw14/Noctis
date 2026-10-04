@@ -2,6 +2,7 @@ import DesignSystem
 import Foundation
 import NightKit
 import NoctisCore
+import NoctisWidgetKit
 import Observation
 import SoundKit
 import UIKit
@@ -28,6 +29,8 @@ public final class WindDownViewModel {
 
     public static let soundFadeSeconds = 4.0
     public static let endingSeconds = 2.5
+    /// "Wind-down complete" stays on the Lock Screen this long (when the time ran out) before the Live Activity goes.
+    public static let activityDismissSeconds = 10.0
     static let minutesKey = AppPreferences.Key.windDownMinutes
     static let soundKey = AppPreferences.Key.windDownSound
 
@@ -44,6 +47,9 @@ public final class WindDownViewModel {
     @ObservationIgnored private var ending: Task<Void, Never>?
     @ObservationIgnored private var sessionID: UUID?
     @ObservationIgnored private var storeTask: Task<Void, Never>?
+    /// The Live Activity (APP_RULES.md R49): started with the session, kept in step with pausing and resuming, ended when it ends. Nil where
+    /// there is none (a test that does not look, an app that has not set it up).
+    @ObservationIgnored public var activity: (any WindDownActivityHosting)?
     @ObservationIgnored var reducedMotionOverride: Bool?
     #if DEBUG
     /// For `-mockWindDown running:0.1:breathing`: an activity to open as the screen appears.
@@ -132,6 +138,7 @@ public final class WindDownViewModel {
         }
         let start = now()
         let minutes = plannedMinutes
+        if let state = activityState(.running) { activity?.start(WindDownActivityAttributes(plannedMinutes: minutes, startedAt: start), state: state) }
         storeTask = Task { [store] in
             let id = await store.begin(start: start, plannedMinutes: minutes)
             self.sessionID = id
@@ -146,6 +153,7 @@ public final class WindDownViewModel {
         ticker?.cancel()
         ticker = nil
         refresh()
+        if self.state == .paused, let state = activityState(.paused) { activity?.update(state) }
     }
 
     public func resume() {
@@ -154,6 +162,7 @@ public final class WindDownViewModel {
         clock.resume(at: now())
         refresh()
         runTicker()
+        if let state = activityState(.running) { activity?.update(state) }
     }
 
     public func toggleSound() {
@@ -187,6 +196,8 @@ public final class WindDownViewModel {
     }
 
     func reset() {
+        // A session still under way that is reset (not ended) takes its Live Activity with it.
+        if isActive { activity?.end(finalState: nil, dismissAfter: 0) }
         ticker?.cancel()
         ticker = nil
         ending?.cancel()
@@ -210,6 +221,12 @@ public final class WindDownViewModel {
         if clock.isComplete(at: moment) { finish(completed: true) }
     }
 
+    /// The Live Activity's state for the session as its clock holds it: one place works the window out (`WindDownActivityState`).
+    private func activityState(_ phase: WindDownActivityAttributes.ContentState.Phase) -> WindDownActivityAttributes.ContentState? {
+        guard let startedAt = clock.startedAt else { return nil }
+        return WindDownActivityState.make(phase: phase, startedAt: startedAt, pausedTotal: clock.pausedTotal, plannedSeconds: clock.plannedSeconds, pausedAt: clock.pausedAt)
+    }
+
     private func runTicker() {
         ticker?.cancel()
         ticker = Task { [weak self, sleeper] in
@@ -231,6 +248,12 @@ public final class WindDownViewModel {
         if completed {
             progress = 1
             remaining = 0
+        }
+        // The Live Activity: "Wind-down complete" for a moment when the time ran out, gone at once when the person ended it.
+        if completed {
+            activity?.end(finalState: activityState(.ending), dismissAfter: Self.activityDismissSeconds)
+        } else {
+            activity?.end(finalState: nil, dismissAfter: 0)
         }
         // A soft haptic, the sound fading, the screen free to sleep again.
         haptic()

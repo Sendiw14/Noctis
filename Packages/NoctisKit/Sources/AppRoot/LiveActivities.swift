@@ -1,9 +1,12 @@
 import Foundation
+import NoctisIntentKit
 
-/// The Live Activities NOCTIS has started. It starts none itself yet: the wake alarm's snooze countdown is AlarmKit's, and it ends
-/// when the alarm is cancelled (the delete-all step before this one). The wind-down's own Live Activity is in ROADMAP.md. This is
-/// the one place that will end them, so "Delete all NOCTIS data" cannot leave one running when it exists.
+/// The Live Activities NOCTIS has started (APP_RULES.md R49): the wind-down's. The wake alarm's snooze countdown is AlarmKit's, and it ends
+/// when the alarm is cancelled (the delete-all step before this one). This is the one place "Delete all NOCTIS data" ends them, so none can be
+/// left running.
 enum LiveActivities {
     @MainActor
-    static func endAll() async {}
+    static func endAll() async {
+        await WindDownActivities.endAll()
+    }
 }

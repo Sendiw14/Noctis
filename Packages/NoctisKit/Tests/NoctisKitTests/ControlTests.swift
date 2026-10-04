@@ -257,6 +257,7 @@ struct ControlIntentTests {
         func startWindDown(minutes: Int?) { calls.append("windDown \(minutes.map(String.init) ?? "nil")") }
         func playSleepSounds(_ kind: SoundKind?) -> SoundKind { calls.append("play \(kind?.rawValue ?? "nil")"); return kind ?? .rain }
         func stopSleepSounds() { calls.append("stop") }
+        func endWindDown() { calls.append("end wind-down") }
         func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome { .couldNotSet }
         func askCoach(_ text: String) { calls.append("coach") }
     }

@@ -37,6 +37,8 @@ public protocol IntentHost: AnyObject, Sendable {
     func playSleepSounds(_ kind: SoundKind?) -> SoundKind
     /// Stops what plays, with the short fade the Sounds screen uses. Nothing playing is not an error.
     func stopSleepSounds()
+    /// Ends the wind-down that is running, as the End button on its screen does. Nothing running is not an error.
+    func endWindDown()
     /// Sets tonight's wake alarm, only if alarm access was already given.
     func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome
     /// Opens Coach and asks `text`. The text is held in memory until Coach takes it; the intent keeps nothing.
@@ -51,17 +53,21 @@ public struct IntentEnvironment: Sendable {
     public var format: @Sendable () -> WidgetFormat
     /// Asks the system to read a control again (`ControlKind`): what it shows is what is true now.
     public var reloadControl: @Sendable (String) -> Void
+    /// Ends every wind-down Live Activity there is (the End button's last word: nothing may stay on the Lock Screen).
+    public var endWindDownActivities: @Sendable () async -> Void
 
     public init(
         snapshot: @escaping @Sendable () -> WidgetSnapshot?, now: @escaping @Sendable () -> Date = { Date() },
         calendar: @escaping @Sendable () -> Calendar = { .autoupdatingCurrent }, format: @escaping @Sendable () -> WidgetFormat = { WidgetFormat() },
-        reloadControl: @escaping @Sendable (String) -> Void = { ControlCenter.shared.reloadControls(ofKind: $0) }
+        reloadControl: @escaping @Sendable (String) -> Void = { ControlCenter.shared.reloadControls(ofKind: $0) },
+        endWindDownActivities: @escaping @Sendable () async -> Void = { await WindDownActivities.endAll() }
     ) {
         self.snapshot = snapshot
         self.now = now
         self.calendar = calendar
         self.format = format
         self.reloadControl = reloadControl
+        self.endWindDownActivities = endWindDownActivities
     }
 
     /// The App Group's snapshot and the real clock.

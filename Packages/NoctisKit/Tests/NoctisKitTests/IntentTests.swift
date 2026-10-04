@@ -44,6 +44,7 @@ private final class FakeIntentHost: IntentHost {
         return played ?? .rain
     }
     func stopSleepSounds() { calls.append("stop") }
+    func endWindDown() { calls.append("end wind-down") }
     func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome {
         calls.append("alarm \(minutes)")
         if case .set = alarmOutcome { return .set(minutes: minutes) }

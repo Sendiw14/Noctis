@@ -348,6 +348,10 @@ public struct AppContainer {
             player: soundPlayer, alarm: alarmService, store: windDownStore, idle: ApplicationIdleTimer(),
             preferences: preferences
         )
+        // The wind-down's Live Activity (R49). One left by an earlier run is ended first, in order with whatever the session asks next.
+        let activityController = WindDownActivityController(client: ActivityKitWindDownClient())
+        windDown.activity = activityController
+        activityController.endLeftovers()
         self.windDownViewModel = windDown
         #if DEBUG
         let breathingHaptics = debug.makeBreathingHaptics()
@@ -398,7 +402,10 @@ public struct AppContainer {
         // Siri, Shortcuts and the controls (R47): the intents ask this running app, through the objects the screens use. Installed at start,
         // so an intent that launches the app in the background finds it.
         IntentRuntime.shared.install(
-            AppIntentHost(model: model, preferences: preferences, player: soundPlayer, sounds: self.soundsViewModel, alarm: alarmService, controls: sleepSoundsPublisher)
+            AppIntentHost(
+                model: model, preferences: preferences, player: soundPlayer, sounds: self.soundsViewModel, alarm: alarmService, windDown: windDown,
+                controls: sleepSoundsPublisher
+            )
         )
 
         // Data management (R41, R42): every store given an eraser and an exporter, and "Delete all NOCTIS data" its steps.
