@@ -172,7 +172,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coach: open Coach, then History, and delete one conversation or all of them. Journal: in Wind-down, open Reflect, then your entries, and delete one or choose Delete all entries. Each asks first and says what it removes. The health data itself lives in Apple Health, so to remove it, delete it there. Deleting NOCTIS from your iPhone removes everything NOCTIS keeps. One place to delete everything from inside the app isn't built yet."
+            "value": "{generated}"
           }
         }
       }

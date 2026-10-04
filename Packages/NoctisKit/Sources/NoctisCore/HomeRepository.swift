@@ -196,6 +196,11 @@ public actor HomeRepository {
 
     /// "Not useful": no insight for the rest of this night, and never this
     /// evidence again (the Insights tab keeps it, muted, in History).
+    /// Forgets the snapshot held in memory (Data management); the next refresh builds it again from Health.
+    public func clearCache() {
+        cachedSnapshot = nil
+    }
+
     public func dismiss(id: String) async -> HomeSnapshot? {
         _ = await insights.dismiss(id: id)
         return dropInsight()

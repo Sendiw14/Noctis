@@ -395,7 +395,7 @@ nonisolated struct JournalPrivacyTests {
     }
 
     /// The only files outside the journal's own that may name it: the wind-down's wiring and the app's.
-    static let wiring: Set<String> = ["NightFeature/WindDownScreen.swift", "AppRoot/AppContainer.swift", "AppRoot/RootView.swift"]
+    static let wiring: Set<String> = ["NightFeature/WindDownScreen.swift", "AppRoot/AppContainer.swift", "AppRoot/RootView.swift", "AppRoot/DataWiring.swift"]
 
     @Test func onlyTheReflectScreensAndTheAppDependOnTheJournalTarget() throws {
         let manifest = try String(contentsOf: Self.packageRoot.appendingPathComponent("Package.swift"), encoding: .utf8)

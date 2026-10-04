@@ -109,7 +109,7 @@ public nonisolated enum PrivacyStatements {
         if !category.syncs { parts.append("They aren't synced.") }
         if !category.inBackup { parts.append("They aren't in backups.") }
         if category.protection == .completeWhileLocked { parts.append("They are protected while your iPhone is locked.") }
-        parts.append("Delete one conversation, or all of them, from History.")
+        parts.append("Delete one conversation, or all of them, from History, or delete the whole history in Data management, in Settings.")
         return parts.joined(separator: " ")
     }
 
@@ -180,6 +180,27 @@ public nonisolated enum PrivacyStatements {
         inventory.facts.coachUsesRemoteModel
             ? "Answers may be written by a model that runs off your iPhone."
             : "Answers are written on your iPhone, and nothing you ask is sent to a server."
+    }
+
+    /// Help's "How do I delete my data?", built from the inventory's own groups.
+    public static func helpDelete(_ inventory: DataInventory) -> String {
+        let deletes = inventory.groups.filter { $0.verb == .delete }.map(\.title)
+        let resets = inventory.groups.filter { $0.verb == .reset }.map { $0.title.lowercased() }
+        func list(_ items: [String]) -> String {
+            guard let last = items.last else { return "" }
+            return items.count == 1 ? last : items.dropLast().joined(separator: ", ") + " and " + last
+        }
+        var parts = ["In Settings, Data management deletes \(list(deletes)), one kind at a time, and resets \(list(resets)). Each asks first and says what it removes."]
+        parts.append("\"Delete all NOCTIS data\" removes everything NOCTIS stores on this iPhone and starts the app over. \"Export my data\" makes a copy first, if you want one.")
+        if let account = noAccount(inventory) { parts.append(account.text) }
+        parts.append("Your health data lives in Apple Health, so to remove it, delete it there. Deleting NOCTIS from your iPhone also removes everything NOCTIS keeps.")
+        return parts.joined(separator: " ")
+    }
+
+    /// Onboarding's welcome tag: only while the app really keeps data on the iPhone, reads Health without writing, and shares nothing.
+    public static func privateByDesign(_ inventory: DataInventory) -> String? {
+        guard healthReadOnly(inventory) != nil, storedOnDevice(inventory) != nil, nothingSoldOrShared(inventory) != nil else { return nil }
+        return "Private by design"
     }
 }
 

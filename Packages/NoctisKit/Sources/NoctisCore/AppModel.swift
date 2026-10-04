@@ -68,6 +68,11 @@ public final class AppModel {
         onProfileChange?()
     }
 
+    /// Forgets the profile in memory only, after its record has been deleted: setup is not finished and nothing is told or saved.
+    public func forgetProfileInMemory() {
+        profile = UserProfileSnapshot()
+    }
+
     /// One edit from Profile: the name, the sleep need, the wake time or the goals.
     public func apply(_ edit: ProfileEdit) {
         updateProfile { edit.apply(to: &$0) }

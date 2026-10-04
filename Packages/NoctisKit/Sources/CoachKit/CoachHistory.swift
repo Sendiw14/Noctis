@@ -150,6 +150,22 @@ public actor CoachHistoryStore {
         CoachHistoryErasure.deleteEverything(in: modelContext)
     }
 
+    /// Every conversation as JSON, for "Export my data": when it started and ended, and each question with a short summary of
+    /// its answer and what the person said about it. Not the structured answers themselves.
+    public func exportJSON() -> Data {
+        let all = (try? modelContext.fetch(FetchDescriptor<AIConversation>(sortBy: [SortDescriptor(\.createdAt)]))) ?? []
+        let format = ISO8601DateFormatter()
+        let conversations = all.filter { !$0.messages.isEmpty }.map { conversation -> [String: Any] in
+            let turns = conversation.messages.sorted { $0.createdAt < $1.createdAt }.map { message -> [String: Any] in
+                var turn: [String: Any] = ["asked": format.string(from: message.createdAt), "question": message.question, "answer": message.answerSummary]
+                if let feedback = message.feedbackRaw { turn["feedback"] = feedback }
+                return turn
+            }
+            return ["started": format.string(from: conversation.createdAt), "updated": format.string(from: conversation.updatedAt), "turns": turns]
+        }
+        return (try? JSONSerialization.data(withJSONObject: conversations)) ?? Data("[]".utf8)
+    }
+
     public func messageCount() -> Int {
         (try? modelContext.fetchCount(FetchDescriptor<AIMessage>())) ?? 0
     }

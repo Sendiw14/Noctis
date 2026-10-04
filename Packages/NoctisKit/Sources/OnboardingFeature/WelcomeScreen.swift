@@ -24,11 +24,14 @@ private struct WelcomeInfoColumn {
     let label: String
 }
 
-private let welcomeInfoColumns: [WelcomeInfoColumn] = [
-    WelcomeInfoColumn(icon: "lock.fill", label: "Private by design"),
-    WelcomeInfoColumn(icon: "heart.text.square.fill", label: "Works with Apple Health"),
-    WelcomeInfoColumn(icon: "clock.fill", label: "2-minute setup"),
-]
+/// "Private by design" is a privacy claim, so it is shown only while the data inventory backs it (APP_RULES.md R41).
+private var welcomeInfoColumns: [WelcomeInfoColumn] {
+    [
+        PrivacyStatements.privateByDesign(.shared).map { WelcomeInfoColumn(icon: "lock.fill", label: $0) },
+        WelcomeInfoColumn(icon: "heart.text.square.fill", label: "Works with Apple Health"),
+        WelcomeInfoColumn(icon: "clock.fill", label: "2-minute setup"),
+    ].compactMap { $0 }
+}
 
 /// Step 0 — the same flat ivory paper language as every other onboarding
 /// screen (ONBOARDING_RULES.md's Direction paragraph). No top bar (R7

@@ -215,6 +215,14 @@ struct NoctisAppContrastTests {
         #expect(dark.sectionApricot == "D48A55")
     }
 
+    /// The delete colors: the text on the paper and the card, and the label on the one fill that deletes everything.
+    @Test(arguments: modes)
+    func theDestructiveColorsReadInBothModes(_ mode: String, _ palette: NoctisAppPalette) {
+        #expect(ratio(palette.destructive, palette.bg) >= 4.5, "\(mode): delete text on the paper \(ratio(palette.destructive, palette.bg))")
+        #expect(ratio(palette.destructive, palette.surface) >= 4.5, "\(mode): delete text on the card \(ratio(palette.destructive, palette.surface))")
+        #expect(ratio(palette.destructiveLabel, palette.destructive) >= 4.5, "\(mode): the label on the delete fill \(ratio(palette.destructiveLabel, palette.destructive))")
+    }
+
     /// Profile's sand field: #E6D9BF in Light, #BFA97F in Dark, with cocoa ink (the block ink) on both.
     @Test func profilesSandFieldIsTheSpecifiedColor() {
         let light = NoctisAppPalette.light, dark = NoctisAppPalette.dark

@@ -19,6 +19,17 @@ public final class ProfileStore {
         return record.snapshot
     }
 
+    /// Deletes every profile record (Data management). The next `load()` starts a blank one.
+    public func eraseAll() {
+        for record in (try? context.fetch(FetchDescriptor<UserProfileRecord>())) ?? [] { context.delete(record) }
+        try? context.save()
+    }
+
+    /// How many records the store holds, for a test.
+    public var recordCount: Int {
+        (try? context.fetchCount(FetchDescriptor<UserProfileRecord>())) ?? 0
+    }
+
     public func save(_ snapshot: UserProfileSnapshot) {
         let descriptor = FetchDescriptor<UserProfileRecord>()
         let record = (try? context.fetch(descriptor).first) ?? {

@@ -61,6 +61,12 @@ public actor InsightsRepository {
         self.clock = clock
     }
 
+    /// Forgets the snapshot held in memory (Data management); the next refresh builds it again from Health.
+    public func clearCache() {
+        cachedSnapshot = nil
+        lastInputs = nil
+    }
+
     public func refresh(profile: UserProfileSnapshot) async -> InsightsSnapshot {
         if let inFlight { return await inFlight.value }
         let task = Task { await load(profile: profile) }

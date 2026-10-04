@@ -100,6 +100,17 @@ public final class MeditationViewModel {
     public var offersSound: Bool { player.state.phase != .playing }
     public var totalSeconds: TimeInterval { schedule.totalSeconds }
 
+    /// Forgets what was last chosen (Data management): the category, length, sound and the voice switch are the defaults again.
+    public func forgetChoices() {
+        for key in [Self.categoryKey, Self.minutesKey, Self.soundKey, Self.spokenKey] { defaults.removeObject(forKey: key) }
+        guard state == .setup || state == .finished else { return }
+        categoryID = .sleep
+        minutes = MeditationSchedule.defaultMinutes
+        sound = nil
+        spokenOn = false
+        prepareSchedule()
+    }
+
     // MARK: Before beginning
 
     public func choose(category: MeditationCategory) {

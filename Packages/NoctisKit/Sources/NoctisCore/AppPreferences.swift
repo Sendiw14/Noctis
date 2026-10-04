@@ -158,6 +158,15 @@ public final class AppPreferences {
         public static let weeklyTime = "noctis.pref.notifications.weekly.time"
     }
 
+    /// Every key the typed preferences write.
+    public static var allKeys: [String] {
+        [
+            Key.appearance, Key.appHaptics, Key.windDownMinutes, Key.windDownSound, Key.breathingPattern, Key.breathingMinutes, Key.breathingHaptics,
+            Key.soundsGain, Key.soundsTimer, Key.morningOn, Key.morningMinutes, Key.windDownReminderOn, Key.windDownLead, Key.weeklyOn,
+            Key.weeklyWeekday, Key.weeklyTime,
+        ]
+    }
+
     public private(set) var values: PreferenceValues
 
     /// Told after every change, with what changed.
@@ -186,6 +195,14 @@ public final class AppPreferences {
     /// One value by its key path.
     public func set<Value>(_ keyPath: WritableKeyPath<PreferenceValues, Value>, to value: Value) {
         update { $0[keyPath: keyPath] = value }
+    }
+
+    /// Back to the defaults, with every stored key removed (not just set to its default), and everyone told.
+    public func reset() {
+        let before = values
+        values = PreferenceValues().normalized()
+        for key in Self.allKeys { defaults.removeObject(forKey: key) }
+        for kind in Self.changes(from: before, to: values) { onChange?(kind) }
     }
 
     // MARK: Reading

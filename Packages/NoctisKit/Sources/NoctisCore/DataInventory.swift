@@ -229,6 +229,12 @@ public nonisolated struct DeletableGroup: Sendable, Identifiable, Equatable {
     public let keeps: String
     /// "from this iPhone".
     public let from: String
+    /// The confirmation's question: "Delete your Journal?".
+    public let question: String
+    /// The confirmation's button: "Delete Journal".
+    public let confirm: String
+    /// What the page says afterwards: "Journal deleted.".
+    public let done: String
 }
 
 /// Facts about the app that are not about one category; each is held to the code by a test.

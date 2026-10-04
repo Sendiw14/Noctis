@@ -27,7 +27,7 @@ public struct SettingsScreen: View {
         case .help: HelpView()
         case .about: AboutView(viewModel: viewModel)
         case .privacyCenter: PrivacyCenterView(viewModel: viewModel)
-        case .dataManagement: EmptyView()
+        case .dataManagement: DataManagementView(viewModel: viewModel)
         }
     }
 }
@@ -184,8 +184,12 @@ struct SettingsRootView: View {
                         systemImage: "lock.shield", fill: NoctisAppColor.blockLavender, title: "Privacy Center",
                         detail: "What NOCTIS keeps, where, and who can see it.", hint: "Opens the Privacy Center.", identifier: "settings.row.privacyCenter"
                     ) { model.push(.settings(.privacyCenter)) }
+                    NoctisRowDivider()
+                    NoctisLinkRow(
+                        systemImage: "externaldrive", fill: NoctisAppColor.blockSage, title: "Data management",
+                        detail: "Delete what NOCTIS keeps, or take a copy.", hint: "Opens Data management.", identifier: "settings.row.dataManagement"
+                    ) { model.push(.settings(.dataManagement)) }
                 }
-                ComingSoonCard(title: "Data management", detail: "One place to erase what NOCTIS keeps.", identifier: "settings.comingSoon.data")
             }
             .noctisRise(index: 3)
             SettingsGroup("SUPPORT") {
@@ -264,37 +268,6 @@ struct ExternalLinkRow: View {
         .accessibilityLabel(title)
         .accessibilityHint("Opens a web page in your browser.")
         .accessibilityAddTraits(.isLink)
-        .accessibilityIdentifier(identifier)
-    }
-}
-
-/// A feature that isn't built yet (APP_RULES.md R19): its name, what it will be, and "Coming soon". Nothing to tap;
-/// it is listed in ROADMAP.md.
-struct ComingSoonCard: View {
-    let title: String
-    let detail: String
-    let identifier: String
-
-    var body: some View {
-        NoctisAppCard {
-            HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.sm) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .noctisFont(17, .semibold, relativeTo: .body)
-                        .foregroundStyle(NoctisAppColor.ink)
-                    Text(detail)
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(.noctisInk3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: NoctisSpacing.xs)
-                Text("Coming soon")
-                    .noctisFont(15, .medium, relativeTo: .subheadline)
-                    .foregroundStyle(.noctisInk2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .accessibilityElement(children: .combine)
         .accessibilityIdentifier(identifier)
     }
 }

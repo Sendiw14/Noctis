@@ -23,6 +23,11 @@ public nonisolated final class NoctisDataRegistry: @unchecked Sendable {
         lock.withLock { registered.append(store) }
     }
 
+    /// Forgets every registration, before a restarted app registers its stores again.
+    public func reset() {
+        lock.withLock { registered = [] }
+    }
+
     public var stores: [any NoctisErasable] {
         lock.withLock { registered }
     }

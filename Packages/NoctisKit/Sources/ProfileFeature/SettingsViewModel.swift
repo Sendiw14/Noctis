@@ -43,8 +43,10 @@ public final class SettingsViewModel {
     private let preferredLanguages: () -> [String]
     private let clock: () -> Date
     public let inventory: DataInventory
+    /// Data management.
+    public let data: DataManager
     /// Whether Settings has a Data management page.
-    static let hasDataManagement = false
+    static let hasDataManagement = true
     private let roots: DataRoots
 
     public init(
@@ -54,8 +56,9 @@ public final class SettingsViewModel {
         preferredLanguages: @escaping () -> [String] = { Locale.preferredLanguages },
         openSettings: @escaping @MainActor () -> Void = SettingsViewModel.openAppSettings,
         openHealth: @escaping @MainActor () -> Void = SettingsViewModel.openHealthApp, clock: @escaping () -> Date = { Date() },
-        inventory: DataInventory = .shared, roots: DataRoots = DataRoots()
+        inventory: DataInventory = .shared, roots: DataRoots = DataRoots(), data: DataManager
     ) {
+        self.data = data
         self.inventory = inventory
         self.roots = roots
         self.privacy = PrivacyCenterBuilder.content(inventory, roots: roots, dataManagement: Self.hasDataManagement)

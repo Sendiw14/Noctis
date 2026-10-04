@@ -192,6 +192,12 @@ public final class SoundPlayer {
         }
     }
 
+    /// Forgets every sound's own volume (Data management): each starts at the default again.
+    public func forgetSavedGains() {
+        state.gains = [:]
+        defaults.removeObject(forKey: Self.gainsKey)
+    }
+
     public func setGain(_ gain: Float, for kind: SoundKind) {
         let value = min(max(gain, 0), 1)
         state.gains[kind] = value

@@ -36,6 +36,11 @@ public actor SleepRepository {
         self.clock = clock
     }
 
+    /// Forgets the snapshot held in memory (Data management); the next refresh builds it again from Health.
+    public func clearCache() {
+        cachedSnapshot = nil
+    }
+
     public func refresh(profile: UserProfileSnapshot) async -> SleepSnapshot {
         if let inFlight { return await inFlight.value }
         NoctisSignpost.begin(.sleepLoad)

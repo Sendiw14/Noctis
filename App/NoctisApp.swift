@@ -1,5 +1,6 @@
 import SwiftUI
 import AppRoot
+import NoctisCore
 
 @main
 struct NoctisApp: App {
@@ -8,6 +9,9 @@ struct NoctisApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(initiallyOnboarded: container.model.isOnboarded)
+                // A new container after "Delete all NOCTIS data": every screen is made again, and the app starts over at onboarding.
+                .id(container.generation)
+                .environment(\.restartApp, RestartAction { container = AppContainer(restarted: true) })
                 .environment(container.model)
                 .environment(container.homeViewModel)
                 .environment(container.sleepViewModel)

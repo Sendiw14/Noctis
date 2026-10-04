@@ -37,6 +37,10 @@ public struct AppContainer {
     public let tonightViewModel: TonightViewModel
     public let profileViewModel: ProfileViewModel
     public let settingsViewModel: SettingsViewModel
+    /// Data management: what NOCTIS keeps, one kind at a time or all of it, and a copy to take away.
+    public let dataManager: DataManager
+    /// A new one each time the app starts over (after "Delete all NOCTIS data"), so the screens are made again.
+    public let generation = UUID()
     /// The sleep sounds: the one player that holds the audio engine, and what the Sounds screen reads.
     public let soundPlayer: SoundPlayer
     public let soundsViewModel: SoundsViewModel
@@ -56,7 +60,10 @@ public struct AppContainer {
     public let storeManager: StoreManager
     public let modelContainer: ModelContainer
 
-    public init() {
+    /// `restarted`: the app starts over after "Delete all NOCTIS data", as a first launch would (a DEBUG launch flag that skips or
+    /// resets onboarding no longer applies).
+    public init(restarted: Bool = false) {
+        NoctisDataRegistry.shared.reset()
         // The launch budgets start counting here.
         NoctisSignpost.begin(.launchToFirstFrame)
         NoctisSignpost.begin(.launchToPopulated)
@@ -89,7 +96,7 @@ public struct AppContainer {
                 // The mock forgets its permission between launches; a
                 // finished onboarding already granted it.
                 startAuthorized: !debug.unauthorized
-                    && (debug.skipOnboarding || (profileStore.load().healthAuthorizationRequested && !debug.resetState)),
+                    && ((debug.skipOnboarding && !restarted) || (profileStore.load().healthAuthorizationRequested && !debug.resetState)),
                 isHealthDataAvailable: !debug.healthUnavailable,
                 failsQueries: debug.healthQueryFails,
                 latency: debug.mockLatency
@@ -100,20 +107,20 @@ public struct AppContainer {
         self.model = AppModel(healthProvider: provider, profileStore: profileStore)
         // UI tests: behave like a fresh install (no onboarding draft, no
         // finished profile) without reinstalling the app between runs.
-        if debug.resetState {
+        if debug.resetState && !restarted {
             let defaults = NoctisUserDefaults.standard
             for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("noctis.") {
                 defaults.removeObject(forKey: key)
             }
             model.updateProfile { $0 = UserProfileSnapshot() }
         }
-        if debug.skipOnboarding {
+        if debug.skipOnboarding && !restarted {
             model.updateProfile {
                 $0.onboardingComplete = true
                 $0.healthAuthorizationRequested = true
             }
         }
-        if let route = debug.initialRoute {
+        if let route = debug.initialRoute, !restarted {
             model.open(route)
         }
         #else
@@ -160,7 +167,8 @@ public struct AppContainer {
         #endif
         let insightStore = InsightStore(file: insightFile)
         self.insightStore = insightStore
-        self.insightsRepository = InsightsRepository(provider: provider, store: insightStore)
+        let insightsRepo = InsightsRepository(provider: provider, store: insightStore)
+        self.insightsRepository = insightsRepo
         // The repositories the tabs read: Coach reads the same snapshots (R20).
         let homeRepository = HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore)
         let sleepRepository = SleepRepository(provider: provider)
@@ -219,13 +227,14 @@ public struct AppContainer {
             history: coachHistory
         )
         self.coachService = coachService
-        self.coachViewModel = CoachViewModel(
+        let coachVM = CoachViewModel(
             service: coachService,
             dataSource: coachData,
             history: coachHistory,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() }
         )
+        self.coachViewModel = coachVM
         // The wake alarm (R30): the record is local, the system's alarms are AlarmKit's. A mock
         // Health scenario gets a pretend alarm system too, so a screenshot or a test never opens
         // a system prompt; `-mockAlarm real` asks for the real one anyway.
@@ -283,8 +292,9 @@ public struct AppContainer {
         soundPlayer.setDefaultGain(preferences.values.soundsGain)
         self.soundPlayer = soundPlayer
         self.soundsViewModel = SoundsViewModel(player: soundPlayer, defaultTimer: { preferences.values.soundsTimer })
+        let windDownStore = WindDownSessionStore(context: ModelContext(container))
         let windDown = WindDownViewModel(
-            player: soundPlayer, alarm: alarmService, store: WindDownSessionStore(context: ModelContext(container)), idle: ApplicationIdleTimer(),
+            player: soundPlayer, alarm: alarmService, store: windDownStore, idle: ApplicationIdleTimer(),
             preferences: preferences
         )
         self.windDownViewModel = windDown
@@ -295,15 +305,6 @@ public struct AppContainer {
         #endif
         let breathing = BreathingViewModel(haptics: breathingHaptics, preferences: preferences)
         self.breathingViewModel = breathing
-        // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
-        #if DEBUG
-        if let summary = debug.subscriptionSummary() { storeManager.entitlementManager.debugSet(summary) }
-        #endif
-        self.settingsViewModel = SettingsViewModel(
-            preferences: preferences, notifications: coordinator, store: storeManager, health: HealthDataStatusReader(provider: provider),
-            alarm: alarmService, profile: { model.profile }, connectHealth: { await model.requestHealthAuthorization() },
-            hapticsAvailable: { breathing.hapticsAvailable }, format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
-        )
         #if DEBUG
         let meditationAudio = debug.makeMeditationAudio(soundPlayer: soundPlayer)
         #else
@@ -342,6 +343,51 @@ public struct AppContainer {
         let router = NotificationRouter(model: model)
         self.notificationRouter = router
         UNUserNotificationCenter.current().delegate = router
+
+        // Data management (R41, R42): every store given an eraser and an exporter, and "Delete all NOCTIS data" its steps.
+        let dataManager = DataWiring.manager(DataWiringInputs(
+            model: model, preferences: preferences, defaults: NoctisUserDefaults.standard, profileStore: profileStore, alarmService: alarmService,
+            alarmStore: alarmStore, windDownStore: windDownStore, journal: journalStore, coachHistory: coachHistory, insightFile: insightFile,
+            snapshotStore: snapshotStore, notifications: NotificationScheduler(center: notificationCenter),
+            appVersion: {
+                let info = Bundle.main.infoDictionary
+                return "NOCTIS \(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"
+            },
+            stopAudio: {
+                soundPlayer.stop()
+                if meditation.isActive { meditation.end() }
+                breathing.end()
+            },
+            endWindDown: { windDown.end() },
+            silenceReminders: {
+                preferences.onChange = nil
+                model.onProfileChange = nil
+            },
+            settleReminders: { await coordinator.settled() },
+            afterJournalDeleted: { journal.load() },
+            afterCoachDeleted: { await coachVM.loadHistory() },
+            clearMemory: {
+                await homeRepository.clearCache()
+                await sleepRepository.clearCache()
+                await recoveryRepository.clearCache()
+                await insightsRepo.clearCache()
+            },
+            forgetSoundChoices: {
+                soundPlayer.forgetSavedGains()
+                meditation.forgetChoices()
+            }
+        ))
+        self.dataManager = dataManager
+        // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
+        #if DEBUG
+        if let summary = debug.subscriptionSummary() { storeManager.entitlementManager.debugSet(summary) }
+        #endif
+        self.settingsViewModel = SettingsViewModel(
+            preferences: preferences, notifications: coordinator, store: storeManager, health: HealthDataStatusReader(provider: provider),
+            alarm: alarmService, profile: { model.profile }, connectHealth: { await model.requestHealthAuthorization() },
+            hapticsAvailable: { breathing.hapticsAvailable }, format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
+            data: dataManager
+        )
 
         #if DEBUG
         if debug.logHomeSnapshot {

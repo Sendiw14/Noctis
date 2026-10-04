@@ -73,6 +73,14 @@ struct PrivacyStatementTests {
         #expect(PrivacyStatements.noAccount(account) == nil)
     }
 
+    @Test func theWelcomeTagIsShownOnlyWhileTheInventoryBacksIt() {
+        #expect(PrivacyStatements.privateByDesign(shared) == "Private by design")
+        let sold = changed { $0.id == .insightHistory ? with($0, destination: .thirdParty("a company")) : $0 }
+        #expect(PrivacyStatements.privateByDesign(sold) == nil)
+        let syncing = changed { $0.id == .journal ? with($0, syncs: true) : $0 }
+        #expect(PrivacyStatements.privateByDesign(syncing) == nil)
+    }
+
     @Test func eachStatementNamesTheCategoriesItRestsOn() {
         let health = PrivacyStatements.healthReadOnly(shared)
         #expect(health?.evidence == [.appleHealth])
@@ -199,7 +207,7 @@ nonisolated struct PrivacyWordsComeFromTheInventoryTests {
     static let phrases = [
         "never sent", "never sends", "stays on this", "stay on this", "kept only on this", "kept on this iphone", "only on this iphone", "on this iphone only",
         "not synced", "aren't synced", "isn't synced", "never writes", "read-only", "no account", "sent to a server", "never leaves", "nothing is sold",
-        "never shared", "not backed up", "aren't in backups", "stored on this iphone",
+        "never shared", "not backed up", "aren't in backups", "stored on this iphone", "private by design",
     ]
 
     @Test func noScreenWritesAPrivacyClaimOfItsOwn() {

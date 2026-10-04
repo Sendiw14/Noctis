@@ -116,7 +116,7 @@ nonisolated extension DataInventory {
             ),
             DataCategory(
                 .journal, name: "Journal",
-                summary: "What you chose to note about a day: how you felt and what you wrote. It has a store of its own and nothing else in NOCTIS reads it.",
+                summary: "What you chose to note about a day: how you felt and what you wrote. It has a store of its own. Only the Journal's own screens read it, and \"Export my data\" when you ask for a copy.",
                 contents: ["Each entry's date", "Your energy, mood and focus ratings, if you gave them", "What you wrote"],
                 locations: [.database(.applicationSupport, "Noctis/Journal/journal.store")], entities: ["JournalEntry"],
                 inBackup: false, protection: .completeWhileLocked, deletion: .button("Journal"),
@@ -173,11 +173,11 @@ nonisolated extension DataInventory {
             ),
             DataCategory(
                 .exportFile, name: "Export file",
-                summary: "The file \"Export my data\" makes, when you ask for it. NOCTIS writes it to a temporary place and deletes it after you share or close the sheet.",
+                summary: "The file \"Export my data\" makes, when you ask for it. NOCTIS writes it to a temporary place and deletes it when you leave Data management and the next time it starts.",
                 contents: ["A copy of what NOCTIS stores, in one JSON file"],
                 locations: [.file(.temporary, "NOCTIS-export.json")],
                 destination: .onlyIfYouSend("wherever you choose to share it"),
-                inBackup: false, protection: .standard, deletion: .automatic("NOCTIS deletes it after you share or close the sheet."),
+                inBackup: false, protection: .standard, deletion: .automatic("NOCTIS deletes it when you leave Data management, and the next time it starts."),
                 owner: "NoctisCore/DataInventory.swift", holdsUserContent: false,
                 export: .notStored("It is the export itself.")
             ),
@@ -214,7 +214,7 @@ nonisolated extension DataInventory {
                 token: "import StoreKit", purpose: "Buying, restoring and managing Premium through Apple's App Store.",
                 files: [
                     "NoctisCore/Store/StoreManager.swift", "NoctisCore/Store/EntitlementManager.swift", "OnboardingFeature/PaywallScreen.swift",
-                    "ProfileFeature/SettingsPages.swift", "ProfileFeature/SettingsScreens.swift",
+                    "ProfileFeature/SettingsPages.swift", "ProfileFeature/SettingsScreens.swift", "ProfileFeature/DataManagementViews.swift",
                 ],
                 categories: [.purchases]
             ),
@@ -227,32 +227,38 @@ nonisolated extension DataInventory {
             DeletableGroup(
                 id: "journal", title: "Journal", verb: .delete, categories: [.journal],
                 removes: "Every entry you have written in the Journal: its dates, ratings and words.",
-                keeps: "Your sleep data, your Coach history and the rest of NOCTIS are not affected.", from: "this iPhone"
+                keeps: "Your sleep data, your Coach history and the rest of NOCTIS are not affected.", from: "this iPhone",
+                question: "Delete your Journal?", confirm: "Delete Journal", done: "Journal deleted."
             ),
             DeletableGroup(
                 id: "coach", title: "Coach history", verb: .delete, categories: [.coachHistory],
                 removes: "Every question you asked Coach and every answer it gave.",
-                keeps: "Your sleep data, your Journal and the rest of NOCTIS are not affected.", from: "this iPhone"
+                keeps: "Your sleep data, your Journal and the rest of NOCTIS are not affected.", from: "this iPhone",
+                question: "Delete Coach history?", confirm: "Delete Coach history", done: "Coach history deleted."
             ),
             DeletableGroup(
                 id: "insights", title: "Insights history", verb: .delete, categories: [.insightHistory],
                 removes: "The insights NOCTIS has found, and whether you have seen them. New ones are found again as new nights arrive.",
-                keeps: "Your Health data, your Journal and the rest of NOCTIS are not affected.", from: "this iPhone"
+                keeps: "Your Health data, your Journal and the rest of NOCTIS are not affected.", from: "this iPhone",
+                question: "Delete insights history?", confirm: "Delete insights history", done: "Insights history deleted."
             ),
             DeletableGroup(
                 id: "windDown", title: "Wind-down history", verb: .delete, categories: [.windDownHistory],
                 removes: "The record of the wind-downs you have done: when each started, its planned length and whether you finished it.",
-                keeps: "Your Journal, your alarm and the rest of NOCTIS are not affected.", from: "this iPhone"
+                keeps: "Your Journal, your alarm and the rest of NOCTIS are not affected.", from: "this iPhone",
+                question: "Delete wind-down history?", confirm: "Delete wind-down history", done: "Wind-down history deleted."
             ),
             DeletableGroup(
                 id: "cache", title: "Cached summaries", verb: .delete, categories: [.cachedSummaries, .memorySummaries],
                 removes: "The saved summary Home draws when it opens, and the summaries the app holds in memory. They are rebuilt from Apple Health.",
-                keeps: "Your Health data is untouched, and so is the rest of NOCTIS.", from: "this iPhone"
+                keeps: "Your Health data is untouched, and so is the rest of NOCTIS.", from: "this iPhone",
+                question: "Delete cached summaries?", confirm: "Delete cached summaries", done: "Cached summaries deleted."
             ),
             DeletableGroup(
                 id: "preferences", title: "Preferences and goals", verb: .reset, categories: [.preferences, .soundSettings],
                 removes: "Your preferences go back to their defaults: appearance, haptics, wind-down and sound defaults, and reminders. Your goals go back to Better sleep.",
-                keeps: "Your name, sleep need, wake time, alarm, Journal and the rest of NOCTIS are kept.", from: "this iPhone"
+                keeps: "Your name, sleep need, wake time, alarm, Journal and the rest of NOCTIS are kept.", from: "this iPhone",
+                question: "Reset preferences and goals?", confirm: "Reset preferences and goals", done: "Preferences and goals reset."
             ),
         ],
         retiredKeys: ["noctis.insights.history"],

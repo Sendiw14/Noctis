@@ -34,6 +34,7 @@ public nonisolated enum HelpCatalog {
     static func answer(_ key: String, inventory: DataInventory = .shared) -> String {
         switch key {
         case "storage": PrivacyStatements.helpStorage(inventory)
+        case "delete": PrivacyStatements.helpDelete(inventory)
         case "coach":
             string("help.coach.a")
                 .replacingOccurrences(of: "{written}", with: PrivacyStatements.coachShort(inventory))

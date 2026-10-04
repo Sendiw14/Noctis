@@ -103,6 +103,8 @@ public nonisolated protocol NotificationCentering: Sendable {
     func pendingIdentifiers() async -> [String]
     func removePending(_ identifiers: [String]) async
     func add(_ notification: ScheduledNotification) async
+    /// Every pending reminder, and every one already shown that is still in the notification centre (Data management).
+    func removeEverything() async
 }
 
 /// The real thing, over `UNUserNotificationCenter`.
@@ -128,6 +130,11 @@ public nonisolated struct SystemNotificationCenter: NotificationCentering {
 
     public func removePending(_ identifiers: [String]) async {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+
+    public func removeEverything() async {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }
 
     public func add(_ notification: ScheduledNotification) async {
@@ -168,6 +175,11 @@ public actor NotificationScheduler {
         let plan = NotificationPlan.make(preferences: preferences, wakeMinutes: wakeMinutes, bedtimeCenterMinutes: bedtimeCenterMinutes)
         for notification in plan { await center.add(notification) }
         return plan
+    }
+
+    /// Removes every reminder NOCTIS has asked for, pending or shown, including the free trial's.
+    public func removeEverything() async {
+        await center.removeEverything()
     }
 
     /// The reminders the system holds now, of the three this owns.
@@ -213,6 +225,13 @@ public nonisolated final class InMemoryNotificationCenter: NotificationCentering
         lock.withLock {
             removed.append(identifiers)
             pending.removeAll { identifiers.contains($0.identifier) }
+        }
+    }
+
+    public func removeEverything() async {
+        lock.withLock {
+            removed.append(pending.map(\.identifier))
+            pending.removeAll()
         }
     }
 

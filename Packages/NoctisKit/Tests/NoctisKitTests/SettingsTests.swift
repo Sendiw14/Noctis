@@ -231,11 +231,13 @@ struct HelpCatalogTests {
         #expect(!text.lowercased().contains("diagnoses you"))
     }
 
-    @Test func theDeleteAnswerNamesWhatTheAppCanDeleteAndWhatItCannot() {
+    @Test func theDeleteAnswerNamesWhatDataManagementDeletesAndWhatItCannot() {
         let text = answer("delete")
-        #expect(text.contains("Coach") && text.contains("History") && text.contains("Journal") && text.contains("Delete all entries"))
-        #expect(text.contains("Apple Health"))
-        #expect(text.contains("isn't built yet"), "no single erase-everything control exists")
+        #expect(text.contains("Data management") && text.contains("Journal") && text.contains("Coach history") && text.contains("Wind-down history"))
+        #expect(text.contains("preferences and goals") && text.contains("Delete all NOCTIS data") && text.contains("Export my data"))
+        #expect(text.contains("Apple Health"), "health data is deleted where it lives")
+        #expect(text.contains("NOCTIS has no account"))
+        #expect(!text.contains("isn't built yet") && !text.contains("{"))
     }
 }
 
@@ -368,7 +370,8 @@ struct SettingsViewModelTests {
                 _ = await provider.requestAuthorization(for: HealthDataKind.allCases)
             },
             hapticsAvailable: { haptics }, format: settingsFormat, bundle: .main, preferredLanguages: { ["en"] },
-            openSettings: { [calls] in calls.settingsOpened += 1 }, openHealth: { [calls] in calls.healthOpened += 1 }, clock: { now }
+            openSettings: { [calls] in calls.settingsOpened += 1 }, openHealth: { [calls] in calls.healthOpened += 1 }, clock: { now },
+            data: DataManager(erasers: [:], providers: [:], deleteAllSteps: [])
         )
         return Bench(viewModel: viewModel, preferences: preferences, center: center, coordinator: coordinator, calls: calls)
     }
