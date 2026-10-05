@@ -1,3 +1,4 @@
+import CoachFeature
 import Foundation
 import NightKit
 import NightFeature
@@ -10,15 +11,22 @@ import SoundKit
 /// (recovery, sleep, bedtime), the rest as the `AppRoute` they are. `AppModel.open` is the one place any of them is opened; an intent holds no
 /// navigation logic of its own.
 public enum IntentRouting {
-    public static func route(for destination: IntentDestination) -> AppRoute {
+    /// What a destination opens: a screen, or the paywall sheet naming a context (the free plan asking for a Premium thing, R62).
+    public static func destination(for destination: IntentDestination) -> WidgetURLRouter.Destination {
         switch destination {
-        case .recovery: WidgetURLRouter.route(for: .recovery)
-        case .sleep: WidgetURLRouter.route(for: .sleep)
-        case .bedtime: WidgetURLRouter.route(for: .bedtime)
-        case .windDown(let autostart): .windDown(autostart: autostart)
-        case .alarm: .alarm
-        case .coach: .coach()
+        case .recovery: .screen(WidgetURLRouter.route(for: .recovery))
+        case .sleep: .screen(WidgetURLRouter.route(for: .sleep))
+        case .bedtime: .screen(WidgetURLRouter.route(for: .bedtime))
+        case .windDown(let autostart): .screen(.windDown(autostart: autostart))
+        case .alarm: .screen(.alarm)
+        case .coach: .screen(.coach())
+        case .paywall(let context): .paywall(context)
         }
+    }
+
+    /// The screen a destination opens; nil for the paywall sheet, which is not one.
+    public static func route(for destination: IntentDestination) -> AppRoute? {
+        if case .screen(let route) = Self.destination(for: destination) { route } else { nil }
     }
 }
 
@@ -35,8 +43,14 @@ final class AppIntentHost: IntentHost {
     private let windDown: WindDownViewModel?
     /// Redraws the Sleep sounds control after one asked for something (R48); nil in a test that does not look.
     private let controls: SleepSoundsPublisher?
+    /// Coach, which counts the free questions (R60); nil in a test that does not look (nothing is limited).
+    private let coach: CoachViewModel?
 
-    init(model: AppModel, preferences: AppPreferences, player: SoundPlayer, sounds: SoundsViewModel, alarm: AlarmService, windDown: WindDownViewModel? = nil, controls: SleepSoundsPublisher? = nil) {
+    init(
+        model: AppModel, preferences: AppPreferences, player: SoundPlayer, sounds: SoundsViewModel, alarm: AlarmService, windDown: WindDownViewModel? = nil,
+        controls: SleepSoundsPublisher? = nil, coach: CoachViewModel? = nil
+    ) {
+        self.coach = coach
         self.model = model
         self.preferences = preferences
         self.player = player
@@ -47,7 +61,7 @@ final class AppIntentHost: IntentHost {
     }
 
     func open(_ destination: IntentDestination) {
-        model.open(IntentRouting.route(for: destination))
+        model.open(IntentRouting.destination(for: destination))
     }
 
     func startWindDown(minutes: Int?) {
@@ -56,11 +70,14 @@ final class AppIntentHost: IntentHost {
         model.open(.windDown(autostart: true))
     }
 
-    func playSleepSounds(_ kind: SoundKind?) -> SoundKind {
-        let chosen = kind ?? player.lastKind ?? .rain
-        sounds.play(chosen)
+    var lastSleepSound: SoundKind? { player.lastKind }
+
+    func playSleepSounds(_ kind: SoundKind) -> Bool {
+        // The sounds screen's own guard (the plan's list, R57) has the last word: a sound it refuses plays nothing.
+        guard !sounds.isLocked(kind) else { return false }
+        sounds.play(kind)
         controls?.started()
-        return chosen
+        return true
     }
 
     func stopSleepSounds() {
@@ -83,7 +100,13 @@ final class AppIntentHost: IntentHost {
         return result.isOn && result.settings.minutesSinceMidnight == minutes ? .set(minutes: minutes) : .couldNotSet
     }
 
-    func askCoach(_ text: String) {
+    func askCoach(_ text: String) -> AskCoachOutcome {
+        // Today's free questions used up: Coach opens on its card (it says why and what Premium has) and the words are not kept.
+        guard coach?.mayAsk(text) ?? true else {
+            model.open(.coach())
+            return .limitReached
+        }
         model.askCoach(text)
+        return .asked
     }
 }

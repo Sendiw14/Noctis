@@ -32,7 +32,8 @@ public struct SleepSoundsToggleIntent: SetValueIntent, AudioPlaybackIntent {
         defer { runtime.environment.reloadControl(ControlKind.sleepSounds) }
         guard let host = await runtime.host() else { return .result() }
         if value {
-            _ = host.playSleepSounds(nil)
+            // The last sound played if the plan still includes it, Brown noise if not: the control never starts a sound the plan does not include (R62).
+            if case .play(let kind) = IntentGate.soundChoice(requested: nil, last: host.lastSleepSound, tier: runtime.environment.tier()) { _ = host.playSleepSounds(kind) }
         } else {
             host.stopSleepSounds()
         }

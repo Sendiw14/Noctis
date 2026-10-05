@@ -15,6 +15,8 @@ public enum IntentDestination: Sendable, Equatable {
     case windDown(autostart: Bool)
     case alarm
     case coach
+    /// The paywall sheet, naming what was asked for (a Premium feature on the free plan): it only shows what Premium includes, and never buys or starts anything.
+    case paywall(PaywallContext)
 }
 
 /// What happened when an intent asked for the alarm to be set.
@@ -33,16 +35,19 @@ public protocol IntentHost: AnyObject, Sendable {
     func open(_ destination: IntentDestination)
     /// Opens the wind-down and begins it, with this length (10, 20 or 30) or the person's last.
     func startWindDown(minutes: Int?)
-    /// Plays `kind`, or the last sound played (Rain before any), through the sound player; returns what was started.
-    func playSleepSounds(_ kind: SoundKind?) -> SoundKind
+    /// The last sound the player played, if it has played one: what "play sleep sounds" and the control start with (R62 turns it into a sound the plan includes).
+    var lastSleepSound: SoundKind? { get }
+    /// Plays `kind` through the sound player, as a tile on the Sounds screen would. False if the player refused it (the app's own guard says the plan does not include it).
+    func playSleepSounds(_ kind: SoundKind) -> Bool
     /// Stops what plays, with the short fade the Sounds screen uses. Nothing playing is not an error.
     func stopSleepSounds()
     /// Ends the wind-down that is running, as the End button on its screen does. Nothing running is not an error.
     func endWindDown()
     /// Sets tonight's wake alarm, only if alarm access was already given.
     func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome
-    /// Opens Coach and asks `text`. The text is held in memory until Coach takes it; the intent keeps nothing.
-    func askCoach(_ text: String)
+    /// Opens Coach and asks `text`. The text is held in memory until Coach takes it; the intent keeps nothing. With today's free questions used up Coach opens on its card
+    /// instead, and the text is not kept at all.
+    func askCoach(_ text: String) -> AskCoachOutcome
 }
 
 /// What an intent reads: the snapshot, the clock, the calendar.
@@ -69,6 +74,9 @@ public struct IntentEnvironment: Sendable {
         self.reloadControl = reloadControl
         self.endWindDownActivities = endWindDownActivities
     }
+
+    /// The person's plan, from the snapshot: free with none (R62).
+    public func tier() -> Tier { snapshot()?.tier ?? .free }
 
     /// The App Group's snapshot and the real clock.
     public static let live = IntentEnvironment(snapshot: { WidgetSnapshotStore()?.load() })

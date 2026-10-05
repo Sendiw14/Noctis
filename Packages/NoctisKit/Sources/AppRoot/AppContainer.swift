@@ -459,7 +459,7 @@ public struct AppContainer {
         IntentRuntime.shared.install(
             AppIntentHost(
                 model: model, preferences: preferences, player: soundPlayer, sounds: self.soundsViewModel, alarm: alarmService, windDown: windDown,
-                controls: sleepSoundsPublisher
+                controls: sleepSoundsPublisher, coach: coachVM
             )
         )
 

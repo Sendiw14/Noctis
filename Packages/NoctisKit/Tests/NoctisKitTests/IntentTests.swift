@@ -35,13 +35,19 @@ private final class FakeIntentHost: IntentHost {
     var calls: [String] = []
     var alarmOutcome: AlarmIntentOutcome = .set(minutes: 0)
     var played: SoundKind?
+    var lastSleepSound: SoundKind?
+    /// The app's own guard refuses the sound.
+    var refusesSounds = false
+    var coachLimited = false
 
     func open(_ destination: IntentDestination) { calls.append("open \(destination)") }
     func startWindDown(minutes: Int?) { calls.append("windDown \(minutes.map(String.init) ?? "nil")") }
-    func playSleepSounds(_ kind: SoundKind?) -> SoundKind {
-        calls.append("play \(kind?.rawValue ?? "nil")")
-        played = kind ?? .rain
-        return played ?? .rain
+    func playSleepSounds(_ kind: SoundKind) -> Bool {
+        calls.append("play \(kind.rawValue)")
+        guard !refusesSounds else { return false }
+        played = kind
+        lastSleepSound = kind
+        return true
     }
     func stopSleepSounds() { calls.append("stop") }
     func endWindDown() { calls.append("end wind-down") }
@@ -50,7 +56,10 @@ private final class FakeIntentHost: IntentHost {
         if case .set = alarmOutcome { return .set(minutes: minutes) }
         return alarmOutcome
     }
-    func askCoach(_ text: String) { calls.append("coach \(text)") }
+    func askCoach(_ text: String) -> AskCoachOutcome {
+        calls.append(coachLimited ? "coach limit" : "coach \(text)")
+        return coachLimited ? .limitReached : .asked
+    }
 }
 
 @MainActor
@@ -112,7 +121,9 @@ struct IntentAnswerTests {
 
     @Test func theBedtimeIsTheBedtimeOnlyAndIsTheSameInEveryHealthState() {
         for state in [WidgetDataState.full, .learning(nightsSoFar: 1), .empty, .stale(hours: 40), .gap] {
-            #expect(sp(WidgetSpoken.bedtime(snapshot(state), format: format)) == "Your bedtime tonight is 11:00 PM.", "no Health value in it, in any state")
+            // The free plan hears the one bedtime and Premium the window around it (R62); neither holds a Health value, in any state.
+            #expect(sp(WidgetSpoken.bedtime(snapshot(state).with(tier: .free), format: format)) == "Your bedtime tonight is 11:00 PM.")
+            #expect(sp(WidgetSpoken.bedtime(snapshot(state).with(tier: .premium), format: format)) == "Your bedtime window tonight is 10:45 to 11:15 PM.")
         }
         #expect(WidgetSpoken.bedtime(nil, format: format) == "Open NOCTIS to get started.")
         #expect(sp(WidgetSpoken.alarmSet(minutes: 6 * 60 + 30, format: format)) == "Alarm set for 6:30 AM.")
@@ -133,6 +144,8 @@ struct IntentAnswerTests {
         strings += SoundKind.allCases.map { PlaySleepSoundsIntent.dialog(kind: $0) }
         strings += [AlarmIntentOutcome.set(minutes: 450), .couldNotSet, .needsAuthorization].map { SetTonightAlarmIntent.dialog($0, format: format) }
         strings += [AskCoachIntent.noQuestion, AskCoachIntent.opening, AskCoachIntent.withoutApp]
+        strings += [IntentGate.startWindDownLocked, IntentGate.coachLimitReached] + SoundKind.allCases.map { IntentGate.premiumSoundDialog($0) }
+        strings += [WidgetSpoken.bedtime(snapshot(.full).with(tier: .free), format: format), WidgetSpoken.bedtime(snapshot(.full).with(tier: .premium), format: format)]
         #expect(strings.count > 40)
         for text in strings {
             #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))"))
@@ -160,13 +173,13 @@ struct IntentPerformTests {
 
     @Test func theActionIntentsAskTheHostForExactlyWhatWasSaid() async throws {
         let host = FakeIntentHost()
-        let under = runtime(nil, host: host)
+        let under = runtime(snapshot(.full), host: host)
         try await run(StartWindDownIntent(length: .thirtyMinutes), under: under)
         try await run(StartWindDownIntent(), under: under)
         try await run(PlaySleepSoundsIntent(sound: SoundEntity(.ocean)), under: under)
         try await run(PlaySleepSoundsIntent(), under: under)
         try await run(AskCoachIntent(question: "  Why was my sleep short?  "), under: under)
-        #expect(host.calls == ["windDown 30", "windDown nil", "play ocean", "play nil", "coach Why was my sleep short?"])
+        #expect(host.calls == ["windDown 30", "windDown nil", "play ocean", "play ocean", "coach Why was my sleep short?"], "no sound named: the last one played, here Ocean")
     }
 
     @Test func theAlarmIsSetOnlyWithAccessAndOtherwiseTheSheetOpens() async throws {
@@ -214,7 +227,7 @@ struct IntentPerformTests {
 
     @Test func aHostThatArrivesWhileAnIntentWaitsIsUsed() async throws {
         let host = FakeIntentHost()
-        let under = runtime(nil, host: nil, wait: 5)
+        let under = runtime(snapshot(.full), host: nil, wait: 5)
         async let running: Void = run(StartWindDownIntent(length: .tenMinutes), under: under)
         try await Task.sleep(for: .milliseconds(100))
         under.install(host)
@@ -401,14 +414,14 @@ struct IntentHostTests {
 
     @Test func sleepSoundsStartThroughThePlayerAndRespectWhatIsPlaying() throws {
         let bench = try Bench()
-        // Nothing played before: Rain.
-        #expect(bench.host.playSleepSounds(nil) == .rain && bench.player.player.state.kind == .rain && bench.player.player.state.phase == .playing)
+        // Nothing played before: the host has no last sound (the intent turns that into Rain).
+        #expect(bench.host.lastSleepSound == nil)
+        #expect(bench.host.playSleepSounds(.rain) && bench.player.player.state.kind == .rain && bench.player.player.state.phase == .playing)
         // Saying "play" again does not pause it.
         _ = bench.host.playSleepSounds(.rain)
         #expect(bench.player.player.state.phase == .playing)
         // Another sound crosses over; the last one played is remembered.
-        #expect(bench.host.playSleepSounds(.ocean) == .ocean && bench.player.player.lastKind == .ocean)
-        #expect(bench.host.playSleepSounds(nil) == .ocean, "no sound named: the last one played")
+        #expect(bench.host.playSleepSounds(.ocean) && bench.player.player.lastKind == .ocean && bench.host.lastSleepSound == .ocean)
         // Paused by the person: play resumes it.
         bench.player.player.pause()
         _ = bench.host.playSleepSounds(.ocean)
@@ -455,7 +468,7 @@ struct IntentHostTests {
 
     @Test func coachIsOpenedOnTheTextAndTheTabTakesItOnce() throws {
         let bench = try Bench()
-        bench.host.askCoach("Why was my sleep short?")
+        #expect(bench.host.askCoach("Why was my sleep short?") == .asked)
         #expect(bench.model.selectedTab == .coach)
         let destination = try #require(bench.model.takeCoachDestination())
         #expect(destination.text == "Why was my sleep short?" && destination.question == nil)

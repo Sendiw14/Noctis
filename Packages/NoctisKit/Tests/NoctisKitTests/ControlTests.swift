@@ -255,11 +255,12 @@ struct ControlIntentTests {
         var calls: [String] = []
         func open(_ destination: IntentDestination) { calls.append("open \(destination)") }
         func startWindDown(minutes: Int?) { calls.append("windDown \(minutes.map(String.init) ?? "nil")") }
-        func playSleepSounds(_ kind: SoundKind?) -> SoundKind { calls.append("play \(kind?.rawValue ?? "nil")"); return kind ?? .rain }
+        var lastSleepSound: SoundKind?
+        func playSleepSounds(_ kind: SoundKind) -> Bool { calls.append("play \(kind.rawValue)"); lastSleepSound = kind; return true }
         func stopSleepSounds() { calls.append("stop") }
         func endWindDown() { calls.append("end wind-down") }
         func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome { .couldNotSet }
-        func askCoach(_ text: String) { calls.append("coach") }
+        func askCoach(_ text: String) -> AskCoachOutcome { calls.append("coach"); return .asked }
     }
 
     private func run<I: AppIntent>(_ intent: I, under runtime: IntentRuntime) async throws {
@@ -279,7 +280,7 @@ struct ControlIntentTests {
         let runtime = IntentRuntime(environment: IntentEnvironment(snapshot: { nil }, reloadControl: { reloads.add($0) }), host: host)
         try await run(SleepSoundsToggleIntent(value: true), under: runtime)
         try await run(SleepSoundsToggleIntent(value: false), under: runtime)
-        #expect(host.calls == ["play nil", "stop"], "on plays the last sound (the host knows which); off stops what plays")
+        #expect(host.calls == ["play rain", "stop"], "on plays the last sound (Rain before any); off stops what plays")
         #expect(reloads.all == [ControlKind.sleepSounds, ControlKind.sleepSounds])
     }
 
@@ -320,7 +321,7 @@ struct ControlIntentTests {
         let alarm = AlarmService(backend: backend, store: MemoryAlarmStore(), defaultMinutes: { 7 * 60 })
         let host = AppIntentHost(model: model, preferences: preferences, player: bench.player, sounds: sounds, alarm: alarm, controls: publisher)
 
-        _ = host.playSleepSounds(nil)
+        _ = host.playSleepSounds(.rain)
         #expect(bench.player.state.phase == .playing && store.exists)
         let afterPlay = box.count
         host.stopSleepSounds()

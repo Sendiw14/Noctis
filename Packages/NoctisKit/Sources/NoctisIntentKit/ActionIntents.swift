@@ -31,9 +31,15 @@ public struct StartWindDownIntent: AppIntent {
 
     public static let withoutApp = "Open NOCTIS to start your wind-down."
 
+    /// The wind-down session is Premium (R62): on the free plan nothing is started. The app opens on the paywall sheet, saying what Premium includes, and says so.
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let host = await IntentRuntime.current.host() else { return .result(dialog: IntentDialog(stringLiteral: Self.withoutApp)) }
+        let runtime = IntentRuntime.current
+        guard let host = await runtime.host() else { return .result(dialog: IntentDialog(stringLiteral: Self.withoutApp)) }
+        guard IntentGate.includesStartWindDown(in: runtime.environment.tier()) else {
+            host.open(.paywall(.windDown))
+            return .result(dialog: IntentDialog(stringLiteral: IntentGate.startWindDownLocked))
+        }
         host.startWindDown(minutes: length?.minutes)
         return .result(dialog: IntentDialog(stringLiteral: Self.dialog(length: length)))
     }
@@ -63,12 +69,19 @@ public struct PlaySleepSoundsIntent: AudioPlaybackIntent {
 
     public static let withoutApp = "Open NOCTIS to play sleep sounds."
 
+    /// Brown noise, Rain and Ocean are free; a Premium sound on the free plan plays nothing and says so (R62). Naming none plays the last one the plan includes.
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let host = await IntentRuntime.current.host() else { return .result(dialog: IntentDialog(stringLiteral: Self.withoutApp)) }
-        // The existing sound player starts it, and handles interruptions as it always does.
-        let kind = host.playSleepSounds(requestedKind)
-        return .result(dialog: IntentDialog(stringLiteral: Self.dialog(kind: kind)))
+        let runtime = IntentRuntime.current
+        guard let host = await runtime.host() else { return .result(dialog: IntentDialog(stringLiteral: Self.withoutApp)) }
+        switch IntentGate.soundChoice(requested: requestedKind, last: host.lastSleepSound, tier: runtime.environment.tier()) {
+        case .premiumNeeded(let kind):
+            return .result(dialog: IntentDialog(stringLiteral: IntentGate.premiumSoundDialog(kind)))
+        case .play(let kind):
+            // The existing sound player starts it, and handles interruptions as it always does; its own guard has the last word on the plan.
+            guard host.playSleepSounds(kind) else { return .result(dialog: IntentDialog(stringLiteral: IntentGate.premiumSoundDialog(kind))) }
+            return .result(dialog: IntentDialog(stringLiteral: Self.dialog(kind: kind)))
+        }
     }
 }
 
@@ -152,7 +165,8 @@ public struct AskCoachIntent: AppIntent {
     public func perform() async throws -> some IntentResult & ProvidesDialog {
         guard !cleaned.isEmpty else { return .result(dialog: IntentDialog(stringLiteral: Self.noQuestion)) }
         guard let host = await IntentRuntime.current.host() else { return .result(dialog: IntentDialog(stringLiteral: Self.withoutApp)) }
-        host.askCoach(cleaned)
-        return .result(dialog: IntentDialog(stringLiteral: Self.opening))
+        // The free questions are counted by the app (R60): with today's used up Coach opens on its card and the question is neither asked nor kept.
+        let outcome = host.askCoach(cleaned)
+        return .result(dialog: IntentDialog(stringLiteral: outcome == .asked ? Self.opening : IntentGate.coachLimitReached))
     }
 }

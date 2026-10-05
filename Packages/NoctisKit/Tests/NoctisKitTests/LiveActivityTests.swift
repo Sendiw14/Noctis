@@ -327,11 +327,12 @@ struct EndWindDownIntentTests {
         var calls: [String] = []
         func open(_ destination: IntentDestination) {}
         func startWindDown(minutes: Int?) {}
-        func playSleepSounds(_ kind: SoundKind?) -> SoundKind { .rain }
+        var lastSleepSound: SoundKind?
+        func playSleepSounds(_ kind: SoundKind) -> Bool { true }
         func stopSleepSounds() {}
         func endWindDown() { calls.append("end") }
         func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome { .couldNotSet }
-        func askCoach(_ text: String) {}
+        func askCoach(_ text: String) -> AskCoachOutcome { .asked }
     }
 
     private nonisolated final class Counter: @unchecked Sendable {

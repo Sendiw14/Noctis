@@ -62,11 +62,9 @@ public final class FeatureGate {
     // MARK: Sounds
 
     /// The sounds of `tier`: Brown noise, Rain and Ocean are free; Wind, Fireplace and Ambient are Premium (a Premium person has all six).
-    public static func sounds(for tier: Tier) -> [SoundKind] {
-        tier == .premium ? SoundKind.allCases : SoundKind.allCases.filter { freeSounds.contains($0) }
-    }
+    public static func sounds(for tier: Tier) -> [SoundKind] { SoundAccess.kinds(for: tier) }
 
-    public static let freeSounds: [SoundKind] = [.brown, .rain, .ocean]
+    public static let freeSounds: [SoundKind] = SoundAccess.freeKinds
 
     public func isUnlocked(_ sound: SoundKind) -> Bool { Self.sounds(for: tier).contains(sound) }
 

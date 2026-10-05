@@ -79,8 +79,9 @@ let package = Package(
         // service that wraps AlarmKit. No UI; nonisolated like the other engines.
         // The breathing patterns and schedule, with no dependencies: the iPhone's breathing and the Apple Watch's both draw them.
         .target(name: "BreathingKit", swiftSettings: engineSwiftSettings),
-        // The feature table, the entitlement rules and the free Coach questions' arithmetic: pure, with no dependencies, so the widgets and the Watch can link it.
-        .target(name: "PremiumKit", swiftSettings: engineSwiftSettings),
+        // The feature table, the entitlement rules, the free Coach questions' arithmetic and which sounds a plan includes: pure, with no dependency but the sound names, so the
+        // widgets, the Watch and the intents can link it.
+        .target(name: "PremiumKit", dependencies: ["SoundCatalog"], swiftSettings: engineSwiftSettings),
         .target(
             name: "NightKit",
             dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit", "AlarmShared", "BreathingKit"],

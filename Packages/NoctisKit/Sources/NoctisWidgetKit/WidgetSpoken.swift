@@ -1,4 +1,5 @@
 import Foundation
+import PremiumKit
 
 /// What Siri and Shortcuts say (APP_RULES.md R47), built from the same snapshot, the same day rule and the same words as the
 /// widgets (R44, R45): "Your recovery is 70. Sleep was 6 hours 42 minutes." Pure, so every state is a unit test and every sentence goes
@@ -34,9 +35,14 @@ public enum WidgetSpoken {
         }
     }
 
-    /// "Your bedtime tonight is 11:00 PM." The bedtime only: it is the plan, not a Health value.
+    /// "Your bedtime tonight is 11:00 PM." The bedtime only: it is the plan, not a Health value. The free plan hears the one bedtime; Premium hears the window around it,
+    /// "Your bedtime window tonight is 10:45 to 11:15 PM." (R62: the plan is the snapshot's flag, and the table says what it includes).
     public static func bedtime(_ snapshot: WidgetSnapshot?, format: WidgetFormat = WidgetFormat()) -> String {
         guard let snapshot else { return WidgetCopy.getStarted + "." }
+        if FeatureTable.isIncluded(.tonightPersonalizedWindow, in: snapshot.tier), let start = snapshot.plan.windowStartMinutes, let end = snapshot.plan.windowEndMinutes {
+            let window = format.windowText(startMinutes: start, endMinutes: end).replacingOccurrences(of: "\u{2009}–\u{2009}", with: " to ").replacingOccurrences(of: " – ", with: " to ")
+            return "Your bedtime window tonight is \(window)."
+        }
         let time = format.clock(minutesSinceMidnight: snapshot.plan.bedtimeMinutes)
         return "Your bedtime tonight is \(time)."
     }
