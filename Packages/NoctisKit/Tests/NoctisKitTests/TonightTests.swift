@@ -342,11 +342,10 @@ struct TonightViewModelTests {
         return (model, backend, store, opens)
     }
 
+    /// By the clock, not by a count of turns: the whole suite shares the main actor, so a turn can take far longer than its sleep.
     private func waitUntil(_ condition: @MainActor () -> Bool) async -> Bool {
-        for _ in 0..<300 {
-            if condition() { return true }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        let deadline = ContinuousClock.now + .seconds(30)
+        while !condition(), ContinuousClock.now < deadline { try? await Task.sleep(for: .milliseconds(10)) }
         return condition()
     }
 

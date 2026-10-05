@@ -255,6 +255,7 @@ struct HeartPageView: View {
 struct TonightPageView: View {
     let content: WatchTonightPage
     let systemDate: (Date) -> Date
+    let breathe: () -> Void
 
     var body: some View {
         ScrollView {
@@ -283,6 +284,16 @@ struct TonightPageView: View {
                     if let wake = content.wakeLine { WatchQuietLine(text: wake) }
                     if let alarm = content.alarmLine { WatchQuietLine(text: alarm) }
                 }
+                // Breathing needs nothing from the iPhone, so it is there in every state.
+                Button(action: breathe) {
+                    Text(WatchBreathCopy.button)
+                        .noctisFont(15, .semibold, relativeTo: .body)
+                        .foregroundStyle(NoctisAppColor.blockInk)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(Capsule(style: .continuous).fill(WatchTheme.accent(.tonight)))
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(WatchBreathCopy.tagline)
             }
             .padding(.horizontal, 6)
             .accessibilityElement(children: .contain)
@@ -297,6 +308,7 @@ struct SettingsPageView: View {
     let isPhoneReachable: Bool
     let askResult: String?
     let ask: () -> Void
+    @Binding var hapticsOn: Bool
 
     var body: some View {
         ScrollView {
@@ -318,6 +330,11 @@ struct SettingsPageView: View {
                 .buttonStyle(.plain)
                 .accessibilityHint(isPhoneReachable ? "Asks your iPhone to refresh." : WatchCopy.unreachable)
                 if let askResult { WatchQuietLine(text: askResult) }
+                Toggle(WatchBreathCopy.hapticsToggle, isOn: $hapticsOn)
+                    .tint(NoctisAppColor.sage)
+                    .noctisFont(14, .semibold, relativeTo: .footnote)
+                    .foregroundStyle(WatchTheme.ink)
+                    .frame(minHeight: 44)
                 WatchQuietLine(text: content.about)
                 WatchQuietLine(text: content.version)
             }

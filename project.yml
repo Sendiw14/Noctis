@@ -161,6 +161,8 @@ targets:
         product: NoctisWidgetKit
       - package: NoctisKit
         product: DesignSystem
+      - package: NoctisKit
+        product: BreathingKit
       # The complications (part 2 of the Watch work).
       - target: NOCTISWatchWidgets
     entitlements:
@@ -176,6 +178,9 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.noctis.app
+        # Breathing keeps the app running with the wrist down (a mindfulness extended runtime session, R55).
+        WKBackgroundModes:
+          - mindfulness
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.watchkitapp

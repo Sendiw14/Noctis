@@ -53,3 +53,10 @@ public struct WatchContext: Equatable, Sendable {
     public static let maximumBytes = 4096
     public var byteCount: Int { (snapshotData?.count ?? 0) + 64 }
 }
+
+/// The one preference the Watch keeps for itself (APP_RULES.md R55): whether breathing on the Watch plays haptics. It is the Watch's own, in the
+/// Watch's own defaults, and is listed in the data inventory under the Apple Watch's category. A "Delete all NOCTIS data" on the iPhone resets it, with
+/// the rest of what the Watch holds, when the Watch next connects.
+public nonisolated enum WatchPreferenceKeys {
+    public static let breathHaptics = "noctis.watch.breathHaptics"
+}

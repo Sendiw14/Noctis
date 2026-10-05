@@ -211,7 +211,8 @@ struct CoachFoundationModelsProviderTests {
         )
         let result = await service.answer(to: "Why is my recovery lower today?")
         print("COACH-FM availability=\(backend.availability.rawValue) outcome=\(result.outcome.code) source=\(result.answer.sourceKind.rawValue)")
-        for text in result.answer.allText { #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: text)) }
+        // The app's own pattern note ("not proof of a cause") is written by the app, not the model, and is the one sentence that has to say "cause".
+        for text in result.answer.allText where text != result.answer.patternNote { #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: text)) }
         #expect(!result.answer.allText.joined().contains("{{"))
         switch result.outcome {
         case .model: #expect(result.answer.sourceKind == .appleIntelligence)

@@ -18,6 +18,8 @@
 		217D71F7695816D618EF320B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E45DD726D9306577368691CB /* PrivacyInfo.xcprivacy */; };
 		25AAD24E5C80ED991A81E595 /* NoctisWatchKit in Frameworks */ = {isa = PBXBuildFile; productRef = B8942FC75A169FA1FAE86847 /* NoctisWatchKit */; };
 		25CF556144CFBEE639B4531E /* NoctisWidgetKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1397A08C866BEA750F6D4CAC /* NoctisWidgetKit */; };
+		2BAE4D8E8121B8A5A7971641 /* WatchBreathing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34018D713065E556C7C30869 /* WatchBreathing.swift */; };
+		2BB343D20446BAFAB394F7AE /* BreathingKit in Frameworks */ = {isa = PBXBuildFile; productRef = 757C0CF7B1DDF4C61E2851C5 /* BreathingKit */; };
 		2D174C4836CCB16E9ABF7770 /* ColorPassQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43AC80FF5F56C48B897A61B /* ColorPassQATests.swift */; };
 		3E0928328CBB9C6CED1BB7F5 /* HomeMotionQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4176437B1713187435A9E79D /* HomeMotionQATests.swift */; };
 		3E911B85790DBF6F34DD1F06 /* WatchViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4381418BABCD30ED4F9689 /* WatchViews.swift */; };
@@ -148,6 +150,7 @@
 		29432FD48663BA9B7FD95CC0 /* NoctisAlarmWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisAlarmWidget.swift; sourceTree = "<group>"; };
 		29446C26A811EB272C0D0A01 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
 		2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		34018D713065E556C7C30869 /* WatchBreathing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBreathing.swift; sourceTree = "<group>"; };
 		3B85D922D7533E3338F79684 /* NoctisKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NoctisKit; path = Packages/NoctisKit; sourceTree = SOURCE_ROOT; };
 		40BE06CE6330A713747986A3 /* NOCTISWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NOCTISWatchApp.swift; sourceTree = "<group>"; };
 		4176437B1713187435A9E79D /* HomeMotionQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeMotionQATests.swift; sourceTree = "<group>"; };
@@ -200,6 +203,7 @@
 				25AAD24E5C80ED991A81E595 /* NoctisWatchKit in Frameworks */,
 				25CF556144CFBEE639B4531E /* NoctisWidgetKit in Frameworks */,
 				8F16A7A5323FD3FD2BB32E0E /* DesignSystem in Frameworks */,
+				2BB343D20446BAFAB394F7AE /* BreathingKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -364,6 +368,7 @@
 				6F6B227D6C1D0125E6CB28A2 /* NOCTISWatch.entitlements */,
 				40BE06CE6330A713747986A3 /* NOCTISWatchApp.swift */,
 				E45DD726D9306577368691CB /* PrivacyInfo.xcprivacy */,
+				34018D713065E556C7C30869 /* WatchBreathing.swift */,
 				64BCF03BF4C8582FEE89933F /* WatchMock.swift */,
 				5CA15F9E177F02AAC5702DB8 /* WatchModel.swift */,
 				29446C26A811EB272C0D0A01 /* WatchRootView.swift */,
@@ -461,6 +466,7 @@
 				B8942FC75A169FA1FAE86847 /* NoctisWatchKit */,
 				1397A08C866BEA750F6D4CAC /* NoctisWidgetKit */,
 				DA618A0CA216AACC91F1A575 /* DesignSystem */,
+				757C0CF7B1DDF4C61E2851C5 /* BreathingKit */,
 			);
 			productName = NOCTISWatch;
 			productReference = F33DBBF3C1F177D3E008F745 /* NOCTISWatch.app */;
@@ -649,6 +655,7 @@
 			files = (
 				5791296039EB649DC5F07D28 /* ComplicationGallery.swift in Sources */,
 				8C400B4A1FDE08C78B04C375 /* NOCTISWatchApp.swift in Sources */,
+				2BAE4D8E8121B8A5A7971641 /* WatchBreathing.swift in Sources */,
 				D51E0D694415A7BBF28D3E87 /* WatchMock.swift in Sources */,
 				DE78B57E5DDF47A44001EF3E /* WatchModel.swift in Sources */,
 				5C192DBF50D6E63AE11AFC71 /* WatchRootView.swift in Sources */,
@@ -1152,6 +1159,10 @@
 		61CABC6F041652D64F45376A /* AlarmShared */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AlarmShared;
+		};
+		757C0CF7B1DDF4C61E2851C5 /* BreathingKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BreathingKit;
 		};
 		8DFDA9704300023319D3E352 /* NoctisWatchKit */ = {
 			isa = XCSwiftPackageProductDependency;

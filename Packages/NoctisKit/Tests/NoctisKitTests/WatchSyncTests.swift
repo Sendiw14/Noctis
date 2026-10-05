@@ -749,7 +749,7 @@ struct WatchInventoryTests {
 
     @Test func theWatchStatusIsListedAndTheEpochIsTheOneValueThatSurvives() {
         let status = inventory[.watchSync]
-        #expect(status.defaultsKeys == [WatchSyncDefaults.lastSentAtKey, WatchSyncDefaults.complicationMarkKey])
+        #expect(status.defaultsKeys == [WatchSyncDefaults.lastSentAtKey, WatchSyncDefaults.complicationMarkKey, WatchPreferenceKeys.breathHaptics])
         #expect(inventory.facts.survivesDeleteAll.map(\.key) == [WatchSyncDefaults.dataEpochKey])
         let keys = inventory.defaultsKeys
         #expect(!keys.contains(WatchSyncDefaults.dataEpochKey), "no category lists it: delete-all must leave it")
@@ -814,7 +814,7 @@ struct WatchTargetStructureTests {
 
     @Test func theKitsTheWatchLinksDependOnNothingThatReadsHealth() throws {
         let package = try read("Packages/NoctisKit/Package.swift")
-        for line in ["name: \"NoctisWatchKit\"", "name: \"NoctisWidgetKit\"", "name: \"DesignSystem\""] {
+        for line in ["name: \"NoctisWatchKit\"", "name: \"NoctisWidgetKit\"", "name: \"DesignSystem\"", "name: \"BreathingKit\""] {
             let row = try #require(package.components(separatedBy: "\n").first { $0.contains(".target(\(line)") })
             for token in ["HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NoctisCore", "InsightsKit", "NightKit", "SoundKit"] {
                 #expect(!row.contains(token), Comment(rawValue: "\(line) depends on \(token)"))
@@ -822,27 +822,41 @@ struct WatchTargetStructureTests {
         }
         let project = try read("project.yml")
         let products = try block("NOCTISWatch", in: project).components(separatedBy: "product: ").dropFirst().map { String($0.prefix { $0.isLetter }) }
-        #expect(Set(products) == ["NoctisWatchKit", "NoctisWidgetKit", "DesignSystem"], "\(products)")
+        #expect(Set(products) == ["NoctisWatchKit", "NoctisWidgetKit", "DesignSystem", "BreathingKit"], "\(products)")
     }
 
-    @Test func eachWatchTargetHasItsOwnPrivacyManifestThatDeclaresNothing() throws {
+    @Test func eachWatchTargetHasItsOwnPrivacyManifestThatDeclaresOnlyWhatItUses() throws {
         for path in ["NOCTISWatch/PrivacyInfo.xcprivacy", "NOCTISWatchWidgets/PrivacyInfo.xcprivacy"] {
             let data = try Data(contentsOf: RawDefaultsTests.root.appendingPathComponent(path))
             let plist = try #require(try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
             #expect(plist["NSPrivacyTracking"] as? Bool == false, Comment(rawValue: path))
             #expect((plist["NSPrivacyTrackingDomains"] as? [Any])?.isEmpty == true && (plist["NSPrivacyCollectedDataTypes"] as? [Any])?.isEmpty == true)
-            #expect((plist["NSPrivacyAccessedAPITypes"] as? [Any])?.isEmpty == true, "it uses no required-reason API: no defaults, no timestamps")
+            let types = try #require(plist["NSPrivacyAccessedAPITypes"] as? [[String: Any]], Comment(rawValue: path))
+            if path.hasPrefix("NOCTISWatchWidgets") {
+                #expect(types.isEmpty, "the complications use no required-reason API: no defaults, no timestamps")
+            } else {
+                // The Watch app keeps one preference of its own in UserDefaults (R55), for its own use only: reason CA92.1.
+                #expect(types.count == 1 && types.first?["NSPrivacyAccessedAPIType"] as? String == "NSPrivacyAccessedAPICategoryUserDefaults")
+                #expect(types.first?["NSPrivacyAccessedAPITypeReasons"] as? [String] == ["CA92.1"])
+            }
         }
     }
 
-    @Test func theWatchCodeUsesNoRequiredReasonAPISoItsEmptyManifestIsTrue() throws {
-        let tokens = ["UserDefaults", "@AppStorage", "creationDate", "modificationDate", "contentModificationDate", "systemUptime", "mach_absolute_time", "volumeAvailableCapacity", "systemFreeSize", "activeInputModes", "fstat(", "lstat("]
+    @Test func theWatchCodeUsesNoRequiredReasonAPIBeyondTheOneItsManifestDeclares() throws {
+        let tokens = ["@AppStorage", "creationDate", "modificationDate", "contentModificationDate", "systemUptime", "mach_absolute_time", "volumeAvailableCapacity", "systemFreeSize", "activeInputModes", "fstat(", "lstat("]
         let files = RawDefaultsTests.swiftFiles(under: ["NOCTISWatch", "NOCTISWatchWidgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/DesignSystem"])
         #expect(files.count > 20)
+        var usesDefaults: Set<String> = []
         for file in files {
             let code = RawDefaultsTests.code(file.text)
             for token in tokens { #expect(!code.contains(token), Comment(rawValue: "\(file.path) uses \(token)")) }
+            if code.contains("UserDefaults") { usesDefaults.insert(file.path) }
         }
+        // UserDefaults is named only by the small wrapper in the Watch kit (`WatchPreferences`, the Watch app's one preference); the Watch app opens it
+        // with the system's own defaults, and that is the use its manifest declares.
+        #expect(usesDefaults == ["Packages/NoctisKit/Sources/NoctisWatchKit/WatchBreathing.swift"], "\(usesDefaults)")
+        let model = try read("NOCTISWatch/WatchModel.swift")
+        #expect(model.contains("WatchPreferences(defaults: .standard)"))
     }
 
     @Test func theWatchBuildsOnlyWhatItNeedsFromTheKits() throws {

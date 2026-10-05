@@ -1,4 +1,5 @@
 import Foundation
+import NoctisWidgetKit
 
 nonisolated extension DataInventory {
     /// What NOCTIS keeps. Hand-written, and held to the code by `DataInventoryTests` (APP_RULES.md R41): add a store, a
@@ -46,10 +47,13 @@ nonisolated extension DataInventory {
                 owner: "NoctisWidgetKit/WidgetSnapshotStore.swift", holdsUserContent: false, export: .included("widgetSnapshot")
             ),
             DataCategory(
-                .watchSync, name: "Apple Watch status",
-                summary: "Two small notes NOCTIS keeps about sending to your Apple Watch: when it last sent the summary, and the day your Watch face's complication was last refreshed for. They hold no Health value.",
-                contents: ["When the summary was last sent to your Apple Watch", "Which day, and whether it had a recovery, the complication was last refreshed for"],
-                locations: [.defaults([WatchSyncDefaults.lastSentAtKey, WatchSyncDefaults.complicationMarkKey])],
+                .watchSync, name: "Apple Watch status and settings",
+                summary: "Small notes about your Apple Watch: when NOCTIS last sent it the summary, the day your Watch face's complication was last refreshed for, and, kept on the Watch itself, whether breathing on the Watch plays haptics. They hold no Health value.",
+                contents: [
+                    "When the summary was last sent to your Apple Watch", "Which day, and whether it had a recovery, the complication was last refreshed for",
+                    "Whether breathing on your Apple Watch plays haptics (kept on the Watch, and reset when you delete all NOCTIS data)",
+                ],
+                locations: [.defaults([WatchSyncDefaults.lastSentAtKey, WatchSyncDefaults.complicationMarkKey, WatchPreferenceKeys.breathHaptics])],
                 inBackup: true, protection: .standard, deletion: .button("Cached summaries"),
                 owner: "NoctisCore/WatchSync/WatchSyncDefaults.swift", holdsUserContent: false, export: .included("watchSync")
             ),

@@ -18,12 +18,15 @@ final class WatchSnapshotReceiver: NSObject, WCSessionDelegate, @unchecked Senda
     private let didChange: @Sendable (_ held: (snapshot: WidgetSnapshot, receivedAt: Date?)?) -> Void
     private let didChangeReachability: @Sendable (Bool) -> Void
     private let reloadComplications: @Sendable () -> Void
+    private let didWipe: @Sendable () -> Void
 
     /// `reloadComplications` is called whenever what the Watch holds changes (a new summary, a wipe).
     init(
         inbox: WatchInbox?, didChange: @escaping @Sendable (_ held: (snapshot: WidgetSnapshot, receivedAt: Date?)?) -> Void,
-        didChangeReachability: @escaping @Sendable (Bool) -> Void = { _ in }, reloadComplications: @escaping @Sendable () -> Void = {}
+        didChangeReachability: @escaping @Sendable (Bool) -> Void = { _ in }, didWipe: @escaping @Sendable () -> Void = {},
+        reloadComplications: @escaping @Sendable () -> Void = {}
     ) {
+        self.didWipe = didWipe
         self.inbox = inbox
         self.didChange = didChange
         self.didChangeReachability = didChangeReachability
@@ -48,7 +51,12 @@ final class WatchSnapshotReceiver: NSObject, WCSessionDelegate, @unchecked Senda
     private func apply(_ dictionary: [String: Any]) {
         guard let inbox, let context = WatchContext(dictionary: dictionary) else { return }
         switch inbox.receive(context, now: Date()) {
-        case .stored, .wiped, .cleared:
+        case .wiped:
+            // "Delete all NOCTIS data": what the Watch kept for itself goes too.
+            didWipe()
+            didChange(inbox.load())
+            reloadComplications()
+        case .stored, .cleared:
             didChange(inbox.load())
             reloadComplications()
         case .ignoredOlderEpoch, .ignoredOlderSnapshot, .ignoredUnreadable:

@@ -14,6 +14,8 @@ final class WatchModel {
     private(set) var isPhoneReachable = false
 
     @ObservationIgnored private(set) var receiver: WatchSnapshotReceiver?
+    /// Breathing: the Watch's own exercise and its one preference (R55). The preference lives in the Watch's defaults and nowhere else.
+    let breath = WatchBreathModel(preferences: WatchPreferences(defaults: .standard))
     #if DEBUG
     /// `-watchRedacted`: draw every Health number as the system draws it while the Watch is locked.
     @ObservationIgnored private(set) var debugRedacted = false
@@ -21,12 +23,15 @@ final class WatchModel {
     @ObservationIgnored private var debugClock: (pretend: Date, started: Date)?
     /// `-watchPage recovery|sleep|heart|tonight|settings`: the page to open on, so a screenshot needs no scrolling.
     @ObservationIgnored private(set) var debugPage: WatchPage?
+    /// `-watchBreathing ...`: opens breathing in the state named (see `WatchBreathModel.debugApply`).
+    @ObservationIgnored private(set) var debugBreathing: String?
     #endif
 
     init() {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         debugRedacted = arguments.contains("-watchRedacted")
+        if let index = arguments.firstIndex(of: "-watchBreathing"), arguments.indices.contains(index + 1) { debugBreathing = arguments[index + 1] }
         if let index = arguments.firstIndex(of: "-watchPage"), arguments.indices.contains(index + 1) { debugPage = WatchPage(rawValue: arguments[index + 1]) }
         if let mock = WatchMock(arguments: arguments) {
             // `-watchMockSnapshot full|learning|...`: the Watch app without the iPhone, for screenshots and tests. Nothing is stored or received.
@@ -45,6 +50,7 @@ final class WatchModel {
             inbox: inbox,
             didChange: { [weak self] held in Task { @MainActor in self?.apply(held) } },
             didChangeReachability: { [weak self] reachable in Task { @MainActor in self?.isPhoneReachable = reachable } },
+            didWipe: { [weak self] in Task { @MainActor in self?.breath.resetPreferences() } },
             // What the Watch holds changed: the complications are asked to draw it.
             reloadComplications: { WidgetCenter.shared.reloadAllTimelines() }
         )
