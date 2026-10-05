@@ -35,12 +35,13 @@ nonisolated extension DataInventory {
             ),
             DataCategory(
                 .widgetSnapshot, name: "Widget summary",
-                summary: "A small file NOCTIS writes for its widgets and for your Apple Watch, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked. If you have an Apple Watch with NOCTIS on it, the same summary is sent to it, and only to it.",
+                summary: "A small file NOCTIS writes for its widgets and for your Apple Watch, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked. It also holds one word saying whether you are on the free plan or Premium, so a widget or your Apple Watch can show what your plan includes without asking the App Store; nothing about a purchase is kept in it. If you have an Apple Watch with NOCTIS on it, the same summary is sent to it, and only to it.",
                 contents: [
                     "Your recovery score, how it compares with your usual, and the four arcs of its ring", "How each of the four recovery factors scored, its value last night and your usual for it",
                     "Last night's sleep: how long, its stages and when it began and ended", "Your resting heart rate and heart rate variability for last night",
                     "Tonight's bedtime and your usual wake time", "Your wake alarm's time, and whether it is on",
                     "How many nights your usual is built from, and the time of your last \"Delete all NOCTIS data\"",
+                "A free or Premium flag (goes only to your own Apple Watch)",
                 ],
                 locations: [.file(.appGroup, "WidgetSnapshot.json")],
                 destination: .pairedWatch("to your own paired Apple Watch, over Bluetooth or Wi-Fi, through Apple's WatchConnectivity. It is never sent to a server."),

@@ -323,11 +323,13 @@ public struct AppContainer {
             tier: { gate.tier }
         )
         self.notificationCoordinator = coordinator
-        // A purchase or a lapse changes the evening reminder's words (R61): the reminders are rebuilt for the new plan.
+        // A purchase or a lapse changes the evening reminder's words (R61): the reminders are rebuilt for the new plan. It also changes what the widgets,
+        // the Watch and the intents may show (R62): the snapshot is written again at once, which redraws the widgets and goes to the Watch.
         let tierChained = store.entitlementManager.onTierChange
         store.entitlementManager.onTierChange = { new, old in
             tierChained?(new, old)
             coordinator.reschedule()
+            Task { await widgetPublisher.republish() }
         }
         model.onProfileChange = {
             coordinator.reschedule()
@@ -368,6 +370,7 @@ public struct AppContainer {
             )
         }
         widgetInputs.setAlarm { WidgetSnapshotMaker.alarm(await alarmService.status().settings) }
+        widgetInputs.setTier { await MainActor.run { gate.tier } }
         Task {
             for await _ in await alarmService.updates() { await widgetPublisher.republish() }
         }

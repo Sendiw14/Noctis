@@ -1,4 +1,5 @@
 import Foundation
+import PremiumKit
 
 // The one thing widgets (and any other extension) read (APP_RULES.md R44): a small file the app writes after it has looked
 // at Health. It holds the least that can draw the surfaces: derived numbers and clock times. No sample times, no source
@@ -320,11 +321,14 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     public var nightsOfHistory: Int
     /// Unix seconds of the last "Delete all NOCTIS data", 0 if never (v2). A Watch that sees a greater one than it holds wipes its copy.
     public var dataEpoch: Int64
+    /// The person's plan when the app wrote this (APP_RULES.md R62): a free or premium flag, and nothing else about a purchase. Extensions and the Watch never
+    /// call StoreKit; they ask the feature table what this tier includes. A snapshot with no flag (written before it existed) is free.
+    public var tier: Tier
 
     public init(
         version: Int = WidgetSnapshot.currentVersion, forDay: WidgetDay, generatedAt: Date, plan: WidgetPlan, state: WidgetDataState,
         recovery: WidgetRecovery? = nil, lastNight: WidgetNight? = nil, factors: WidgetFactors? = nil, alarm: WidgetAlarm? = nil,
-        recoveryFactors: [WidgetRecoveryFactor] = [], nightsOfHistory: Int = 0, dataEpoch: Int64 = 0
+        recoveryFactors: [WidgetRecoveryFactor] = [], nightsOfHistory: Int = 0, dataEpoch: Int64 = 0, tier: Tier = .free
     ) {
         self.version = version
         self.forDay = forDay
@@ -338,11 +342,12 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
         self.recoveryFactors = recoveryFactors
         self.nightsOfHistory = min(max(nightsOfHistory, 0), 14)
         self.dataEpoch = max(dataEpoch, 0)
+        self.tier = tier
     }
 
     enum CodingKeys: String, CodingKey {
         case version = "v", forDay = "day", generatedAt = "at", plan = "p", state = "st", recovery = "rec", lastNight = "n", factors = "f", alarm = "al"
-        case recoveryFactors = "rf", nightsOfHistory = "nh", dataEpoch = "de"
+        case recoveryFactors = "rf", nightsOfHistory = "nh", dataEpoch = "de", tier = "t"
     }
 
     public init(from decoder: any Decoder) throws {
@@ -355,8 +360,17 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
             alarm: try values.decodeIfPresent(WidgetAlarm.self, forKey: .alarm),
             recoveryFactors: try values.decodeIfPresent([WidgetRecoveryFactor].self, forKey: .recoveryFactors) ?? [],
             nightsOfHistory: try values.decodeIfPresent(Int.self, forKey: .nightsOfHistory) ?? 0,
-            dataEpoch: try values.decodeIfPresent(Int64.self, forKey: .dataEpoch) ?? 0
+            dataEpoch: try values.decodeIfPresent(Int64.self, forKey: .dataEpoch) ?? 0,
+            // An unknown word is free too: a flag that cannot be read never unlocks anything.
+            tier: (try? values.decodeIfPresent(Tier.self, forKey: .tier)).flatMap { $0 } ?? .free
         )
+    }
+
+    /// The same snapshot for another plan (a purchase, or a lapse).
+    public func with(tier: Tier) -> WidgetSnapshot {
+        var copy = self
+        copy.tier = tier
+        return copy
     }
 
     /// The same snapshot for the next epoch (delete-all), with everything else as it was: used only to stamp a snapshot.

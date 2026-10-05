@@ -1,5 +1,6 @@
 import Foundation
 import NightKit
+import PremiumKit
 import NoctisWidgetKit
 import RecoveryKit
 import SleepKit
@@ -11,7 +12,7 @@ public nonisolated enum WidgetSnapshotMaker {
     /// The snapshot for `home`, or nil when there is nothing true to say (a failed read leaves the last snapshot as it was).
     public static func make(
         home: HomeSnapshot, profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, now: Date, calendar: Calendar,
-        dataEpoch: Int64 = 0
+        dataEpoch: Int64 = 0, tier: Tier = .free
     ) -> WidgetSnapshot? {
         guard let state = state(of: home, now: now) else { return nil }
 
@@ -59,7 +60,7 @@ public nonisolated enum WidgetSnapshotMaker {
 
         return WidgetSnapshot(
             forDay: forDay, generatedAt: now, plan: plan, state: state, recovery: recovery, lastNight: night, factors: factors, alarm: alarm,
-            recoveryFactors: recoveryFactors, nightsOfHistory: nightsOfHistory, dataEpoch: dataEpoch
+            recoveryFactors: recoveryFactors, nightsOfHistory: nightsOfHistory, dataEpoch: dataEpoch, tier: tier
         )
     }
 

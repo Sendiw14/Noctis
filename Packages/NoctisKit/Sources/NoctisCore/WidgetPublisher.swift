@@ -1,6 +1,7 @@
 import Foundation
 import NightKit
 import NoctisWidgetKit
+import PremiumKit
 
 /// What the publisher asks the app for each time it writes: the profile, the bedtime recommendation if one is known, and the
 /// alarm. Set after the repositories that answer exist, so the publisher can be made first.
@@ -9,6 +10,7 @@ public nonisolated final class WidgetInputSource: @unchecked Sendable {
     private var profileProvider: @Sendable () async -> UserProfileSnapshot
     private var bedtimeProvider: @Sendable (UserProfileSnapshot) async -> BedtimeRecommendation? = { _ in nil }
     private var alarmProvider: @Sendable () async -> WidgetAlarm? = { nil }
+    private var tierProvider: @Sendable () async -> Tier = { .free }
 
     public init(profile: @escaping @Sendable () async -> UserProfileSnapshot) {
         profileProvider = profile
@@ -22,10 +24,15 @@ public nonisolated final class WidgetInputSource: @unchecked Sendable {
         lock.withLock { alarmProvider = provider }
     }
 
-    func current() async -> (profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?) {
-        let (profileFor, bedtimeFor, alarmFor) = lock.withLock { (profileProvider, bedtimeProvider, alarmProvider) }
+    /// The person's plan, written into the snapshot so the extensions and the Watch need not (and never do) call StoreKit. Free until the app says otherwise.
+    public func setTier(_ provider: @escaping @Sendable () async -> Tier) {
+        lock.withLock { tierProvider = provider }
+    }
+
+    func current() async -> (profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, tier: Tier) {
+        let (profileFor, bedtimeFor, alarmFor, tierFor) = lock.withLock { (profileProvider, bedtimeProvider, alarmProvider, tierProvider) }
         let profile = await profileFor()
-        return await (profile, bedtimeFor(profile), alarmFor())
+        return await (profile, bedtimeFor(profile), alarmFor(), tierFor())
     }
 }
 
@@ -98,7 +105,8 @@ public actor WidgetPublisher {
         let now = clock()
         let current = await inputs.current()
         guard let snapshot = WidgetSnapshotMaker.make(
-            home: home, profile: current.profile, bedtime: current.bedtime, alarm: current.alarm, now: now, calendar: calendar, dataEpoch: epoch()
+            home: home, profile: current.profile, bedtime: current.bedtime, alarm: current.alarm, now: now, calendar: calendar, dataEpoch: epoch(),
+            tier: current.tier
         ) else { return }
         // Nothing the widgets draw has changed: leave the file, and the system's budget, alone.
         if let written, Self.sameContent(written, snapshot) { return }
