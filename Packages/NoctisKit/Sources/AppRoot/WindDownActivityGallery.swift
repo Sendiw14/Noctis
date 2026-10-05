@@ -3,14 +3,14 @@ import DesignSystem
 import NoctisWidgetKit
 import SwiftUI
 
-// The DEBUG Live Activity gallery (APP_RULES.md R49): `-activityGallery [lock|island|all]`. The Lock Screen presentation and each Dynamic Island
+// The DEBUG Live Activity gallery (APP_RULES.md R49, R56): `-activityGallery [lock|island|watch|all]`. The Lock Screen presentation and each Dynamic Island
 // presentation (compact, minimal, expanded), running and paused, drawn from the very views the extension composes, so a screenshot can be taken
 // of each. It is NOT the real thing: the system's own Lock Screen and island (their shape, the camera cutout, their blur and the way the
 // expanded island opens) are seen on the simulator's real Lock Screen and Dynamic Island, and on an iPhone. The black shapes here are
 // outlines of the island's sizes, and the End button is drawn without its intent.
 
 public enum ActivityGalleryRequest {
-    public enum Part: String { case lock, island, all }
+    public enum Part: String { case lock, island, watch, all }
 
     public static func requested(_ arguments: [String]) -> Part? {
         guard let flag = arguments.firstIndex(of: "-activityGallery") else { return nil }
@@ -45,7 +45,7 @@ public struct WindDownActivityGalleryView: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                if part != .island {
+                if part == .lock || part == .all {
                     label("Lock Screen: running")
                     lockScreen(running)
                     label("Lock Screen: paused")
@@ -53,7 +53,15 @@ public struct WindDownActivityGalleryView: View {
                     label("Lock Screen: the time ran out")
                     lockScreen(ending)
                 }
-                if part != .lock {
+                if part == .watch || part == .all {
+                    label("Apple Watch Smart Stack (small family): running")
+                    watch(running)
+                    label("Apple Watch Smart Stack: paused")
+                    watch(paused)
+                    label("Apple Watch Smart Stack: the time ran out")
+                    watch(ending)
+                }
+                if part == .island || part == .all {
                     label("Dynamic Island: compact, running")
                     compact(running)
                     label("Dynamic Island: compact, paused")
@@ -85,6 +93,14 @@ public struct WindDownActivityGalleryView: View {
         WindDownLockScreenView(attributes: attributes, state: state) { WindDownEndLabel() }
             .background(WindDownActivityStyle.background)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    /// The Smart Stack's card on a Watch, at a nominal size (the system draws its own frame around it).
+    private func watch(_ state: WindDownActivityAttributes.ContentState) -> some View {
+        WindDownWatchView(state: state)
+            .frame(width: 184, height: 68)
+            .background(WindDownActivityStyle.background)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     /// The island's compact form: a black pill with the camera between its two halves.

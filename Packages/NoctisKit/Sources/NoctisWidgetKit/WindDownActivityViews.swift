@@ -131,6 +131,56 @@ public struct WindDownLockScreenView<End: View>: View {
     }
 }
 
+// MARK: Apple Watch
+
+/// The Smart Stack on the Apple Watch (`ActivityFamily.small`, R56): the moon, "Wind down" and the time left, in the night colors. A glance, not a control:
+/// no End button (the Watch has no wind-down of its own) and nothing from Health. The countdown is the system's, so it ticks with no help from the app.
+public struct WindDownWatchView: View {
+    let state: WindDownActivityAttributes.ContentState
+    let isStale: Bool
+
+    public init(state: WindDownActivityAttributes.ContentState, isStale: Bool = false) {
+        self.state = state
+        self.isStale = isStale
+    }
+
+    public var body: some View {
+        let timer = showsTimer(state, isStale: isStale)
+        HStack(spacing: 10) {
+            Image(systemName: "moon.stars.fill")
+                .noctisFont(24, .semibold, relativeTo: .title2, maxScale: 1.2)
+                .foregroundStyle(NoctisNight.lavender)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 4) {
+                    Text(timer ? WindDownActivityCopy.title : WindDownActivityCopy.complete)
+                        .noctisFont(15, .semibold, relativeTo: .body, maxScale: 1.2)
+                        .foregroundStyle(NoctisNight.ivory)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                    // Paused is a glyph beside the name: a word would not fit the card beside the time.
+                    if timer && state.isPaused {
+                        Image(systemName: "pause.fill")
+                            .noctisIcon(12, .semibold, relativeTo: .footnote)
+                            .foregroundStyle(NoctisNight.ivory2)
+                            .accessibilityLabel(WindDownActivityCopy.paused)
+                    }
+                }
+                if timer {
+                    WindDownTimerText(state: state)
+                        .noctisFont(24, .heavy, relativeTo: .title2, maxScale: 1.2)
+                        .foregroundStyle(state.isPaused ? NoctisNight.ivory2 : NoctisNight.ivory)
+                        .lineLimit(1)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 // MARK: Dynamic Island
 
 /// The compact island, left of the camera: the moon.
