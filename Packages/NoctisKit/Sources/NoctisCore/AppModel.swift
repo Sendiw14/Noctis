@@ -172,8 +172,8 @@ public final class AppModel {
         case .reviews:
             insightsPath = [.reviews]
         case .review(let kind, let id):
-            // A link or a notification never opens the Premium monthly review for a free person: it lands on the reviews (no paywall: nothing was tapped).
-            insightsPath = kind == .monthly && !isUnlocked(.monthlyReview) ? [.reviews] : [.review(kind: kind, id: id)]
+            // The story decides what a plan sees: a free person's weekly review is its cover, and their monthly review is one calm locked page (no paywall: nothing was tapped).
+            insightsPath = [.review(kind: kind, id: id)]
         case .coach(let question):
             serial += 1
             coachDestination = CoachDestination(question: question, serial: serial)
@@ -216,6 +216,12 @@ public final class AppModel {
     /// chrome (the tab bar, the bedtime pill above it) may sit over it.
     public var isWindDownShowing: Bool {
         guard selectedTab == .home, case .windDown? = homePath.last else { return false }
+        return true
+    }
+
+    /// A review's story is the screen showing: it is full-screen on purpose, so nothing of the app's chrome (the tab bar, the bedtime pill above it) may sit over it.
+    public var isReviewStoryShowing: Bool {
+        guard selectedTab == .insights, case .review? = insightsPath.last else { return false }
         return true
     }
 

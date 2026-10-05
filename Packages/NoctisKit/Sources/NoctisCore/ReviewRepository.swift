@@ -12,6 +12,12 @@ public actor ReviewRepository {
     private let insights: InsightStore
     private let timeZone: @Sendable () -> TimeZone
     private let clock: @Sendable () -> Date
+    #if DEBUG
+    private var debugPlacesInsightsInPeriod = false
+
+    /// DEBUG mock runs: the insights are dated inside the period asked for, so a review's insight page has something to point to.
+    public func debugPlaceInsightsInPeriod() { debugPlacesInsightsInPeriod = true }
+    #endif
 
     public init(
         provider: any HealthDataProviding, store: ReviewStore = ReviewStore(), insights: InsightStore = InsightStore(),
@@ -47,8 +53,13 @@ public actor ReviewRepository {
         let zone = calendar.timeZone
         let provider = provider
         let insights = insights
+        #if DEBUG
+        let debugPlaced = debugPlacesInsightsInPeriod
+        #else
+        let debugPlaced = false
+        #endif
         return await store.review(for: period, now: now, calendar: calendar) {
-            guard await provider.isHealthDataAvailable, await provider.authorizationStatus() == .authorized else { return nil }
+            guard await provider.isHealthDataAvailable, await provider.authorizationStatus() == .authorized else { return .noAccess }
             // Reach back 18 hours more so the oldest night is seen whole.
             let start = now.addingTimeInterval(-Double(ReviewInputsBuilder.historyDays) * 86_400 - 18 * 3600)
             do {
@@ -60,11 +71,13 @@ public actor ReviewRepository {
                     sleep: samples.0, hrv: samples.1, restingHeartRate: samples.2, needMinutes: Double(profile.needMinutes), now: now, timeZone: zone
                 )
                 let library = await insights.snapshot()
-                return ReviewEngine.build(
-                    period: period, nights: nights, needMinutes: profile.needMinutes, insights: ReviewInputsBuilder.insights(from: library), now: now, calendar: calendar
-                )
+                let placed: ReviewPeriod? = debugPlaced ? period : nil
+                return .result(ReviewEngine.build(
+                    period: period, nights: nights, needMinutes: profile.needMinutes,
+                    insights: ReviewInputsBuilder.insights(from: library, placedIn: placed, calendar: calendar), now: now, calendar: calendar
+                ))
             } catch {
-                return nil
+                return .failed
             }
         }
     }

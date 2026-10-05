@@ -90,10 +90,9 @@ public nonisolated enum ReviewScreenBuilder {
     // MARK: Too few nights
 
     public static func notReady(period: ReviewPeriod, have: Int, need: Int, format: ReviewFormat = ReviewFormat()) -> ReviewNotReadyContent {
-        let words = Words(kind: period.kind)
         return ReviewNotReadyContent(
-            title: "Not enough nights yet", count: "\(have) of \(need) nights",
-            detail: "A \(words.period)'s review needs at least \(need) nights of sleep. Nights are added as Apple Health receives them, so it can fill in later.",
+            title: "Not enough nights yet", count: "\(have) of \(need) nights so far",
+            detail: "Your \(period.kind.rawValue) review appears once there are at least \(need).",
             dateRange: dateRange(period, format)
         )
     }

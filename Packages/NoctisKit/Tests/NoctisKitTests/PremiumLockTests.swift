@@ -27,7 +27,7 @@ struct PremiumLockTests {
             #expect(titles.insert(card.title).inserted)
             #expect(card.line.split(separator: ".").count <= 2, "one line, not a paragraph")
         }
-        #expect(count == 4, "sleep quality, insights, Coach at zero, and Tonight's window")
+        #expect(count == 6, "sleep quality, insights, Coach at zero, Tonight's window, the weekly review and the monthly review")
         #expect(LockedCopy.card(for: .coachQuestions)?.title == "You've used today's free questions.")
         #expect(LockedCopy.card(for: .coachQuestions)?.line.hasPrefix("They reset at midnight.") == true)
         #expect(LockedCopy.seePremium == "See Premium")

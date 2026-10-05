@@ -179,7 +179,7 @@ struct ReviewStoreTests {
     ) async -> ReviewOutcome {
         await store.review(for: period, now: moment, calendar: ny) {
             calls.add()
-            return result()
+            return result().map { .result($0) } ?? .failed
         }
     }
 
@@ -419,7 +419,7 @@ struct ReviewScenarioTests {
         let result = try await review(.sparseWeek)
         #expect(result == .notEnoughNights(have: 4, need: 5))
         let content = ReviewScreenBuilder.notReady(period: weekPeriod, have: 4, need: 5, format: ReviewFormat(locale: Locale(identifier: "en_US")))
-        #expect(content.count == "4 of 5 nights")
+        #expect(content.count == "4 of 5 nights so far")
     }
 
     @Test func variedMonthHasWeeksThatDiffer() async throws {
@@ -501,7 +501,7 @@ struct ReviewRepositoryTests {
     @Test func noAccessOrAFailedReadIsUnavailableNotACountOfZero() async {
         let denied = await repository(authorized: false).review(weekPeriod, profile: UserProfileSnapshot())
         let failed = await repository(fails: true).review(weekPeriod, profile: UserProfileSnapshot())
-        #expect(denied == .unavailable && failed == .unavailable)
+        #expect(denied == .noAccess && failed == .unavailable)
     }
 
     @Test func aTimeZoneThatMovesTheDayMovesTheLatestWeekAndNothingElse() async {

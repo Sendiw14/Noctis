@@ -271,15 +271,14 @@ struct ReviewRouteTests {
         #expect(ReviewRoute.period(kind: .monthly, id: bad, weekday: 1, now: now, calendar: ny) == ReviewPeriod.monthly(year: 2026, month: 8))
     }
 
-    @Test func tooFewNightsIsTheRealCountAndAReviewIsComingSoon() async {
+    @Test func tooFewNightsIsTheRealCountAndAReviewHasNoMessage() async {
         let few = await Rig(.sparseWeek, reference: at(2026, 9, 28)).repository.review(ReviewPeriod.weekly(reviewDate: key(2026, 9, 27)), profile: UserProfileSnapshot())
         let period = ReviewPeriod.weekly(reviewDate: key(2026, 9, 27))
         guard case .notEnough(let content) = ReviewRoute.page(for: few, period: period, format: format) else { Issue.record("not enough nights: \(few)"); return }
-        #expect(content.title == "Not enough nights yet" && content.count == "4 of 5 nights" && content.dateRange == "Sep 20 \u{2013} 26")
-        #expect(content.detail.contains("5 nights") && !content.detail.contains("Premium"))
+        #expect(content.title == "Not enough nights yet" && content.count == "4 of 5 nights so far" && content.dateRange == "Sep 20 \u{2013} 26")
+        #expect(content.detail == "Your weekly review appears once there are at least 5.")
         let enough = await Rig(reference: at(2026, 9, 28)).repository.review(period, profile: UserProfileSnapshot())
-        guard case .comingSoon(let title, let range, let line) = ReviewRoute.page(for: enough, period: period, format: format) else { Issue.record("coming soon: \(enough)"); return }
-        #expect(title == "Your weekly review" && range == "Sep 20 \u{2013} 26" && line.contains("coming soon"))
+        #expect(ReviewRoute.page(for: enough, period: period, format: format) == nil, "a review is a story, not a message")
     }
 
     @Test func aPeriodNotOverIsSaidPlainlyWithNoCountClaimed() {
@@ -289,26 +288,26 @@ struct ReviewRouteTests {
         #expect(!content.count.contains(" of "))
     }
 
-    @Test func healthThatCannotBeReadIsSaidAndNotACountOfZero() {
+    @Test func noHealthAndAFailedReadAreDifferentMessagesAndNeitherIsACountOfZero() {
         let period = ReviewPeriod.weekly(reviewDate: key(2026, 9, 27))
-        guard case .unavailable(let title, let line) = ReviewRoute.page(for: .unavailable, period: period, format: format) else { Issue.record("unavailable"); return }
-        #expect(title == "Your sleep can't be read right now" && !line.contains("0 of"))
+        guard case .noAccess(let title, let line) = ReviewRoute.page(for: .noAccess, period: period, format: format) else { Issue.record("no access"); return }
+        #expect(title == "No Health data" && !line.contains("0 of"))
+        guard case .failed(let failedTitle, let failedLine) = ReviewRoute.page(for: .unavailable, period: period, format: format) else { Issue.record("failed"); return }
+        #expect(failedTitle == "Your review didn't load" && failedLine.contains("Try again"))
     }
 
-    @Test func everyPageStandingInIsFreeOfTheBannedLanguage() async {
+    @Test func everyMessageIsFreeOfTheBannedLanguage() {
         let period = ReviewPeriod.weekly(reviewDate: key(2026, 9, 27))
         let month = ReviewPeriod.monthly(year: 2026, month: 9)
         var strings: [String] = []
-        for (outcome, subject) in [(ReviewOutcome.notComplete, period), (.unavailable, period), (.notEnoughNights(have: 19, need: 20), month), (.notEnoughNights(have: 4, need: 5), period)] {
+        for (outcome, subject) in [(ReviewOutcome.notComplete, period), (.unavailable, period), (.noAccess, period), (.notEnoughNights(have: 19, need: 20), month), (.notEnoughNights(have: 4, need: 5), period)] {
             switch ReviewRoute.page(for: outcome, period: subject, format: format) {
             case .notEnough(let content), .notOver(let content): strings += [content.title, content.count, content.detail, content.dateRange]
-            case .comingSoon(let title, let range, let line): strings += [title, range, line]
-            case .unavailable(let title, let line): strings += [title, line]
+            case .noAccess(let title, let line), .failed(let title, let line): strings += [title, line]
+            case nil: break
             }
         }
-        let stored = StoredReview(record: ReviewTestRecords.record(period), firstGeneratedAt: at(2026, 9, 27))
-        if case .comingSoon(let title, let range, let line) = ReviewRoute.page(for: .review(stored), period: period, format: format) { strings += [title, range, line] }
-        #expect(strings.count >= 14)
+        #expect(strings.count >= 16)
         for text in strings { #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: text)) }
     }
 }
@@ -317,37 +316,52 @@ struct ReviewRouteTests {
 
 @MainActor
 struct ReviewPageModelTests {
+    private func story(_ rig: Rig, kind: ReviewKind = .weekly, unlocked: Bool = true, opened: Counter = Counter()) -> ReviewStoryViewModel {
+        ReviewStoryViewModel(
+            kind: kind, id: nil, repository: rig.repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, isUnlocked: { _ in unlocked }, clock: { rig.clock.now },
+            locale: Locale(identifier: "en_US"), opened: { opened.add() }
+        )
+    }
+
     @Test func openingAReviewMakesItMarksItSeenAndTellsHomeItsCardIsGone() async {
         let rig = Rig(reference: at(2026, 9, 28))
         let opened = Counter()
-        let model = ReviewRouteViewModel(
-            kind: .weekly, id: nil, repository: rig.repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, clock: { at(2026, 9, 28) },
-            locale: Locale(identifier: "en_US"), opened: { opened.add() }
-        )
-        #expect(model.state == .loading)
+        let model = story(rig, opened: opened)
+        #expect(model.phase == .loading)
         await model.load()
-        guard case .page(.comingSoon(let title, _, _)) = model.state else { Issue.record("coming soon: \(model.state)"); return }
-        #expect(title == "Your weekly review")
+        guard case .story(let story) = model.phase else { Issue.record("a story: \(model.phase)"); return }
+        #expect(story.title == "Your week" && story.dateRange == "Sep 20 \u{2013} 26" && model.pages.first?.kind == .cover)
         let stored = await rig.store.stored(ReviewPeriod.weekly(reviewDate: key(2026, 9, 27)).id)
         #expect(stored?.state == .seen && opened.value == 1)
     }
 
-    @Test func aWeekWithFourNightsOpensTheNotEnoughNightsPageAndOpensNothingElse() async {
+    @Test func aWeekWithFourNightsIsTheNotEnoughNightsMessageAndOpensNothingElse() async {
         let rig = Rig(.sparseWeek, reference: at(2026, 9, 28))
         let opened = Counter()
-        let model = ReviewRouteViewModel(
-            kind: .weekly, id: nil, repository: rig.repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, clock: { at(2026, 9, 28) },
-            locale: Locale(identifier: "en_US"), opened: { opened.add() }
-        )
+        let model = story(rig, opened: opened)
         await model.load()
-        guard case .page(.notEnough(let content)) = model.state else { Issue.record("not enough: \(model.state)"); return }
-        #expect(content.count == "4 of 5 nights" && opened.value == 0)
+        guard case .message(.notEnough(let content)) = model.phase else { Issue.record("not enough: \(model.phase)"); return }
+        #expect(content.count == "4 of 5 nights so far" && opened.value == 0 && model.pages.isEmpty && !model.canShare)
     }
 
-    @Test func noRepositoryIsUnavailable() async {
-        let model = ReviewRouteViewModel(kind: .weekly, id: nil, repository: nil, profile: { UserProfileSnapshot() })
-        await model.load()
-        guard case .page(.unavailable) = model.state else { Issue.record("unavailable"); return }
+    @Test func noHealthAndAFailedReadAreTheirOwnMessages() async {
+        let denied = Rig(.full, reference: at(2026, 9, 28))
+        let deniedModel = ReviewStoryViewModel(
+            kind: .weekly, id: nil,
+            repository: ReviewRepository(
+                provider: MockHealthKitProvider(scenario: .full, referenceDate: at(2026, 9, 28), calendar: calendar(), startAuthorized: false), store: ReviewStore(), insights: InsightStore(),
+                timeZone: { nyZone }, clock: { denied.clock.now }
+            ),
+            profile: { UserProfileSnapshot() }, clock: { denied.clock.now }
+        )
+        await deniedModel.load()
+        guard case .message(.noAccess) = deniedModel.phase else { Issue.record("no access: \(deniedModel.phase)"); return }
+        let nothing = ReviewStoryViewModel(kind: .weekly, id: nil, repository: nil, profile: { UserProfileSnapshot() })
+        await nothing.load()
+        guard case .message(.failed) = nothing.phase else { Issue.record("failed: \(nothing.phase)"); return }
+        // Try again runs the same load.
+        await nothing.load()
+        guard case .message(.failed) = nothing.phase else { Issue.record("still failed"); return }
     }
 
     private static func appModel(_ tier: Tier) throws -> AppModel {
@@ -370,16 +384,20 @@ struct ReviewPageModelTests {
         }
     }
 
-    @Test func aLinkToTheMonthlyReviewOpensItForPremiumAndTheListForTheFreePlanWithNoPaywall() throws {
-        let premium = try Self.appModel(.premium)
-        premium.open(.review(kind: .monthly))
-        #expect(premium.selectedTab == .insights && premium.insightsPath == [.review(kind: .monthly, id: nil)] && premium.paywall == nil)
-        let free = try Self.appModel(.free)
-        free.open(.review(kind: .monthly))
-        #expect(free.selectedTab == .insights && free.insightsPath == [.reviews], "nothing was tapped, so nothing opens the paywall")
-        #expect(free.paywall == nil)
-        free.open(.reviews)
-        #expect(free.insightsPath == [.reviews])
+    @Test func aLinkToTheMonthlyReviewOpensItsStoryOnEitherPlanAndNeverTheStoreByItself() throws {
+        for tier in [Tier.premium, .free] {
+            let model = try Self.appModel(tier)
+            model.open(.review(kind: .monthly))
+            #expect(model.selectedTab == .insights && model.insightsPath == [.review(kind: .monthly, id: nil)], Comment(rawValue: tier.rawValue))
+            #expect(model.paywall == nil, "nothing was tapped, so nothing opens the paywall")
+            #expect(model.isReviewStoryShowing, "the story is full-screen: the tab bar and the bedtime pill stay away")
+        }
+        let model = try Self.appModel(.free)
+        model.open(.reviews)
+        #expect(model.insightsPath == [.reviews] && !model.isReviewStoryShowing)
+        model.selectedTab = .home
+        model.insightsPath = [.review(kind: .weekly, id: nil)]
+        #expect(!model.isReviewStoryShowing, "only while Insights is the tab showing")
     }
 }
 

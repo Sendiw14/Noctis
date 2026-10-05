@@ -32,6 +32,12 @@ public nonisolated struct ReviewFormat: Sendable {
     /// "Tue, Sep 22".
     public func weekdayDay(_ key: SleepNightKey) -> String { format(key, "EEEMMMd") }
 
+    /// "M", "T": a weekday's first letter, for a column under a bar.
+    public func narrowWeekday(_ key: SleepNightKey) -> String { format(key, "EEEEE") }
+
+    /// "12": the day of the month, for a slim bar.
+    public func dayNumber(_ key: SleepNightKey) -> String { String(key.day) }
+
     /// "September".
     public func monthName(_ key: SleepNightKey) -> String { format(key, "MMMM") }
 
@@ -70,6 +76,9 @@ public nonisolated struct ReviewFormat: Sendable {
 
     /// Whole minutes: 24 min.
     public static func minutes(_ value: Double) -> String { "\(Int(value.rounded())) min" }
+
+    /// 54: a whole number (a recovery score, an HRV, a heart rate).
+    public static func whole(_ value: Double) -> String { String(Int(value.rounded())) }
 
     /// 54, or 7.5 when it is not a whole number.
     public static func number(_ value: Double) -> String {

@@ -73,8 +73,17 @@ public nonisolated enum ReviewOutcome: Sendable, Equatable {
     case notEnoughNights(have: Int, need: Int)
     /// The period has not ended yet.
     case notComplete
-    /// Health could not be read (no access, or an error), so nothing can be said about the nights.
+    /// NOCTIS cannot read Apple Health (no access, or no Health on this device), so nothing can be said about the nights.
+    case noAccess
+    /// Reading Apple Health failed: it can be tried again.
     case unavailable
+}
+
+/// What reading Health and running the engine came to.
+public nonisolated enum ReviewBuild: Sendable, Equatable {
+    case result(ReviewResult)
+    case noAccess
+    case failed
 }
 
 /// The one place reviews live. A review is made the first time its period is asked for after it ended, made again for 24 hours when asked for (a night Apple Health
@@ -102,25 +111,30 @@ public actor ReviewStore {
         return library[id]
     }
 
-    /// The review of `period` as it is asked for at `now`. `build` reads Health and runs the engine (nil when Health could not be read); it is called only when the
-    /// rules say a review is to be made, so a frozen one never reads Health again.
-    public func review(for period: ReviewPeriod, now: Date, calendar: Calendar, build: @Sendable () async -> ReviewResult?) async -> ReviewOutcome {
+    /// The review of `period` as it is asked for at `now`. `build` reads Health and runs the engine; it is called only when the rules say a review is to be made, so a
+    /// frozen one never reads Health again.
+    public func review(for period: ReviewPeriod, now: Date, calendar: Calendar, build: @Sendable () async -> ReviewBuild) async -> ReviewOutcome {
         guard period.isComplete(at: now, calendar: calendar) else { return .notComplete }
         syncWithFile()
         let id = period.id
         if let stored = library[id], ReviewLifecycle.action(stored: stored, now: now) == .reuse { return .review(stored) }
 
-        let result = await build()
+        let built = await build()
 
         // Another request may have stored it while this one was reading Health: decide again with what is stored now.
         syncWithFile()
         if let existing = library[id] {
-            guard let result, ReviewLifecycle.action(stored: existing, now: now) == .refresh else { return .review(existing) }
+            guard case .result(let result) = built, ReviewLifecycle.action(stored: existing, now: now) == .refresh else { return .review(existing) }
             let next = ReviewLifecycle.refreshed(existing, with: result)
             commit { $0.put(next) }
             return .review(next)
         }
-        guard let result else { return .unavailable }
+        let result: ReviewResult
+        switch built {
+        case .result(let value): result = value
+        case .noAccess: return .noAccess
+        case .failed: return .unavailable
+        }
         switch result {
         case .record(let record):
             let stored = StoredReview(record: record, state: .new, firstGeneratedAt: now)

@@ -65,10 +65,18 @@ public final class InsightsViewModel {
     private let reviews: ReviewRepository?
     private let reviewWeekday: () -> Int
     private let reviewOpened: () -> Void
+    /// DEBUG `-reviewPage <kind>`: the page a story opens on, for screenshots.
+    private let reviewStartPage: String?
 
-    /// The model of one review's page: the one `id` names, or the latest of `kind`.
-    public func reviewRoute(kind: ReviewKind, id: ReviewID?) -> ReviewRouteViewModel {
-        ReviewRouteViewModel(kind: kind, id: id, repository: reviews, profile: profile, weekday: reviewWeekday, clock: clock, locale: locale, opened: reviewOpened)
+    /// The model of one review's story: the review `id` names, or the latest of `kind`.
+    public func reviewStory(kind: ReviewKind, id: ReviewID?) -> ReviewStoryViewModel {
+        ReviewStoryViewModel(
+            kind: kind, id: id, repository: reviews, profile: profile, weekday: reviewWeekday, isUnlocked: isUnlocked, clock: clock, locale: locale,
+            // The story's insight pages read the Insights tab's own insights: they are loaded first, and a page whose insight is gone is left out.
+            prepareInsights: { [self] in await onAppear() },
+            availableInsights: { [self] ids in ids.filter { insight(id: $0) != nil }.reduce(into: Set<String>()) { $0.insert($1) } },
+            startPage: reviewStartPage, opened: reviewOpened
+        )
     }
 
     public init(
@@ -86,8 +94,10 @@ public final class InsightsViewModel {
         isUnlocked: @escaping (Feature) -> Bool = { _ in true },
         reviews: ReviewRepository? = nil,
         reviewWeekday: @escaping () -> Int = { 1 },
-        reviewOpened: @escaping () -> Void = {}
+        reviewOpened: @escaping () -> Void = {},
+        reviewStartPage: String? = nil
     ) {
+        self.reviewStartPage = reviewStartPage
         self.reviews = reviews
         self.reviewWeekday = reviewWeekday
         self.reviewOpened = reviewOpened

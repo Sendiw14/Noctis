@@ -49,7 +49,7 @@ public struct InsightsTabView: View {
                 case .reviews:
                     ReviewsListScreen()
                 case .review(let kind, let id):
-                    ReviewRouteScreen(model: viewModel.reviewRoute(kind: kind, id: id))
+                    ReviewStoryScreen(kind: kind, id: id, insights: viewModel)
                 }
             }
         }

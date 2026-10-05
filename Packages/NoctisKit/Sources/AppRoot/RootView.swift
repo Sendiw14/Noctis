@@ -174,7 +174,7 @@ struct RootTabView: View {
         // no accessory rather than one that can't hide by day. It is also off while the wind-down is
         // showing: that screen is full-screen and dark, and the bedtime pill would float over it.
         if #available(iOS 26.1, *) {
-            tabView.tabViewBottomAccessory(isEnabled: HomeBedtimeAccessory.isShown(for: home) && !model.isWindDownShowing) {
+            tabView.tabViewBottomAccessory(isEnabled: HomeBedtimeAccessory.isShown(for: home) && !model.isWindDownShowing && !model.isReviewStoryShowing) {
                 HomeBedtimeAccessory(viewModel: home, clock: clock) { model.open(.tonight) }
             }
         } else {

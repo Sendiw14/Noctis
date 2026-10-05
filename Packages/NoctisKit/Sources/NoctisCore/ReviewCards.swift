@@ -96,17 +96,16 @@ public actor ReviewCardProvider {
 
 // MARK: - What opening a review lands on
 
-/// What a review's page shows until the screens that draw a review exist: a real review is announced and the page says it is coming (APP_RULES.md R19, ROADMAP.md),
-/// and too few nights, or a period not over, is said plainly.
+/// What a review's page says when there is no story to tell (APP_RULES.md R63): too few nights with the real count, a period not over, no Apple Health, a failed read.
 public nonisolated enum ReviewRoutePage: Sendable, Equatable {
-    /// The period has too few nights: "4 of 5 nights".
+    /// The period has too few nights: "4 of 5 nights so far".
     case notEnough(ReviewNotReadyContent)
     /// The period is not over (only a link made by hand reaches it).
     case notOver(ReviewNotReadyContent)
-    /// A review exists; its page is built next.
-    case comingSoon(title: String, dateRange: String, line: String)
-    /// Apple Health could not be read.
-    case unavailable(title: String, line: String)
+    /// NOCTIS cannot read Apple Health.
+    case noAccess(title: String, line: String)
+    /// Reading Apple Health failed: "Try again".
+    case failed(title: String, line: String)
 }
 
 public nonisolated enum ReviewRoute {
@@ -119,20 +118,19 @@ public nonisolated enum ReviewRoute {
         }
     }
 
-    public static func page(for outcome: ReviewOutcome, period: ReviewPeriod, format: ReviewFormat) -> ReviewRoutePage {
+    /// The page for an outcome that has no review to show; nil when there is one (its story is drawn).
+    public static func page(for outcome: ReviewOutcome, period: ReviewPeriod, format: ReviewFormat) -> ReviewRoutePage? {
         switch outcome {
-        case .review(let stored):
-            let words = period.kind == .weekly ? "week" : "month"
-            return .comingSoon(
-                title: ReviewScreenBuilder.title(stored.record, format), dateRange: ReviewScreenBuilder.dateRange(period, format),
-                line: "Your review of this \(words) is ready. The page that shows it is coming soon."
-            )
+        case .review:
+            return nil
         case .notEnoughNights(let have, let need):
             return .notEnough(ReviewScreenBuilder.notReady(period: period, have: have, need: need, format: format))
         case .notComplete:
             return .notOver(ReviewScreenBuilder.notOver(period: period, format: format))
+        case .noAccess:
+            return .noAccess(title: "No Health data", line: "NOCTIS can't read Apple Health yet. Connect it in Settings and your reviews will appear here.")
         case .unavailable:
-            return .unavailable(title: "Your sleep can't be read right now", line: "Open the Health data page in Settings to check NOCTIS can read it, then come back.")
+            return .failed(title: "Your review didn't load", line: "Apple Health didn't answer. Try again in a moment.")
         }
     }
 }

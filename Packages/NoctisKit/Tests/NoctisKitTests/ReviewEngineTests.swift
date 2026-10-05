@@ -692,9 +692,9 @@ struct ReviewLanguageTests {
     @Test func thePlaceholderForTooFewNightsShowsTheRealCount() {
         let period = ReviewPeriod.latestWeekly(now: reviewNow, weekday: 1, calendar: ny)
         let content = ReviewScreenBuilder.notReady(period: period, have: 4, need: 5, format: format)
-        #expect(content.title == "Not enough nights yet" && content.count == "4 of 5 nights" && content.dateRange == "Sep 20 \u{2013} 26")
+        #expect(content.title == "Not enough nights yet" && content.count == "4 of 5 nights so far" && content.dateRange == "Sep 20 \u{2013} 26")
         let month = ReviewScreenBuilder.notReady(period: ReviewPeriod.monthly(year: 2026, month: 9), have: 19, need: 20, format: format)
-        #expect(month.count == "19 of 20 nights" && month.dateRange == "September 2026" && month.detail.contains("month"))
+        #expect(month.count == "19 of 20 nights so far" && month.dateRange == "September 2026" && month.detail == "Your monthly review appears once there are at least 20.")
     }
 
     @Test func theFormatWritesDurationsDatesAndClocksInTheLanguageOfTheDay() {

@@ -22,6 +22,10 @@ public nonisolated enum LockedCopy {
             Card(title: CoachQuota.usedUpTitle, line: "\(CoachQuota.usedUpDetail) Premium has no daily limit.")
         case .tonightWindow:
             Card(title: "See why this time and your bedtime window", line: "Premium shows the window around tonight's bedtime and the reasons for it.")
+        case .weeklyReview:
+            Card(title: "The full story of your week", line: "Premium shows your sleep, consistency and recovery, what changed, and one thing to try next.")
+        case .monthlyReview:
+            Card(title: "Your month, in full", line: "Premium shows your month's sleep, recovery and timing, what changed, and your records.")
         default:
             nil
         }

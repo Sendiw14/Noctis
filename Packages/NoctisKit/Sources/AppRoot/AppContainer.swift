@@ -188,6 +188,10 @@ public struct AppContainer {
         #endif
         let reviewStore = ReviewStore(file: reviewFile)
         let reviewRepo = ReviewRepository(provider: provider, store: reviewStore, insights: insightStore)
+        #if DEBUG
+        // A mock run has no insights found during last week: place them there, so the story's insight page can be seen.
+        if debug.mockScenario != nil { Task { await reviewRepo.debugPlaceInsightsInPeriod() } }
+        #endif
         self.reviewRepository = reviewRepo
         let insightsRepo = InsightsRepository(provider: provider, store: insightStore)
         self.insightsRepository = insightsRepo
@@ -215,6 +219,11 @@ public struct AppContainer {
         let recoveryRepository = RecoveryRepository(provider: provider)
         // The reviews' cards (R63): which review day the person chose is read when it is needed, since the preferences are read further down.
         let reviewWeekday = ReviewWeekdaySource()
+        #if DEBUG
+        let reviewStartPage = debug.reviewPage
+        #else
+        let reviewStartPage: String? = nil
+        #endif
         let reviewCardProvider = ReviewCardProvider(repository: reviewRepo)
         let homeVM = HomeViewModel(
             repository: homeRepository,
@@ -258,7 +267,8 @@ public struct AppContainer {
             reviews: reviewRepo,
             reviewWeekday: { reviewWeekday.current() },
             // A review that has been opened stops being a card on Home.
-            reviewOpened: { Task { await homeVM.refreshReviewCards() } }
+            reviewOpened: { Task { await homeVM.refreshReviewCards() } },
+            reviewStartPage: reviewStartPage
         )
 
         // Coach (R29). Its history is local only, protected, out of backups and
@@ -473,6 +483,16 @@ public struct AppContainer {
         let router = NotificationRouter(model: model)
         self.notificationRouter = router
         UNUserNotificationCenter.current().delegate = router
+        #if DEBUG
+        // `-noctisNotificationTap <identifier>`: the tap on a notification, without needing one to be delivered (the simulator's permission prompt and its banner are not the
+        // thing under test): the same `handle` the delegate calls.
+        if let identifier = debug.notificationTap, !restarted {
+            Task {
+                try? await Task.sleep(for: .seconds(2.5))
+                router.handle(identifier: identifier)
+            }
+        }
+        #endif
 
         // Siri, Shortcuts and the controls (R47): the intents ask this running app, through the objects the screens use. Installed at start,
         // so an intent that launches the app in the background finds it.
@@ -571,6 +591,10 @@ extension AppContainer {
 /// DEBUG-only launch arguments (UI tests and simulator checks).
 struct DebugLaunchOptions {
     let mockScenario: MockScenario?
+    /// `-reviewPage <kind>`: the page a review's story opens on.
+    let reviewPage: String?
+    /// `-noctisNotificationTap <identifier>`: taps that notification after launch.
+    let notificationTap: String?
     let skipOnboarding: Bool
     let resetState: Bool
     let healthUnavailable: Bool
@@ -656,6 +680,8 @@ struct DebugLaunchOptions {
         mockSubscription = value(after: "-mockSubscription")
         mockWatch = value(after: "-mockWatch")
         forceTier = value(after: "-forceTier").flatMap(Tier.init(rawValue:))
+        reviewPage = value(after: "-reviewPage")
+        notificationTap = value(after: "-noctisNotificationTap")
         paywallContext = value(after: "-paywallContext").flatMap(PaywallContext.init(rawValue:))
     }
 

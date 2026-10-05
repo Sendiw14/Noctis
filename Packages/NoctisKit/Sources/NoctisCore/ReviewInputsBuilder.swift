@@ -36,10 +36,14 @@ public nonisolated enum ReviewInputsBuilder {
         }
     }
 
-    /// The insights a review may point to: every one the person has not dismissed or hidden, with the score the Insights tab ranks it by. Ids only.
-    public static func insights(from library: InsightLibrary) -> [ReviewInsightInput] {
-        library.visible.filter { $0.state != .dismissed }.map {
-            ReviewInsightInput(id: $0.record.id, generatedAt: $0.record.generatedAt, score: InsightRanking.score($0.record))
+    /// The insights a review may point to: every one the person has not dismissed or hidden, with the score the Insights tab ranks it by. Ids only. `placedIn` (DEBUG mock
+    /// runs only: a fresh mock has no history of insights found during last week) dates every insight inside that period.
+    public static func insights(from library: InsightLibrary, placedIn period: ReviewPeriod? = nil, calendar: Calendar = .current) -> [ReviewInsightInput] {
+        let placed = period.flatMap {
+            calendar.date(from: DateComponents(year: $0.lastMorning.year, month: $0.lastMorning.month, day: $0.lastMorning.day, hour: 12))
+        }
+        return library.visible.filter { $0.state != .dismissed }.map {
+            ReviewInsightInput(id: $0.record.id, generatedAt: placed ?? $0.record.generatedAt, score: InsightRanking.score($0.record))
         }
     }
 }
