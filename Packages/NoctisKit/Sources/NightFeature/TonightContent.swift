@@ -54,6 +54,9 @@ public nonisolated struct TonightContent: Sendable, Equatable {
     /// "Bedtime window 10:45 – 11:15 PM", or "Bedtime around 11:00 PM".
     public let summary: String
     public let isWindow: Bool
+    /// The bedtime is built on the person's own nights (Premium); false is the free plan's one bedtime from the wake time and the need
+    /// (APP_RULES.md R57), which has no window and no "why".
+    public let isPersonalized: Bool
     /// "BEDTIME WINDOW" or "BEDTIME".
     public let heroCaption: String
     /// The window, or the one bedtime, as a metric.
@@ -76,7 +79,9 @@ public nonisolated struct TonightContent: Sendable, Equatable {
 public nonisolated enum TonightBuilder {
     // MARK: Tonight
 
-    public static func content(for recommendation: BedtimeRecommendation, now: Date, timeZone: TimeZone, format: HomeFormat) -> TonightContent {
+    public static func content(
+        for recommendation: BedtimeRecommendation, now: Date, timeZone: TimeZone, format: HomeFormat, personalized: Bool = true
+    ) -> TonightContent {
         let wakeText = format.clock(minutesSinceMidnight: recommendation.wakeMinutes)
         let needText = HomeFormat.compactDuration(recommendation.needMinutes)
         let wakeLine = "Wake \(wakeText) · \(needText) need"
@@ -93,12 +98,12 @@ public nonisolated enum TonightBuilder {
         }
         let strip = strip(for: recommendation, format: format)
         let confidence = isWindow ? confidenceLine(recommendation) : nil
-        let note = isWindow ? nil : "A starting point. We're still learning your pattern."
+        let note = isWindow ? nil : (personalized ? "A starting point. We're still learning your pattern." : "Your wake time less the sleep you need.")
         let clockChange = clockChangeNote(recommendation.clockChangeMinutes)
         let caption = isWindow ? "Bedtime window" : "Bedtime"
         let label = [caption + ". " + hero.spoken, wakeLine, note, confidence, clockChange].compactMap { $0 }.joined(separator: ". ")
         return TonightContent(
-            dateCaption: format.longDate(now, in: timeZone).uppercased(format.locale), summary: summary, isWindow: isWindow,
+            dateCaption: format.longDate(now, in: timeZone).uppercased(format.locale), summary: summary, isWindow: isWindow, isPersonalized: personalized,
             heroCaption: caption.uppercased(format.locale), hero: hero, wakeLine: wakeLine, note: note, strip: strip,
             reasons: reasons(for: recommendation, format: format), confidence: confidence, clockChange: clockChange,
             method: method(for: recommendation), accessibilityLabel: label + ". " + strip.accessibilityLabel
@@ -109,28 +114,12 @@ public nonisolated enum TonightBuilder {
 
     /// "10:45 – 11:15 PM", or "11:45 PM – 12:15 AM" when the window crosses AM and PM.
     public static func windowText(_ window: BedtimeWindow, format: HomeFormat) -> String {
-        let start = format.clock(minutesSinceMidnight: window.startMinutes)
-        let end = format.clock(minutesSinceMidnight: window.endMinutes)
-        let (startTime, startPeriod) = format.splitClock(start)
-        let (endTime, endPeriod) = format.splitClock(end)
-        guard !startPeriod.isEmpty, startPeriod == endPeriod else { return "\(start) – \(end)" }
-        return "\(startTime) – \(endTime) \(endPeriod)"
+        format.windowText(startMinutes: window.startMinutes, endMinutes: window.endMinutes)
     }
 
-    /// The window as one metric: the period is the unit. The dash and its spaces are set at the
-    /// numbers' size, so "10:15 – 10:45 PM" reads as one thing.
+    /// The window as one metric: the period is the unit (Home draws the same one).
     public static func windowMetric(_ window: BedtimeWindow, format: HomeFormat) -> NoctisMetricValue {
-        let start = format.splitClock(format.clock(minutesSinceMidnight: window.startMinutes))
-        let end = format.splitClock(format.clock(minutesSinceMidnight: window.endMinutes))
-        var parts: [NoctisMetricValue.Part] = []
-        if !start.period.isEmpty, start.period != end.period {
-            parts += [.number(start.time), .unit(start.period), .number(" – "), .number(end.time)]
-        } else {
-            parts.append(.number("\(start.time) – \(end.time)"))
-        }
-        if !end.period.isEmpty { parts.append(.unit(end.period)) }
-        let spoken = windowText(window, format: format).replacingOccurrences(of: " – ", with: " to ")
-        return NoctisMetricValue(parts: parts, spoken: spoken)
+        format.windowMetric(startMinutes: window.startMinutes, endMinutes: window.endMinutes)
     }
 
     static func confidenceLine(_ recommendation: BedtimeRecommendation) -> String {

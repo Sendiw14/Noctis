@@ -17,6 +17,7 @@ struct SleepInsightCard<Content: View>: View {
     let identifier: String
     let action: () -> Void
     @ViewBuilder let content: Content
+    @Environment(\.featureGate) private var gate
 
     var body: some View {
         Button {
@@ -28,10 +29,14 @@ struct SleepInsightCard<Content: View>: View {
                     HStack {
                         NoctisCaption(title, style: .noctisInk3)
                         Spacer(minLength: NoctisSpacing.xs)
-                        Image(systemName: "chevron.right")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.noctisInk3)
-                            .accessibilityHidden(true)
+                        if gate.isUnlocked(.sleepConsistencyBalanceTimingDetails) {
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.noctisInk3)
+                                .accessibilityHidden(true)
+                        } else {
+                            LockGlyph(size: 13).foregroundStyle(.noctisInk3)
+                        }
                     }
                     content
                 }
@@ -40,7 +45,7 @@ struct SleepInsightCard<Content: View>: View {
         .buttonStyle(NoctisCardButtonStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
-        .accessibilityHint("Opens the details.")
+        .accessibilityHint(gate.isUnlocked(.sleepConsistencyBalanceTimingDetails) ? "Opens the details." : "Premium. Opens what Premium includes.")
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier(identifier)
     }

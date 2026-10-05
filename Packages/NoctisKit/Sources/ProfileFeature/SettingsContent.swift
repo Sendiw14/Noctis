@@ -102,7 +102,7 @@ public nonisolated enum NotificationsCopy {
     /// What the notification says, word for word.
     public static let morningSays = NotificationPlan.morningBody
     public static let weeklySays = NotificationPlan.weeklyBody
-    public static func windDownSays(leadMinutes: Int) -> String { NotificationPlan.windDownBody(leadMinutes: leadMinutes) }
+    public static func windDownSays(leadMinutes: Int, tier: Tier) -> String { NotificationPlan.windDownBody(leadMinutes: leadMinutes, tier: tier) }
 
     public static func minutesAfterWake(_ minutes: Int) -> String { minutes == 0 ? "At wake time" : "\(minutes) min after waking" }
     public static func minutesBeforeBed(_ minutes: Int) -> String { "\(minutes) min before bedtime" }

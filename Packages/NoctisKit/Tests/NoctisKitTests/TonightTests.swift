@@ -88,13 +88,16 @@ struct TonightRouteTests {
         #expect(model.takeAlarmDestination() != nil)
     }
 
-    @Test func theEveningNotificationOpensWindDownWithoutStartingIt() {
-        #expect(NoctisNotification.route(for: "noctis.notification.windDown") == .windDown(autostart: false))
-        #expect(NoctisNotification.route(for: NoctisNotification.windDown) == .windDown(autostart: false))
-        #expect(NoctisNotification.route(for: NoctisNotification.morningSummary) == nil)
-        #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview) == nil)
-        #expect(NoctisNotification.route(for: "noctis.notification.trialEnding") == nil)
-        #expect(NoctisNotification.route(for: "somebody.else") == nil)
+    @Test func theEveningNotificationOpensWindDownWithoutStartingItForPremiumAndTonightForFree() {
+        #expect(NoctisNotification.route(for: "noctis.notification.windDown", tier: .premium) == .windDown(autostart: false))
+        #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .premium) == .windDown(autostart: false))
+        #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .free) == .tonight)
+        for tier in [Tier.free, .premium] {
+            #expect(NoctisNotification.route(for: NoctisNotification.morningSummary, tier: tier) == nil)
+            #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == nil)
+            #expect(NoctisNotification.route(for: "noctis.notification.trialEnding", tier: tier) == nil)
+            #expect(NoctisNotification.route(for: "somebody.else", tier: tier) == nil)
+        }
     }
 }
 

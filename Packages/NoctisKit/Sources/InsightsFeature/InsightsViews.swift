@@ -43,6 +43,8 @@ struct InsightCategoryTile: View {
 struct InsightChipRow: View {
     let chips: [InsightChipContent]
     let selected: InsightCategory?
+    /// Whether a chip is Premium (every category chip is, All is not): a lock glyph before its name, and a tap opens the paywall.
+    var isLocked: (InsightCategory?) -> Bool = { _ in false }
     let select: (InsightCategory?) -> Void
     @Namespace private var selection
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -75,7 +77,7 @@ struct InsightChipRow: View {
             NoctisHaptics.snapLight()
             select(chip.category)
         } label: {
-            Text(chip.title)
+            lockedSegmentLabel(chip.title, locked: isLocked(chip.category))
                 .noctisFont(15, .semibold, relativeTo: .subheadline)
                 .foregroundStyle(isSelected ? NoctisAppColor.ctaLabel : NoctisAppColor.ink2)
                 .padding(.horizontal, NoctisSpacing.md)
@@ -95,7 +97,7 @@ struct InsightChipRow: View {
                 .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(chip.title)
+        .accessibilityLabel(isLocked(chip.category) ? "\(chip.title), Premium" : chip.title)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .accessibilityIdentifier("insights.chip.\(chip.id)")
     }

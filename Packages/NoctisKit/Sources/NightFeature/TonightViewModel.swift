@@ -30,6 +30,7 @@ public final class TonightViewModel {
     private let format: HomeFormat
     private let timeZone: TimeZone
     private let clock: () -> Date
+    private let isUnlocked: (Feature) -> Bool
     private let openSettingsAction: @MainActor () -> Void
     private var observing: Task<Void, Never>?
 
@@ -40,6 +41,7 @@ public final class TonightViewModel {
         format: HomeFormat,
         timeZone: TimeZone = .autoupdatingCurrent,
         clock: @escaping () -> Date = { Date() },
+        isUnlocked: @escaping (Feature) -> Bool = { _ in true },
         openSettings: @escaping @MainActor () -> Void = TonightViewModel.openAppSettings
     ) {
         self.sleep = sleep
@@ -48,6 +50,7 @@ public final class TonightViewModel {
         self.format = format
         self.timeZone = timeZone
         self.clock = clock
+        self.isUnlocked = isUnlocked
         self.openSettingsAction = openSettings
         self.draft = AlarmSettings(minutesSinceMidnight: profile().typicalWakeMinutes)
     }
@@ -72,15 +75,29 @@ public final class TonightViewModel {
         observing = nil
     }
 
+    /// Tonight's window and the reasons for it are Premium; the free plan gets the one bedtime (APP_RULES.md R57, R59). Asked each time it is read,
+    /// so a purchase or a lapse shows in the next `refreshBedtime`.
+    public var showsWindow: Bool { isUnlocked(.tonightPersonalizedWindow) }
+
+    /// "Start wind-down" is Premium: the free plan sees a lock glyph and the paywall (R58); a session already running finishes either way.
+    public var windDownLocked: Bool { !isUnlocked(.windDownSession) }
+
     public func refreshBedtime() async {
         let current = profile()
         let snapshot = await sleep.refresh(profile: current)
         let now = clock()
+        let personalized = showsWindow
         let recommendation = BedtimeInputsBuilder.recommendation(
             wakeMinutes: current.typicalWakeMinutes, needMinutes: current.needMinutes, timing: snapshot.timing, balance: snapshot.balance,
-            consistency: snapshot.consistency, now: now, timeZone: timeZone
+            consistency: snapshot.consistency, now: now, timeZone: timeZone, personalized: personalized
         )
-        content = TonightBuilder.content(for: recommendation, now: now, timeZone: timeZone, format: format)
+        content = TonightBuilder.content(for: recommendation, now: now, timeZone: timeZone, format: format, personalized: personalized)
+    }
+
+    /// The tier changed while Tonight is open: the bedtime is built again for it.
+    public func tierChanged() async {
+        guard content != nil else { return }
+        await refreshBedtime()
     }
 
     public func refreshAlarm() async {

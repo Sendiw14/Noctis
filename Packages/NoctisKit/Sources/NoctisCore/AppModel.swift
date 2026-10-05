@@ -32,6 +32,10 @@ public final class AppModel {
     public private(set) var alarmDestination: AlarmDestination?
     /// The tab whose button was pressed while it was already showing.
     public private(set) var tabRetap: TabRetap?
+    /// What is free and what is Premium, where the app has put it (nil in a test that does not care: everything is open).
+    @ObservationIgnored public var featureGate: FeatureGate?
+    /// Whether a wind-down session is running (the app says). A session that began while the plan included it always finishes, so a lapse never blocks it.
+    @ObservationIgnored public var isWindDownRunning: () -> Bool = { false }
     /// The paywall, while it is open: only after a tap on a locked element or on "What Premium includes", never on launch or on entering a tab (R58).
     public var paywall: PaywallContext?
     private var serial = 0
@@ -48,6 +52,26 @@ public final class AppModel {
         self.profileStore = profileStore
         self.profile = profileStore.load()
     }
+
+    /// The person's plan (Premium with no gate: a test that does not care sees everything).
+    public var tier: Tier { featureGate?.tier ?? .premium }
+
+    /// Whether `feature` is shown in full (always, with no gate).
+    public func isUnlocked(_ feature: Feature) -> Bool { featureGate?.isUnlocked(feature) ?? true }
+
+    /// A factor's detail from a card on Recovery (the tab's stack) or Home: Premium. A free person gets the paywall, saying what it unlocks, and nothing is pushed (R58).
+    public func openRecoveryFactorOnTab(_ kind: RecoveryFactorKind, range: RecoveryFactorRange) {
+        guard isUnlocked(.recoveryFactorDetail) else { return presentPaywall(for: .recoveryFactorDetail) }
+        recoveryPath.append(.factor(kind, range: range))
+    }
+
+    public func openRecoveryFactorOverHome(_ kind: RecoveryFactorKind, range: RecoveryFactorRange) {
+        guard isUnlocked(.recoveryFactorDetail) else { return presentPaywall(for: .recoveryFactorDetail) }
+        homePath.append(.recoveryFactor(kind, range: range))
+    }
+
+    /// The wind-down session is Premium; a running one is never shut out.
+    private var mayOpenWindDown: Bool { isUnlocked(.windDownSession) || isWindDownRunning() }
 
     /// A locked thing was tapped: the paywall opens over the screen, saying what it unlocks.
     public func presentPaywall(_ context: PaywallContext) { paywall = context }
@@ -101,7 +125,8 @@ public final class AppModel {
         case .settings(let section): homePath = section == .root ? [.profile, .settings(.root)] : [.profile, .settings(.root), .settings(section)]
         case .home: homePath = []
         case .tonight: homePath = [.tonight]
-        case .windDown(let autostart): homePath = [.tonight, .windDown(autostart: autostart)]
+        // A link or a notification never opens the Premium session for a free person: it lands on Tonight, where the button is marked (no paywall: nothing was tapped).
+        case .windDown(let autostart): homePath = mayOpenWindDown ? [.tonight, .windDown(autostart: autostart)] : [.tonight]
         case .sounds: homePath = [.tonight, .sounds]
         case .alarm:
             serial += 1
@@ -110,7 +135,14 @@ public final class AppModel {
         case .sleep(let night, let range):
             serial += 1
             sleepDestination = SleepDestination(night: night, range: range, serial: serial)
-        case .recovery(let range, let factor):
+        case .recovery(let requested, let requestedFactor):
+            // A link never opens what is Premium for a free person: 30 and 90 days fall back to 7, a factor's detail to the tab (no paywall: nothing was tapped).
+            let range: RecoverySegment = switch requested {
+            case .month: isUnlocked(.recovery30D) ? .month : .week
+            case .quarter: isUnlocked(.recovery90D) ? .quarter : .week
+            default: requested
+            }
+            let factor = isUnlocked(.recoveryFactorDetail) ? requestedFactor : nil
             serial += 1
             recoveryDestination = RecoveryDestination(segment: range, factor: factor, serial: serial)
             // A factor's page is pushed over the tab's root.
@@ -144,6 +176,7 @@ public final class AppModel {
     /// tap on the same route does nothing.
     public func push(_ route: HomeRoute) {
         selectedTab = .home
+        if case .windDown = route, !mayOpenWindDown { return presentPaywall(.windDown) }
         guard homePath.last != route else { return }
         homePath.append(route)
     }

@@ -554,8 +554,9 @@ struct EveningHeroView: View {
     var body: some View {
         HomeCollapseEffect(viewModel: viewModel, anchor: .topLeading) {
             VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                NoctisCaption("BEDTIME", style: .noctisInk3)
-                NoctisMetric(content.time, size: 88)
+                NoctisCaption(content.caption, style: .noctisInk3)
+                // The window is longer than one time: it sits at the size Tonight draws it.
+                NoctisMetric(content.time, size: content.isWindow ? 56 : 88)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                 EveningCountdownView(times: content.times)
@@ -576,7 +577,8 @@ struct EveningHeroView: View {
     /// 7:00 AM. Wake 7:00 AM · 8h need."
     private func summary(at now: Date) -> String {
         let lead = content.times.countdownMetric(at: now).map { "Bedtime \(content.times.bedtimeText), in \($0.spoken)." } ?? "\(content.times.passedText)."
-        return [lead, content.stripAccessibilityLabel, content.detail].joined(separator: " ")
+        let window = content.isWindow ? "Bedtime window \(content.time.spoken)." : nil
+        return [window, lead, content.stripAccessibilityLabel, content.detail].compactMap { $0 }.joined(separator: " ")
     }
 }
 

@@ -219,10 +219,10 @@ nonisolated struct AppearanceTests {
 // MARK: - The reminders' schedule
 
 nonisolated struct NotificationPlanTests {
-    static func plan(wake: Int = 7 * 60, center: Int = 23 * 60, _ change: (inout NotificationPreferences) -> Void = { _ in }) -> [ScheduledNotification] {
+    static func plan(wake: Int = 7 * 60, center: Int = 23 * 60, tier: Tier = .premium, _ change: (inout NotificationPreferences) -> Void = { _ in }) -> [ScheduledNotification] {
         var preferences = NotificationPreferences()
         change(&preferences)
-        return NotificationPlan.make(preferences: preferences, wakeMinutes: wake, bedtimeCenterMinutes: center)
+        return NotificationPlan.make(preferences: preferences, wakeMinutes: wake, bedtimeCenterMinutes: center, tier: tier)
     }
 
     static func time(_ plan: [ScheduledNotification], _ identifier: String) -> (hour: Int, minute: Int, weekday: Int?)? {
@@ -248,7 +248,8 @@ nonisolated struct NotificationPlanTests {
         let windDown = Self.time(plan, NoctisNotification.windDown)
         let minutes = (windDown?.hour ?? 0) * 60 + (windDown?.minute ?? 0)
         #expect(minutes == 23 * 60 + 10 - lead)
-        #expect(plan.first { $0.identifier == NoctisNotification.windDown }?.body == "Your wind-down starts in \(lead) minutes.")
+        #expect(plan.first { $0.identifier == NoctisNotification.windDown }?.body == "Your wind-down window starts in \(lead) minutes.")
+        #expect(Self.plan(center: 23 * 60 + 10, tier: .free) { $0.windDownLeadMinutes = lead }.first { $0.identifier == NoctisNotification.windDown }?.body == "Your bedtime window starts in \(lead) minutes.")
     }
 
     @Test(arguments: NotificationPreferences.morningOffsets)
@@ -296,7 +297,8 @@ nonisolated struct NotificationPlanTests {
     @Test func theWordsAreGenericAndCarryNoValueFromHealth() {
         let plan = Self.plan()
         #expect(plan.allSatisfy { $0.title == "NOCTIS" })
-        #expect(plan.map(\.body) == ["Your morning summary is ready.", "Your wind-down starts in 20 minutes.", "Your weekly review is ready."])
+        #expect(plan.map(\.body) == ["Your morning summary is ready.", "Your wind-down window starts in 20 minutes.", "Your weekly review is ready."])
+        #expect(Self.plan(tier: .free).map(\.body) == ["Your morning summary is ready.", "Your bedtime window starts in 20 minutes.", "Your weekly review is ready."])
         for item in plan where item.identifier != NoctisNotification.windDown {
             #expect(!item.body.contains(where: { $0.isNumber }), Comment(rawValue: item.body))
         }

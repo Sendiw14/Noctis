@@ -10,6 +10,7 @@ import SwiftUI
 struct CoachConversationScreen: View {
     let viewModel: CoachViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(AppModel.self) private var appModel
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -18,6 +19,12 @@ struct CoachConversationScreen: View {
                     ForEach(viewModel.turns) { turn in
                         CoachTurnView(turn: turn, isLatest: turn.id == viewModel.turns.last?.id, viewModel: viewModel)
                             .id(turn.id)
+                    }
+                    // Today's free questions are used up (R60): one card, after the answers.
+                    if viewModel.isLimited, !viewModel.isSending, let card = LockedCopy.card(for: .coachQuestions) {
+                        LockedCard(systemImage: "sparkles", title: card.title, line: card.line, identifier: "coach.conversation.locked") {
+                            appModel.presentPaywall(.coachQuestions)
+                        }
                     }
                 }
                 .frame(maxWidth: 680)
@@ -42,7 +49,9 @@ struct CoachConversationScreen: View {
                     CoachFollowUpChips(questions: viewModel.followUpQuestions) { viewModel.followUp($0) }
                         .transition(.opacity)
                 }
-                CoachInputBar(viewModel: viewModel, placeholder: "Ask a follow-up", identifier: "coach.conversation") { viewModel.followUp() }
+                CoachInputBar(
+                    viewModel: viewModel, placeholder: viewModel.isLimited ? CoachQuota.usedUpTitle : "Ask a follow-up", identifier: "coach.conversation"
+                ) { viewModel.followUp() }
             }
             .background(NoctisAppColor.bg)
             .animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion), value: viewModel.followUpQuestions)

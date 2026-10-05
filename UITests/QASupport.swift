@@ -35,6 +35,8 @@ enum QA {
         if let step { arguments += ["-noctis.onboarding.step", step] }
         if let goals { arguments += ["-noctis.onboarding.selectedGoals", goals] }
         if isAX3 { arguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"] }
+        // The main app's QA suites were written before Premium: they run as Premium unless a test asks for a tier.
+        if extra.contains("-noctisSkipOnboarding"), !extra.contains("-forceTier") { arguments += ["-forceTier", "premium"] }
         app.launchArguments = arguments + extra
         app.launch()
         return app

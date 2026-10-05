@@ -244,8 +244,23 @@ public nonisolated struct InsightNightDot: Sendable, Equatable {
     public let within: Bool?
 }
 
+/// Tonight's bedtime window (Premium, APP_RULES.md R57): minutes since midnight, `end` before `start` when it crosses midnight. Home never works it out
+/// (the Night feature does, from the person's own nights); it only draws it.
+public nonisolated struct HomeBedtimeWindow: Sendable, Equatable {
+    public let startMinutes: Int
+    public let endMinutes: Int
+    /// The recommended bedtime the window is built around: what the countdown and the strip run to, so they agree with the window.
+    public let centerMinutes: Int
+
+    public init(startMinutes: Int, endMinutes: Int, centerMinutes: Int) {
+        self.startMinutes = startMinutes
+        self.endMinutes = endMinutes
+        self.centerMinutes = centerMinutes
+    }
+}
+
 public nonisolated struct TonightCardContent: Sendable, Equatable {
-    /// "Bedtime around", then the time.
+    /// "Bedtime around", or "Bedtime window", then the time.
     public let bedtimeLead: String
     public let bedtime: NoctisMetricValue
     /// "Wake 7:00 AM · 8h need".
@@ -256,8 +271,10 @@ public nonisolated struct TonightCardContent: Sendable, Equatable {
 
 /// Evening mode's hero: tonight's bedtime, a countdown and the night strip.
 public nonisolated struct EveningHeroContent: Sendable, Equatable {
-    /// 11:00 PM, the period as a unit.
+    /// 11:00 PM, the period as a unit; for Premium the window, "10:45 – 11:15 PM".
     public let time: NoctisMetricValue
+    /// `time` is the window around tonight's bedtime, not the one bedtime.
+    public let isWindow: Bool
     public let times: TonightTimes
     /// "Wake 7:00 AM · 8h need".
     public let detail: String
@@ -265,6 +282,8 @@ public nonisolated struct EveningHeroContent: Sendable, Equatable {
     public let stripLabels: [StripLabel]
     /// "Tonight's sleep window, 11:00 PM to 7:00 AM."
     public let stripAccessibilityLabel: String
+    /// "BEDTIME" or "BEDTIME WINDOW".
+    public var caption: String { isWindow ? "BEDTIME WINDOW" : "BEDTIME" }
 
     public nonisolated struct StripLabel: Sendable, Equatable {
         public let text: String
@@ -394,11 +413,19 @@ public nonisolated enum HomeScreenBuilder {
     /// Headroom above the tallest bar or the need line in This week.
     public static let weekHeadroom = WeekRenderBuilder.headroom
 
-    public static func build(_ snapshot: HomeSnapshot, now: Date, calendar: Calendar, locale: Locale, modeOverride: HomeMode? = nil) -> HomeScreen {
+    /// `bedtimeWindow`: Premium's window around tonight's bedtime (nil is the free plan's one bedtime, and also a Premium night with too few nights recorded).
+    public static func build(
+        _ snapshot: HomeSnapshot, now: Date, calendar: Calendar, locale: Locale, modeOverride: HomeMode? = nil, bedtimeWindow: HomeBedtimeWindow? = nil
+    ) -> HomeScreen {
         let format = HomeFormat(calendar: calendar, locale: locale)
         let recovery = recoveryCard(snapshot, format: format)
-        let mode = modeOverride ?? Self.mode(now: now, plan: snapshot.tonight, calendar: calendar)
-        let times = tonightTimes(now: now, plan: snapshot.tonight, format: format)
+        // With Premium's window the countdown, the strip and the evening's start all run to the recommended bedtime it is built around, so none of them
+        // contradicts the window; the wake time is still the person's own.
+        let plan = bedtimeWindow.map {
+            TonightPlan(bedtimeMinutes: $0.centerMinutes, wakeMinutes: snapshot.tonight.wakeMinutes, needMinutes: snapshot.tonight.needMinutes)
+        } ?? snapshot.tonight
+        let mode = modeOverride ?? Self.mode(now: now, plan: plan, calendar: calendar)
+        let times = tonightTimes(now: now, plan: plan, format: format)
         let summary: HeaderSummary = mode == .evening ? .bedtime(times) : .text(daySummary(snapshot, recovery: recovery))
         let showsDataCards: Bool = switch recovery {
         case .connect, .noSleepData, .failed: false
@@ -411,12 +438,12 @@ public nonisolated enum HomeScreenBuilder {
         return HomeScreen(
             header: header(now: now, newestSample: snapshot.newestSample, mode: mode, summary: summary, format: format),
             mode: mode,
-            nextModeChange: nextModeChange(after: now, plan: snapshot.tonight, calendar: calendar),
+            nextModeChange: nextModeChange(after: now, plan: plan, calendar: calendar),
             recovery: recovery,
             lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, heart: snapshot.lastNightHeart, quality: snapshot.lastNightSleepQuality, render: snapshot.render.night, format: format) } : nil,
             insight: showsDataCards ? snapshot.topInsight.map { insightCard($0, format: format) } : nil,
-            tonight: tonightCard(snapshot.tonight, format: format),
-            evening: eveningHero(times, plan: snapshot.tonight, format: format),
+            tonight: tonightCard(plan, window: bedtimeWindow, format: format),
+            evening: eveningHero(times, plan: plan, window: bedtimeWindow, format: format),
             week: showsDataCards ? weekCard(snapshot, format: format) : nil,
             detail: detail,
             share: showsDataCards ? shareCard(snapshot, recovery: recovery, now: now, format: format) : nil
@@ -469,17 +496,19 @@ public nonisolated enum HomeScreenBuilder {
         let bedtime = calendar.date(bySettingHour: plan.bedtimeMinutes / 60, minute: plan.bedtimeMinutes % 60, second: 0, of: bedDay) ?? now
         return TonightTimes(
             bedtime: bedtime,
-            wake: bedtime.addingTimeInterval(Double(plan.needMinutes) * 60),
+            // The wake time is the person's own (the bedtime plus the need, unless Premium's window moved the bedtime earlier).
+            wake: bedtime.addingTimeInterval(Double(((plan.wakeMinutes - plan.bedtimeMinutes) % 1440 + 1440) % 1440) * 60),
             bedtimeText: format.clock(minutesSinceMidnight: plan.bedtimeMinutes),
             windowStart: calendar.date(bySettingHour: 18, minute: 0, second: 0, of: day) ?? day,
             windowEnd: calendar.date(bySettingHour: 10, minute: 0, second: 0, of: nextDay) ?? nextDay
         )
     }
 
-    static func eveningHero(_ times: TonightTimes, plan: TonightPlan, format: HomeFormat) -> EveningHeroContent {
+    static func eveningHero(_ times: TonightTimes, plan: TonightPlan, window: HomeBedtimeWindow? = nil, format: HomeFormat) -> EveningHeroContent {
         let labels: [(Int, Double)] = [(18 * 60, 0), (0, 6.0 / 16), (6 * 60, 12.0 / 16), (10 * 60, 1)]
         return EveningHeroContent(
-            time: format.clockMetric(times.bedtimeText),
+            time: window.map { format.windowMetric(startMinutes: $0.startMinutes, endMinutes: $0.endMinutes) } ?? format.clockMetric(times.bedtimeText),
+            isWindow: window != nil,
             times: times,
             detail: tonightCard(plan, format: format).detail,
             stripLabels: labels.map { EveningHeroContent.StripLabel(text: format.hour(minutesSinceMidnight: $0.0), position: $0.1) },
@@ -867,10 +896,11 @@ public nonisolated enum HomeScreenBuilder {
 
     // MARK: Tonight
 
-    static func tonightCard(_ plan: TonightPlan, format: HomeFormat) -> TonightCardContent {
+    static func tonightCard(_ plan: TonightPlan, window: HomeBedtimeWindow? = nil, format: HomeFormat) -> TonightCardContent {
         TonightCardContent(
-            bedtimeLead: "Bedtime around",
-            bedtime: format.clockMetric(format.clock(minutesSinceMidnight: plan.bedtimeMinutes)),
+            bedtimeLead: window == nil ? "Bedtime around" : "Bedtime window",
+            bedtime: window.map { format.windowMetric(startMinutes: $0.startMinutes, endMinutes: $0.endMinutes) }
+                ?? format.clockMetric(format.clock(minutesSinceMidnight: plan.bedtimeMinutes)),
             detail: "Wake \(format.clock(minutesSinceMidnight: plan.wakeMinutes)) · \(HomeFormat.compactDuration(plan.needMinutes)) need"
         )
     }
@@ -1058,6 +1088,31 @@ public nonisolated struct HomeFormat: Sendable, Equatable {
 
     /// 11:00 PM as a metric: the period is the unit (none on 24-hour
     /// clocks).
+    /// "10:45 – 11:15 PM", or "11:45 PM – 12:15 AM" when the window crosses AM and PM.
+    public func windowText(startMinutes: Int, endMinutes: Int) -> String {
+        let start = clock(minutesSinceMidnight: startMinutes)
+        let end = clock(minutesSinceMidnight: endMinutes)
+        let (startTime, startPeriod) = splitClock(start)
+        let (endTime, endPeriod) = splitClock(end)
+        guard !startPeriod.isEmpty, startPeriod == endPeriod else { return "\(start) – \(end)" }
+        return "\(startTime) – \(endTime) \(endPeriod)"
+    }
+
+    /// The window as one metric: the period is the unit. The dash and its spaces are set at the numbers' size, so "10:15 – 10:45 PM" reads as one thing.
+    public func windowMetric(startMinutes: Int, endMinutes: Int) -> NoctisMetricValue {
+        let start = splitClock(clock(minutesSinceMidnight: startMinutes))
+        let end = splitClock(clock(minutesSinceMidnight: endMinutes))
+        var parts: [NoctisMetricValue.Part] = []
+        if !start.period.isEmpty, start.period != end.period {
+            parts += [.number(start.time), .unit(start.period), .number(" – "), .number(end.time)]
+        } else {
+            parts.append(.number("\(start.time) – \(end.time)"))
+        }
+        if !end.period.isEmpty { parts.append(.unit(end.period)) }
+        let spoken = windowText(startMinutes: startMinutes, endMinutes: endMinutes).replacingOccurrences(of: " – ", with: " to ")
+        return NoctisMetricValue(parts: parts, spoken: spoken)
+    }
+
     public func clockMetric(_ text: String) -> NoctisMetricValue {
         let (time, period) = splitClock(text)
         return NoctisMetricValue(parts: period.isEmpty ? [.number(time)] : [.number(time), .unit(period)], spoken: text)

@@ -120,7 +120,7 @@ final class SleepQATests: XCTestCase {
     // MARK: - Week and Month
 
     private func choose(_ range: String, _ app: XCUIApplication) {
-        let segment = app.segmentedControls.buttons[range]
+        let segment = app.buttons["sleep.range.\(range)"]
         XCTAssertTrue(segment.waitForExistence(timeout: 5), range)
         segment.tap()
         XCTAssertTrue(element(app, "sleep.bars").waitForExistence(timeout: 5), range)
@@ -149,7 +149,7 @@ final class SleepQATests: XCTestCase {
     func testWeekOnMessyNightAndGap() {
         for scenario in ["messyNight", "gap", "sleepOnly", "learning"] {
             let app = launchSleep(scenario)
-            XCTAssertTrue(app.segmentedControls.buttons["Week"].waitForExistence(timeout: 12), scenario)
+            XCTAssertTrue(app.buttons["sleep.range.Week"].waitForExistence(timeout: 12), scenario)
             QA.pause(2)
             choose("Week", app)
             QA.shot("sleep-week-\(scenario)")
@@ -166,7 +166,7 @@ final class SleepQATests: XCTestCase {
         choose("Week", app)
         choose("Month", app)
         choose("Week", app)
-        app.segmentedControls.buttons["Day"].tap()
+        app.buttons["sleep.range.Day"].tap()
         XCTAssertTrue(element(app, "sleep.hero").waitForExistence(timeout: 5))
         XCTAssertFalse(element(app, "sleep.bars").exists)
     }
@@ -265,7 +265,7 @@ final class SleepQATests: XCTestCase {
         // Below the bars: the caption row, where a tap isn't a bar's.
         card.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.06)).tap()
         XCTAssertTrue(element(app, "sleep.bars").waitForExistence(timeout: 8))
-        XCTAssertTrue(app.segmentedControls.buttons["Week"].isSelected)
+        XCTAssertTrue(app.buttons["sleep.range.Week"].isSelected)
     }
 
     /// A second press of the Sleep tab scrolls it back to the top.

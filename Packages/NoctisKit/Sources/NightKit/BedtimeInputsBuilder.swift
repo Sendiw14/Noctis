@@ -27,10 +27,14 @@ public enum BedtimeInputsBuilder {
     /// Tonight's recommendation: the base bedtime (wake less need), the clock change across the night
     /// (daylight saving), the inputs from the engines, and the model. The one path Tonight, the evening
     /// reminder and Profile all take, so they can never disagree about the bedtime.
+    ///
+    /// `personalized: false` is the free plan's bedtime (APP_RULES.md R57): the engine's base alone, one bedtime from the wake time, the need and tonight's
+    /// clock, as if no nights were recorded. Without it the window, the catch-up and the usual-bedtime limit (what Premium adds) apply.
     public static func recommendation(
         wakeMinutes: Int, needMinutes: Int, timing: SleepTimingResult?, balance: SleepBalanceResult?,
-        consistency: ConsistencyResult?, now: Date, timeZone: TimeZone
+        consistency: ConsistencyResult?, now: Date, timeZone: TimeZone, personalized: Bool = true
     ) -> BedtimeRecommendation {
+        let (timing, balance, consistency) = personalized ? (timing, balance, consistency) : (nil, nil, nil)
         let base = BedtimeClock.wrap(wakeMinutes - needMinutes)
         let change = TonightClock.clockChangeMinutes(
             night: TonightClock.tonight(now: now, in: timeZone), bedtimeMinutes: base, wakeMinutes: wakeMinutes, timeZone: timeZone

@@ -13,6 +13,7 @@ public struct SleepTabView: View {
     let viewModel: SleepViewModel
     @Environment(AppModel.self) private var appModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.featureGate) private var gate
     @State private var scrollPosition = ScrollPosition(edge: .top)
 
     public init(viewModel: SleepViewModel) {
@@ -46,6 +47,9 @@ public struct SleepTabView: View {
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
         .task { await viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
+        // A lapse or a purchase: what was Premium goes back to what is free, or unlocks in place (R57).
+        .onChange(of: gate.tier) { viewModel.tierChanged() }
+        .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: gate.tier)
         // The Sleep tab pressed again: back to the top.
         .onChange(of: appModel.tabRetap) { _, retap in
             guard retap?.tab == .sleep else { return }
@@ -77,20 +81,23 @@ public struct SleepTabView: View {
     }
 
     private var rangePicker: some View {
-        Picker("Range", selection: rangeBinding) {
-            ForEach(SleepRange.allCases, id: \.self) { range in
-                Text(range.title).tag(range)
-            }
-        }
-        .pickerStyle(.segmented)
+        NoctisSegmentedControl(
+            "Range", segments: SleepRange.allCases.map { NoctisSegment($0, title: $0.title, isLocked: viewModel.lockedFeature(for: $0) != nil) },
+            selection: rangeBinding, identifier: "sleep.range"
+        )
         .disabled(viewModel.screen == nil)
-        .accessibilityIdentifier("sleep.range")
     }
 
     private var rangeBinding: Binding<SleepRange> {
         Binding {
             viewModel.selection?.range ?? .day
         } set: { range in
+            // A locked range opens the paywall and the selection stays where it was (R58).
+            if let feature = viewModel.lockedFeature(for: range) {
+                NoctisHaptics.selection()
+                appModel.presentPaywall(for: feature)
+                return
+            }
             NoctisHaptics.snapLight()
             viewModel.select(range: range)
         }
@@ -142,11 +149,21 @@ struct SleepContent: View {
 struct SleepFieldHero: View {
     let viewModel: SleepViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(AppModel.self) private var appModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.md) {
             if let screen = viewModel.screen, screen.state == nil, screen.selection.range == .day {
-                SleepNightPicker(items: screen.picker, selected: screen.selection.night) { night in
+                SleepNightPicker(
+                    items: screen.picker, selected: screen.selection.night,
+                    locked: Set(screen.picker.map(\.night).filter { viewModel.lockedFeature(forNight: $0) != nil })
+                ) { night in
+                    // Nights 4 to 14 are Premium: a tap opens the paywall and the selection stays (R58).
+                    if let feature = viewModel.lockedFeature(forNight: night) {
+                        NoctisHaptics.selection()
+                        appModel.presentPaywall(for: feature)
+                        return
+                    }
                     NoctisHaptics.snapLight()
                     viewModel.select(night: night)
                 }

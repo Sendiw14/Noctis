@@ -74,7 +74,8 @@ public struct AppContainer {
         NoctisSignpost.begin(.launchToPopulated)
         let store = StoreManager()
         self.storeManager = store
-        self.featureGate = FeatureGate(entitlements: store.entitlementManager)
+        let gate = FeatureGate(entitlements: store.entitlementManager)
+        self.featureGate = gate
         let container: ModelContainer
         do {
             // Never synced: the profile, the alarm and the wind-down record stay on this device.
@@ -96,6 +97,8 @@ public struct AppContainer {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         let debug = DebugLaunchOptions(arguments: arguments)
+        // Before anything reads the tier (a route that opens at launch is clamped by it).
+        if let tier = debug.forceTier { store.entitlementManager.debugForce(tier) }
         let provider: any HealthDataProviding
         if let scenario = debug.mockScenario {
             provider = MockHealthKitProvider(
@@ -112,6 +115,7 @@ public struct AppContainer {
             provider = HealthKitProvider()
         }
         self.model = AppModel(healthProvider: provider, profileStore: profileStore)
+        self.model.featureGate = gate
         // UI tests: behave like a fresh install (no onboarding draft, no
         // finished profile) without reinstalling the app between runs.
         if debug.resetState && !restarted {
@@ -133,6 +137,7 @@ public struct AppContainer {
         #else
         let provider = HealthKitProvider()
         self.model = AppModel(healthProvider: provider, profileStore: profileStore)
+        self.model.featureGate = gate
         #endif
 
         let model = self.model
@@ -203,22 +208,38 @@ public struct AppContainer {
             profile: { model.profile },
             // "Connect Apple Health" reuses onboarding's authorization flow.
             connectHealth: { await model.requestHealthAuthorization() },
-            modeOverride: modeOverride
+            modeOverride: modeOverride,
+            // Tonight's block and the evening hero draw Premium's window; the free plan's is the one bedtime (R57).
+            bedtimeWindow: {
+                guard gate.isUnlocked(.tonightPersonalizedWindow) else { return nil }
+                let current = model.profile
+                let snapshot = await sleepRepository.refresh(profile: current)
+                let recommendation = BedtimeInputsBuilder.recommendation(
+                    wakeMinutes: current.typicalWakeMinutes, needMinutes: current.needMinutes, timing: snapshot.timing, balance: snapshot.balance,
+                    consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent
+                )
+                return recommendation.window.map {
+                    HomeBedtimeWindow(startMinutes: $0.startMinutes, endMinutes: $0.endMinutes, centerMinutes: recommendation.centerMinutes)
+                }
+            }
         )
         self.sleepViewModel = SleepViewModel(
             repository: sleepRepository,
             profile: { model.profile },
-            connectHealth: { await model.requestHealthAuthorization() }
+            connectHealth: { await model.requestHealthAuthorization() },
+            isUnlocked: { gate.isUnlocked($0) }
         )
         self.recoveryViewModel = RecoveryViewModel(
             repository: recoveryRepository,
             profile: { model.profile },
-            connectHealth: { await model.requestHealthAuthorization() }
+            connectHealth: { await model.requestHealthAuthorization() },
+            isUnlocked: { gate.isUnlocked($0) }
         )
         self.insightsViewModel = InsightsViewModel(
             repository: insightsRepository,
             profile: { model.profile },
-            connectHealth: { await model.requestHealthAuthorization() }
+            connectHealth: { await model.requestHealthAuthorization() },
+            isUnlocked: { gate.isUnlocked($0) }
         )
 
         // Coach (R29). Its history is local only, protected, out of backups and
@@ -257,7 +278,8 @@ public struct AppContainer {
             dataSource: coachData,
             history: coachHistory,
             profile: { model.profile },
-            connectHealth: { await model.requestHealthAuthorization() }
+            connectHealth: { await model.requestHealthAuthorization() },
+            gate: gate
         )
         self.coachViewModel = coachVM
         // The wake alarm (R30): the record is local, the system's alarms are AlarmKit's. A mock
@@ -274,7 +296,8 @@ public struct AppContainer {
         self.alarmService = alarmService
         self.tonightViewModel = TonightViewModel(
             sleep: sleepRepository, alarm: alarmService, profile: { model.profile },
-            format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
+            format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
+            isUnlocked: { gate.isUnlocked($0) }
         )
         // The preferences (R38). Read after `-noctisResetState` has cleared what a fresh install would not have.
         let preferences = AppPreferences()
@@ -293,11 +316,19 @@ public struct AppContainer {
                 let snapshot = await sleepRepository.refresh(profile: model.profile)
                 return BedtimeInputsBuilder.recommendation(
                     wakeMinutes: wake, needMinutes: need, timing: snapshot.timing, balance: snapshot.balance,
-                    consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent
+                    consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent,
+                    personalized: gate.isUnlocked(.tonightPersonalizedWindow)
                 ).centerMinutes
-            }
+            },
+            tier: { gate.tier }
         )
         self.notificationCoordinator = coordinator
+        // A purchase or a lapse changes the evening reminder's words (R61): the reminders are rebuilt for the new plan.
+        let tierChained = store.entitlementManager.onTierChange
+        store.entitlementManager.onTierChange = { new, old in
+            tierChained?(new, old)
+            coordinator.reschedule()
+        }
         model.onProfileChange = {
             coordinator.reschedule()
             Task { await widgetPublisher.republish() }
@@ -313,7 +344,8 @@ public struct AppContainer {
         Task {
             await watchSync.activate(onUpdateRequested: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) })
         }
-        let background = provider as? any HealthBackgroundDelivering
+        // Through the existential: in Release the provider is the concrete HealthKit one, and a cast from it would always succeed.
+        let background = (provider as any HealthDataProviding) as? any HealthBackgroundDelivering
         let startBackgroundUpdates: @Sendable () async -> Void = {
             await background?.startBackgroundDelivery { done in
                 Task {
@@ -329,9 +361,10 @@ public struct AppContainer {
         // numbers, so no extra read of Health) and the alarm as it stands, redrawn when either changes.
         widgetInputs.setBedtime { profile in
             guard let snapshot = await sleepRepository.cachedSnapshot else { return nil }
+            let personalized = await MainActor.run { gate.isUnlocked(.tonightPersonalizedWindow) }
             return BedtimeInputsBuilder.recommendation(
                 wakeMinutes: profile.typicalWakeMinutes, needMinutes: profile.needMinutes, timing: snapshot.timing, balance: snapshot.balance,
-                consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent
+                consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent, personalized: personalized
             )
         }
         widgetInputs.setAlarm { WidgetSnapshotMaker.alarm(await alarmService.status().settings) }
@@ -355,7 +388,7 @@ public struct AppContainer {
         #endif
         soundPlayer.setDefaultGain(preferences.values.soundsGain)
         self.soundPlayer = soundPlayer
-        self.soundsViewModel = SoundsViewModel(player: soundPlayer, defaultTimer: { preferences.values.soundsTimer })
+        self.soundsViewModel = SoundsViewModel(player: soundPlayer, defaultTimer: { preferences.values.soundsTimer }, isIncluded: { gate.isUnlocked($0) })
         // The Sleep sounds control (R48) is told what the one player does, so it shows what is true. At launch nothing plays: a record left by a
         // process the system ended is removed by the first state it sees.
         let sleepSoundsPublisher = SleepSoundsPublisher(store: SleepSoundsStore(), reload: { ControlCenter.shared.reloadControls(ofKind: ControlKind.sleepSounds) })
@@ -371,6 +404,7 @@ public struct AppContainer {
         windDown.activity = activityController
         activityController.endLeftovers()
         self.windDownViewModel = windDown
+        model.isWindDownRunning = { windDown.isActive }
         #if DEBUG
         let breathingHaptics = debug.makeBreathingHaptics()
         #else
@@ -474,7 +508,6 @@ public struct AppContainer {
         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
         #if DEBUG
         if let summary = debug.subscriptionSummary() { storeManager.entitlementManager.debugSet(summary) }
-        if let tier = debug.forceTier { storeManager.entitlementManager.debugForce(tier) }
         if let context = debug.paywallContext { model.presentPaywall(context) }
         #endif
         self.settingsViewModel = SettingsViewModel(

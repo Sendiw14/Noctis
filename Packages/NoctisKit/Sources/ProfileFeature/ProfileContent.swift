@@ -83,9 +83,9 @@ public nonisolated enum ProfileBuilder {
         let name = ProfileEdit.cleaned(name: profile.name)
         let recommendation = BedtimeInputsBuilder.recommendation(
             wakeMinutes: profile.typicalWakeMinutes, needMinutes: profile.needMinutes, timing: inputs.timing, balance: inputs.balance,
-            consistency: inputs.consistency, now: now, timeZone: timeZone
+            consistency: inputs.consistency, now: now, timeZone: timeZone, personalized: inputs.isPremium
         )
-        let bedtime = TonightBuilder.content(for: recommendation, now: now, timeZone: timeZone, format: format)
+        let bedtime = TonightBuilder.content(for: recommendation, now: now, timeZone: timeZone, format: format, personalized: inputs.isPremium)
         let nights = inputs.timing?.nights ?? 0
         let known = nights >= BedtimeInputsBuilder.usualBedtimeMinimumNights
         let typicalBedtime = known ? inputs.timing?.typicalBedtime.map { format.clock(minutesAfterNoon: $0) } : nil

@@ -20,15 +20,19 @@ public final class SoundsViewModel {
     /// The timer a sound starts with when it begins from silence (a preference; off unless Settings says).
     @ObservationIgnored private let defaultTimer: () -> SleepTimerChoice
     @ObservationIgnored private let sleeper: @Sendable (TimeInterval) async -> Void
+    /// Whether the person's plan includes a sound (APP_RULES.md R57): Brown noise, Rain and Ocean are free; the other three are Premium.
+    @ObservationIgnored private let isIncluded: (SoundKind) -> Bool
     @ObservationIgnored private var isVisible = false
     @ObservationIgnored private var ticker: Task<Void, Never>?
 
     public init(
         player: SoundPlayer, now: @escaping () -> Date = { Date() }, haptic: @escaping () -> Void = { NoctisHaptics.soft() },
         defaultTimer: @escaping () -> SleepTimerChoice = { .off },
+        isIncluded: @escaping (SoundKind) -> Bool = { _ in true },
         sleeper: @escaping @Sendable (TimeInterval) async -> Void = { seconds in try? await Task.sleep(for: .seconds(seconds)) }
     ) {
         self.player = player
+        self.isIncluded = isIncluded
         self.now = now
         self.defaultTimer = defaultTimer
         self.sleeper = sleeper
@@ -42,7 +46,11 @@ public final class SoundsViewModel {
 
     // MARK: Content
 
-    public var tiles: [SoundTileContent] { SoundsBuilder.tiles(state) }
+    public var tiles: [SoundTileContent] { SoundsBuilder.tiles(state, isLocked: isLocked) }
+
+    /// A Premium sound on the free plan: its tile opens the paywall instead of playing. One that is already playing when the plan changes keeps playing
+    /// until it is stopped or its timer ends; nothing is cut off.
+    public func isLocked(_ kind: SoundKind) -> Bool { !isIncluded(kind) }
     public var nowPlaying: NowPlayingContent? { SoundsBuilder.nowPlaying(state, remaining: remaining) }
     public var timerChoices: [(choice: SleepTimerChoice, isSelected: Bool)] { SoundsBuilder.timerChoices(state) }
     /// "Sleep well.": the timer ran out and the sound has faded.
@@ -55,6 +63,7 @@ public final class SoundsViewModel {
 
     /// A tile: plays that sound, or pauses it if it is the one playing, or plays it again if it is paused.
     public func tap(_ kind: SoundKind) {
+        guard state.kind == kind || !isLocked(kind) else { return }
         let startsFromSilence = state.phase == .stopped
         defer {
             // A sound that begins from silence takes the timer Settings says it should; one that takes
@@ -79,6 +88,7 @@ public final class SoundsViewModel {
     /// Plays `kind` and never pauses it: a request from Siri, Shortcuts or a control, where "play" must not stop a sound that is playing. A sound
     /// that begins from silence takes the default timer, as a tile does; nothing is felt (the phone may be locked).
     public func play(_ kind: SoundKind) {
+        guard state.kind == kind || !isLocked(kind) else { return }
         let startsFromSilence = state.phase == .stopped
         switch (state.kind == kind, state.phase) {
         case (true, .playing): return

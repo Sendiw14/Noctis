@@ -285,7 +285,9 @@ struct NotificationsCopyTests {
         #expect(NotificationsCopy.morningSays == NotificationPlan.morningBody)
         #expect(NotificationsCopy.weeklySays == NotificationPlan.weeklyBody)
         for lead in NotificationPreferences.windDownLeads {
-            #expect(NotificationsCopy.windDownSays(leadMinutes: lead) == NotificationPlan.windDownBody(leadMinutes: lead))
+            for tier in [Tier.free, .premium] {
+                #expect(NotificationsCopy.windDownSays(leadMinutes: lead, tier: tier) == NotificationPlan.windDownBody(leadMinutes: lead, tier: tier))
+            }
         }
         #expect(NotificationsCopy.privacyNote == "Reminders never carry a number from your Health data.")
     }

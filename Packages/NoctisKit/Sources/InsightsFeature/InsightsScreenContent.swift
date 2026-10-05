@@ -114,6 +114,22 @@ public nonisolated struct InsightsScreenContent: Sendable, Equatable {
     public let note: InsightsNoteContent?
 }
 
+extension InsightsScreenContent {
+    /// What a free person sees (R57): the featured story and the single most recent other insight, with none of the records. The rest, the category chips'
+    /// lists, the records and History are Premium and are said once by one locked card; nothing here deletes or hides a stored insight, it only decides how many
+    /// are drawn.
+    public func limitedForFree() -> InsightsScreenContent {
+        let firstRow = groups.first?.rows.first
+        let kept = groups.first.flatMap { group in firstRow.map { [InsightRowGroup(title: group.title, rows: [$0])] } } ?? []
+        return InsightsScreenContent(
+            dateCaption: dateCaption, summary: summary, chips: chips, state: state, learning: learning, featured: featured, groups: kept, records: [], note: note
+        )
+    }
+
+    /// Whether anything is drawn for the locked card to speak for: a list of insights, not a state or the learning card.
+    public var showsInsights: Bool { state == nil && learning == nil }
+}
+
 public nonisolated enum InsightsScreenBuilder {
     /// The milestones the learning card counts toward.
     static let milestoneDetails: [(nights: Int, title: String, detail: String)] = [

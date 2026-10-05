@@ -75,9 +75,10 @@ public final class ProfileViewModel {
     public func bedtime(wakeMinutes: Int, needMinutes: Int) -> TonightContent {
         let now = clock()
         let recommendation = BedtimeInputsBuilder.recommendation(
-            wakeMinutes: wakeMinutes, needMinutes: needMinutes, timing: timing, balance: balance, consistency: consistency, now: now, timeZone: timeZone
+            wakeMinutes: wakeMinutes, needMinutes: needMinutes, timing: timing, balance: balance, consistency: consistency, now: now, timeZone: timeZone,
+            personalized: entitlements.hasActivePremium
         )
-        return TonightBuilder.content(for: recommendation, now: now, timeZone: timeZone, format: format)
+        return TonightBuilder.content(for: recommendation, now: now, timeZone: timeZone, format: format, personalized: entitlements.hasActivePremium)
     }
 
     /// The bedtime the open wake time or sleep need editor would give, the other value as it is saved.

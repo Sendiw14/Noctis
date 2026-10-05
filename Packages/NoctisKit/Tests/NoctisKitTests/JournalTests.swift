@@ -396,8 +396,10 @@ nonisolated struct JournalPrivacyTests {
         path.hasPrefix("JournalKit/") || path.hasPrefix("NightFeature/Journal") || path.hasPrefix("NightFeature/Reflect")
     }
 
-    /// The only files outside the journal's own that may name it: the wind-down's wiring and the app's.
-    static let wiring: Set<String> = ["NightFeature/WindDownScreen.swift", "AppRoot/AppContainer.swift", "AppRoot/RootView.swift", "AppRoot/DataWiring.swift"]
+    /// The only files outside the journal's own that may name it: the wiring of the two places Reflect opens from (the wind-down, and Tonight for the free plan) and the app's.
+    static let wiring: Set<String> = [
+        "NightFeature/WindDownScreen.swift", "NightFeature/TonightScreen.swift", "AppRoot/AppContainer.swift", "AppRoot/RootView.swift", "AppRoot/DataWiring.swift",
+    ]
 
     @Test func onlyTheReflectScreensAndTheAppDependOnTheJournalTarget() throws {
         let manifest = try String(contentsOf: Self.packageRoot.appendingPathComponent("Package.swift"), encoding: .utf8)
@@ -445,6 +447,9 @@ nonisolated struct JournalPrivacyTests {
         // The wind-down screen opens the Reflect panel and does nothing else with it.
         let screen = files["NightFeature/WindDownScreen.swift"] ?? ""
         #expect(!screen.contains("JournalEntry") && !screen.contains("JournalStore") && !screen.contains("JournalContainer"))
+        // Tonight opens the same panel for the free plan, and likewise reads no entry.
+        let tonight = files["NightFeature/TonightScreen.swift"] ?? ""
+        #expect(tonight.contains("ReflectPanel(viewModel: journal") && !tonight.contains("JournalEntry") && !tonight.contains("JournalStore") && !tonight.contains("JournalContainer"))
         // The app's container makes the store, registers its erasure and makes the view model; it reads no entry.
         let container = files["AppRoot/AppContainer.swift"] ?? ""
         #expect(container.contains("JournalErasure(provider: journalProvider)"))

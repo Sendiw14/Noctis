@@ -74,6 +74,7 @@ struct SettingsToggleRow: View {
 
 struct NotificationsSettingsView: View {
     let viewModel: SettingsViewModel
+    @Environment(\.featureGate) private var gate
 
     private var preferences: AppPreferences { viewModel.preferences }
     private var values: NotificationPreferences { viewModel.values.notifications }
@@ -136,7 +137,7 @@ struct NotificationsSettingsView: View {
         NoctisRowCard {
             SettingsToggleRow(
                 systemImage: "moon.stars", fill: NoctisAppColor.blockLavender, title: "Wind-down reminder",
-                detail: "Says \"\(NotificationsCopy.windDownSays(leadMinutes: values.windDownLeadMinutes))\"",
+                detail: "Says \"\(NotificationsCopy.windDownSays(leadMinutes: values.windDownLeadMinutes, tier: gate.tier))\"",
                 isOn: binding(\.windDownIsOn), identifier: "settings.notifications.windDown", isEnabled: enabled
             )
             if values.windDownIsOn {

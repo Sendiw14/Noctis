@@ -18,7 +18,7 @@ public struct RecoveryTabView: View {
         @Bindable var model = appModel
         NavigationStack(path: $model.recoveryPath) {
             RecoveryTabRoot(viewModel: viewModel) { kind, range in
-                appModel.recoveryPath.append(.factor(kind, range: range))
+                appModel.openRecoveryFactorOnTab(kind, range: range)
             }
             .navigationDestination(for: RecoveryRoute.self) { route in
                 switch route {
@@ -68,7 +68,7 @@ public struct RecoveryPushedScreen: View {
 
     public var body: some View {
         RecoveryScreen(viewModel: viewModel, presentation: .pushed, focus: focus) { kind, range in
-            appModel.homePath.append(.recoveryFactor(kind, range: range))
+            appModel.openRecoveryFactorOverHome(kind, range: range)
         }
         // Home's ring opens Today.
         .onAppear {

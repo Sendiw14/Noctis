@@ -46,6 +46,8 @@ public final class RecoveryViewModel {
     private let clock: () -> Date
     private let calendar: Calendar
     private let locale: Locale
+    /// Whether a feature is shown in full: the feature table's answer (R57, R59), and open with no gate (a test that does not care).
+    private let isUnlocked: (Feature) -> Bool
     private var observation: Task<Void, Never>?
     private var revealEnd: Task<Void, Never>?
     private var isVisible = false
@@ -69,8 +71,10 @@ public final class RecoveryViewModel {
         lowPower: @escaping () -> Bool = { HomeViewModel.systemLowPower() },
         clock: @escaping () -> Date = { Date() },
         calendar: Calendar = .autoupdatingCurrent,
-        locale: Locale = .autoupdatingCurrent
+        locale: Locale = .autoupdatingCurrent,
+        isUnlocked: @escaping (Feature) -> Bool = { _ in true }
     ) {
+        self.isUnlocked = isUnlocked
         self.repository = repository
         self.profile = profile
         self.connectHealth = connectHealth
@@ -128,7 +132,29 @@ public final class RecoveryViewModel {
 
     // MARK: Selection
 
+    /// The Premium feature a segment needs while it is locked: 30D and 90D (Today and 7D are free). Nil when it can be shown (R57).
+    public func lockedFeature(for segment: RecoverySegment) -> Feature? {
+        let feature: Feature? = switch segment {
+        case .today, .week: nil
+        case .month: .recovery30D
+        case .quarter: .recovery90D
+        }
+        return feature.flatMap { isUnlocked($0) ? nil : $0 }
+    }
+
+    /// Whether a factor's detail page can be opened.
+    public var canOpenFactorDetail: Bool { isUnlocked(.recoveryFactorDetail) }
+
+    /// A change of tier (a lapse, or a purchase): a locked segment or factor page that was open goes back to what is free.
+    public func tierChanged() {
+        var next = selection
+        if lockedFeature(for: next.segment) != nil { next.segment = .week }
+        if next.factor != nil, !canOpenFactorDetail { next.factor = nil }
+        if next != selection { move(to: next) }
+    }
+
     public func select(segment: RecoverySegment) {
+        guard lockedFeature(for: segment) == nil else { return }
         guard selection.segment != segment else { return }
         var next = selection
         next.segment = segment
@@ -137,6 +163,7 @@ public final class RecoveryViewModel {
 
     /// A factor's detail over `range` nights.
     public func select(factor: RecoveryFactorKind?, range: RecoveryFactorRange) {
+        guard factor == nil || canOpenFactorDetail else { return }
         var next = selection
         next.factor = factor
         next.factorRange = range
@@ -147,7 +174,10 @@ public final class RecoveryViewModel {
     /// A deep link or Home's zoom: `segment`, and a factor's detail when
     /// given.
     public func open(segment: RecoverySegment, factor: RecoveryFactorKind? = nil, factorRange: RecoveryFactorRange = .fortnight) {
-        move(to: RecoverySelection(segment: segment, factor: factor, factorRange: factorRange))
+        // Nothing Premium opens for a free person by a link or a zoom: the segment falls back to 7D and the factor's page to the tab.
+        let allowedSegment = lockedFeature(for: segment) == nil ? segment : .week
+        let allowedFactor = canOpenFactorDetail ? factor : nil
+        move(to: RecoverySelection(segment: allowedSegment, factor: allowedFactor, factorRange: allowedFactor == nil ? .fortnight : factorRange))
     }
 
     private func move(to next: RecoverySelection) {

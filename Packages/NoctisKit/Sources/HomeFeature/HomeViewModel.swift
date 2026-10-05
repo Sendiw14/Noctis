@@ -82,6 +82,9 @@ public final class HomeViewModel {
     private let clock: () -> Date
     private let calendar: Calendar
     private let locale: Locale
+    /// Premium's window around tonight's bedtime, from the Night feature (the app supplies it); nil is the free plan's one bedtime.
+    private let bedtimeWindow: () async -> HomeBedtimeWindow?
+    private var window: HomeBedtimeWindow?
     private var modeOverride: HomeMode?
     /// Whether the day's reveal has been decided (played, skipped, or
     /// already used up) by a screen with a score.
@@ -113,9 +116,11 @@ public final class HomeViewModel {
         calendar: Calendar = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
         modeOverride: HomeMode? = nil,
+        bedtimeWindow: @escaping () async -> HomeBedtimeWindow? = { nil },
         revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) }
     ) {
         self.revealSleep = revealSleep
+        self.bedtimeWindow = bedtimeWindow
         self.repository = repository
         self.profile = profile
         self.connectHealth = connectHealth
@@ -171,6 +176,7 @@ public final class HomeViewModel {
     public func refresh() async {
         isRefreshing = true
         let fresh = await repository.refresh(profile: profile())
+        window = await bedtimeWindow()
         if revalidatingRestored {
             // What changed since the saved snapshot fades in; what
             // didn't stays put.
@@ -186,6 +192,12 @@ public final class HomeViewModel {
         #if DEBUG
         if debugLogsSnapshots, let snapshot { print(snapshot.debugSummary) }
         #endif
+    }
+
+    /// The plan changed while Home is open (a purchase, or a lapse): Tonight's block and the evening hero are drawn again for it, nothing else moves.
+    public func tierChanged() async {
+        window = await bedtimeWindow()
+        updateClock(canReveal: false)
     }
 
     /// "Connect Apple Health": onboarding's authorization flow, then a
@@ -317,7 +329,7 @@ public final class HomeViewModel {
 
     private func apply(_ snapshot: HomeSnapshot, canReveal: Bool = true) {
         if self.snapshot != snapshot { self.snapshot = snapshot }
-        let screen = HomeScreenBuilder.build(snapshot, now: clock(), calendar: calendar, locale: locale, modeOverride: modeOverride)
+        let screen = HomeScreenBuilder.build(snapshot, now: clock(), calendar: calendar, locale: locale, modeOverride: modeOverride, bedtimeWindow: window)
         updateReveal(for: screen, canReveal: canReveal)
         // Equal values aren't republished: a rebuild that changes nothing
         // (returning to the foreground, a refresh with the same data)

@@ -1,4 +1,5 @@
 import Foundation
+import PremiumKit
 import UserNotifications
 
 // The repeating reminders (APP_RULES.md R38): when each fires, what each says, and the actor that keeps the
@@ -34,16 +35,21 @@ public nonisolated enum NotificationPlan {
     public static let morningBody = "Your morning summary is ready."
     public static let weeklyBody = "Your weekly review is ready."
 
-    /// "Your wind-down starts in 20 minutes." Generic: a number of minutes the person chose, never a value
-    /// from Health.
-    public static func windDownBody(leadMinutes: Int) -> String {
-        "Your wind-down starts in \(leadMinutes) minutes."
+    /// The evening reminder's words by plan (APP_RULES.md R61): Premium has the wind-down, so its reminder names it ("Your wind-down window starts in 20
+    /// minutes."); the free plan's names the bedtime ("Your bedtime window starts in 20 minutes."). Generic either way: a number of minutes the person
+    /// chose, never a value from Health.
+    public static func windDownBody(leadMinutes: Int, tier: Tier) -> String {
+        switch tier {
+        case .premium: "Your wind-down window starts in \(leadMinutes) minutes."
+        case .free: "Your bedtime window starts in \(leadMinutes) minutes."
+        }
     }
 
     /// The reminders that are on, in a stable order.
     /// - `wakeMinutes`: the typical wake time, minutes since midnight.
     /// - `bedtimeCenterMinutes`: the bedtime engine's centre (the one bedtime, or the middle of the window).
-    public static func make(preferences: NotificationPreferences, wakeMinutes: Int, bedtimeCenterMinutes: Int) -> [ScheduledNotification] {
+    /// - `tier`: the person's plan, which picks the evening reminder's words. The morning and weekly reminders say the same on both.
+    public static func make(preferences: NotificationPreferences, wakeMinutes: Int, bedtimeCenterMinutes: Int, tier: Tier = .free) -> [ScheduledNotification] {
         let preferences = preferences.normalized()
         var plan: [ScheduledNotification] = []
         if preferences.morningIsOn {
@@ -54,7 +60,7 @@ public nonisolated enum NotificationPlan {
         }
         if preferences.windDownIsOn {
             plan.append(ScheduledNotification(
-                identifier: NoctisNotification.windDown, title: title, body: windDownBody(leadMinutes: preferences.windDownLeadMinutes),
+                identifier: NoctisNotification.windDown, title: title, body: windDownBody(leadMinutes: preferences.windDownLeadMinutes, tier: tier),
                 components: clock(bedtimeCenterMinutes - preferences.windDownLeadMinutes)
             ))
         }
@@ -169,10 +175,10 @@ public actor NotificationScheduler {
 
     /// Rebuilds the reminders. Returns what it scheduled (empty when notifications aren't allowed).
     @discardableResult
-    public func rebuild(preferences: NotificationPreferences, wakeMinutes: Int, bedtimeCenterMinutes: Int) async -> [ScheduledNotification] {
+    public func rebuild(preferences: NotificationPreferences, wakeMinutes: Int, bedtimeCenterMinutes: Int, tier: Tier = .free) async -> [ScheduledNotification] {
         await center.removePending(NotificationPlan.identifiers)
         guard await center.authorization().canSchedule else { return [] }
-        let plan = NotificationPlan.make(preferences: preferences, wakeMinutes: wakeMinutes, bedtimeCenterMinutes: bedtimeCenterMinutes)
+        let plan = NotificationPlan.make(preferences: preferences, wakeMinutes: wakeMinutes, bedtimeCenterMinutes: bedtimeCenterMinutes, tier: tier)
         for notification in plan { await center.add(notification) }
         return plan
     }

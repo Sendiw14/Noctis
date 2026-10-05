@@ -51,6 +51,8 @@ public final class SleepViewModel {
     private let clock: () -> Date
     private let calendar: Calendar
     private let locale: Locale
+    /// Whether a feature is shown in full: the feature table's answer (R57, R59), and open with no gate (a test that does not care).
+    private let isUnlocked: (Feature) -> Bool
     private var observation: Task<Void, Never>?
     private var revealEnd: Task<Void, Never>?
     private var isVisible = false
@@ -79,8 +81,10 @@ public final class SleepViewModel {
         lowPower: @escaping () -> Bool = { HomeViewModel.systemLowPower() },
         clock: @escaping () -> Date = { Date() },
         calendar: Calendar = .autoupdatingCurrent,
-        locale: Locale = .autoupdatingCurrent
+        locale: Locale = .autoupdatingCurrent,
+        isUnlocked: @escaping (Feature) -> Bool = { _ in true }
     ) {
+        self.isUnlocked = isUnlocked
         self.repository = repository
         self.profile = profile
         self.connectHealth = connectHealth
@@ -138,14 +142,49 @@ public final class SleepViewModel {
 
     // MARK: Selection
 
+    /// The Premium feature a range needs while it is locked: Month (Day and Week are free). Nil when it can be shown.
+    public func lockedFeature(for range: SleepRange) -> Feature? {
+        range == .month && !isUnlocked(.sleepMonth) ? .sleepMonth : nil
+    }
+
+    /// The nights a free person can open: the newest three. Any older night in the picker is Premium (nights 4 to 14).
+    public func lockedFeature(forNight night: SleepNightKey) -> Feature? {
+        guard !isUnlocked(.sleepNightPicker14), let snapshot else { return nil }
+        let free = snapshot.nights(endingAt: snapshot.defaultNight, count: 3).map(\.night)
+        return free.contains(night) || night > snapshot.defaultNight ? nil : .sleepNightPicker14
+    }
+
+    /// Whether the quality card shows the four factors and "What changed?" (Premium), or the score alone.
+    public var showsQualityFactors: Bool { isUnlocked(.sleepQualityFactors) }
+
+    /// Whether Week's Consistency, Balance and Timing cards open their detail sheets (Premium).
+    public var opensDetailSheets: Bool { isUnlocked(.sleepConsistencyBalanceTimingDetails) }
+
+    /// What a selection may be for this tier: a locked range falls back to Week, a locked night to the newest.
+    private func allowed(_ wanted: SleepSelection, in snapshot: SleepSnapshot) -> SleepSelection {
+        var result = wanted
+        if lockedFeature(for: result.range) != nil { result.range = .week }
+        if lockedFeature(forNight: result.night) != nil { result.night = snapshot.defaultNight }
+        return result
+    }
+
+    /// A change of tier (a lapse, or a purchase): a locked range or night that was open goes back to what is free.
+    public func tierChanged() {
+        guard let snapshot, let current = selection else { return }
+        let next = allowed(current, in: snapshot)
+        if next != current { move(to: next) }
+    }
+
     /// Chooses a night (Day) or the night a week or month ends on.
     public func select(night: SleepNightKey) {
+        guard lockedFeature(forNight: night) == nil else { return }
         guard var next = selection, next.night != night else { return }
         next.night = night
         move(to: next)
     }
 
     public func select(range: SleepRange) {
+        guard lockedFeature(for: range) == nil else { return }
         guard var next = selection, next.range != range else { return }
         next.range = range
         move(to: next)
@@ -163,7 +202,7 @@ public final class SleepViewModel {
             requested = (night, range)
             return
         }
-        move(to: SleepSelection(night: night ?? snapshot.defaultNight, range: range))
+        move(to: allowed(SleepSelection(night: night ?? snapshot.defaultNight, range: range), in: snapshot))
     }
 
     private func move(to next: SleepSelection) {
@@ -186,6 +225,7 @@ public final class SleepViewModel {
             // Looking at the newest night: a newer one arriving is the one to show.
             next.night = snapshot.defaultNight
         }
+        next = allowed(next, in: snapshot)
         followsLatest = next.night == snapshot.defaultNight
         selection = next
         await rebuild(for: next, animated: screen != nil)

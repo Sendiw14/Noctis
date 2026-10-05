@@ -35,6 +35,8 @@ struct SleepDayView: View {
 struct SleepNightPicker: View {
     let items: [SleepPickerItem]
     let selected: SleepNightKey
+    /// The nights that are Premium (4 to 14): a lock glyph under the day, and a tap opens the paywall.
+    var locked: Set<SleepNightKey> = []
     let choose: (SleepNightKey) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -75,6 +77,7 @@ struct SleepNightPicker: View {
                 Text(item.day)
                     .noctisFont(17, .semibold, relativeTo: .body)
                     .monospacedDigit()
+                if locked.contains(item.night) { LockGlyph(size: 12) }
             }
             .foregroundStyle(isSelected ? NoctisAppColor.nightInk : NoctisAppColor.blockInk)
             .opacity(item.hasData || isSelected ? 1 : 0.55)
@@ -87,7 +90,7 @@ struct SleepNightPicker: View {
             .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(item.accessibilityLabel)
+        .accessibilityLabel(locked.contains(item.night) ? "\(item.accessibilityLabel), Premium" : item.accessibilityLabel)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: isSelected)
     }
@@ -117,6 +120,7 @@ struct SleepNoNightView: View {
 struct SleepDayContentView: View {
     let day: SleepDayContent
     let viewModel: SleepViewModel
+    @Environment(AppModel.self) private var appModel
     @State private var laneFocus: NightLane?
 
     var body: some View {
@@ -129,7 +133,15 @@ struct SleepDayContentView: View {
                 SleepStageCard(content: stages, focus: laneFocus)
             }
             if let quality = day.quality {
-                SleepQualityCard(content: quality)
+                if viewModel.showsQualityFactors {
+                    SleepQualityCard(content: quality)
+                } else {
+                    // The score is everyone's; the four factors and "What changed?" are Premium, said once by one locked card (R58).
+                    SleepQualityScoreCard(content: quality, ring: day.ring)
+                    LockedCard(title: LockedCopy.card(for: .sleepQuality)?.title ?? "", line: LockedCopy.card(for: .sleepQuality)?.line ?? "", identifier: "sleep.quality.locked") {
+                        appModel.presentPaywall(.sleepQuality)
+                    }
+                }
             }
             if !day.details.isEmpty {
                 SleepDetailsGrid(tiles: day.details)
@@ -444,6 +456,60 @@ struct SleepQualityCard: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityElement(children: .combine)
                 CoachAskButton("Ask Coach why", question: content.coachQuestion, identifier: "sleep.askCoach")
+                DisclosureGroup(isExpanded: $expanded) {
+                    VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+                        ForEach(content.calculation, id: \.self) { paragraph in
+                            Text(paragraph)
+                                .noctisFont(15, relativeTo: .subheadline)
+                                .foregroundStyle(NoctisAppColor.ink2)
+                        }
+                        Text(content.modelVersion)
+                            .noctisFont(13, relativeTo: .footnote)
+                            .foregroundStyle(NoctisAppColor.ink3)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, NoctisSpacing.sm)
+                } label: {
+                    Text("How this is calculated")
+                        .noctisFont(17, .semibold, relativeTo: .body)
+                        .foregroundStyle(NoctisAppColor.ink)
+                }
+                .tint(NoctisAppColor.ink2)
+            }
+        }
+        .accessibilityIdentifier("sleep.quality")
+    }
+}
+
+/// The quality card for a free person: the score, how it sits against theirs, how sure it is, and how it is calculated. Without the factors and "What changed?".
+struct SleepQualityScoreCard: View {
+    let content: SleepQualityCardContent
+    let ring: SleepQualityRingContent?
+    @State private var expanded = false
+
+    var body: some View {
+        NoctisAppCard {
+            VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+                NoctisCaption("SLEEP QUALITY", style: .noctisInk3)
+                if let ring {
+                    HStack(alignment: .firstTextBaseline, spacing: NoctisSpacing.xs) {
+                        Text("\(ring.score)")
+                            .noctisFont(34, .bold, relativeTo: .title)
+                            .foregroundStyle(NoctisAppColor.ink)
+                        if let typical = ring.typicalText {
+                            Text(typical)
+                                .noctisFont(15, relativeTo: .subheadline)
+                                .foregroundStyle(.noctisInk2)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(ring.accessibilityLabel)
+                }
+                Text(content.confidence)
+                    .noctisFont(13, relativeTo: .footnote)
+                    .foregroundStyle(.noctisInk3)
+                    .fixedSize(horizontal: false, vertical: true)
                 DisclosureGroup(isExpanded: $expanded) {
                     VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                         ForEach(content.calculation, id: \.self) { paragraph in

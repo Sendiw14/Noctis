@@ -243,6 +243,7 @@ struct RecoveryBuildCard: View {
 struct RecoveryFactorCard: View {
     let row: FactorDetailRow
     let open: () -> Void
+    @Environment(\.featureGate) private var gate
 
     var body: some View {
         Button {
@@ -283,11 +284,16 @@ struct RecoveryFactorCard: View {
                                 .noctisFont(13, relativeTo: .footnote)
                                 .foregroundStyle(.noctisInk3)
                         }
-                        Image(systemName: "chevron.right")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.noctisInk3)
-                            .padding(.top, 6)
-                            .accessibilityHidden(true)
+                        // A lock where the chevron would be, while the detail is Premium: the tap opens what Premium includes (R58).
+                        if gate.isUnlocked(.recoveryFactorDetail) {
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.noctisInk3)
+                                .padding(.top, 6)
+                                .accessibilityHidden(true)
+                        } else {
+                            LockGlyph(size: 13).foregroundStyle(.noctisInk3).padding(.top, 6)
+                        }
                     }
                     if let sparkline = row.sparkline {
                         FactorSparkline(content: sparkline, tint: row.kind.tint, lineTint: row.kind.lineTint)
@@ -299,7 +305,7 @@ struct RecoveryFactorCard: View {
         .buttonStyle(NoctisCardButtonStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(row.accessibilityLabel)
-        .accessibilityHint("Opens the details.")
+        .accessibilityHint(gate.isUnlocked(.recoveryFactorDetail) ? "Opens the details." : "Premium. Opens what Premium includes.")
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("recovery.factor.\(row.kind.rawValue)")
     }

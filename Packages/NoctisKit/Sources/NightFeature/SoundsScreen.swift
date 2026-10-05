@@ -80,11 +80,20 @@ public struct SoundsScreen: View {
 
 private struct SoundGrid: View {
     let viewModel: SoundsViewModel
+    @Environment(AppModel.self) private var model
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: NoctisSpacing.md), GridItem(.flexible(), spacing: NoctisSpacing.md)], spacing: NoctisSpacing.md) {
             ForEach(Array(viewModel.tiles.enumerated()), id: \.element.id) { index, tile in
-                SoundTileView(tile: tile, level: viewModel.level) { viewModel.tap(tile.kind) }
+                SoundTileView(tile: tile, level: viewModel.level) {
+                    // A Premium sound on the free plan opens the paywall (R58); the others play.
+                    if tile.isLocked {
+                        NoctisHaptics.selection()
+                        model.presentPaywall(.sounds)
+                    } else {
+                        viewModel.tap(tile.kind)
+                    }
+                }
                     .noctisRise(index: index)
             }
         }
@@ -106,6 +115,7 @@ struct SoundTileView: View {
                         SoundTile(symbol: tile.symbol, tone: tile.tone, size: 56)
                         Spacer(minLength: 0)
                         if tile.isPlaying { SoundLevelGlyph(level: level) }
+                        if tile.isLocked { LockGlyph(size: 14).foregroundStyle(.noctisInk3) }
                     }
                     Spacer(minLength: NoctisSpacing.xs)
                     Text(tile.title)

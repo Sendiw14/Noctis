@@ -50,7 +50,9 @@ public struct CoachScreen: View {
             CoachHubContentView(viewModel: viewModel, ask: ask)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            CoachInputBar(viewModel: viewModel, placeholder: "Ask about your sleep or recovery", identifier: "coach.hub", send: send)
+            CoachInputBar(
+                viewModel: viewModel, placeholder: viewModel.isLimited ? CoachQuota.usedUpTitle : "Ask about your sleep or recovery", identifier: "coach.hub", send: send
+            )
         }
         .task { await viewModel.onAppear() }
         // A second press of the Coach tab: back to the top.
@@ -99,6 +101,7 @@ struct CoachHubContentView: View {
     let viewModel: CoachViewModel
     let ask: (CoachQuestion) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(AppModel.self) private var appModel
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -131,8 +134,19 @@ struct CoachHubContentView: View {
             if let note = hub.learningNote {
                 CoachLearningNote(text: note)
             }
+            // The free questions (R60): how many are left, and, when none are, one card saying so and what Premium does about it.
+            if viewModel.isLimited, let card = LockedCopy.card(for: .coachQuestions) {
+                LockedCard(systemImage: "sparkles", title: card.title, line: card.line, identifier: "coach.locked") { appModel.presentPaywall(.coachQuestions) }
+                    .transition(.opacity)
+            } else if let line = viewModel.quotaLine {
+                Text(line)
+                    .noctisFont(13, .medium, relativeTo: .footnote)
+                    .foregroundStyle(.noctisInk3)
+                    .padding(.horizontal, NoctisSpacing.xs)
+                    .accessibilityIdentifier("coach.quota")
+            }
             ForEach(hub.cards) { card in
-                CoachQuestionCardView(card: card) { ask(card.question) }
+                CoachQuestionCardView(card: card, isLimited: viewModel.isLimited) { ask(card.question) }
             }
         }
         .animation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion), value: hub)

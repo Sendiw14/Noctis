@@ -116,6 +116,7 @@ struct HomeView: View {
     let zoomNamespace: Namespace.ID
 
     @Environment(AppModel.self) private var model
+    @Environment(\.featureGate) private var gate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -194,6 +195,7 @@ struct HomeView: View {
         // Any touch or scroll during the morning reveal skips to its end.
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in skipReveal() }, including: revealRunning ? .all : .subviews)
         .task { await viewModel.onAppear() }
+        .onChange(of: gate.tier) { Task { await viewModel.tierChanged() } }
         .onAppear { NoctisSignpost.end(.launchToFirstFrame) }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { viewModel.updateClock() }
@@ -285,9 +287,12 @@ struct HomeView: View {
         HomeActions(
             openProfile: { model.push(.profile) },
             openTonight: { model.open(.tonight) },
-            openWindDown: { model.push(.windDown(autostart: false)) },
+            openWindDown: {
+                // Premium's session (R57): the free plan's tap opens the paywall instead, and a session already running is never touched.
+                if gate.isUnlocked(.windDownSession) { model.push(.windDown(autostart: false)) } else { model.presentPaywall(.windDown) }
+            },
             openRecoveryDetail: { model.homePath.append(.recoveryDetail(focus: $0)) },
-            openRecoveryFactor: { model.homePath.append(.recoveryFactor($0, range: .fortnight)) },
+            openRecoveryFactor: { model.openRecoveryFactorOverHome($0, range: .fortnight) },
             openLastNight: { model.open(.sleep(night: viewModel.lastNightMoment, range: .day)) },
             openWeek: { model.open(.sleep(night: nil, range: .week)) },
             share: { sharing = true },
@@ -321,6 +326,8 @@ struct HomeView: View {
 /// "Start wind-down" under the evening hero: R10's secondary action (44pt, ink2, no capsule),
 /// with an arrow so it reads as a way on and not as a caption.
 struct HomeWindDownButton: View {
+    /// The wind-down session is Premium: the free plan sees a lock glyph where the arrow is, and the button opens the paywall (APP_RULES.md R58).
+    var locked = false
     let action: () -> Void
 
     var body: some View {
@@ -328,16 +335,20 @@ struct HomeWindDownButton: View {
             HStack(spacing: 6) {
                 Text("Start wind-down")
                     .noctisFont(15, .semibold, relativeTo: .subheadline)
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .accessibilityHidden(true)
+                if locked {
+                    LockGlyph(size: 13)
+                } else {
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .accessibilityHidden(true)
+                }
             }
             .foregroundStyle(NoctisAppColor.ink2)
             .frame(minWidth: 44, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityHint("Opens Wind-down.")
+        .accessibilityHint(locked ? "Premium. Opens what Premium includes." : "Opens Wind-down.")
         .accessibilityIdentifier("home.windDown")
     }
 }
@@ -388,6 +399,7 @@ struct HomeContent: View {
     /// The hero's frame in the scroll content, for the scroll collapse.
     var onHeroFrame: (CGRect) -> Void = { _ in }
 
+    @Environment(\.featureGate) private var gate
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var morph
@@ -501,7 +513,7 @@ struct HomeContent: View {
                     EveningHeroView(content: screen.evening, viewModel: viewModel)
                         .accessibilityRotorEntry(id: HomeSection.tonight, in: rotor)
                     // A secondary action, not a second hero (R10): 44pt, ink2.
-                    HomeWindDownButton(action: actions.openWindDown)
+                    HomeWindDownButton(locked: !gate.isUnlocked(.windDownSession), action: actions.openWindDown)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .transition(.opacity.combined(with: .offset(y: 24)))

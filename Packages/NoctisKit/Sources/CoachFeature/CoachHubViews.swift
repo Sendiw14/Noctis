@@ -21,6 +21,8 @@ extension CoachTile {
 /// lines and a chevron. Pressing it asks the question.
 struct CoachQuestionCardView: View {
     let card: CoachQuestionCard
+    /// Today's free questions are used up: the card is off, and the locked card above it says why.
+    var isLimited = false
     let ask: () -> Void
 
     var body: some View {
@@ -42,12 +44,12 @@ struct CoachQuestionCardView: View {
                 }
                 .frame(minHeight: 56)
             }
-            .opacity(card.isEnabled ? 1 : 0.5)
+            .opacity(card.isEnabled && !isLimited ? 1 : 0.5)
         }
         .buttonStyle(NoctisCardButtonStyle())
-        .disabled(!card.isEnabled)
+        .disabled(!card.isEnabled || isLimited)
         .accessibilityLabel(card.title)
-        .accessibilityHint(card.isEnabled ? "Asks Coach." : CoachHubContent.disabledReason)
+        .accessibilityHint(isLimited ? "\(CoachQuota.usedUpTitle) \(CoachQuota.usedUpDetail)" : card.isEnabled ? "Asks Coach." : CoachHubContent.disabledReason)
         .accessibilityIdentifier("coach.question.\(card.id)")
     }
 }

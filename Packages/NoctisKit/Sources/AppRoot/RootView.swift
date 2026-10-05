@@ -190,7 +190,7 @@ struct RootTabView: View {
                 viewModel: home,
                 recoveryScreen: { focus in AnyView(RecoveryPushedScreen(viewModel: recovery, focus: focus)) },
                 recoveryFactor: { kind, range in AnyView(RecoveryPushedFactorScreen(viewModel: recovery, kind: kind, range: range)) },
-                tonightScreen: { AnyView(TonightScreen(viewModel: tonight)) },
+                tonightScreen: { AnyView(TonightScreen(viewModel: tonight, breathing: breathing, journal: journal)) },
                 soundsScreen: { AnyView(SoundsScreen(viewModel: sounds)) },
                 windDownScreen: { autostart in AnyView(WindDownScreen(autostart: autostart, viewModel: windDown, sounds: sounds, breathing: breathing, meditation: meditation, journal: journal)) },
                 profileScreen: { AnyView(ProfileScreen(viewModel: profile)) },

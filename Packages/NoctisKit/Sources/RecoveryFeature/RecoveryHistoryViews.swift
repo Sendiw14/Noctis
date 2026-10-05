@@ -384,6 +384,7 @@ struct RecoveryHistoryFactorRowView: View {
     let row: RecoveryHistoryFactorRow
     let line: FactorLineRender?
     let open: () -> Void
+    @Environment(\.featureGate) private var gate
 
     static let sparkHeight: CGFloat = 36
 
@@ -406,10 +407,14 @@ struct RecoveryHistoryFactorRowView: View {
                                 .foregroundStyle(.noctisInk3)
                             NoctisMetric(average, size: 17, relativeTo: .body)
                         }
-                        Image(systemName: "chevron.right")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.noctisInk3)
-                            .accessibilityHidden(true)
+                        if gate.isUnlocked(.recoveryFactorDetail) {
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.noctisInk3)
+                                .accessibilityHidden(true)
+                        } else {
+                            LockGlyph(size: 13).foregroundStyle(.noctisInk3)
+                        }
                     }
                     if let line {
                         ZStack {
@@ -432,7 +437,7 @@ struct RecoveryHistoryFactorRowView: View {
         .buttonStyle(NoctisCardButtonStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(row.accessibilityLabel)
-        .accessibilityHint("Opens the details.")
+        .accessibilityHint(gate.isUnlocked(.recoveryFactorDetail) ? "Opens the details." : "Premium. Opens what Premium includes.")
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("recovery.historyFactor.\(row.kind.rawValue)")
     }

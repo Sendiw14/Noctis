@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import PremiumKit
 import SwiftUI
 
 /// Keeps the reminders matching what the person has chosen (APP_RULES.md R38). It reads the preferences, the
@@ -19,16 +20,19 @@ public final class NotificationCoordinator {
     @ObservationIgnored private let profile: () -> UserProfileSnapshot
     /// The bedtime engine's centre for a wake time and a sleep need, in minutes since midnight.
     @ObservationIgnored private let bedtimeCenter: (Int, Int) async -> Int
+    /// The person's plan: it picks the evening reminder's words, and the reminders are rebuilt when it changes.
+    @ObservationIgnored private let tier: () -> Tier
     @ObservationIgnored private var chain: Task<Void, Never>?
 
     public init(
         scheduler: NotificationScheduler, preferences: AppPreferences, profile: @escaping () -> UserProfileSnapshot,
-        bedtimeCenter: @escaping (Int, Int) async -> Int
+        bedtimeCenter: @escaping (Int, Int) async -> Int, tier: @escaping () -> Tier = { .free }
     ) {
         self.scheduler = scheduler
         self.preferences = preferences
         self.profile = profile
         self.bedtimeCenter = bedtimeCenter
+        self.tier = tier
     }
 
     /// Looks at the system's answer again (Settings may have changed it behind the app's back).
@@ -65,7 +69,7 @@ public final class NotificationCoordinator {
         let wake = wakeMinutes ?? current.typicalWakeMinutes
         let need = needMinutes ?? current.needMinutes
         let center = await bedtimeCenter(wake, need)
-        scheduled = await scheduler.rebuild(preferences: preferences.values.notifications, wakeMinutes: wake, bedtimeCenterMinutes: center)
+        scheduled = await scheduler.rebuild(preferences: preferences.values.notifications, wakeMinutes: wake, bedtimeCenterMinutes: center, tier: tier())
         authorization = await scheduler.authorization()
     }
 }

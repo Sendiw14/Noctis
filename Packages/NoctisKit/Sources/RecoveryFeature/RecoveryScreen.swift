@@ -28,6 +28,8 @@ public struct RecoveryScreen: View {
     let openFactor: (RecoveryFactorKind, RecoveryFactorRange) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.featureGate) private var gate
+    @Environment(AppModel.self) private var appModel
     @State private var scrollPosition = ScrollPosition(edge: .top)
 
     public init(
@@ -81,6 +83,9 @@ public struct RecoveryScreen: View {
             }
         }
         .modifier(RecoveryNavigation(presentation: presentation))
+        // A lapse or a purchase: what was Premium goes back to what is free, or unlocks in place (R57).
+        .onChange(of: gate.tier) { viewModel.tierChanged() }
+        .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: gate.tier)
         // Any touch during the reveal skips to its end.
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
         .task { await viewModel.onAppear() }
@@ -94,20 +99,23 @@ public struct RecoveryScreen: View {
     }
 
     private var segmentPicker: some View {
-        Picker("Range", selection: segmentBinding) {
-            ForEach(RecoverySegment.allCases, id: \.self) { segment in
-                Text(segment.title).tag(segment)
-            }
-        }
-        .pickerStyle(.segmented)
+        NoctisSegmentedControl(
+            "Range", segments: RecoverySegment.allCases.map { NoctisSegment($0, title: $0.title, isLocked: viewModel.lockedFeature(for: $0) != nil) },
+            selection: segmentBinding, identifier: "recovery.range"
+        )
         .disabled(viewModel.screen == nil)
-        .accessibilityIdentifier("recovery.range")
     }
 
     private var segmentBinding: Binding<RecoverySegment> {
         Binding {
             viewModel.selection.segment
         } set: { segment in
+            // A locked segment opens the paywall and the selection stays where it was (R58).
+            if let feature = viewModel.lockedFeature(for: segment) {
+                NoctisHaptics.selection()
+                appModel.presentPaywall(for: feature)
+                return
+            }
             NoctisHaptics.snapLight()
             viewModel.select(segment: segment)
         }

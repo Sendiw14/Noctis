@@ -17,17 +17,17 @@ struct WindDownRoutingTests {
         return AppModel(healthProvider: MockHealthKitProvider(scenario: .empty), profileStore: ProfileStore(context: ModelContext(container)))
     }
 
-    @Test func theEveningNotificationOpensTheWindDownWithoutStartingIt() {
-        #expect(NoctisNotification.route(for: NoctisNotification.windDown) == .windDown(autostart: false))
-        #expect(NoctisNotification.route(for: NoctisNotification.morningSummary) == nil)
-        #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview) == nil)
-        #expect(NoctisNotification.route(for: "something.else") == nil)
+    @Test func theEveningNotificationOpensTheWindDownWithoutStartingItForPremium() {
+        #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .premium) == .windDown(autostart: false))
+        #expect(NoctisNotification.route(for: NoctisNotification.morningSummary, tier: .premium) == nil)
+        #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: .premium) == nil)
+        #expect(NoctisNotification.route(for: "something.else", tier: .premium) == nil)
     }
 
     @Test func aNotificationBuildsItsOwnPathTonightThenTheWindDown() throws {
         let model = try Self.model()
         model.selectedTab = .coach
-        let route = try #require(NoctisNotification.route(for: NoctisNotification.windDown))
+        let route = try #require(NoctisNotification.route(for: NoctisNotification.windDown, tier: .premium))
         model.open(route)
         #expect(model.selectedTab == .home)
         #expect(model.homePath == [.tonight, .windDown(autostart: false)])
@@ -92,7 +92,7 @@ struct WindDownRoutingTests {
         let entryPoints: [AppRoute] = [
             .windDown(),
             .windDown(autostart: false),
-            NoctisNotification.route(for: NoctisNotification.windDown) ?? .home,
+            NoctisNotification.route(for: NoctisNotification.windDown, tier: .premium) ?? .home,
             AppRoute(name: "wind-down") ?? .home,
             AppRoute(url: URL(string: "noctis://wind-down") ?? URL(fileURLWithPath: "/")) ?? .home,
         ]
@@ -135,10 +135,12 @@ nonisolated struct WindDownCopyAndRoadmapTests {
         let roadmap = try String(contentsOf: Self.root.appendingPathComponent("ROADMAP.md"), encoding: .utf8)
         for entry in [
             "Live Activity and Dynamic Island", "Control Center control", "StartWindDownIntent", "PlaySleepSoundsIntent",
-            "Free vs Premium gating for the wind-down", "Adaptive wind-down lengths", "Recorded, voice-guided meditations",
+            "Adaptive wind-down lengths", "Recorded, voice-guided meditations",
         ] {
             #expect(roadmap.contains(entry), Comment(rawValue: "ROADMAP.md lost \"\(entry)\""))
         }
+        // The wind-down's gating is built now (R57, R61): the table decides it, so the roadmap no longer lists it.
+        #expect(!roadmap.contains("Free vs Premium gating for the wind-down"))
     }
 
     @Test func theTwoButtonsSayTheSameWords() throws {

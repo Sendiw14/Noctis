@@ -9,6 +9,12 @@ import SwiftUI
 struct SleepRangeView: View {
     let screen: SleepScreen
     let viewModel: SleepViewModel
+    @Environment(AppModel.self) private var appModel
+
+    /// A Week card's detail sheet is Premium: a free person's tap opens the paywall instead (R58), and the card shows its headline number as always.
+    private func openDetail(_ detail: SleepDetail) {
+        if viewModel.opensDetailSheets { viewModel.detail = detail } else { appModel.presentPaywall(.sleepDetails) }
+    }
 
     var body: some View {
         @Bindable var model = viewModel
@@ -18,13 +24,13 @@ struct SleepRangeView: View {
             }
             if screen.selection.range == .week, let insights = screen.insights {
                 if let consistency = insights.consistency {
-                    SleepConsistencyCard(content: consistency) { viewModel.detail = .consistency }
+                    SleepConsistencyCard(content: consistency) { openDetail(.consistency) }
                 }
-                SleepBalanceCard(content: insights.balance) { viewModel.detail = .balance }
-                SleepTimingCard(content: insights.timing) { viewModel.detail = .timing }
+                SleepBalanceCard(content: insights.balance) { openDetail(.balance) }
+                SleepTimingCard(content: insights.timing) { openDetail(.timing) }
             }
             if let month = screen.month {
-                SleepRhythmCard(content: month.rhythm) { viewModel.detail = .timing }
+                SleepRhythmCard(content: month.rhythm) { openDetail(.timing) }
                 SleepQualityStripCard(content: month.quality)
             }
         }

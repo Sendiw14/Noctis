@@ -18,6 +18,7 @@ public struct InsightsScreen: View {
 
     @Environment(AppModel.self) private var appModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.featureGate) private var gate
     @State private var scrollPosition = ScrollPosition(edge: .top)
 
     public init(viewModel: InsightsViewModel, zoom: Namespace.ID, openInsight: @escaping (String) -> Void, openHistory: @escaping () -> Void) {
@@ -36,7 +37,10 @@ public struct InsightsScreen: View {
                 dateCaption: viewModel.screen?.dateCaption ?? " ",
                 title: "Insights",
                 summary: viewModel.screen.map { AnyView(summary($0.summary)) },
-                trailing: showsHistory ? AnyView(InsightsHistoryButton(open: openHistory)) : nil
+                trailing: showsHistory ? AnyView(InsightsHistoryButton(locked: !viewModel.canOpenHistory) {
+                    // History is Premium: a free person's tap opens the paywall (R58).
+                    if viewModel.canOpenHistory { openHistory() } else { appModel.presentPaywall(.insightsHistory) }
+                }) : nil
             ),
             entrance: viewModel.fieldEntrance,
             onEntered: { viewModel.fieldEntered() },
@@ -53,6 +57,8 @@ public struct InsightsScreen: View {
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
         .task { await viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
+        // A lapse or a purchase: what was Premium goes back to what is free, or unlocks in place (R57).
+        .onChange(of: gate.tier) { viewModel.tierChanged() }
         .task(id: viewModel.reveal == .pending) {
             guard viewModel.reveal == .pending else { return }
             // After the content has laid out in its start state.
@@ -91,6 +97,8 @@ public struct InsightsScreen: View {
 
 /// History at the field's trailing edge: a 36pt circle in a 44pt target.
 struct InsightsHistoryButton: View {
+    /// History is Premium: a lock beside the glyph, and the tap opens the paywall.
+    var locked = false
     let open: () -> Void
 
     var body: some View {
@@ -103,12 +111,17 @@ struct InsightsHistoryButton: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(NoctisAppColor.blockInk)
                 )
+                .overlay(alignment: .bottomTrailing) {
+                    if locked {
+                        LockGlyph(size: 12).foregroundStyle(NoctisAppColor.blockInk).offset(x: 2, y: 2)
+                    }
+                }
                 .frame(width: 44, height: 44)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("History")
-        .accessibilityHint("Shows every insight so far.")
+        .accessibilityLabel(locked ? "History, Premium" : "History")
+        .accessibilityHint(locked ? "Opens what Premium includes." : "Shows every insight so far.")
         .accessibilityIdentifier("insights.history")
     }
 }
@@ -120,6 +133,7 @@ struct InsightsContent: View {
     let zoom: Namespace.ID
     let openInsight: (String) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(AppModel.self) private var appModel
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -143,7 +157,15 @@ struct InsightsContent: View {
             InsightsLearningCard(content: learning)
         } else {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-                InsightChipRow(chips: screen.chips, selected: viewModel.filter) { viewModel.select(filter: $0) }
+                InsightChipRow(chips: screen.chips, selected: viewModel.filter, isLocked: { viewModel.lockedFeature(forFilter: $0) != nil }) { category in
+                    // A category chip is Premium: a tap opens the paywall and the chip stays where it was (R58).
+                    if let feature = viewModel.lockedFeature(forFilter: category) {
+                        NoctisHaptics.selection()
+                        appModel.presentPaywall(for: feature)
+                    } else {
+                        viewModel.select(filter: category)
+                    }
+                }
                 // A filter moves the list with springs: rows leave and arrive, the rest re-flow.
                 VStack(alignment: .leading, spacing: NoctisSpacing.md) {
                     if let featured = screen.featured {
@@ -162,6 +184,11 @@ struct InsightsContent: View {
                     }
                     if !screen.records.isEmpty {
                         InsightRecordsSection(tiles: screen.records)
+                            .transition(.opacity.combined(with: .offset(y: 12)))
+                    }
+                    // Everything past the featured story and the most recent insight is Premium: said once, by one card (R58).
+                    if !viewModel.showsEverything, screen.showsInsights, let card = LockedCopy.card(for: .insightsAll) {
+                        LockedCard(title: card.title, line: card.line, identifier: "insights.locked") { appModel.presentPaywall(.insightsAll) }
                             .transition(.opacity.combined(with: .offset(y: 12)))
                     }
                 }

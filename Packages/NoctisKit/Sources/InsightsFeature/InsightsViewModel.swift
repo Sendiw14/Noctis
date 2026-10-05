@@ -46,6 +46,8 @@ public final class InsightsViewModel {
     private let calendar: Calendar
     private let locale: Locale
     private let revealSleep: @Sendable (Double) async -> Void
+    /// Whether a feature is shown in full: the feature table's answer (R57, R59), and open with no gate (a test that does not care).
+    private let isUnlocked: (Feature) -> Bool
     private var observation: Task<Void, Never>?
     private var revealEnd: Task<Void, Never>?
     private var isVisible = false
@@ -69,8 +71,10 @@ public final class InsightsViewModel {
         clock: @escaping () -> Date = { Date() },
         calendar: Calendar = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
-        revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) }
+        revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) },
+        isUnlocked: @escaping (Feature) -> Bool = { _ in true }
     ) {
+        self.isUnlocked = isUnlocked
         self.repository = repository
         self.profile = profile
         self.connectHealth = connectHealth
@@ -129,8 +133,27 @@ public final class InsightsViewModel {
 
     // MARK: Filter
 
+    /// The Premium feature a chip needs while it is locked: every category chip (All is free).
+    public func lockedFeature(forFilter category: InsightCategory?) -> Feature? {
+        category != nil && !isUnlocked(.insightCategoryFilters) ? .insightCategoryFilters : nil
+    }
+
+    /// History is Premium.
+    public var canOpenHistory: Bool { isUnlocked(.insightHistory) }
+
+    /// Whether every insight, the records and History are shown (Premium); a free person sees the featured story and the most recent other insight.
+    public var showsEverything: Bool { isUnlocked(.insightAll) }
+
+    /// A change of tier (a lapse, or a purchase): a category chip that was chosen goes back to All, and the list is drawn again.
+    public func tierChanged() {
+        if lockedFeature(forFilter: filter) != nil { filter = nil }
+        if lockedFeature(forFilter: historyFilter) != nil { historyFilter = nil }
+        rebuild(animated: true)
+    }
+
     /// A chip, or nil for All; the list morphs with a spring.
     public func select(filter next: InsightCategory?) {
+        guard lockedFeature(forFilter: next) == nil else { return }
         guard next != filter else { return }
         skipReveal()
         filter = next
@@ -139,6 +162,7 @@ public final class InsightsViewModel {
 
     /// History is about to open: it starts on the tab's chip.
     public func openHistory() {
+        guard canOpenHistory else { return }
         historyFilter = filter
         rebuildHistory()
     }
@@ -188,7 +212,9 @@ public final class InsightsViewModel {
 
     private func rebuild(animated: Bool) {
         guard let snapshot else { return }
-        let content = InsightsScreenBuilder.build(snapshot, filter: filter, now: clock(), calendar: calendar, locale: locale)
+        let full = InsightsScreenBuilder.build(snapshot, filter: filter, now: clock(), calendar: calendar, locale: locale)
+        // Only what is drawn is limited: the stored insights, the records' numbers and the history are all still computed and kept.
+        let content = showsEverything ? full : full.limitedForFree()
         let publish = {
             if self.screen != content { self.screen = content }
             self.rebuildHistory()

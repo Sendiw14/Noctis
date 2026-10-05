@@ -67,6 +67,12 @@ public nonisolated struct TonightPlan: Sendable, Equatable, Codable {
     public let wakeMinutes: Int
     public let needMinutes: Int
 
+    public init(bedtimeMinutes: Int, wakeMinutes: Int, needMinutes: Int) {
+        self.bedtimeMinutes = bedtimeMinutes
+        self.wakeMinutes = wakeMinutes
+        self.needMinutes = needMinutes
+    }
+
     public init(profile: UserProfileSnapshot) {
         bedtimeMinutes = noctisBedtimeMinutes(wakeMinutes: profile.typicalWakeMinutes, needMinutes: profile.needMinutes)
         wakeMinutes = profile.typicalWakeMinutes

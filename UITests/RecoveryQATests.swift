@@ -249,9 +249,8 @@ final class RecoveryQATests: XCTestCase {
     func testSwitchingSegments() {
         let app = launchRecovery()
         settled(app, waitFor: "recovery.hero")
-        let range = app.segmentedControls["recovery.range"]
         for name in ["7D", "30D", "90D", "Today"] {
-            range.buttons[name].tap()
+            app.buttons["recovery.range.\(name)"].tap()
             XCTAssertTrue(element(app, name == "Today" ? "recovery.hero" : "recovery.historyChart").waitForExistence(timeout: 5), name)
             QA.pause(0.8)
         }

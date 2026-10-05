@@ -16,6 +16,9 @@ public enum SoundsCopy {
     public static let interrupted = "Paused by iPhone"
     public static let paused = "Paused"
     public static let playing = "Playing"
+    /// What a tile of a Premium sound says where "Playing" would be.
+    public static let premium = "Premium"
+    public static let lockedHint = "Opens what Premium includes."
 }
 
 /// Which block color a sound wears.
@@ -65,6 +68,8 @@ public struct SoundTileContent: Sendable, Equatable, Identifiable {
     public let stateText: String?
     public let accessibilityLabel: String
     public let accessibilityHint: String
+    /// A Premium sound on the free plan (APP_RULES.md R57): the tile wears a lock glyph and opens the paywall instead of playing.
+    public var isLocked = false
 
     public var id: SoundKind { kind }
 }
@@ -87,8 +92,16 @@ public struct NowPlayingContent: Sendable, Equatable {
 }
 
 public enum SoundsBuilder {
-    public static func tiles(_ state: SoundPlayerState) -> [SoundTileContent] {
+    /// `isLocked`: the sounds the person's plan does not include (`FeatureGate.sounds(for:)`); a locked sound is never "current" here, because a tile
+    /// that is locked opens the paywall and does not play.
+    public static func tiles(_ state: SoundPlayerState, isLocked: (SoundKind) -> Bool = { _ in false }) -> [SoundTileContent] {
         SoundKind.allCases.map { kind in
+            if isLocked(kind), !(state.kind == kind && state.phase != .stopped) {
+                return SoundTileContent(
+                    kind: kind, title: kind.title, symbol: kind.symbol, tone: kind.tone, isCurrent: false, isPlaying: false, stateText: SoundsCopy.premium,
+                    accessibilityLabel: "\(kind.title), \(SoundsCopy.premium)", accessibilityHint: SoundsCopy.lockedHint, isLocked: true
+                )
+            }
             let isCurrent = state.kind == kind && state.phase != .stopped
             let isPlaying = isCurrent && state.phase == .playing
             let text: String? = isCurrent ? stateText(state.phase) : nil

@@ -90,6 +90,9 @@ public final class CoachViewModel {
     private let locale: Locale
     private let minimumLoading: Duration
     private let reduceMotion: () -> Bool
+    /// The free questions (R60): nil where there is no limit to apply (a test that does not care).
+    private let gate: FeatureGate?
+    private let router = CoachQuestionRouter()
     private var sending: Task<Void, Never>?
 
     public init(
@@ -104,8 +107,10 @@ public final class CoachViewModel {
         calendar: Calendar = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
         minimumLoading: Duration = .milliseconds(700),
-        reduceMotion: @escaping () -> Bool = { HomeViewModel.systemReduceMotion() }
+        reduceMotion: @escaping () -> Bool = { HomeViewModel.systemReduceMotion() },
+        gate: FeatureGate? = nil
     ) {
+        self.gate = gate
         self.service = service
         self.dataSource = dataSource
         store = history
@@ -190,8 +195,30 @@ public final class CoachViewModel {
         draft = text.count > Self.maxLength ? String(text.prefix(Self.maxLength)) : text
     }
 
-    /// Whether Send does anything: something is typed and nothing is being answered.
-    public var canSend: Bool { !isSending && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    /// Whether Send does anything: something is typed and nothing is being answered, and the free questions are not used up (unless it is a question
+    /// whose reply is always given).
+    public var canSend: Bool {
+        !isSending && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && mayAsk(draft)
+    }
+
+    // MARK: - The free questions (R60)
+
+    /// The free questions left today; nil with Premium (no limit).
+    public var freeQuestionsRemaining: Int? { gate?.coachQuestionsRemaining }
+
+    /// "2 of 3 free questions left today"; nil with Premium.
+    public var quotaLine: String? { freeQuestionsRemaining.map { CoachQuota.line(remaining: $0) } }
+
+    /// Today's free questions are used up.
+    public var isLimited: Bool { gate?.canAskCoach == false }
+
+    /// Whether `question` may be sent now. Once the free questions are used up only the replies that are never gated are: the medical and crisis ones, which
+    /// are fixed words, cost nothing and never count.
+    public func mayAsk(_ question: String) -> Bool {
+        guard isLimited else { return true }
+        let reply = router.route(question).reply
+        return reply == .crisis || reply == .medical
+    }
 
     // MARK: - Asking
 
@@ -200,6 +227,8 @@ public final class CoachViewModel {
     public func startConversation(asking question: CoachQuestion) -> Bool {
         startConversation(asking: CoachQuestionText.text(question))
     }
+
+
 
     /// A question from the hub's text field, or a chip: a new conversation.
     @discardableResult
@@ -235,7 +264,7 @@ public final class CoachViewModel {
 
     /// The questions offered above the input: what usually comes next after the latest answer (at most three), once it has come.
     public var followUpQuestions: [CoachQuestion] {
-        guard !isSending, let answer = turns.last?.answer, answer.sourceKind != .scripted else { return [] }
+        guard !isSending, !isLimited, let answer = turns.last?.answer, answer.sourceKind != .scripted else { return [] }
         return CoachFollowUps.questions(after: answer.intent)
     }
 
@@ -244,7 +273,7 @@ public final class CoachViewModel {
 
     private func ask(_ text: String, continuing: Bool) -> Bool {
         let question = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !isSending, !question.isEmpty else { return false }
+        guard !isSending, !question.isEmpty, mayAsk(question) else { return false }
         let bounded = question.count > Self.maxLength ? String(question.prefix(Self.maxLength)) : question
         if !continuing {
             sending?.cancel()
@@ -275,6 +304,11 @@ public final class CoachViewModel {
         withAnimation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion())) {
             turns[index].messageID = result.messageID
             turns[index].phase = result.outcome == .unavailable ? .failed : .answered(result.answer)
+            // A real answer, from the model or from the person's data, is one free question used. A fixed reply (medical, crisis, unknown) or a failure is not.
+            switch result.outcome {
+            case .model, .template: gate?.recordCoachAnswer()
+            case .scripted, .unavailable: break
+            }
         }
         isSending = false
         NoctisHaptics.soft()

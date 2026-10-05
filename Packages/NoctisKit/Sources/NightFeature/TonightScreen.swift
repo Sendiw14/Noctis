@@ -8,12 +8,19 @@ import SwiftUI
 /// only `TonightViewModel` (APP_RULES.md R20, R30).
 public struct TonightScreen: View {
     let viewModel: TonightViewModel
+    /// Breathing and Reflect are free (APP_RULES.md R57), so they open from here as well as from inside a wind-down, which is Premium.
+    let breathing: BreathingViewModel
+    let journal: JournalViewModel
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.featureGate) private var gate
     @State private var scrollPosition = ScrollPosition(edge: .top)
+    @State private var activity: WindDownActivity?
 
-    public init(viewModel: TonightViewModel) {
+    public init(viewModel: TonightViewModel, breathing: BreathingViewModel, journal: JournalViewModel) {
         self.viewModel = viewModel
+        self.breathing = breathing
+        self.journal = journal
     }
 
     public var body: some View {
@@ -34,7 +41,7 @@ public struct TonightScreen: View {
             scrollPosition: $scrollPosition
         ) {
             if let content = viewModel.content {
-                TonightSections(content: content, viewModel: viewModel)
+                TonightSections(content: content, viewModel: viewModel, open: { activity = $0 })
             } else {
                 TonightSkeleton()
             }
@@ -48,38 +55,68 @@ public struct TonightScreen: View {
             await viewModel.onAppear()
         }
         .onDisappear { viewModel.onDisappear() }
+        .onChange(of: gate.tier) { Task { await viewModel.tierChanged() } }
         .onChange(of: model.alarmDestination) { _, destination in
             if destination != nil, model.takeAlarmDestination() != nil { viewModel.openSheet() }
         }
         .sheet(isPresented: $viewModel.isSheetPresented) {
             AlarmSheet(viewModel: viewModel)
         }
+        .fullScreenCover(item: $activity) { item in
+            WindDownActivityHost(progress: 0.4, reduceMotion: reduceMotion, title: item.title, backTitle: "Tonight", backLabel: "Back to Tonight") {
+                switch item {
+                case .breathing: BreathingPanel(viewModel: breathing, reduceMotion: reduceMotion)
+                case .reflect: ReflectPanel(viewModel: journal, reduceMotion: reduceMotion)
+                case .sounds, .meditation: EmptyView()
+                }
+            }
+        }
         .accessibilityIdentifier("tonight.screen")
     }
 }
 
-/// The page's cards, in order: the bedtime, why, the button, the alarm, the sounds.
+/// The page's cards, in order: the bedtime, why (Premium; the free plan has one card saying what Premium adds), the button, the alarm, the sounds.
 private struct TonightSections: View {
     let content: TonightContent
     let viewModel: TonightViewModel
+    let open: (WindDownActivity) -> Void
     @Environment(AppModel.self) private var model
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.md) {
             TonightHeroCard(content: content)
                 .noctisRise(index: 0)
-            TonightWhyCard(content: content)
+            if content.isPersonalized {
+                TonightWhyCard(content: content)
+                    .noctisRise(index: 1)
+            } else if let card = LockedCopy.card(for: .tonightWindow) {
+                LockedCard(
+                    systemImage: "moon.stars", title: card.title, line: card.line, identifier: "tonight.locked",
+                    action: { model.presentPaywall(.tonightWindow) }
+                )
                 .noctisRise(index: 1)
-            NoctisCTA("Start wind-down", icon: "arrow.right", adaptive: true) {
-                model.push(.windDown(autostart: false))
+            }
+            let locked = viewModel.windDownLocked
+            NoctisCTA("Start wind-down", icon: locked ? "lock.fill" : "arrow.right", adaptive: true) {
+                if locked { model.presentPaywall(.windDown) } else { model.push(.windDown(autostart: false)) }
             }
             .accessibilityIdentifier("tonight.windDown")
-            .accessibilityHint("Opens Wind-down.")
+            .accessibilityHint(locked ? "Premium. Opens what Premium includes." : "Opens Wind-down.")
             .noctisRise(index: 2)
             AlarmCardView(viewModel: viewModel)
                 .noctisRise(index: 3)
-            SleepSoundsRow { model.open(.sounds) }
+            TonightLinkRow(
+                symbol: "speaker.wave.2", fill: NoctisAppColor.blockLavender, title: "Sleep sounds", hint: "Opens Sleep sounds.", identifier: "tonight.sounds"
+            ) { model.open(.sounds) }
                 .noctisRise(index: 4)
+            TonightLinkRow(
+                symbol: "wind", fill: NoctisAppColor.blockSage, title: WindDownActivity.breathing.title, hint: "Opens Breathing.", identifier: "tonight.breathing"
+            ) { open(.breathing) }
+                .noctisRise(index: 5)
+            TonightLinkRow(
+                symbol: "square.and.pencil", fill: NoctisAppColor.blockButter, title: WindDownActivity.reflect.title, hint: "Opens Reflect.", identifier: "tonight.reflect"
+            ) { open(.reflect) }
+                .noctisRise(index: 6)
         }
     }
 }
@@ -267,15 +304,21 @@ struct TonightReasonRowView: View {
 
 // MARK: - The rest
 
-struct SleepSoundsRow: View {
+/// A card that is one line: an icon tile, a name and a chevron. Sleep sounds, Breathing and Reflect, all free.
+struct TonightLinkRow: View {
+    let symbol: String
+    let fill: Color
+    let title: String
+    let hint: String
+    let identifier: String
     let open: () -> Void
 
     var body: some View {
         Button(action: open) {
             NoctisAppCard {
                 HStack(spacing: NoctisSpacing.sm) {
-                    NoctisIconTile(systemImage: "speaker.wave.2", fill: NoctisAppColor.blockLavender, foreground: NoctisAppColor.blockInk, size: 40)
-                    Text("Sleep sounds")
+                    NoctisIconTile(systemImage: symbol, fill: fill, foreground: NoctisAppColor.blockInk, size: 40)
+                    Text(title)
                         .noctisFont(17, .semibold, relativeTo: .body)
                         .foregroundStyle(NoctisAppColor.ink)
                     Spacer(minLength: 0)
@@ -288,8 +331,8 @@ struct SleepSoundsRow: View {
             }
         }
         .buttonStyle(NoctisCardButtonStyle())
-        .accessibilityHint("Opens Sleep sounds.")
-        .accessibilityIdentifier("tonight.sounds")
+        .accessibilityHint(hint)
+        .accessibilityIdentifier(identifier)
     }
 }
 

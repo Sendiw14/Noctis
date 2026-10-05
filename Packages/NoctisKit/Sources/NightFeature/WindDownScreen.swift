@@ -333,6 +333,9 @@ struct WindDownActivityHost<Content: View>: View {
     let progress: Double
     let reduceMotion: Bool
     let title: String
+    /// The way back: "Wind-down" from inside a session, "Tonight" where Breathing and Reflect open from Tonight.
+    var backTitle = WindDownCopy.title
+    var backLabel = "Back to wind down"
     @ViewBuilder let content: Content
     @Environment(\.dismiss) private var dismiss
 
@@ -343,14 +346,14 @@ struct WindDownActivityHost<Content: View>: View {
                 Button { dismiss() } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.left").font(.system(size: 15, weight: .semibold))
-                        Text(WindDownCopy.title).noctisFont(17, .medium, relativeTo: .body)
+                        Text(backTitle).noctisFont(17, .medium, relativeTo: .body)
                     }
                     .foregroundStyle(NoctisNight.ivory)
                     .frame(minHeight: 44)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Back to wind down")
+                .accessibilityLabel(backLabel)
                 .accessibilityIdentifier("windDown.back")
                 Text(title)
                     .noctisFont(30, .bold, relativeTo: .largeTitle)
