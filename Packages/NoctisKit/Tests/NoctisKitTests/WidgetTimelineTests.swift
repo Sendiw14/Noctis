@@ -192,7 +192,7 @@ struct WidgetTimelineTests {
     }
 
     @Test func sampleNumbersAreOnlyEverNamedWhereAPreviewIsMade() throws {
-        let allowed = ["NoctisWidgetKit/WidgetSamples.swift", "AppRoot/WidgetGallery.swift", "AppRoot/IntentRunner.swift", "NoctisWidgets/NoctisWidgets.swift"]
+        let allowed = ["NoctisWidgetKit/WidgetSamples.swift", "AppRoot/WidgetGallery.swift", "AppRoot/IntentRunner.swift", "NoctisWidgets/NoctisWidgets.swift", "NOCTISWatch/WatchMock.swift"]
         for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets"]) where file.text.contains("WidgetSamples") {
             #expect(allowed.contains { file.path.hasSuffix($0) }, Comment(rawValue: "\(file.path) uses sample numbers"))
         }

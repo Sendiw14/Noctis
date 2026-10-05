@@ -13,8 +13,29 @@ final class WatchModel {
     private(set) var isPhoneReachable = false
 
     @ObservationIgnored private(set) var receiver: WatchSnapshotReceiver?
+    #if DEBUG
+    /// `-watchRedacted`: draw every Health number as the system draws it while the Watch is locked.
+    @ObservationIgnored private(set) var debugRedacted = false
+    /// With a mock, the time the pages are drawn at is the mock's, running on from when the app started.
+    @ObservationIgnored private var debugClock: (pretend: Date, started: Date)?
+    /// `-watchPage recovery|sleep|heart|tonight|settings`: the page to open on, so a screenshot needs no scrolling.
+    @ObservationIgnored private(set) var debugPage: WatchPage?
+    #endif
 
     init() {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        debugRedacted = arguments.contains("-watchRedacted")
+        if let index = arguments.firstIndex(of: "-watchPage"), arguments.indices.contains(index + 1) { debugPage = WatchPage(rawValue: arguments[index + 1]) }
+        if let mock = WatchMock(arguments: arguments) {
+            // `-watchMockSnapshot full|learning|...`: the Watch app without the iPhone, for screenshots and tests. Nothing is stored or received.
+            snapshot = mock.snapshot
+            receivedAt = mock.receivedAt
+            isPhoneReachable = true
+            debugClock = (mock.now, Date())
+            return
+        }
+        #endif
         let inbox = WatchInbox()
         let held = inbox?.load()
         snapshot = held?.snapshot
@@ -32,8 +53,45 @@ final class WatchModel {
         receivedAt = held?.receivedAt
     }
 
-    /// The state at `now`.
-    func state(now: Date = Date(), calendar: Calendar = .autoupdatingCurrent) -> WatchState {
-        WatchState.map(snapshot, now: now, calendar: calendar)
+    /// Everything a page needs, at `now`.
+    func input(now: Date) -> WatchPageInput {
+        #if DEBUG
+        if let debugClock { return WatchPageInput(snapshot: snapshot, now: debugClock.pretend.addingTimeInterval(now.timeIntervalSince(debugClock.started)), receivedAt: receivedAt) }
+        #endif
+        return WatchPageInput(snapshot: snapshot, now: now, receivedAt: receivedAt)
+    }
+
+    /// The page the Watch opens on: always Recovery, except for the DEBUG flag.
+    var initialPage: WatchPage {
+        #if DEBUG
+        if let debugPage { return debugPage }
+        #endif
+        return .recovery
+    }
+
+    /// A date on the page's clock as a date on the system clock, which is what a timer-style `Text` runs on. They are the same thing, except in the
+    /// DEBUG mock, which pretends it is another time of day.
+    func systemDate(for date: Date) -> Date {
+        #if DEBUG
+        if let debugClock { return debugClock.started.addingTimeInterval(date.timeIntervalSince(debugClock.pretend)) }
+        #endif
+        return date
+    }
+
+    var versionText: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "0"
+        let build = info?["CFBundleVersion"] as? String ?? "0"
+        return "NOCTIS \(version) (\(build))"
+    }
+
+    /// "Ask iPhone to update": only while the iPhone can be reached.
+    func askPhone() async -> String {
+        guard let receiver else { return WatchCopy.asked }
+        switch await receiver.requestUpdate() {
+        case .accepted: return WatchCopy.asked
+        case .unreachable: return WatchCopy.unreachable
+        case .failed: return WatchCopy.askFailed
+        }
     }
 }

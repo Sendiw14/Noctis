@@ -7,8 +7,12 @@ import WidgetKit
 // the system flattens color, so the arcs and the stages are told apart by how strong they are.
 
 /// How the widget is being drawn: its own full color, or the system's accented or vibrant treatment.
-struct WidgetPalette {
+public struct WidgetPalette {
     let mode: WidgetRenderingMode
+
+    public init(mode: WidgetRenderingMode) {
+        self.mode = mode
+    }
 
     var isFullColor: Bool { mode == .fullColor }
 
@@ -82,12 +86,17 @@ struct WidgetArc: Shape {
 }
 
 /// The four-arc recovery ring: each factor's arc has its share of the circle, filled by how well it went.
-struct WidgetRingView: View {
+public struct WidgetRingView: View {
     let segments: [WidgetRingSegment]
     let lineWidth: CGFloat
     @Environment(\.widgetRenderingMode) private var renderingMode
 
-    var body: some View {
+    public init(segments: [WidgetRingSegment], lineWidth: CGFloat) {
+        self.segments = segments
+        self.lineWidth = lineWidth
+    }
+
+    public var body: some View {
         let palette = WidgetPalette(mode: renderingMode)
         let arcs = NoctisRecoveryRingLayout.arcs(weights: segments.map(\.weight))
         GeometryReader { proxy in
@@ -120,11 +129,15 @@ struct WidgetRingView: View {
 }
 
 /// The ring with no readings: the track only, for a state that has no score.
-struct WidgetEmptyRing: View {
+public struct WidgetEmptyRing: View {
     let lineWidth: CGFloat
     @Environment(\.widgetRenderingMode) private var renderingMode
 
-    var body: some View {
+    public init(lineWidth: CGFloat) {
+        self.lineWidth = lineWidth
+    }
+
+    public var body: some View {
         Circle()
             .inset(by: lineWidth / 2)
             .stroke(WidgetPalette(mode: renderingMode).track, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
@@ -133,12 +146,17 @@ struct WidgetEmptyRing: View {
 }
 
 /// A flat bar of the night's stages: deep, core and REM minutes side by side, 14pt tall.
-struct WidgetStageStrip: View {
+public struct WidgetStageStrip: View {
     let stages: WidgetStages
     var height: CGFloat = 14
     @Environment(\.widgetRenderingMode) private var renderingMode
 
-    var body: some View {
+    public init(stages: WidgetStages, height: CGFloat = 14) {
+        self.stages = stages
+        self.height = height
+    }
+
+    public var body: some View {
         let palette = WidgetPalette(mode: renderingMode)
         let parts: [(WidgetStageKind, Int)] = [(.deep, stages.deep), (.core, stages.core), (.rem, stages.rem)].filter { $0.1 > 0 }
         let total = max(parts.reduce(0) { $0 + $1.1 }, 1)

@@ -15,6 +15,12 @@ public enum WidgetSamples {
         let sleepRing = [
             WidgetRingSegment(kind: .sleepDuration, weight: 0.6, fraction: 0.82), WidgetRingSegment(kind: .sleepConsistency, weight: 0.4, fraction: 0.9),
         ]
+        let fullFactors = [
+            WidgetRecoveryFactor(kind: .sleepDuration, score: 82, value: 402, baseline: 450),
+            WidgetRecoveryFactor(kind: .hrv, score: 64, value: 54, baseline: 61, range: .within),
+            WidgetRecoveryFactor(kind: .restingHeartRate, score: 71, value: 52, baseline: 50, range: .above),
+            WidgetRecoveryFactor(kind: .sleepConsistency, score: 90, value: 12, baseline: nil),
+        ]
         var snapshot = WidgetSnapshot(
             forDay: WidgetDay.today(at: now, calendar: calendar), generatedAt: now, plan: plan, state: state,
             alarm: WidgetAlarm(minutes: 7 * 60, isOn: true)
@@ -24,13 +30,19 @@ public enum WidgetSamples {
             snapshot.recovery = WidgetRecovery(score: 70, delta: 6, confidence: .high, ring: fullRing)
             snapshot.lastNight = night
             snapshot.factors = WidgetFactors(hrv: 54, restingHeartRate: 52)
+            snapshot.recoveryFactors = fullFactors
+            snapshot.nightsOfHistory = 14
         case .sleepOnly:
             snapshot.recovery = WidgetRecovery(score: 68, delta: 2, confidence: .moderate, ring: sleepRing)
             snapshot.lastNight = night
+            snapshot.recoveryFactors = Array(fullFactors.filter { $0.kind == .sleepDuration || $0.kind == .sleepConsistency })
+            snapshot.nightsOfHistory = 9
         case .stale:
             snapshot.recovery = WidgetRecovery(score: 70, delta: 6, confidence: .high, ring: fullRing)
             snapshot.lastNight = night
             snapshot.factors = WidgetFactors(hrv: 54, restingHeartRate: 52)
+            snapshot.recoveryFactors = fullFactors
+            snapshot.nightsOfHistory = 14
         case .learning:
             snapshot.lastNight = night
         case .empty, .noPermission, .gap:

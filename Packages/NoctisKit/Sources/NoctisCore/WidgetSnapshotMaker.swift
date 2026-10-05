@@ -110,7 +110,7 @@ public nonisolated enum WidgetSnapshotMaker {
         }
     }
 
-    static func range(_ range: RecoveryRange?) -> WidgetFactorRange? {
+    public static func range(_ range: RecoveryRange?) -> WidgetFactorRange? {
         switch range {
         case .within?: .within
         case .above?: .above

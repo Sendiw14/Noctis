@@ -40,6 +40,16 @@ public enum WidgetCopy {
         delta > 0 ? "+\(delta)" : delta < 0 ? "\u{2212}\(-delta)" : "\u{00B1}0"
     }
 
+    /// "Within your normal range", "Above your normal range", "Below your normal range": the iPhone's own words (Home's range sentence is made from
+    /// this), so the Watch says what the iPhone says.
+    public static func rangePlace(_ range: WidgetFactorRange) -> String {
+        switch range {
+        case .within: "Within your normal range"
+        case .above: "Above your normal range"
+        case .below: "Below your normal range"
+        }
+    }
+
     /// A delta is above at +3 or more and below at −3 or less (the recovery model's threshold, which a test holds this to).
     public static let trendThreshold = 3
 }

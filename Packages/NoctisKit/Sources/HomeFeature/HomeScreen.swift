@@ -3,6 +3,7 @@ import Foundation
 import HealthProviding
 import InsightsKit
 import NoctisCore
+import NoctisWidgetKit
 import RecoveryKit
 import SleepKit
 
@@ -820,11 +821,8 @@ public nonisolated enum HomeScreenBuilder {
 
     /// "Within your normal range: 48 ms vs your 50 ms baseline."
     public static func rangeSentence(_ range: RecoveryRange, value: String, baseline: String) -> String {
-        let place = switch range {
-        case .within: "Within your normal range"
-        case .above: "Above your normal range"
-        case .below: "Below your normal range"
-        }
+        // The words are shared with the Apple Watch (`WidgetCopy.rangePlace`): one definition.
+        let place = WidgetCopy.rangePlace(WidgetSnapshotMaker.range(range) ?? .within)
         return "\(place): \(value) vs your \(baseline) baseline."
     }
 
