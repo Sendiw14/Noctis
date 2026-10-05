@@ -47,8 +47,8 @@ public struct RootView: View {
             }
         }
         .onOpenURL { url in
-            // A URL from outside: only a widget's own links open anything (WidgetURLRouter, R44).
-            if let route = WidgetURLRouter.route(for: url) { model.open(route) }
+            // A URL from outside: only NOCTIS's own links open anything (WidgetURLRouter, R44): a screen, or the paywall sheet (R62).
+            if let destination = WidgetURLRouter.destination(for: url) { model.open(destination) }
         }
     }
 }

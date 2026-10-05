@@ -78,6 +78,21 @@ public final class AppModel {
 
     public func presentPaywall(for feature: Feature) { paywall = PaywallContext(feature: feature) }
 
+    /// What a link from outside opens (a locked widget, the Watch, Siri: R62). A screen opens as it always did. The paywall sheet opens only after setup is finished and
+    /// only for a person who is not Premium (a Premium person who taps a stale locked widget lands on Home); it never starts a purchase.
+    public func open(_ destination: WidgetURLRouter.Destination) {
+        switch destination {
+        case .screen(let route): open(route)
+        case .paywall(let context):
+            guard isOnboarded else { return }
+            if tier == .premium {
+                open(.home)
+            } else {
+                presentPaywall(context)
+            }
+        }
+    }
+
     public func dismissPaywall() { paywall = nil }
 
     public var isOnboarded: Bool { profile.onboardingComplete }

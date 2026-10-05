@@ -1,6 +1,7 @@
 #if DEBUG
 import DesignSystem
 import NoctisWidgetKit
+import PremiumKit
 import SwiftUI
 import UIKit
 import WidgetKit
@@ -39,7 +40,7 @@ public enum WidgetGalleryScene: String, CaseIterable, Identifiable {
         return calendar.date(bySettingHour: hour, minute: self == .evening ? 30 : 0, second: 0, of: Date()) ?? Date()
     }
 
-    func entry(calendar: Calendar) -> WidgetEntryModel {
+    func entry(calendar: Calendar, tier: Tier = .premium) -> WidgetEntryModel {
         let now = date(calendar: calendar)
         let snapshot: WidgetSnapshot?
         switch self {
@@ -58,7 +59,8 @@ public enum WidgetGalleryScene: String, CaseIterable, Identifiable {
         }
         // These are the gallery's samples, drawn as the real timeline would draw them (not tagged: the "Sample" tag is for the widget
         // gallery's own preview, which `WidgetGalleryAppearance` does not use).
-        return WidgetTimelineBuilder.entry(for: snapshot, at: now, calendar: calendar)
+        // The snapshot says which plan it is for (R62): on the free plan the Premium families are drawn locked, with no number.
+        return WidgetTimelineBuilder.entry(for: snapshot?.with(tier: tier), at: now, calendar: calendar)
     }
 }
 
@@ -73,6 +75,8 @@ public enum WidgetGalleryAppearance: String, CaseIterable, Identifiable {
 public struct WidgetGalleryRequest {
     public var scenes: [WidgetGalleryScene]
     public var appearances: [WidgetGalleryAppearance]
+    /// `-widgetGalleryTier free|premium|both` (premium when absent): the plan the snapshot says, which decides which families are drawn locked.
+    public var tiers: [Tier]
     public var exports: Bool
 
     public init?(arguments: [String]) {
@@ -82,6 +86,8 @@ public struct WidgetGalleryRequest {
         let look = arguments.firstIndex(of: "-widgetGalleryAppearance").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
         appearances = look == nil || look == "all" ? WidgetGalleryAppearance.allCases : look.flatMap(WidgetGalleryAppearance.init(rawValue:)).map { [$0] } ?? []
         exports = arguments.contains("-widgetGalleryExport")
+        let plan = arguments.firstIndex(of: "-widgetGalleryTier").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
+        tiers = plan == "both" ? Tier.allCases : [plan.flatMap(Tier.init(rawValue:)) ?? .premium]
         if scenes.isEmpty || appearances.isEmpty { return nil }
     }
 }
@@ -164,12 +170,13 @@ struct WidgetGalleryTile: View {
 struct WidgetGalleryPanel: View {
     let scene: WidgetGalleryScene
     let appearance: WidgetGalleryAppearance
+    var tier: Tier = .premium
 
     var body: some View {
-        let entry = scene.entry(calendar: .autoupdatingCurrent)
+        let entry = scene.entry(calendar: .autoupdatingCurrent, tier: tier)
         let locked = scene == .locked
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(scene.title) · \(appearance.rawValue)")
+            Text("\(scene.title) · \(appearance.rawValue) · \(tier.rawValue)")
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                 .foregroundStyle(appearance == .light ? Color(red: 0.17, green: 0.11, blue: 0.08) : Color.white)
             HStack(alignment: .top, spacing: 12) {
@@ -230,7 +237,9 @@ public struct WidgetGalleryView: View {
                 }
                 ForEach(request.scenes) { scene in
                     ForEach(request.appearances) { appearance in
-                        WidgetGalleryPanel(scene: scene, appearance: appearance)
+                        ForEach(request.tiers, id: \.self) { tier in
+                            WidgetGalleryPanel(scene: scene, appearance: appearance, tier: tier)
+                        }
                     }
                 }
             }
@@ -253,11 +262,14 @@ enum WidgetGalleryExport {
         var written = 0
         for scene in WidgetGalleryScene.allCases {
             for appearance in WidgetGalleryAppearance.allCases {
-                let renderer = ImageRenderer(content: WidgetGalleryPanel(scene: scene, appearance: appearance))
-                renderer.scale = 3
-                guard let data = renderer.uiImage?.pngData() else { continue }
-                let url = folder.appending(path: "\(scene.rawValue)-\(appearance.rawValue).png", directoryHint: .notDirectory)
-                if (try? data.write(to: url)) != nil { written += 1 }
+                for tier in Tier.allCases {
+                    let renderer = ImageRenderer(content: WidgetGalleryPanel(scene: scene, appearance: appearance, tier: tier))
+                    renderer.scale = 3
+                    guard let data = renderer.uiImage?.pngData() else { continue }
+                    let name = "\(scene.rawValue)-\(appearance.rawValue)" + (tier == .free ? "-free" : "")
+                    let url = folder.appending(path: "\(name).png", directoryHint: .notDirectory)
+                    if (try? data.write(to: url)) != nil { written += 1 }
+                }
             }
         }
         return "Wrote \(written) panels to \(folder.path)"

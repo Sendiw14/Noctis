@@ -1,5 +1,6 @@
 #if os(iOS)
 import DesignSystem
+import PremiumKit
 import SwiftUI
 import WidgetKit
 
@@ -90,13 +91,24 @@ public struct WidgetBackground: View {
 public struct NoctisTodayWidgetView: View {
     let presentation: WidgetPresentation
     let family: WidgetFamily
+    /// The family is Premium and the person's plan (in the snapshot, free with none) does not include it: a calm locked view and no health number (R62).
+    let locked: WidgetLockedContent?
 
     public init(entry: WidgetEntryModel, family: WidgetFamily, format: WidgetFormat = WidgetFormat()) {
         presentation = WidgetPresentationBuilder.build(entry, format: format)
         self.family = family
+        locked = WidgetSurface(family).flatMap { WidgetGate.lockedContent(entry, in: $0) }
     }
 
     public var body: some View {
+        if let locked {
+            WidgetLockedView(content: locked)
+        } else {
+            unlocked
+        }
+    }
+
+    private var unlocked: some View {
         VStack(alignment: .leading, spacing: 8) {
             switch presentation.body {
             case .message(let message):
@@ -126,6 +138,96 @@ public struct NoctisTodayWidgetView: View {
         .widgetURL(presentation.link.url)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(presentation.accessibilityLabel)
+    }
+}
+
+// MARK: A locked family (R62)
+
+extension WidgetSurface {
+    /// The family of a widget as the gate names it; nil for one NOCTIS does not offer.
+    public init?(_ family: WidgetFamily) {
+        switch family {
+        case .systemSmall: self = .small
+        case .systemMedium: self = .medium
+        case .systemLarge: self = .large
+        case .accessoryCircular: self = .lockCircular
+        case .accessoryRectangular: self = .lockRectangular
+        case .accessoryInline: self = .lockInline
+        default: return nil
+        }
+    }
+}
+
+/// What a Premium family shows on the free plan: a lock glyph, "NOCTIS Premium" and one line naming what the widget shows. Flat, calm and numberless: it holds nothing
+/// from Health, and a tap opens the paywall sheet (`widgetURL`).
+struct WidgetLockedView: View {
+    let content: WidgetLockedContent
+
+    var body: some View {
+        Group {
+            switch content.surface {
+            case .lockInline: inline
+            case .lockRectangular: rectangular
+            case .lockCircular: circular
+            case .small, .medium, .large: homeScreen
+            }
+        }
+        .widgetURL(content.link)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(content.accessibilityLabel)
+    }
+
+    private var inline: some View {
+        Label(WidgetLockedContent.title, systemImage: "lock.fill")
+            .noctisFont(14, .semibold, relativeTo: .footnote)
+            .lineLimit(1)
+    }
+
+    private var rectangular: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "lock.fill")
+                .noctisIcon(15, .semibold, relativeTo: .footnote)
+                .widgetAccentable()
+            VStack(alignment: .leading, spacing: 2) {
+                Text(WidgetLockedContent.title)
+                    .noctisFont(14, .semibold, relativeTo: .footnote)
+                    .lineLimit(1)
+                if let line = content.line {
+                    Text(line)
+                        .noctisFont(12, .regular, relativeTo: .caption)
+                        .lineLimit(3)
+                        .minimumScaleFactor(0.9)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var circular: some View {
+        Image(systemName: "lock.fill")
+            .noctisIcon(22, .semibold, relativeTo: .title3)
+            .widgetAccentable()
+    }
+
+    private var homeScreen: some View {
+        let wide = content.surface != .small
+        return VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: "lock.fill")
+                .noctisIcon(wide ? 26 : 22, .semibold, relativeTo: .title3)
+                .foregroundStyle(NoctisAppColor.orangeText)
+                .widgetAccentable()
+            Text(WidgetLockedContent.title)
+                .noctisFont(wide ? 18 : 15, .semibold, relativeTo: .headline)
+                .foregroundStyle(NoctisAppColor.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            if let line = content.line {
+                Text(line)
+                    .noctisFont(13, .regular, relativeTo: .footnote)
+                    .foregroundStyle(NoctisAppColor.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -484,11 +586,14 @@ struct WidgetEveningView: View {
 public struct NoctisLockWidgetView: View {
     let presentation: WidgetPresentation
     let family: WidgetFamily
+    /// A Premium family on the free plan: "NOCTIS Premium" and no health number (R62). The circular one is free.
+    let locked: WidgetLockedContent?
     @Environment(\.redactionReasons) private var reasons
 
     public init(entry: WidgetEntryModel, family: WidgetFamily, format: WidgetFormat = WidgetFormat()) {
         presentation = WidgetPresentationBuilder.build(entry, format: format)
         self.family = family
+        locked = WidgetSurface(family).flatMap { WidgetGate.lockedContent(entry, in: $0) }
     }
 
     private var content: WidgetLockContent {
@@ -496,6 +601,14 @@ public struct NoctisLockWidgetView: View {
     }
 
     public var body: some View {
+        if let locked {
+            WidgetLockedView(content: locked)
+        } else {
+            unlocked
+        }
+    }
+
+    private var unlocked: some View {
         Group {
             switch family {
             case .accessoryCircular: circular

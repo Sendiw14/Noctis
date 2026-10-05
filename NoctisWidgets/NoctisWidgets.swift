@@ -45,12 +45,17 @@ struct NoctisTimelineProvider: TimelineProvider {
             return
         }
         let plan = WidgetTimelineBuilder.build(snapshot: WidgetSnapshotStore()?.load(), now: .now, calendar: calendar)
-        completion(NoctisEntry(model: plan.entries[0]))
+        completion(NoctisEntry(model: entries(plan.entries, for: context)[0]))
     }
 
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<NoctisEntry>) -> Void) {
         let plan = WidgetTimelineBuilder.build(snapshot: WidgetSnapshotStore()?.load(), now: .now, calendar: calendar)
-        completion(Timeline(entries: plan.entries.map(NoctisEntry.init(model:)), policy: .after(plan.reloadAfter)))
+        completion(Timeline(entries: entries(plan.entries, for: context).map(NoctisEntry.init(model:)), policy: .after(plan.reloadAfter)))
+    }
+
+    /// A family the person's plan does not include is drawn locked by the views (R62); here it also gives the Smart Stack nothing to promote.
+    private func entries(_ entries: [WidgetEntryModel], for context: Context) -> [WidgetEntryModel] {
+        WidgetSurface(context.family).map { WidgetGate.entries(entries, in: $0) } ?? entries
     }
 
     /// For the Smart Stack: the morning (the system's own wake-up) and the evening (its bedtime), and the windows around the usual
