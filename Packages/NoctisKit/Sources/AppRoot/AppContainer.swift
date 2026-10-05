@@ -180,7 +180,12 @@ public struct AppContainer {
         #endif
         let widgetInputs = WidgetInputSource(profile: { await MainActor.run { model.profile } })
         // The Apple Watch (R50, R52): the same summary is queued for the person's own Watch after every write, and a delete-all wipes it.
-        let watchSync = WatchSyncService(session: WCSessionDriver())
+        #if DEBUG
+        let watchSession: any WatchSessionDriving = debug.mockWatch.map { MockWatchSession(mode: $0) } ?? WCSessionDriver()
+        #else
+        let watchSession: any WatchSessionDriving = WCSessionDriver()
+        #endif
+        let watchSync = WatchSyncService(session: watchSession, stored: { widgetStore?.load() })
         let widgetPublisher = WidgetPublisher(
             store: widgetStore, inputs: widgetInputs, reload: { WidgetCenter.shared.reloadAllTimelines() },
             epoch: { watchSync.dataEpoch }, afterWrite: { await watchSync.publish($0) }, afterForget: { await watchSync.forget() }
@@ -470,7 +475,7 @@ public struct AppContainer {
             preferences: preferences, notifications: coordinator, store: storeManager, health: HealthDataStatusReader(provider: provider),
             alarm: alarmService, profile: { model.profile }, connectHealth: { await model.requestHealthAuthorization() },
             hapticsAvailable: { breathing.hapticsAvailable }, format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
-            data: dataManager
+            data: dataManager, watch: watchSync
         )
 
         #if DEBUG
@@ -543,6 +548,8 @@ struct DebugLaunchOptions {
     let mockSubscription: String?
     /// `-mockJournal empty|filled|unavailable[:journal][:draft]`: an in-memory journal, with or without entries; `:journal` opens on the list, `:draft` fills in the form.
     let mockJournal: String?
+    /// `-mockWatch connected|notReachable|notInstalled|unpaired|unsupported|connecting`: the link to the Apple Watch plays a script.
+    let mockWatch: String?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -576,6 +583,7 @@ struct DebugLaunchOptions {
         mockJournal = value(after: "-mockJournal")
         mockNotifications = value(after: "-mockNotifications")
         mockSubscription = value(after: "-mockSubscription")
+        mockWatch = value(after: "-mockWatch")
     }
 
     /// The summary the flag names, for the Subscription page's every state.

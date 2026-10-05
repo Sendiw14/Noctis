@@ -28,6 +28,7 @@ public struct SettingsScreen: View {
         case .about: AboutView(viewModel: viewModel)
         case .privacyCenter: PrivacyCenterView(viewModel: viewModel)
         case .dataManagement: DataManagementView(viewModel: viewModel)
+        case .appleWatch: WatchSettingsView(viewModel: viewModel)
         }
     }
 }
@@ -154,6 +155,14 @@ struct SettingsRootView: View {
                         value: viewModel.health.map { ProfileBuilder.healthValue($0) },
                         hint: "Opens Health data.", identifier: "settings.row.healthData"
                     ) { model.push(.settings(.healthData)) }
+                    // Only while a Watch is paired with this iPhone: nothing is shown that cannot work (R29).
+                    if viewModel.offersWatch {
+                        NoctisRowDivider()
+                        NoctisLinkRow(
+                            systemImage: "applewatch", fill: NoctisAppColor.fieldSand, title: "Apple Watch", value: viewModel.watchContent.rowValue,
+                            hint: "Opens Apple Watch.", identifier: "settings.row.appleWatch"
+                        ) { model.push(.settings(.appleWatch)) }
+                    }
                     NoctisRowDivider()
                     NoctisLinkRow(
                         systemImage: "circle.lefthalf.filled", fill: NoctisAppColor.blockLavender, title: "Appearance",
@@ -225,6 +234,8 @@ struct SettingsRootView: View {
             await viewModel.onAppear()
             await viewModel.refreshHealth()
         }
+        // The Watch row follows the link while the list is on screen (a Watch paired or unpaired meanwhile).
+        .task { await viewModel.followWatch() }
         .sheet(isPresented: $showsMailComposer) {
             SupportMailComposer(address: StoreLegalLinks.supportEmail, subject: SupportMessage.subject, body: viewModel.supportBody)
                 .ignoresSafeArea()

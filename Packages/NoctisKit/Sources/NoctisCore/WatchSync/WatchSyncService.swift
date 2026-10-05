@@ -32,14 +32,18 @@ public actor WatchSyncService {
     private let defaults: WatchSyncDefaults
     private let clock: @Sendable () -> Date
     private let signpost: @Sendable (Int) -> Void
+    /// The summary the widgets last saved, for "Send update now" when nothing was written yet in this launch (it is the same file the widgets read).
+    private let stored: @Sendable () -> WidgetSnapshot?
     private var latest: WidgetSnapshot?
     private var continuations: [UUID: AsyncStream<WatchConnectionStatus>.Continuation] = [:]
     private var onUpdateRequested: (@Sendable () async -> Void)?
 
     public init(
         session: any WatchSessionDriving, defaults: WatchSyncDefaults = WatchSyncDefaults(), clock: @escaping @Sendable () -> Date = { Date() },
-        signpost: @escaping @Sendable (Int) -> Void = { NoctisSignpost.emit(.watchComplicationBudget, number: $0) }
+        signpost: @escaping @Sendable (Int) -> Void = { NoctisSignpost.emit(.watchComplicationBudget, number: $0) },
+        stored: @escaping @Sendable () -> WidgetSnapshot? = { nil }
     ) {
+        self.stored = stored
         self.session = session
         self.defaults = defaults
         self.clock = clock
@@ -61,12 +65,15 @@ public actor WatchSyncService {
 
     // MARK: Status
 
-    public func status() -> WatchConnectionStatus {
+    /// The status now, readable from anywhere (the Settings page opens with it, so a Watch row never appears a moment after the page does).
+    public nonisolated var currentStatus: WatchConnectionStatus {
         WatchConnectionStatus(
             isSupported: session.isSupported, isPaired: session.isPaired, isWatchAppInstalled: session.isWatchAppInstalled, activation: session.activation,
             isReachable: session.isReachable, lastSentAt: defaults.lastSentAt
         )
     }
+
+    public func status() -> WatchConnectionStatus { currentStatus }
 
     /// The status now, then again each time the link changes.
     public func updates() -> AsyncStream<WatchConnectionStatus> {
@@ -104,8 +111,8 @@ public actor WatchSyncService {
     /// "Send update now" (Settings) and the Watch's own request: the latest snapshot again, and what happened.
     public func sendNow(_ snapshot: WidgetSnapshot? = nil) async -> WatchSendOutcome {
         if let snapshot { latest = snapshot }
-        guard let latest else { return .nothingToSend }
-        return queue(latest)
+        guard let summary = latest ?? stored() else { return .nothingToSend }
+        return queue(summary)
     }
 
     /// Everything the iPhone had for the Watch is gone (a delete of the summary, not of everything): the Watch drops its copy too.

@@ -22,6 +22,11 @@ public final class SettingsViewModel {
     public private(set) var isConnectingHealth = false
     /// The Privacy Center, made from the inventory (R41); made again whenever the page appears, for the sizes.
     public private(set) var privacy: PrivacyCenterContent
+    /// The link to the person's Apple Watch, as the iPhone can tell: the Settings row exists only while a Watch is paired (R29).
+    public private(set) var watchStatus: WatchConnectionStatus
+    /// What "Send update now" last did, shown under the button until the next one.
+    public private(set) var watchSendMessage: String?
+    public private(set) var isSendingToWatch = false
     /// "Manage subscription" is the system's sheet over the page.
     public var showsManageSubscription = false
     public var showsPaywall = false
@@ -48,6 +53,7 @@ public final class SettingsViewModel {
     /// Whether Settings has a Data management page.
     static let hasDataManagement = true
     private let roots: DataRoots
+    private let watch: WatchSyncService?
 
     public init(
         preferences: AppPreferences, notifications: NotificationCoordinator, store: StoreManager, health: HealthDataStatusReader,
@@ -56,9 +62,11 @@ public final class SettingsViewModel {
         preferredLanguages: @escaping () -> [String] = { Locale.preferredLanguages },
         openSettings: @escaping @MainActor () -> Void = SettingsViewModel.openAppSettings,
         openHealth: @escaping @MainActor () -> Void = SettingsViewModel.openHealthApp, clock: @escaping () -> Date = { Date() },
-        inventory: DataInventory = .shared, roots: DataRoots = DataRoots(), data: DataManager
+        inventory: DataInventory = .shared, roots: DataRoots = DataRoots(), data: DataManager, watch: WatchSyncService? = nil
     ) {
         self.data = data
+        self.watch = watch
+        self.watchStatus = watch?.currentStatus ?? .unsupported
         self.inventory = inventory
         self.roots = roots
         self.privacy = PrivacyCenterBuilder.content(inventory, roots: roots, dataManagement: Self.hasDataManagement)
@@ -98,6 +106,32 @@ public final class SettingsViewModel {
         _ = await authorization
         alarm = await status
         await entitlements.refresh()
+        if let watch { watchStatus = await watch.status() }
+    }
+
+    // MARK: Apple Watch
+
+    /// Keeps the Watch row and page true while they are on screen: the status now, and again whenever the link changes. Ends with the view.
+    public func followWatch() async {
+        guard let watch else { return }
+        for await status in await watch.updates() { watchStatus = status }
+    }
+
+    /// What the page says about the link, at this moment.
+    public var watchContent: WatchSettingsContent { WatchSettingsContent.make(watchStatus, now: clock()) }
+
+    /// Whether Settings has an Apple Watch row: a Watch is paired with this iPhone (R29, R50).
+    public var offersWatch: Bool { watchStatus.showsSettingsRow }
+
+    /// "Send update now": the latest summary queued for the Watch, and what happened, in words.
+    public func sendWatchUpdate() async {
+        guard let watch, !isSendingToWatch else { return }
+        isSendingToWatch = true
+        watchSendMessage = nil
+        let outcome = await watch.sendNow()
+        watchStatus = await watch.status()
+        watchSendMessage = WatchSettingsContent.sendResult(outcome, reachable: watchStatus.isReachable)
+        isSendingToWatch = false
     }
 
     /// One look at Health: when the Health data page, or Profile, appears, and again after connecting.
