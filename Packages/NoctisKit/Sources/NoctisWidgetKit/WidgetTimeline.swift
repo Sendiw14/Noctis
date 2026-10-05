@@ -131,13 +131,25 @@ public enum WidgetClock {
     /// How much the Smart Stack should want the widget at `date`: high in the morning window (from half an hour before the usual wake
     /// time to three hours after it) and in the evening hour (the hour before bedtime and half an hour after it).
     public static func relevance(at date: Date, plan: WidgetPlan, calendar: Calendar) -> WidgetRelevanceScore {
+        let morning = morningRelevance(at: date, plan: plan, calendar: calendar)
+        if morning != .idle { return morning }
+        return eveningRelevance(at: date, plan: plan, calendar: calendar)
+    }
+
+    /// 100 in the morning window (from half an hour before the usual wake time to three hours after it), for as long as it lasts; idle otherwise.
+    public static func morningRelevance(at date: Date, plan: WidgetPlan, calendar: Calendar) -> WidgetRelevanceScore {
         let minute = minuteOfDay(date, calendar)
-        func offset(from anchor: Int) -> Int { ((minute - anchor + 720 + 1440) % 1440) - 720 }
-        let morning = offset(from: plan.wakeMinutes)
-        if (-30...180).contains(morning) { return WidgetRelevanceScore(score: 100, duration: TimeInterval((180 - morning) * 60)) }
-        let evening = offset(from: plan.bedtimeMinutes)
-        if (-60...30).contains(evening) { return WidgetRelevanceScore(score: 90, duration: TimeInterval((30 - evening) * 60)) }
-        return .idle
+        let offset = ((minute - plan.wakeMinutes + 720 + 1440) % 1440) - 720
+        guard (-30...180).contains(offset) else { return .idle }
+        return WidgetRelevanceScore(score: 100, duration: TimeInterval((180 - offset) * 60))
+    }
+
+    /// 90 in the evening hour (the hour before bedtime and half an hour after it), for as long as it lasts; idle otherwise.
+    public static func eveningRelevance(at date: Date, plan: WidgetPlan, calendar: Calendar) -> WidgetRelevanceScore {
+        let minute = minuteOfDay(date, calendar)
+        let offset = ((minute - plan.bedtimeMinutes + 720 + 1440) % 1440) - 720
+        guard (-60...30).contains(offset) else { return .idle }
+        return WidgetRelevanceScore(score: 90, duration: TimeInterval((30 - offset) * 60))
     }
 }
 
@@ -146,16 +158,24 @@ extension WidgetClock {
     /// that is going on now), from half an hour before the usual wake time to three hours after it, and from an hour before
     /// bedtime to half an hour after it.
     public static func relevanceWindows(_ plan: WidgetPlan, from date: Date, calendar: Calendar) -> [DateInterval] {
-        func window(start minutes: Int, length: TimeInterval) -> DateInterval? {
-            if let began = previous(minutes, onOrBefore: date, calendar: calendar), began.addingTimeInterval(length) > date {
-                return DateInterval(start: began, duration: length)
-            }
-            return next(minutes, onOrAfter: date, calendar: calendar).map { DateInterval(start: $0, duration: length) }
+        [morningWindow(plan, from: date, calendar: calendar), eveningWindow(plan, from: date, calendar: calendar)].compactMap { $0 }
+    }
+
+    /// The morning window: the one going on now, or the next one.
+    public static func morningWindow(_ plan: WidgetPlan, from date: Date, calendar: Calendar) -> DateInterval? {
+        window(start: plan.wakeMinutes - 30, length: 210 * 60, from: date, calendar: calendar)
+    }
+
+    /// The evening hour: the one going on now, or the next one.
+    public static func eveningWindow(_ plan: WidgetPlan, from date: Date, calendar: Calendar) -> DateInterval? {
+        window(start: plan.bedtimeMinutes - 60, length: 90 * 60, from: date, calendar: calendar)
+    }
+
+    private static func window(start minutes: Int, length: TimeInterval, from date: Date, calendar: Calendar) -> DateInterval? {
+        if let began = previous(minutes, onOrBefore: date, calendar: calendar), began.addingTimeInterval(length) > date {
+            return DateInterval(start: began, duration: length)
         }
-        return [
-            window(start: plan.wakeMinutes - 30, length: 210 * 60),
-            window(start: plan.bedtimeMinutes - 60, length: 90 * 60),
-        ].compactMap { $0 }
+        return next(minutes, onOrAfter: date, calendar: calendar).map { DateInterval(start: $0, duration: length) }
     }
 }
 

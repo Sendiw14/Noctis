@@ -23,6 +23,7 @@
 		3E911B85790DBF6F34DD1F06 /* WatchViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4381418BABCD30ED4F9689 /* WatchViews.swift */; };
 		4CD8B6DBB5BDF8E0E2F03AF4 /* NoctisShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A10A8BEADCAC2F10DCF9B93 /* NoctisShortcuts.swift */; };
 		5719FF0C4B1AF25264084D24 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */; };
+		5791296039EB649DC5F07D28 /* ComplicationGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22187E6FC3F314EA69DE78A7 /* ComplicationGallery.swift */; };
 		5C192DBF50D6E63AE11AFC71 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29446C26A811EB272C0D0A01 /* WatchRootView.swift */; };
 		5D47D15860502C898689BDAF /* ScreenCatalogQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */; };
 		5FB459DBC64292A168809508 /* NoctisIntentKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5A839DD9F8FF334F1E8C81D3 /* NoctisIntentKit */; };
@@ -142,6 +143,7 @@
 		14A364E8BF38E298E7413078 /* SleepQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQATests.swift; sourceTree = "<group>"; };
 		1D3A3DCBAF2299BA252BA5C2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCatalogQATests.swift; sourceTree = "<group>"; };
+		22187E6FC3F314EA69DE78A7 /* ComplicationGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationGallery.swift; sourceTree = "<group>"; };
 		2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsQATests.swift; sourceTree = "<group>"; };
 		29432FD48663BA9B7FD95CC0 /* NoctisAlarmWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisAlarmWidget.swift; sourceTree = "<group>"; };
 		29446C26A811EB272C0D0A01 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
@@ -357,6 +359,7 @@
 			isa = PBXGroup;
 			children = (
 				464C5B8CE6E2ACC67014F3E0 /* Assets.xcassets */,
+				22187E6FC3F314EA69DE78A7 /* ComplicationGallery.swift */,
 				1D3A3DCBAF2299BA252BA5C2 /* Info.plist */,
 				6F6B227D6C1D0125E6CB28A2 /* NOCTISWatch.entitlements */,
 				40BE06CE6330A713747986A3 /* NOCTISWatchApp.swift */,
@@ -644,6 +647,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5791296039EB649DC5F07D28 /* ComplicationGallery.swift in Sources */,
 				8C400B4A1FDE08C78B04C375 /* NOCTISWatchApp.swift in Sources */,
 				D51E0D694415A7BBF28D3E87 /* WatchMock.swift in Sources */,
 				DE78B57E5DDF47A44001EF3E /* WatchModel.swift in Sources */,

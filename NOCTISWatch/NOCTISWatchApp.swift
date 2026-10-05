@@ -8,7 +8,15 @@ struct NOCTISWatchApp: App {
 
     var body: some Scene {
         WindowGroup {
+            #if DEBUG
+            if let gallery = ComplicationGallery(arguments: ProcessInfo.processInfo.arguments) {
+                gallery
+            } else {
+                WatchRootView(model: model)
+            }
+            #else
             WatchRootView(model: model)
+            #endif
         }
         // The iPhone's update arrived while the app was not running: the system wakes it for the delivery, and the task is completed when this returns.
         .backgroundTask(.watchConnectivity) { [model] in

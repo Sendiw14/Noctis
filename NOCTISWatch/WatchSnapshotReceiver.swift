@@ -19,7 +19,7 @@ final class WatchSnapshotReceiver: NSObject, WCSessionDelegate, @unchecked Senda
     private let didChangeReachability: @Sendable (Bool) -> Void
     private let reloadComplications: @Sendable () -> Void
 
-    /// `reloadComplications` is a stub until the complications exist (part 2): it is called whenever what the Watch holds changes.
+    /// `reloadComplications` is called whenever what the Watch holds changes (a new summary, a wipe).
     init(
         inbox: WatchInbox?, didChange: @escaping @Sendable (_ held: (snapshot: WidgetSnapshot, receivedAt: Date?)?) -> Void,
         didChangeReachability: @escaping @Sendable (Bool) -> Void = { _ in }, reloadComplications: @escaping @Sendable () -> Void = {}

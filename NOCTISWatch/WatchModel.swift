@@ -2,6 +2,7 @@ import Foundation
 import NoctisWatchKit
 import NoctisWidgetKit
 import Observation
+import WidgetKit
 
 /// What the Watch app's screens read (APP_RULES.md R50, R51): the held snapshot and when it arrived. It runs no engine and reads no Health: it holds
 /// what the iPhone sent, and `WatchState` says what that allows the screens to say.
@@ -43,7 +44,9 @@ final class WatchModel {
         receiver = WatchSnapshotReceiver(
             inbox: inbox,
             didChange: { [weak self] held in Task { @MainActor in self?.apply(held) } },
-            didChangeReachability: { [weak self] reachable in Task { @MainActor in self?.isPhoneReachable = reachable } }
+            didChangeReachability: { [weak self] reachable in Task { @MainActor in self?.isPhoneReachable = reachable } },
+            // What the Watch holds changed: the complications are asked to draw it.
+            reloadComplications: { WidgetCenter.shared.reloadAllTimelines() }
         )
         receiver?.activate()
     }

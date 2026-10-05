@@ -32,6 +32,10 @@ struct WatchRootView: View {
         }
         .background(Color.black)
         .containerBackground(Color.black.gradient, for: .tabView)
+        // A tap on a complication: the page it is about, through the one strict parser (anything else is ignored).
+        .onOpenURL { url in
+            if let link = WatchLink(url: url) { page = link.page }
+        }
         #if DEBUG
         .redacted(reason: model.debugRedacted ? .privacy : [])
         #endif
