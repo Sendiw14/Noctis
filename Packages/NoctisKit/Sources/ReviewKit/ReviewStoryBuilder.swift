@@ -24,8 +24,19 @@ public nonisolated enum ReviewStoryBuilder {
             }
             pages.append(ReviewStoryPage(kind: .focus, tint: .paper, content: .focus(focus(record, words))))
         case .monthly:
-            // A month's pages come with the monthly review.
-            break
+            let sleep = monthBars(record, format)
+            bars = sleep
+            pages.append(ReviewStoryPage(kind: .sleepPattern, tint: .sage, content: .bars(sleep)))
+            if let page = recoveryMonth(record, format) { pages.append(ReviewStoryPage(kind: .recoveryPattern, tint: .lavender, content: .line(page))) }
+            pages.append(ReviewStoryPage(kind: .timing, tint: .butter, content: .timing(timing(record, words, format))))
+            if let page = changes(record, words, major: true) { pages.append(ReviewStoryPage(kind: .majorChanges, tint: .sand, content: .changes(page))) }
+            if !record.topInsightIDs.isEmpty {
+                pages.append(ReviewStoryPage(
+                    kind: .insights, tint: .cocoa,
+                    content: .insights(ReviewInsightsPage(headline: record.topInsightIDs.count == 1 ? "An insight from this month." : "Insights from this month.", insightIDs: Array(record.topInsightIDs.prefix(3))))
+                ))
+            }
+            if let page = records(record, format) { pages.append(ReviewStoryPage(kind: .records, tint: .paper, content: .records(page))) }
         }
 
         let title = record.kind == .weekly ? "Your week" : "Your month"
@@ -139,6 +150,23 @@ public nonisolated enum ReviewStoryBuilder {
         )
     }
 
+    private static func monthBars(_ record: ReviewRecord, _ format: ReviewFormat) -> ReviewBarsPage {
+        let (bars, top) = bars(record, label: { format.dayNumber($0) }, spokenDay: { format.weekdayDay($0) })
+        let need = Double(record.sleep.needMinutes)
+        var lines: [String] = []
+        if let longest = record.monthly?.longestNight {
+            lines.append("Your longest night was \(ReviewFormat.duration(longest.value)), on \(format.weekdayDay(longest.morning)).")
+        }
+        // The shortest night: the latest of equals, as the longest is.
+        if let shortest = record.nights.min(by: { $0.asleepMinutes != $1.asleepMinutes ? $0.asleepMinutes < $1.asleepMinutes : $0.morning > $1.morning }) {
+            lines.append("Your shortest night was \(ReviewFormat.duration(Double(shortest.asleepMinutes))), on \(format.weekdayDay(shortest.morning)).")
+        }
+        return ReviewBarsPage(
+            headline: "Reached your need on \(record.sleep.nightsReachedNeed) of \(record.nightsRecorded) nights", lines: lines, bars: bars, topMinutes: top, needFraction: need / top,
+            needText: "\(ReviewFormat.duration(need)) need", averageFraction: record.sleep.averageMinutes / top, averageText: "\(ReviewFormat.duration(record.sleep.averageMinutes)) average", slim: true
+        )
+    }
+
     // MARK: Timing and consistency
 
     private static func timing(_ record: ReviewRecord, _ words: Words, _ format: ReviewFormat) -> ReviewTimingPage {
@@ -228,6 +256,21 @@ public nonisolated enum ReviewStoryBuilder {
         )
     }
 
+    private static func recoveryMonth(_ record: ReviewRecord, _ format: ReviewFormat) -> ReviewLinePage? {
+        guard let recovery = record.recovery, let rolling = record.monthly?.recoveryRolling, !rolling.isEmpty else { return nil }
+        let byMorning = Dictionary(rolling.map { ($0.morning, $0.value) }, uniquingKeysWith: { first, _ in first })
+        let values = record.period.mornings.map { byMorning[$0] }
+        let axis = scoreAxis(values.compactMap { $0 })
+        let span = axis.high - axis.low
+        let lines = [extremeText("Highest", recovery.high, format), extremeText("Lowest", recovery.low, format), "The line is the average of the 7 nights up to each morning."]
+        let headline = "Recovery averaged \(ReviewFormat.whole(recovery.average))"
+        return ReviewLinePage(
+            headline: headline, lines: lines, points: values.map { $0.map { ($0 - axis.low) / span } },
+            axis: axis.ticks.map { ReviewAxisTick(position: ($0 - axis.low) / span, label: ReviewFormat.number($0)) }, direction: nil, directionArrow: nil,
+            spoken: ([headline + "."] + lines).joined(separator: " ")
+        )
+    }
+
     // MARK: What changed
 
     private static func metricTitle(_ metric: ReviewMetric) -> String {
@@ -264,16 +307,20 @@ public nonisolated enum ReviewStoryBuilder {
         // Nothing was compared: nothing is said, and no page is made.
         guard record.hasComparison else { return nil }
         var tiles: [ReviewChangeTile] = []
-        switch (record.biggestImprovement, record.biggestChange) {
-        case (.change(let improvement), .change(let change)):
-            if improvement == change {
-                tiles = [tile("Biggest improvement", improvement, words)]
-            } else {
-                tiles = [tile("Biggest improvement", improvement, words), tile("Biggest change", change, words)]
+        if major {
+            tiles = record.topChanges.map { tile("Change", $0, words) }
+        } else {
+            switch (record.biggestImprovement, record.biggestChange) {
+            case (.change(let improvement), .change(let change)):
+                if improvement == change {
+                    tiles = [tile("Biggest improvement", improvement, words)]
+                } else {
+                    tiles = [tile("Biggest improvement", improvement, words), tile("Biggest change", change, words)]
+                }
+            case (.change(let improvement), _): tiles = [tile("Biggest improvement", improvement, words)]
+            case (_, .change(let change)): tiles = [tile("Biggest change", change, words)]
+            default: break
             }
-        case (.change(let improvement), _): tiles = [tile("Biggest improvement", improvement, words)]
-        case (_, .change(let change)): tiles = [tile("Biggest change", change, words)]
-        default: break
         }
         if tiles.isEmpty {
             // Compared, and nothing moved by half the person's own variation: one calm tile and a sentence, no highlight.
@@ -294,6 +341,26 @@ public nonisolated enum ReviewStoryBuilder {
         }
         let text = ReviewScreenBuilder.build(record).page(.nextFocus)
         return ReviewFocusPage(headline: text?.headline ?? "Nothing stands out to work on.", lines: text?.evidence ?? [], coachTopic: topic)
+    }
+
+    // MARK: A month's records
+
+    private static func records(_ record: ReviewRecord, _ format: ReviewFormat) -> ReviewRecordsPage? {
+        guard let monthly = record.monthly else { return nil }
+        func tie(_ extreme: ReviewExtreme) -> String? { extreme.alsoOn > 0 ? "Equalled on \(extreme.alsoOn) other night\(extreme.alsoOn == 1 ? "" : "s")" : nil }
+        var blocks: [ReviewRecordBlock] = []
+        let longest = monthly.longestNight
+        blocks.append(ReviewRecordBlock(
+            kind: .longestNight, title: "Longest night", minutes: Int(longest.value.rounded()), score: nil, date: format.weekdayDay(longest.morning), tie: tie(longest),
+            spoken: "Longest night, \(ReviewFormat.duration(longest.value)), on \(format.weekdayDay(longest.morning))"
+        ))
+        if let best = monthly.highestRecovery {
+            blocks.append(ReviewRecordBlock(
+                kind: .highestRecovery, title: "Highest recovery", minutes: nil, score: Int(best.value.rounded()), date: format.weekdayDay(best.morning), tie: tie(best),
+                spoken: "Highest recovery, \(ReviewFormat.whole(best.value)), on \(format.weekdayDay(best.morning))"
+            ))
+        }
+        return ReviewRecordsPage(headline: "This month's records", blocks: blocks)
     }
 
     // MARK: Details, only on request

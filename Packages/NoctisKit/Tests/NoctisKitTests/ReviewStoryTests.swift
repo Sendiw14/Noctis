@@ -53,7 +53,7 @@ private enum StoryTestError: Error { case notEnough }
 /// A record made by hand, for the cases a scenario does not reach.
 private nonisolated func handmade(
     _ period: ReviewPeriod = week, average: Double = 470, delta: Double? = 22, hasComparison: Bool = true, recovery: ReviewRecovery? = nil,
-    improvement: ReviewHighlight = .steady, change: ReviewHighlight = .steady, insights: [String] = [], focus: ReviewFocus = .keepGoing,
+    improvement: ReviewHighlight = .steady, change: ReviewHighlight = .steady, top: [ReviewChange] = [], insights: [String] = [], focus: ReviewFocus = .keepGoing,
     monthly: ReviewMonthlyExtras? = nil, nights recorded: Int? = nil
 ) -> ReviewRecord {
     let mornings = period.mornings
@@ -69,7 +69,7 @@ private nonisolated func handmade(
         consistency: ReviewConsistency(bedtimeSD: 32.2, wakeSD: 18, bedtimeSDDelta: hasComparison ? -10 : nil, wakeSDDelta: nil), recovery: recovery,
         heart: ReviewHeart(hrvAverage: 52.4, hrvDelta: nil, restingHeartRateAverage: 55, restingHeartRateDelta: nil),
         timing: ReviewTiming(medianBedtimeMinutes: 665, medianWakeMinutes: 1140, bedtimeShift: hasComparison ? 12 : nil, wakeShift: nil), nights: nights,
-        biggestImprovement: hasComparison ? improvement : .noComparison, biggestChange: hasComparison ? change : .noComparison, topInsightIDs: insights, nextFocus: focus,
+        biggestImprovement: hasComparison ? improvement : .noComparison, biggestChange: hasComparison ? change : .noComparison, topChanges: top, topInsightIDs: insights, nextFocus: focus,
         monthly: monthly
     )
 }
@@ -215,7 +215,7 @@ struct WeeklyStoryTests {
                 strings += ReviewStoryBuilder.allStrings(ReviewStoryBuilder.build(value, format: format))
             }
         }
-        #expect(strings.count > 150)
+        #expect(strings.count > 300)
         let extra = ["streak", "miss", "fail", "lazy", "guilt", "shame", "worse", "wrong", "!", "should", "because", "caused", "due to", "led to", "diagnos", "symptom", "disorder", "red"]
         for text in strings {
             #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: text))
@@ -226,6 +226,66 @@ struct WeeklyStoryTests {
     }
 }
 
+// MARK: - A month
+
+struct MonthlyStoryTests {
+    @Test func aFullMonthHasItsPagesInOrder() async throws {
+        let insights = (0..<4).map { ReviewInsightInput(id: "insight-\($0)", generatedAt: at(2026, 8, 10 + $0), score: Double($0) / 10) }
+        let story = ReviewStoryBuilder.build(try await record(.full, month, insights: insights), format: format)
+        #expect(kinds(story) == [.cover, .sleepPattern, .recoveryPattern, .timing, .majorChanges, .insights, .records])
+        #expect(story.pages.map { $0.tint } == [.apricot, .sage, .lavender, .butter, .sand, .cocoa, .paper])
+        #expect(story.title == "Your month" && story.dateRange == "August 2026")
+        guard case .insights(let page) = story.pages[5].content else { Issue.record("insights"); return }
+        #expect(page.insightIDs == ["insight-3", "insight-2", "insight-1"], "the three best")
+    }
+
+    @Test func theSleepPatternHasASlimBarForEveryDayTheAverageAndTheExtremes() async throws {
+        let story = ReviewStoryBuilder.build(try await record(.full, month), format: format)
+        guard case .bars(let page) = story.pages[1].content else { Issue.record("bars"); return }
+        #expect(page.slim && page.bars.count == 31 && page.bars.allSatisfy { $0.stages == nil || $0.fraction != nil })
+        #expect(page.averageFraction != nil && page.averageText?.hasSuffix("average") == true)
+        #expect(page.bars.contains { $0.reachedNeed } && page.bars.contains { !$0.reachedNeed && $0.fraction != nil }, "reached-need coloring has both colors")
+        #expect(page.lines.count == 2 && page.lines[0].hasPrefix("Your longest night was") && page.lines[1].hasPrefix("Your shortest night was"))
+        #expect(page.bars.first?.label == "1" && page.bars.last?.label == "31")
+    }
+
+    @Test func theRollingRecoveryLineAndTheTimingRhythmHaveAGapWhereTheresNoData() async throws {
+        let story = ReviewStoryBuilder.build(try await record(.full, month), format: format)
+        guard case .line(let line) = story.pages[2].content, case .timing(let timing) = story.pages[3].content else { Issue.record("pages"); return }
+        #expect(line.points.count == 31 && line.points.contains { $0 == nil } && line.points.contains { $0 != nil }, "the first mornings have no 7-night average yet")
+        #expect(line.direction == nil && line.headline.hasPrefix("Recovery averaged "))
+        #expect(timing.rows.count == 31 && timing.headline.hasPrefix("Bedtime varied by ") && timing.lines.contains { $0.hasPrefix("Your median bedtime was") && $0.contains("than the month before") })
+    }
+
+    @Test func majorChangesAreUpToThreeWithBothNumbersOrASteadyMonth() {
+        let many = [change(.duration, 460, 430, 1.4), change(.recovery, 74, 70, 0.9), change(.hrv, 55, 52, 0.6)]
+        let story = ReviewStoryBuilder.build(handmade(month, top: many), format: format)
+        guard case .changes(let page) = story.pages.first(where: { $0.kind == .majorChanges })?.content else { Issue.record("changes"); return }
+        #expect(page.tiles.count == 3 && page.tiles.map(\.caption) == ["Change", "Change", "Change"] && page.tiles[1].from == "70" && page.tiles[1].to == "74")
+        #expect(page.headline == "Compared with the month before" && page.tiles[0].summary.hasSuffix("in the month before."))
+        guard case .changes(let steady) = ReviewStoryBuilder.build(handmade(month, top: []), format: format).pages.first(where: { $0.kind == .majorChanges })?.content else { Issue.record("steady"); return }
+        #expect(steady.headline == "A steady month" && steady.steadySentence == "Compared with the month before, nothing moved by much.")
+        #expect(!kinds(ReviewStoryBuilder.build(handmade(month, hasComparison: false), format: format)).contains(.majorChanges))
+    }
+
+    @Test func recordsAreOnlyTheOnesThatExistWithTheirDatesAndTies() {
+        let extras = ReviewMonthlyExtras(recoveryRolling: [], longestNight: extreme(521, month.mornings[11], also: 2), highestRecovery: nil)
+        let story = ReviewStoryBuilder.build(handmade(month, monthly: extras), format: format)
+        guard case .records(let page) = story.pages.last?.content else { Issue.record("records"); return }
+        #expect(page.blocks.map(\.kind) == [.longestNight] && page.blocks[0].minutes == 521 && page.blocks[0].date == format.weekdayDay(month.mornings[11]) && page.blocks[0].tie == "Equalled on 2 other nights")
+        let both = ReviewMonthlyExtras(recoveryRolling: [], longestNight: extreme(521, month.mornings[11]), highestRecovery: extreme(91, month.mornings[20]))
+        guard case .records(let more) = ReviewStoryBuilder.build(handmade(month, monthly: both), format: format).pages.last?.content else { return }
+        #expect(more.blocks.map(\.kind) == [.longestNight, .highestRecovery] && more.blocks[1].score == 91 && more.blocks[1].tie == nil)
+        // No recovery in the month: no recovery page and no recovery record.
+        #expect(!kinds(ReviewStoryBuilder.build(handmade(month, recovery: nil, monthly: extras), format: format)).contains(.recoveryPattern))
+    }
+
+    @Test func thePatternsBuildFromWholeNumbers() async throws {
+        let story = ReviewStoryBuilder.build(try await record(.full, month), format: format)
+        for text in ReviewStoryBuilder.allStrings(story) where text.contains("averaged") { #expect(text.range(of: #"\d\.\d"#, options: .regularExpression) == nil, Comment(rawValue: text)) }
+    }
+}
+
 // MARK: - What a plan sees
 
 struct StoryPlanTests {
@@ -233,7 +293,7 @@ struct StoryPlanTests {
         let weekly = ReviewStoryBuilder.build(try await record(.full), format: format)
         #expect(weekly.visiblePages(unlocked: false).map(\.kind) == [.cover] && weekly.visiblePages(unlocked: true).count == 6)
         let monthly = ReviewStoryBuilder.build(try await record(.full, month), format: format)
-        #expect(monthly.visiblePages(unlocked: false).map(\.kind) == [.locked])
+        #expect(monthly.visiblePages(unlocked: false).map(\.kind) == [.locked] && monthly.visiblePages(unlocked: true).count == 6)
         let locked = LockedCopy.card(for: .weeklyReview)
         #expect(locked?.title == "The full story of your week" && LockedCopy.card(for: .monthlyReview)?.title == "Your month, in full")
         for context in [PaywallContext.weeklyReview, .monthlyReview] {
@@ -249,6 +309,7 @@ struct StoryPlanTests {
         #expect(premium.bars != nil && free.bars == nil && free.cover == premium.cover, "a free person's card has the cover only")
         let monthly = ReviewStoryBuilder.build(try await record(.full, month), format: format)
         #expect(monthly.share(unlocked: false) == nil, "a locked month has nothing to share")
+        #expect(monthly.share(unlocked: true)?.bars?.slim == true)
         #expect(premium.fileName == "NOCTIS-week-2026-09-26" && monthly.share(unlocked: true)?.fileName == "NOCTIS-month-2026-08-31")
     }
 
@@ -328,6 +389,13 @@ struct StoryViewModelTests {
             week.goNext()
         }
         #expect(shareable == [.cover, .sleep])
+        let (monthly, _) = await model(kind: .monthly, reference: at(2026, 10, 2))
+        var monthShareable: [ReviewStoryPage.Kind] = []
+        for _ in monthly.pages {
+            if monthly.canShare, let kind = monthly.current?.kind { monthShareable.append(kind) }
+            monthly.goNext()
+        }
+        #expect(monthShareable == [.cover, .sleepPattern, .records], "and the last page, where Done and Share are")
     }
 
     @Test func aPurchaseUnlocksTheStoryInPlaceAndTheCoverStaysWhereItIs() async {

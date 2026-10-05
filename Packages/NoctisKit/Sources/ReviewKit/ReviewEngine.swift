@@ -10,7 +10,7 @@ import SleepKit
 // is made only when the previous period has enough nights of its own.
 
 public nonisolated enum ReviewModel {
-    public static let version = "review-v1"
+    public static let version = "review-v2"
 
     /// A change counts as a change, or an improvement, only when it is at least this much of the person's own variation.
     public static let normalizedThreshold = 0.5
@@ -68,6 +68,7 @@ public nonisolated enum ReviewEngine {
 
         let candidates = comparable ? changes(inPeriod: inPeriod, before: before, prior: prior) : []
         let (improvement, biggest) = highlights(candidates, comparable: comparable, needMinutes: needMinutes)
+        let major = comparable ? majorChanges(candidates) : []
 
         let values = inPeriod.map { night in
             ReviewNightValues(
@@ -79,7 +80,7 @@ public nonisolated enum ReviewEngine {
         let record = ReviewRecord(
             id: period.id, firstMorning: period.firstMorning, lastMorning: period.lastMorning, generatedAt: now, nightsRecorded: inPeriod.count,
             nightsInPeriod: period.morningCount, hasComparison: comparable, sleep: sleep, consistency: consistency, recovery: recovery, heart: heart, timing: timing,
-            nights: values, biggestImprovement: improvement, biggestChange: biggest,
+            nights: values, biggestImprovement: improvement, biggestChange: biggest, topChanges: major,
             topInsightIDs: topInsights(insights, period: period, calendar: calendar),
             nextFocus: focus(period: period, inPeriod: inPeriod, consistency: consistency, timing: timing, recovery: recovery, needMinutes: needMinutes),
             monthly: period.kind == .monthly ? monthlyExtras(inPeriod) : nil
@@ -164,6 +165,13 @@ public nonisolated enum ReviewEngine {
     /// The rule: a figure to three decimals, so a change that is 0.5 of the person's variation to the eye is 0.5 to the rule.
     static func passes(_ value: Double) -> Bool {
         ((abs(value) * 1000).rounded() / 1000) >= ReviewModel.normalizedThreshold
+    }
+
+    /// The changes that count (at least half the person's own variation), the largest first, at most three; equals keep the metrics' own order.
+    static func majorChanges(_ candidates: [ReviewChange]) -> [ReviewChange] {
+        let counted = candidates.enumerated().filter { passes($0.element.normalized) }
+        let ordered = counted.sorted { abs($0.element.normalized) != abs($1.element.normalized) ? abs($0.element.normalized) > abs($1.element.normalized) : $0.offset < $1.offset }
+        return ordered.prefix(3).map(\.element)
     }
 
     static func highlights(_ candidates: [ReviewChange], comparable: Bool, needMinutes: Int) -> (improvement: ReviewHighlight, biggest: ReviewHighlight) {

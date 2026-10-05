@@ -592,7 +592,7 @@ struct ReviewRecordTests {
     @Test func theRecordSaysWhichPeriodItIsFor() throws {
         let result = try #require(record(build(scenario())))
         #expect(result.period == week && result.kind == .weekly && result.nightsInPeriod == 7)
-        #expect(ReviewRecord.currentVersion == 1 && ReviewModel.version == "review-v1")
+        #expect(ReviewRecord.currentVersion == 2 && ReviewModel.version == "review-v2")
     }
 }
 
@@ -705,5 +705,41 @@ struct ReviewLanguageTests {
         #expect(format.day(key(2026, 9, 20)) == "Sep 20" && format.monthName(key(2026, 9, 1)) == "September" && format.monthYear(key(2026, 9, 1)) == "September 2026")
         let twentyFour = ReviewFormat(locale: Locale(identifier: "en_GB"))
         #expect(twentyFour.clock(minutesAfterNoon: 660) == "23:00")
+    }
+}
+
+// MARK: - A month's major changes
+
+struct ReviewMajorChangesTests {
+    private func change(_ metric: ReviewMetric, _ normalized: Double) -> ReviewChange {
+        ReviewChange(metric: metric, value: 10 + normalized, previous: 10, normalized: normalized)
+    }
+
+    @Test func theLargestChangesThatCountAreKeptThreeAtMostAndInTheMetricsOwnOrderWhenEqual() {
+        let candidates = [change(.duration, 0.4), change(.bedtimeVariation, -0.5), change(.recovery, 0.5), change(.hrv, -0.9), change(.restingHeartRate, 1.2)]
+        let major = ReviewEngine.majorChanges(candidates)
+        #expect(major.map(\.metric) == [.restingHeartRate, .hrv, .bedtimeVariation], "1.2, 0.9, then the first of the two that are 0.5; 0.4 is not a change")
+        #expect(ReviewEngine.majorChanges([change(.duration, 0.49), change(.recovery, -0.4994)]).isEmpty, "under half of the person's own variation is nothing")
+        #expect(ReviewEngine.majorChanges([change(.duration, 0.5)]).count == 1 && ReviewEngine.majorChanges([]).isEmpty)
+    }
+
+    @Test func aMonthsRecordHoldsThemAndAPeriodWithNothingToCompareHoldsNone() throws {
+        let nights = (0..<(28 + 62)).map { index -> ReviewNightInput in
+            let morning = key(2026, 6, 1).adding(days: index)
+            // Sleep gets steadily longer, so August is longer than July and the person's own variation is small.
+            return ReviewNightInput(
+                night: ReviewPeriod.night(endingOn: morning), asleepMinutes: 380 + Double(index) * 1.2 + Double(index % 3) * 3, bedtimeMinutes: 660, wakeMinutes: 1140,
+                recoveryScore: 60 + index / 3, hrv: 40 + Double(index) / 4, restingHeartRate: 60 - Double(index) / 10
+            )
+        }
+        let month = ReviewPeriod.monthly(year: 2026, month: 8)
+        guard case .record(let record) = ReviewEngine.build(period: month, nights: nights, needMinutes: 480, now: moment(2026, 9, 2), calendar: ny) else { Issue.record("a record"); return }
+        #expect(record.hasComparison && !record.topChanges.isEmpty && record.topChanges.count <= 3)
+        #expect(record.topChanges.allSatisfy { ReviewEngine.passes($0.normalized) })
+        #expect(record.topChanges.map { abs($0.normalized) } == record.topChanges.map { abs($0.normalized) }.sorted(by: >))
+        // Without a previous month of its own, nothing is compared and nothing is listed.
+        let alone = nights.filter { month.contains(morning: ReviewPeriod.morning(ofNight: $0.night)) }
+        guard case .record(let first) = ReviewEngine.build(period: month, nights: alone, needMinutes: 480, now: moment(2026, 9, 2), calendar: ny) else { Issue.record("a record"); return }
+        #expect(!first.hasComparison && first.topChanges.isEmpty)
     }
 }

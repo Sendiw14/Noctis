@@ -261,7 +261,7 @@ public nonisolated struct ReviewRollingPoint: Sendable, Equatable, Codable {
 
 public nonisolated struct ReviewRecord: Sendable, Equatable, Codable, Identifiable {
     /// Bump when a change would break an older reader; a record of another version is not read.
-    public static let currentVersion = 1
+    public static let currentVersion = 2
 
     public let version: Int
     public let id: ReviewID
@@ -280,6 +280,9 @@ public nonisolated struct ReviewRecord: Sendable, Equatable, Codable, Identifiab
     public let nights: [ReviewNightValues]
     public let biggestImprovement: ReviewHighlight
     public let biggestChange: ReviewHighlight
+    /// Every change of at least half the person's own variation, the largest first, at most three (a month's "Major changes"); empty when nothing moved by that much
+    /// or there was nothing to compare with.
+    public let topChanges: [ReviewChange]
     /// Insight ids, best first: one for a week, up to three for a month.
     public let topInsightIDs: [String]
     public let nextFocus: ReviewFocus
@@ -288,8 +291,8 @@ public nonisolated struct ReviewRecord: Sendable, Equatable, Codable, Identifiab
     public init(
         id: ReviewID, firstMorning: SleepNightKey, lastMorning: SleepNightKey, generatedAt: Date, nightsRecorded: Int, nightsInPeriod: Int, hasComparison: Bool,
         sleep: ReviewSleep, consistency: ReviewConsistency, recovery: ReviewRecovery?, heart: ReviewHeart, timing: ReviewTiming, nights: [ReviewNightValues],
-        biggestImprovement: ReviewHighlight, biggestChange: ReviewHighlight, topInsightIDs: [String], nextFocus: ReviewFocus, monthly: ReviewMonthlyExtras?,
-        version: Int = ReviewRecord.currentVersion
+        biggestImprovement: ReviewHighlight, biggestChange: ReviewHighlight, topChanges: [ReviewChange] = [], topInsightIDs: [String], nextFocus: ReviewFocus,
+        monthly: ReviewMonthlyExtras?, version: Int = ReviewRecord.currentVersion
     ) {
         self.version = version
         self.id = id
@@ -307,6 +310,7 @@ public nonisolated struct ReviewRecord: Sendable, Equatable, Codable, Identifiab
         self.nights = nights
         self.biggestImprovement = biggestImprovement
         self.biggestChange = biggestChange
+        self.topChanges = topChanges
         self.topInsightIDs = topInsightIDs
         self.nextFocus = nextFocus
         self.monthly = monthly
