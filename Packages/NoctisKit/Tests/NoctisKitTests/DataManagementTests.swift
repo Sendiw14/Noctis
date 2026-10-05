@@ -13,6 +13,7 @@ import Testing
 @testable import NoctisCore
 @testable import NoctisWidgetKit
 @testable import ProfileFeature
+@testable import ReviewKit
 
 private let shared = DataInventory.shared
 
@@ -29,7 +30,7 @@ struct DataManagementCopyTests {
             #expect(group.keeps.contains("not affected") || group.keeps.contains("untouched") || group.keeps.contains("kept"), Comment(rawValue: group.id))
             #expect(!group.question.isEmpty && group.question.hasSuffix("?") && !group.confirm.isEmpty && group.done.hasSuffix("."), Comment(rawValue: group.id))
         }
-        #expect(shared.groups.map(\.id) == ["journal", "coach", "insights", "windDown", "cache", "preferences"])
+        #expect(shared.groups.map(\.id) == ["journal", "coach", "insights", "reviews", "windDown", "cache", "preferences"])
     }
 
     @Test func aResetSaysItIsAResetAndADeleteSaysItIsDeleted() {
@@ -104,6 +105,7 @@ final class DataBench {
     let journal = MemoryJournalStore()
     let coachHistory: CoachHistoryStore
     let insightFile: InsightFileStore
+    let reviewFile: ReviewFileStore
     let snapshotStore: HomeSnapshotStore
     let root: URL
     let roots: DataRoots
@@ -138,6 +140,7 @@ final class DataBench {
         windDownStore = WindDownSessionStore(context: ModelContext(container))
         coachHistory = CoachHistoryStore(modelContainer: try CoachHistoryContainer.make(inMemory: true))
         insightFile = InsightFileStore(directory: support.appending(path: "Noctis", directoryHint: .isDirectory))
+        reviewFile = ReviewFileStore(directory: support.appending(path: "Noctis", directoryHint: .isDirectory))
         snapshotStore = HomeSnapshotStore(directory: support.appending(path: "Noctis", directoryHint: .isDirectory))
     }
 
@@ -159,7 +162,7 @@ final class DataBench {
             forgetSoundChoices: { [unowned self] in calls.append("soundChoices") },
             reloadWidgets: { [unowned self] in calls.append("widgets") }, watch: watch, sleepSounds: sleepSounds,
             reloadControls: { [unowned self] in calls.append("controls") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") },
-            stopBackgroundUpdates: { [unowned self] in calls.append("background") }
+            stopBackgroundUpdates: { [unowned self] in calls.append("background") }, reviewFile: reviewFile
         ))
     }
 
@@ -190,6 +193,9 @@ final class DataBench {
         let conversation = await coachHistory.startConversation()
         await coachHistory.append(question: "How did I sleep?", answer: CoachFixtureAnswer.storable, to: conversation)
         insightFile.save(InsightLibrary())
+        var reviews = ReviewLibrary()
+        reviews.put(ReviewTestRecords.stored())
+        reviewFile.save(reviews)
         try Data("{\"saved\":true}".utf8).write(to: snapshotStore.fileURL)
         try Data("{\"v\":1}".utf8).write(to: widgetFile)
         _ = sleepSounds
@@ -237,7 +243,7 @@ struct DataManagementIntegrationTests {
         try await bench.fill()
         let coachBefore = await bench.coachHistory.messageCount()
         #expect(bench.profileStore.recordCount == 1 && !bench.journal.stored.isEmpty && coachBefore == 1)
-        #expect((try? Data(contentsOf: bench.snapshotStore.fileURL)) != nil && bench.insightFile.load() != nil)
+        #expect((try? Data(contentsOf: bench.snapshotStore.fileURL)) != nil && bench.insightFile.load() != nil && bench.reviewFile.load() != nil)
         #expect(FileManager.default.fileExists(atPath: bench.widgetFile.path) && FileManager.default.fileExists(atPath: bench.controlsFile.path))
         #expect(await bench.center.pendingIdentifiers().count == 4)
         #expect(await bench.alarmService.status().isOn)
@@ -252,6 +258,7 @@ struct DataManagementIntegrationTests {
         let conversationsAfter = await bench.coachHistory.conversations()
         #expect(coachAfter == 0 && conversationsAfter.isEmpty)
         #expect(bench.insightFile.load() == nil && !FileManager.default.fileExists(atPath: bench.insightFile.fileURL.path))
+        #expect(bench.reviewFile.load() == nil && !FileManager.default.fileExists(atPath: bench.reviewFile.fileURL.path), "the reviews are deleted")
         #expect(!FileManager.default.fileExists(atPath: bench.snapshotStore.fileURL.path))
         #expect(!FileManager.default.fileExists(atPath: bench.widgetFile.path), "the widgets' summary is deleted")
         #expect(!FileManager.default.fileExists(atPath: bench.controlsFile.path), "the Sleep sounds control's status is deleted")
@@ -350,7 +357,12 @@ struct DataManagementIntegrationTests {
         let coachGone = await bench.coachHistory.messageCount()
         #expect(coachGone == 0 && bench.calls.contains("coachReload"))
         _ = await bench.manager.delete(shared.groups.first { $0.id == "insights" }!)
-        #expect(bench.insightFile.load() == nil && bench.windDownStore.sessions().count == 1)
+        #expect(bench.insightFile.load() == nil && bench.windDownStore.sessions().count == 1 && bench.reviewFile.load() != nil, "deleting insights leaves the reviews")
+        let reviewsGroup = shared.groups.first { $0.id == "reviews" }!
+        #expect(bench.manager.sizeText(for: reviewsGroup).hasSuffix("B") || bench.manager.sizeText(for: reviewsGroup).contains("Less"), "Reviews has a size of its own")
+        let reviewsReport = await bench.manager.delete(reviewsGroup)
+        #expect(reviewsReport.succeeded && bench.reviewFile.load() == nil && bench.windDownStore.sessions().count == 1)
+        #expect(bench.manager.sizeText(for: reviewsGroup) == "Nothing stored")
         _ = await bench.manager.delete(shared.groups.first { $0.id == "windDown" }!)
         #expect(bench.windDownStore.sessions().isEmpty)
         _ = await bench.manager.delete(shared.groups.first { $0.id == "cache" }!)
@@ -431,6 +443,8 @@ struct DataExportTests {
         #expect(alarm["minutesSinceMidnight"] as? Int == 390)
         #expect((categories["windDownHistory"] as? [[String: Any]])?.count == 1)
         #expect(categories["cachedSummaries"] != nil && categories["insightHistory"] != nil)
+        let reviews = try #require(categories["reviews"] as? [String: Any])
+        #expect((reviews["reviews"] as? [Any])?.count == 1 && reviews["schema"] as? Int == 1, "the reviews are in the export, as derived values")
     }
 
     @Test func theExportHoldsNoRawHealthSampleAndNothingNotStoredByNOCTIS() async throws {

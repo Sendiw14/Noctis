@@ -172,7 +172,7 @@ struct PrivacyCenterContentTests {
         #expect(page.sizes.first { $0.category == .cachedSummaries }?.value == "3 KB" || page.sizes.first { $0.category == .cachedSummaries }?.value?.contains("KB") == true)
         #expect(page.sizes.first { $0.category == .journal }?.value == "Nothing stored", "the Journal says so when it is empty")
         #expect(page.storedTotal.contains("KB"))
-        #expect(content.deletable.map(\.title) == ["Journal", "Coach history", "Insights history", "Wind-down history", "Cached summaries", "Preferences and goals"])
+        #expect(content.deletable.map(\.title) == ["Journal", "Coach history", "Insights history", "Reviews", "Wind-down history", "Cached summaries", "Preferences and goals"])
         #expect(content.deleteNote.hasPrefix("Deleting NOCTIS from this iPhone"), "no Data management page yet to point at")
         #expect(PrivacyCenterBuilder.content(shared, dataManagement: true).deleteNote.contains("Data management"))
     }

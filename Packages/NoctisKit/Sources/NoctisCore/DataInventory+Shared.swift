@@ -78,6 +78,17 @@ nonisolated extension DataInventory {
                 owner: "NoctisCore/InsightStore.swift", holdsUserContent: false, export: .included("insightHistory")
             ),
             DataCategory(
+                .reviews, name: "Reviews",
+                summary: "The weekly and monthly reviews NOCTIS has made, worked out from your Health data: for each, its dates and the numbers behind it. They stay on this iPhone, and Coach cannot read them.",
+                contents: [
+                    "For each review: the dates it covers and the numbers it is made of (sleep, bedtimes, recovery, how the nights compare)", "Which insights it points to, by id",
+                    "Whether you have opened it",
+                ],
+                locations: [.file(.applicationSupport, "Noctis/reviews.json")],
+                inBackup: false, protection: .completeWhileLocked, deletion: .button("Reviews"),
+                owner: "NoctisCore/ReviewStore.swift", holdsUserContent: false, export: .included("reviews")
+            ),
+            DataCategory(
                 .memorySummaries, name: "Summaries in memory",
                 summary: "The recovery, sleep, Home and insight summaries the app holds while it is open. They are rebuilt from Apple Health and are never written to disk.",
                 contents: ["Recovery, sleep, Home and insight summaries, as they were last worked out"],
@@ -291,6 +302,12 @@ nonisolated extension DataInventory {
                 removes: "The insights NOCTIS has found, and whether you have seen them. New ones are found again as new nights arrive.",
                 keeps: "Your Health data, your Journal and the rest of NOCTIS are not affected.", from: "this iPhone",
                 question: "Delete insights history?", confirm: "Delete insights history", done: "Insights history deleted."
+            ),
+            DeletableGroup(
+                id: "reviews", title: "Reviews", verb: .delete, categories: [.reviews],
+                removes: "Every weekly and monthly review NOCTIS has made, and whether you opened it. A recent one can be made again from your Health data when you ask for it.",
+                keeps: "Your Health data, your Insights, your Journal and the rest of NOCTIS are not affected.", from: "this iPhone",
+                question: "Delete your reviews?", confirm: "Delete reviews", done: "Reviews deleted."
             ),
             DeletableGroup(
                 id: "windDown", title: "Wind-down history", verb: .delete, categories: [.windDownHistory],

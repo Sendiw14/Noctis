@@ -68,6 +68,68 @@ enum MockShape {
     /// sleep than usual (nothing else about any night changes), so the stage
     /// insights have something to say beside the shifts.
     case fullStory
+    /// The reviews' stories: every night alike (a tiny noise, a fixed quality), then one thing different about the latest review week or month. Nothing else moves, so
+    /// the one thing is what a review finds.
+    case steadyWeek
+    /// The bedtimes before the latest review week are scattered an hour either way; that week's are tight.
+    case improvedWeek
+    /// The latest review week's bedtimes are an hour later than every week before it.
+    case laterWeek
+    /// Each week of the latest review month has its own bedtime and quality.
+    case variedMonth
+
+    /// The shapes whose nights are all alike but for the story.
+    var isCalm: Bool {
+        switch self {
+        case .steadyWeek, .improvedWeek, .laterWeek, .variedMonth: true
+        case .standard, .earlyBird, .weekendShift, .hrvDip, .fullStory: false
+        }
+    }
+}
+
+/// Where a night falls in the reviews the mock tells a story about: the latest weekly review (the 7 mornings before the most recent Sunday, the default review day) and
+/// the latest monthly review (the previous calendar month). Dates only; the night keeps its own evening.
+struct MockReviewFrame {
+    let calendar: Calendar
+    /// The last morning of the latest weekly review (start of day).
+    let lastWeekMorning: Date
+    /// The first and last mornings of the previous calendar month (start of day).
+    let monthFirstMorning: Date
+    let monthLastMorning: Date
+
+    init(referenceDate: Date, calendar: Calendar) {
+        self.calendar = calendar
+        let today = calendar.startOfDay(for: referenceDate)
+        let sinceSunday = (calendar.component(.weekday, from: today) + 6) % 7
+        let reviewDay = calendar.date(byAdding: .day, value: -sinceSunday, to: today) ?? today
+        lastWeekMorning = calendar.date(byAdding: .day, value: -1, to: reviewDay) ?? reviewDay
+        let thisMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: today)) ?? today
+        monthFirstMorning = calendar.date(byAdding: .month, value: -1, to: thisMonth) ?? thisMonth
+        monthLastMorning = calendar.date(byAdding: .day, value: -1, to: thisMonth) ?? thisMonth
+    }
+
+    private func morning(ofNight night: Date) -> Date {
+        calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: night) ?? night)
+    }
+
+    /// How many whole weeks before the latest review week the night's morning is: 0 for a night in it, -1 for one after it.
+    func weeksBack(ofNight night: Date) -> Int {
+        let days = calendar.dateComponents([.day], from: morning(ofNight: night), to: lastWeekMorning).day ?? 0
+        return days < 0 ? -1 : days / 7
+    }
+
+    /// 0...6 for a night in the latest review week (0 is its first morning), as the morning's place in it.
+    func dayOfWeek(ofNight night: Date) -> Int {
+        let days = calendar.dateComponents([.day], from: morning(ofNight: night), to: lastWeekMorning).day ?? 0
+        return max(6 - days, 0)
+    }
+
+    /// 0... for a night whose morning is in the latest review month: the week of the month it is in (days 1-7 are 0); nil for any other night.
+    func weekOfMonth(ofNight night: Date) -> Int? {
+        let morning = morning(ofNight: night)
+        guard morning >= monthFirstMorning, morning <= monthLastMorning else { return nil }
+        return ((calendar.dateComponents([.day], from: monthFirstMorning, to: morning).day ?? 0)) / 7
+    }
 }
 
 enum MockNightGenerator {
@@ -103,7 +165,7 @@ enum MockNightGenerator {
 
     static func generate(
         seed: UInt64, count: Int, referenceDate: Date, calendar: Calendar, lastNight: MockLastNight = .laterAndShorter, dip: Bool = false,
-        shape: MockShape = .standard
+        shape: MockShape = .standard, frame: MockReviewFrame? = nil
     ) -> [NightProfile] {
         guard count > 0 else { return [] }
         let hour = calendar.component(.hour, from: referenceDate)
@@ -142,7 +204,7 @@ enum MockNightGenerator {
             let depth = (dip || shape == .hrvDip) && depths.indices.contains(dipIndex) ? depths[dipIndex] : 0
             nights.append(generateNight(
                 index: i, total: count, day: day, seed: seed, calendar: calendar, override: override, steady: lastNight == .steady, dip: depth,
-                qualityCap: lastNight == .best ? 0.3 : nil, shape: shape
+                qualityCap: lastNight == .best ? 0.3 : nil, shape: shape, frame: frame
             ))
         }
         return nights
@@ -182,23 +244,39 @@ enum MockNightGenerator {
 
     private static func generateNight(
         index: Int, total: Int, day: Date, seed: UInt64, calendar: Calendar, override: LastNightOverride?, steady: Bool = false, dip: Double = 0, qualityCap: Double? = nil,
-        shape: MockShape = .standard
+        shape: MockShape = .standard, frame: MockReviewFrame? = nil
     ) -> NightProfile {
         var rng = SeededGenerator(seed: seed &+ UInt64(index) &* 0x9E3779B1)
 
         let weekday = calendar.component(.weekday, from: day)
         let isWeekend = weekday == 1 || weekday == 7
 
-        let progress = Double(index) / Double(max(total - 1, 1))
+        // The reviews' stories: every night alike but for the story, so the one thing that differs is what a review finds. The noise is a tenth of the usual, nothing
+        // drifts over the history, and a night's quality is fixed (enough sleep to meet the need), whatever the story does to it.
+        let calm = shape.isCalm
+        let noiseScale = calm ? 0.1 : 1.0
+        let weeksBack = frame?.weeksBack(ofNight: day)
+        let weekOfMonth = shape == .variedMonth ? frame?.weekOfMonth(ofNight: day) : nil
+        let progress = calm ? 0.6 : Double(index) / Double(max(total - 1, 1))
         let trend = 0.42 + 0.28 * progress
-        let noise = Double.random(in: -0.16...0.16, using: &rng)
-        let naturalQuality = min(max(trend + noise, 0.12), qualityCap ?? 0.97)
+        let noise = Double.random(in: -0.16...0.16, using: &rng) * noiseScale
+        var naturalQuality = min(max(trend + noise, 0.12), qualityCap ?? 0.97)
+        if calm {
+            // Each week of the review month has its own quality; every other night is the same.
+            let monthQuality = [0.9, 0.55, 0.95, 0.45, 0.8]
+            naturalQuality = weekOfMonth.map { monthQuality[min($0, monthQuality.count - 1)] } ?? 0.9 + noise
+        }
 
         // A steady sleeper keeps weekends and weeknights within minutes.
         // Fridays and Saturdays are the weekend the weekend-shift scenario moves.
         let isWeekendEvening = weekday == 6 || weekday == 7
         var bedtimeHourBase = isWeekend && !steady ? 23.6 : 23.0
-        var bedtimeJitter = Double.random(in: -35...35, using: &rng) * (steady ? 0.25 : 1)
+        let rawJitter = Double.random(in: -35...35, using: &rng)
+        var bedtimeJitter = rawJitter * (steady ? 0.25 : 1)
+        if calm {
+            bedtimeHourBase = 23.0
+            bedtimeJitter = rawJitter * 0.1
+        }
         switch shape {
         case .earlyBird:
             bedtimeHourBase = 23.0
@@ -206,6 +284,17 @@ enum MockNightGenerator {
         case .weekendShift:
             bedtimeHourBase = isWeekendEvening ? 24.0 : 23.0
             bedtimeJitter *= 0.6
+        case .steadyWeek:
+            break
+        case .improvedWeek:
+            // Scattered an hour either way before the latest review week; tight in it and after it.
+            if let weeksBack, weeksBack >= 1 { bedtimeJitter = rawJitter * 60 / 35 }
+        case .laterWeek:
+            if weeksBack == 0 { bedtimeHourBase += 65.0 / 60 }
+        case .variedMonth:
+            // Minutes later than 11 PM, by week of the review month.
+            let monthLate: [Double] = [0, 50, -10, 70, 20]
+            if let weekOfMonth { bedtimeHourBase += monthLate[min(weekOfMonth, monthLate.count - 1)] / 60 }
         case .standard, .hrvDip, .fullStory:
             break
         }
@@ -218,7 +307,7 @@ enum MockNightGenerator {
         }
         let bedtime = day.addingTimeInterval(bedtimeHour * 3600)
 
-        let naturalSleepHours = 6.4 + quality * 2.1 + Double.random(in: -0.25...0.25, using: &rng)
+        let naturalSleepHours = 6.4 + quality * 2.1 + Double.random(in: -0.25...0.25, using: &rng) * noiseScale
         let totalSleepHours = override?.asleepHours ?? naturalSleepHours
         let totalSleepSeconds = totalSleepHours * 3600
 
@@ -294,7 +383,7 @@ enum MockNightGenerator {
         sleepSamples.append(RawSleepSample(start: inBedStart, end: inBedEnd, stage: .inBed, sourceName: phoneSource, sourceBundleID: phoneBundleID))
 
         let restingBaseline = 61.0 - 7.0 * progress
-        let restingHR = restingBaseline - quality * 3.0 + Double.random(in: -1.5...1.5, using: &rng) + dip * 5
+        let restingHR = restingBaseline - quality * 3.0 + Double.random(in: -1.5...1.5, using: &rng) * noiseScale + dip * 5
         let restingSample = HeartRateSample(date: wakeTime.addingTimeInterval(25 * 60), bpm: restingHR.rounded(), sourceName: watchSource)
 
         var heartRateSamples: [HeartRateSample] = []
@@ -313,13 +402,13 @@ enum MockNightGenerator {
         }
 
         let hrvBaseline = 44.0 + 22.0 * progress
-        var hrv = hrvBaseline + quality * 9.0 + Double.random(in: -5...5, using: &rng) - dip * 14
+        var hrv = hrvBaseline + quality * 9.0 + Double.random(in: -5...5, using: &rng) * noiseScale - dip * 14
         if shape == .earlyBird, override == nil { hrv -= lateness * earlyBirdHRVPerHour }
         let span = wakeTime.timeIntervalSince(sleepOnset)
         let hrvSamples = [0.2, 0.45, 0.7, 0.95].map { fraction in
             HRVSample(
                 date: sleepOnset.addingTimeInterval(span * fraction),
-                sdnnMilliseconds: max(hrv + Double.random(in: -6...6, using: &rng), 15).rounded()
+                sdnnMilliseconds: max(hrv + Double.random(in: -6...6, using: &rng) * noiseScale, 15).rounded()
             )
         }
 

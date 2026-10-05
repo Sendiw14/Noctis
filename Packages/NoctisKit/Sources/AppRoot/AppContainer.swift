@@ -29,6 +29,7 @@ public struct AppContainer {
     /// Home and the Insights tab both read them.
     public let insightStore: InsightStore
     public let insightsRepository: InsightsRepository
+    public let reviewRepository: ReviewRepository
     /// Coach's front door: question in, validated answer out. There is no
     /// Coach UI yet (ROADMAP.md); the tab will read this and nothing else.
     public let coachService: AIService
@@ -179,6 +180,15 @@ public struct AppContainer {
         #endif
         let insightStore = InsightStore(file: insightFile)
         self.insightStore = insightStore
+        // The reviews (R39): derived numbers only, complete file protection, excluded from backups, never sent anywhere, and erased with the rest.
+        let reviewFile = ReviewFileStore()
+        NoctisDataRegistry.shared.register(reviewFile)
+        #if DEBUG
+        if debug.resetState { reviewFile.erase() }
+        #endif
+        let reviewStore = ReviewStore(file: reviewFile)
+        let reviewRepo = ReviewRepository(provider: provider, store: reviewStore, insights: insightStore)
+        self.reviewRepository = reviewRepo
         let insightsRepo = InsightsRepository(provider: provider, store: insightStore)
         self.insightsRepository = insightsRepo
         // The widgets' summary (R44): one small file in the App Group, written after every refresh of Home's data. It is
@@ -505,7 +515,8 @@ public struct AppContainer {
             stopBackgroundUpdates: {
                 model.onHealthAuthorizationRequested = nil
                 await background?.stopBackgroundDelivery()
-            }
+            },
+            reviewFile: reviewFile
         ))
         self.dataManager = dataManager
         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.

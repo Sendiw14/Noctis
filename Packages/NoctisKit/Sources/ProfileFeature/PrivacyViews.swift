@@ -10,6 +10,7 @@ extension DataCategoryID {
         case .appleHealth: "heart.text.square"
         case .cachedSummaries: "square.stack"
         case .insightHistory: "lightbulb"
+        case .reviews: "calendar"
         case .memorySummaries: "memorychip"
         case .profile: "person"
         case .preferences: "slider.horizontal.3"
@@ -33,7 +34,7 @@ extension DataCategoryID {
     var fill: Color {
         switch self {
         case .appleHealth, .cachedSummaries, .widgetSnapshot, .watchSync, .sleepSoundsState, .memorySummaries, .systemFiles: NoctisAppColor.blockSage
-        case .insightHistory, .preferences, .soundSettings, .appState, .reminders: NoctisAppColor.blockButter
+        case .insightHistory, .reviews, .preferences, .soundSettings, .appState, .reminders: NoctisAppColor.blockButter
         case .journal, .coachHistory, .profile, .exportFile: NoctisAppColor.blockLavender
         case .alarm, .windDownHistory, .diagnosticLog, .purchases: NoctisAppColor.fieldSand
         }

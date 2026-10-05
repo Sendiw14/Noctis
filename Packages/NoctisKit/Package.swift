@@ -39,6 +39,7 @@ let package = Package(
         .library(name: "SoundKit", targets: ["SoundKit"]),
         .library(name: "BreathingKit", targets: ["BreathingKit"]),
         .library(name: "PremiumKit", targets: ["PremiumKit"]),
+        .library(name: "ReviewKit", targets: ["ReviewKit"]),
         .library(name: "NightKit", targets: ["NightKit"]),
         .library(name: "NightFeature", targets: ["NightFeature"]),
         .library(name: "JournalKit", targets: ["JournalKit"]),
@@ -82,6 +83,9 @@ let package = Package(
         // The feature table, the entitlement rules, the free Coach questions' arithmetic and which sounds a plan includes: pure, with no dependency but the sound names, so the
         // widgets, the Watch and the intents can link it.
         .target(name: "PremiumKit", dependencies: ["SoundCatalog"], swiftSettings: engineSwiftSettings),
+        // The weekly and monthly reviews (APP_RULES.md R39): their periods, the engine that builds a record from the nights and the previous period, and the one
+        // builder of their words. Pure and nonisolated like the other engines; it reuses the baseline, history and ranking engines and reads nothing itself.
+        .target(name: "ReviewKit", dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit", "InsightsKit"], swiftSettings: engineSwiftSettings),
         .target(
             name: "NightKit",
             dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit", "AlarmShared", "BreathingKit"],
@@ -89,7 +93,7 @@ let package = Package(
         ),
         .target(
             name: "NoctisCore",
-            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "SoundKit", "DesignSystem", "NoctisWidgetKit", "PremiumKit"],
+            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "SoundKit", "DesignSystem", "NoctisWidgetKit", "PremiumKit", "ReviewKit"],
             swiftSettings: noctisSwiftSettings
         ),
         .target(name: "OnboardingFeature", dependencies: ["DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
@@ -173,7 +177,7 @@ let package = Package(
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
                 "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot", "NoctisWidgetKit", "NoctisIntentKit", "NoctisWatchKit",
-                "BreathingKit", "PremiumKit",
+                "BreathingKit", "PremiumKit", "ReviewKit",
             ],
             swiftSettings: noctisSwiftSettings
         ),

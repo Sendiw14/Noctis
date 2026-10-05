@@ -114,6 +114,7 @@ public nonisolated enum DataCategoryID: String, Sendable, CaseIterable, Hashable
     case watchSync
     case sleepSoundsState
     case insightHistory
+    case reviews
     case memorySummaries
     case profile
     case preferences

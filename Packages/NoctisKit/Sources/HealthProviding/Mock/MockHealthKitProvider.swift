@@ -42,6 +42,17 @@ public enum MockScenario: String, Sendable, CaseIterable {
     case hrvDip
     /// Only the last 6 nights: the Insights tab is still learning.
     case sparse
+    /// 120 nights where nothing moves: every week alike, to the minute. The weekly review says it was a steady week (the reviews' `steadyWeek`).
+    case steadyWeek
+    /// Like `steadyWeek`, but the bedtimes before the latest review week were scattered an hour either way and that week's are tight (consistency tightens; the
+    /// recovery model counts consistency, so recovery rises with it).
+    case improvedWeek
+    /// Like `steadyWeek`, but the latest review week's bedtimes (and so its wake times) are an hour later than every week before it.
+    case laterWeek
+    /// Like `full`, but the latest review week has only 4 nights: "4 of 5 nights".
+    case sparseWeek
+    /// Like `steadyWeek`, but each week of the previous calendar month differs from the others: the monthly review's story.
+    case variedMonth
 }
 
 /// Development-only stand-in for a real HealthKit-backed provider. Clearly
@@ -90,7 +101,7 @@ public final class MockHealthKitProvider: HealthDataProviding {
         let lastNight: MockLastNight = switch scenario {
         case .lateBedtime: .later
         case .steady, .recoveryDip: .steady
-        case .earlyBird, .weekendShift, .hrvDip: .usual
+        case .earlyBird, .weekendShift, .hrvDip, .steadyWeek, .improvedWeek, .laterWeek, .variedMonth: .usual
         case .messyNight: .messy
         case .highs: .best
         default: .laterAndShorter
@@ -100,21 +111,28 @@ public final class MockHealthKitProvider: HealthDataProviding {
         case .weekendShift: .weekendShift
         case .hrvDip: .hrvDip
         case .full: .fullStory
+        case .steadyWeek: .steadyWeek
+        case .improvedWeek: .improvedWeek
+        case .laterWeek: .laterWeek
+        case .variedMonth: .variedMonth
         default: .standard
         }
         // The early bird's story is 90 nights; the others keep the default.
         let historyDays = scenario == .earlyBird ? min(historyDays, 90) : historyDays
+        let frame = MockReviewFrame(referenceDate: referenceDate, calendar: calendar)
         let generated = MockNightGenerator.generate(
             seed: seed, count: historyDays, referenceDate: referenceDate, calendar: calendar, lastNight: lastNight,
             dip: scenario == .recoveryDip,
-            shape: shape
+            shape: shape, frame: frame
         )
         let nights: [NightProfile] = switch scenario {
-        case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight, .recoveryDip, .highs, .earlyBird, .weekendShift, .hrvDip: generated
+        case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight, .recoveryDip, .highs, .earlyBird, .weekendShift, .hrvDip, .steadyWeek, .improvedWeek, .laterWeek, .variedMonth: generated
         case .learning: Array(generated.suffix(3))
         case .sparse: Array(generated.suffix(6))
         case .empty: []
         case .gap: Array(generated.dropLast())
+        // The latest review week keeps its 1st, 3rd, 5th and 7th nights.
+        case .sparseWeek: generated.filter { night in frame.weeksBack(ofNight: night.date) != 0 || frame.dayOfWeek(ofNight: night.date) % 2 == 0 }
         }
         let daytime = scenario == .empty ? [] : MockNightGenerator.daytimeHeartRate(referenceDate: referenceDate, nights: generated, seed: seed)
         let hasHeartData = scenario != .sleepOnly

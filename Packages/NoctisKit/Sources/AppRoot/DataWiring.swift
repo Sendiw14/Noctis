@@ -18,6 +18,8 @@ public struct DataWiringInputs {
     public var journal: any JournalStoring
     public var coachHistory: CoachHistoryStore?
     public var insightFile: InsightFileStore
+    /// The reviews' file (R39); nil where there is none (a test).
+    public var reviewFile: ReviewFileStore?
     public var snapshotStore: HomeSnapshotStore?
     public var notifications: NotificationScheduler
     public var roots: DataRoots
@@ -59,7 +61,7 @@ public struct DataWiringInputs {
         clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {},
         widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {},
         watch: WatchSyncService? = nil, sleepSounds: SleepSoundsPublisher? = nil, reloadControls: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {},
-        stopBackgroundUpdates: @escaping @MainActor () async -> Void = {}
+        stopBackgroundUpdates: @escaping @MainActor () async -> Void = {}, reviewFile: ReviewFileStore? = nil
     ) {
         self.model = model
         self.preferences = preferences
@@ -71,6 +73,7 @@ public struct DataWiringInputs {
         self.journal = journal
         self.coachHistory = coachHistory
         self.insightFile = insightFile
+        self.reviewFile = reviewFile
         self.snapshotStore = snapshotStore
         self.notifications = notifications
         self.roots = roots
@@ -125,6 +128,7 @@ public enum DataWiring {
                 await i.afterCoachDeleted()
             },
             .insightHistory: { i.insightFile.erase() },
+            .reviews: { i.reviewFile?.erase() },
             .cachedSummaries: { i.snapshotStore?.erase() },
             .widgetSnapshot: {
                 await i.widgets?.forget()
@@ -248,6 +252,7 @@ public enum DataWiring {
                 return object
             },
             .insightHistory: { i.insightFile.load().map { (try? DataExport.object(from: $0)) ?? [String: Any]() } ?? [String: Any]() },
+            .reviews: { i.reviewFile?.load().map { (try? DataExport.object(from: $0)) ?? [String: Any]() } ?? [String: Any]() },
             .profile: {
                 let profile = i.model.profile
                 var object: [String: Any] = [
