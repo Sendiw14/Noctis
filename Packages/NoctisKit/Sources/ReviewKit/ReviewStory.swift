@@ -270,3 +270,83 @@ public nonisolated struct ReviewStory: Sendable, Equatable {
         return unlocked ? fullShare : ReviewShareContent(title: fullShare.title, dateRange: fullShare.dateRange, cover: fullShare.cover, bars: nil, details: fullShare.details, fileName: fullShare.fileName)
     }
 }
+
+// MARK: - The reviews list
+
+/// One line of the Reviews list.
+public nonisolated struct ReviewListRow: Sendable, Equatable, Identifiable {
+    public enum Status: Sendable, Equatable {
+        /// Made and not opened: a small dot, never a count or a badge.
+        case new
+        case opened
+        /// A past period that had too few nights: the nights it had and the nights it needs.
+        case notEnough(have: Int, need: Int)
+    }
+
+    public let id: ReviewID
+    /// "Sep 20 \u{2013} 26", "September 2026".
+    public let title: String
+    /// The headline number ("7h 42m a night on average"), or "4 of 5 nights".
+    public let headline: String
+    public let status: Status
+    public let spoken: String
+
+    public var kind: ReviewKind { id.kind }
+}
+
+/// The Reviews list: the weeks and the months, newest first. Only reviews that were made are listed, with past periods that had too few nights as their own "Not enough
+/// nights" rows (the nights they had) so a gap is explained and not hidden. A period with no night at all is not listed.
+public nonisolated struct ReviewListContent: Sendable, Equatable {
+    public let weekly: [ReviewListRow]
+    public let monthly: [ReviewListRow]
+
+    public var isEmpty: Bool { weekly.isEmpty && monthly.isEmpty }
+}
+
+public nonisolated enum ReviewListBuilder {
+    /// How far back the list looks for periods that had too few nights: what Health is read for.
+    public static let weeklyLimit = 12
+    public static let monthlyLimit = 3
+    public static let lookbackDays = ReviewModel.priorNights * 3 + 14
+
+    /// The periods that may have too few nights to list: the last weeks and months that are over and inside what is read from Health.
+    public static func candidates(now: Date, weekday: Int, calendar: Calendar) -> [ReviewPeriod] {
+        let today = ReviewPeriod.today(now, calendar: calendar)
+        let earliest = today.adding(days: -lookbackDays)
+        var periods: [ReviewPeriod] = []
+        var week = ReviewPeriod.latestWeekly(now: now, weekday: weekday, calendar: calendar)
+        for _ in 0..<weeklyLimit where week.firstMorning >= earliest {
+            periods.append(week)
+            week = week.previous
+        }
+        var month = ReviewPeriod.latestMonthly(now: now, calendar: calendar)
+        for _ in 0..<monthlyLimit where month.firstMorning >= earliest {
+            periods.append(month)
+            month = month.previous
+        }
+        return periods
+    }
+
+    /// `counts` are the nights Health holds for each of `candidates` that was not made (nil where they could not be read).
+    public static func build(library: ReviewLibrary, counts: [ReviewID: Int], now: Date, weekday: Int, calendar: Calendar, format: ReviewFormat = ReviewFormat()) -> ReviewListContent {
+        var rows: [ReviewListRow] = library.all.map { stored in
+            let record = stored.record
+            let average = ReviewFormat.duration(record.sleep.averageMinutes)
+            return ReviewListRow(
+                id: stored.id, title: ReviewScreenBuilder.dateRange(record.period, format), headline: "\(average) a night", status: stored.state == .new ? .new : .opened,
+                spoken: "\(ReviewScreenBuilder.dateRange(record.period, format)), \(average) a night on average, \(stored.state == .new ? "not opened yet" : "opened")"
+            )
+        }
+        for period in candidates(now: now, weekday: weekday, calendar: calendar) where library[period.id] == nil && period.isComplete(at: now, calendar: calendar) {
+            let need = period.kind.minimumNights
+            guard let have = counts[period.id], have > 0, have < need else { continue }
+            let range = ReviewScreenBuilder.dateRange(period, format)
+            rows.append(ReviewListRow(
+                id: period.id, title: range, headline: "\(have) of \(need) nights", status: .notEnough(have: have, need: need), spoken: "\(range), not enough nights, \(have) of \(need)"
+            ))
+        }
+        // Newest first within a kind: by the last morning, then the id.
+        rows.sort { $0.id.lastMorning != $1.id.lastMorning ? $0.id.lastMorning > $1.id.lastMorning : $0.id > $1.id }
+        return ReviewListContent(weekly: rows.filter { $0.kind == .weekly }, monthly: rows.filter { $0.kind == .monthly })
+    }
+}

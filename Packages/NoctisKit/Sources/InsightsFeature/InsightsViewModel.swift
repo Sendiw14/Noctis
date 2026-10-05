@@ -68,6 +68,11 @@ public final class InsightsViewModel {
     /// DEBUG `-reviewPage <kind>`: the page a story opens on, for screenshots.
     private let reviewStartPage: String?
 
+    /// The model of the Reviews list.
+    public func reviewsList() -> ReviewsListViewModel {
+        ReviewsListViewModel(repository: reviews, profile: profile, weekday: reviewWeekday, isUnlocked: isUnlocked, clock: clock, locale: locale)
+    }
+
     /// The model of one review's story: the review `id` names, or the latest of `kind`.
     public func reviewStory(kind: ReviewKind, id: ReviewID?) -> ReviewStoryViewModel {
         ReviewStoryViewModel(

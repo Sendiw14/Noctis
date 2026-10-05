@@ -21,34 +21,6 @@ struct InsightsReviewsRow: View {
     }
 }
 
-/// The Reviews list: a "Coming soon" card until the list is built.
-struct ReviewsListScreen: View {
-    @State private var scrollPosition = ScrollPosition(edge: .top)
-
-    var body: some View {
-        TabScreenScaffold(
-            .insights,
-            presentation: .pushed,
-            header: TabScreenHeader(
-                dateCaption: "REVIEWS", title: "Reviews", showsTitle: false,
-                summary: AnyView(
-                    Text("Your weekly and monthly reviews.")
-                        .noctisFont(17, relativeTo: .body)
-                        .foregroundStyle(.noctisFieldInk2)
-                )
-            ),
-            contentTop: .below(NoctisSpacing.md),
-            scrollPosition: $scrollPosition
-        ) {
-            ReviewMessageCard(caption: "COMING SOON", headline: "Reviews are coming.", detail: "A list of every weekly and monthly review will be here.", identifier: "reviews.comingSoon")
-        }
-        .scrollBounceBehavior(.basedOnSize)
-        .navigationTitle("Reviews")
-        .navigationBarTitleDisplayMode(.inline)
-        .accessibilityIdentifier("reviews.list")
-    }
-}
-
 /// A calm card with a caption, a line and a sentence: the count, or the word that the screen is coming.
 struct ReviewMessageCard: View {
     let caption: String

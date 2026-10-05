@@ -301,10 +301,8 @@ struct HomeView: View {
             openInsight: { model.open(.insight(id: $0)) },
             dismissInsight: { removeInsight(viewModel.dismissInsight) },
             hideInsights: { removeInsight(viewModel.hideInsights) },
-            openReview: { card in
-                // The weekly review's cover is free; the monthly review is Premium (R58): a tap on its lock opens the paywall, never on its own.
-                if gate.isUnlocked(card.feature) { model.open(.review(kind: card.kind, id: card.id)) } else { model.presentPaywall(for: card.feature) }
-            }
+            // The story decides what a plan sees: a free person's weekly review is its cover and their monthly review is one calm locked page (the paywall opens only from there).
+            openReview: { card in model.open(.review(kind: card.kind, id: card.id)) }
         )
     }
 

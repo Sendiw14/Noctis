@@ -503,3 +503,122 @@ struct StoryMetricTests {
         #expect(NoctisMetricValue(reading: "73.5 ms").parts.first == .number("73.5") && NoctisMetricValue(reading: "6h 42m").spoken == "6h 42m")
     }
 }
+
+// MARK: - The Reviews list
+
+struct ReviewListBuilderTests {
+    private func stored(_ period: ReviewPeriod, average: Double = 462, state: ReviewState = .new) -> StoredReview {
+        let base = handmade(period, average: average)
+        return StoredReview(record: base, state: state, firstGeneratedAt: now)
+    }
+
+    @Test func theCandidatesAreTheLastWeeksAndMonthsThatAreOverAndInsideWhatIsRead() {
+        let ny = calendar()
+        let list = ReviewListBuilder.candidates(now: now, weekday: 1, calendar: ny)
+        let weeks = list.filter { $0.kind == .weekly }, months = list.filter { $0.kind == .monthly }
+        #expect(weeks.count <= ReviewListBuilder.weeklyLimit && months.count <= ReviewListBuilder.monthlyLimit && weeks.first == week)
+        #expect(zip(weeks, weeks.dropFirst()).allSatisfy { $0.previous == $1 }, "weeks tile with no gap")
+        #expect(list.allSatisfy { $0.isComplete(at: now, calendar: ny) && $0.firstMorning >= ReviewPeriod.today(now, calendar: ny).adding(days: -ReviewListBuilder.lookbackDays) })
+        #expect(months.first == month && ReviewListBuilder.lookbackDays < ReviewInputsBuilder.historyDays)
+        // A different review day moves the weeks.
+        #expect(ReviewListBuilder.candidates(now: now, weekday: 4, calendar: ny).first?.lastMorning == key(2026, 9, 22))
+    }
+
+    @Test func onlyMadeReviewsAreListedNewestFirstWithTheirDotOrOpened() {
+        let older = ReviewPeriod.weekly(reviewDate: key(2026, 9, 20))
+        var library = ReviewLibrary()
+        library.put(stored(older, average: 450, state: .seen))
+        library.put(stored(week, average: 467, state: .new))
+        library.put(stored(month, average: 475, state: .new))
+        let list = ReviewListBuilder.build(library: library, counts: [:], now: now, weekday: 1, calendar: calendar(), format: format)
+        #expect(list.weekly.map(\.id) == [week.id, older.id] && list.monthly.map(\.id) == [month.id])
+        #expect(list.weekly.map(\.status) == [.new, .opened] && list.weekly.map(\.title) == ["Sep 20 \u{2013} 26", "Sep 13 \u{2013} 19"] && list.monthly.first?.title == "August 2026")
+        #expect(list.weekly.map(\.headline) == ["7h 47m a night", "7h 30m a night"] && !list.isEmpty)
+        #expect(list.weekly[0].spoken == "Sep 20 \u{2013} 26, 7h 47m a night on average, not opened yet" && list.weekly[1].spoken.hasSuffix("opened"))
+    }
+
+    @Test func aPastPeriodWithTooFewNightsIsItsOwnRowAndAnEmptyOrCompleteOneIsNot() {
+        let two = week.previous, none = week.previous.previous, enough = week.previous.previous.previous
+        let counts: [ReviewID: Int] = [week.id: 4, two.id: 1, none.id: 0, enough.id: 6, month.id: 19]
+        let list = ReviewListBuilder.build(library: ReviewLibrary(), counts: counts, now: now, weekday: 1, calendar: calendar(), format: format)
+        #expect(list.weekly.map(\.id) == [week.id, two.id], "4 of 5 and 1 of 5 are listed; 0 nights is no row, and 6 nights is a review that was not made, not a gap")
+        #expect(list.weekly.map(\.headline) == ["4 of 5 nights", "1 of 5 nights"] && list.weekly.first?.status == .notEnough(have: 4, need: 5))
+        #expect(list.monthly.map(\.headline) == ["19 of 20 nights"] && list.monthly.first?.spoken == "August 2026, not enough nights, 19 of 20")
+        // A made review is never also a gap, and nothing is listed with nothing to list.
+        var library = ReviewLibrary()
+        library.put(stored(week))
+        #expect(ReviewListBuilder.build(library: library, counts: counts, now: now, weekday: 1, calendar: calendar(), format: format).weekly.map(\.status) == [.new, .notEnough(have: 1, need: 5)])
+        #expect(ReviewListBuilder.build(library: ReviewLibrary(), counts: [:], now: now, weekday: 1, calendar: calendar(), format: format).isEmpty)
+    }
+
+    @Test func everyWordOfTheListIsFreeOfTheBannedLanguageAndNeverACountOrABadge() {
+        var library = ReviewLibrary()
+        library.put(stored(week)); library.put(stored(month, state: .seen))
+        let list = ReviewListBuilder.build(library: library, counts: [week.previous.id: 3], now: now, weekday: 1, calendar: calendar(), format: format)
+        let strings = (list.weekly + list.monthly).flatMap { [$0.title, $0.headline, $0.spoken] }
+        #expect(strings.count >= 9)
+        for text in strings {
+            #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty && LockedCopy.pressure(in: text).isEmpty, Comment(rawValue: text))
+            for word in ["unread", "!", "miss", "behind"] { #expect(!text.lowercased().contains(word), Comment(rawValue: text)) }
+        }
+    }
+}
+
+@MainActor
+struct ReviewsListViewModelTests {
+    private func repository(_ scenario: MockScenario = .full, authorized: Bool = true) -> ReviewRepository {
+        let provider = MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: calendar(), startAuthorized: authorized)
+        return ReviewRepository(provider: provider, store: ReviewStore(), insights: InsightStore(), timeZone: { nyZone }, clock: { now })
+    }
+
+    private func model(_ repository: ReviewRepository?, unlocked: Bool = true) -> ReviewsListViewModel {
+        ReviewsListViewModel(repository: repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, isUnlocked: { _ in unlocked }, clock: { now }, locale: Locale(identifier: "en_US"))
+    }
+
+    @Test func aFreshInstallHasNothingListedExceptTheGapsThatHaveSomeNights() async {
+        let model = model(repository(.sparseWeek))
+        #expect(model.phase == .loading)
+        await model.load()
+        guard case .content(let list) = model.phase else { Issue.record("content: \(model.phase)"); return }
+        #expect(list.weekly.first?.headline == "4 of 5 nights", "the week with four nights is a gap row")
+        #expect(list.weekly.first?.status == .notEnough(have: 4, need: 5) && list.weekly.allSatisfy { if case .notEnough = $0.status { true } else { false } })
+    }
+
+    @Test func aReviewThatWasMadeIsListedAndOpenedOnceItIsRead() async throws {
+        let repository = repository()
+        let story = ReviewStoryViewModel(
+            kind: .weekly, id: nil, repository: repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, clock: { now }, locale: Locale(identifier: "en_US")
+        )
+        await story.load()
+        let model = model(repository)
+        await model.load()
+        guard case .content(let list) = model.phase else { Issue.record("content"); return }
+        #expect(list.weekly.first?.id == week.id && list.weekly.first?.status == .opened, "opening the story marked it opened")
+        #expect(list.monthly.isEmpty, "the month was never made, and a made month is all that is listed")
+    }
+
+    @Test func monthlyRowsAreLockedOnTheFreePlanOnly() {
+        #expect(model(nil, unlocked: false).monthlyLocked && !model(nil, unlocked: true).monthlyLocked)
+    }
+
+    @Test func noRepositoryIsNoHealthData() async {
+        let model = model(nil)
+        await model.load()
+        #expect(model.phase == .noAccess)
+    }
+}
+
+struct ReviewNightCountTests {
+    @Test func theRepositoryCountsTheNightsHealthHoldsInEachPeriod() async throws {
+        let provider = MockHealthKitProvider(scenario: .sparseWeek, referenceDate: now, calendar: calendar(), startAuthorized: true)
+        let repository = ReviewRepository(provider: provider, store: ReviewStore(), insights: InsightStore(), timeZone: { nyZone }, clock: { now })
+        let counts = try #require(await repository.nightCounts(for: [week, week.previous, month], profile: UserProfileSnapshot()))
+        #expect(counts[week.id] == 4 && counts[week.previous.id] == 7 && counts[month.id] == 31)
+        let denied = ReviewRepository(
+            provider: MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: calendar(), startAuthorized: false), store: ReviewStore(), insights: InsightStore(),
+            timeZone: { nyZone }, clock: { now }
+        )
+        let none = await denied.nightCounts(for: [week], profile: UserProfileSnapshot())
+        #expect(none == nil, "no access is not a count of zero")
+    }
+}

@@ -166,7 +166,7 @@ let package = Package(
             name: "AppRoot",
             dependencies: [
                 "DesignSystem", "HealthProviding", "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature",
-                "InsightsFeature", "CoachKit", "CoachFeature", "NightKit", "NightFeature", "SoundKit", "JournalKit", "ProfileFeature",
+                "InsightsFeature", "CoachKit", "CoachFeature", "NightKit", "NightFeature", "SoundKit", "JournalKit", "ProfileFeature", "ReviewKit",
                 "NoctisIntentKit", "NoctisWidgetKit",
             ],
             swiftSettings: noctisSwiftSettings

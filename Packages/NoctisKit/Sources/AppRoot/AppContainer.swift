@@ -13,6 +13,7 @@ import NoctisIntentKit
 import NoctisWidgetKit
 import ProfileFeature
 import RecoveryFeature
+import ReviewKit
 import SleepFeature
 import SoundKit
 import SwiftData
@@ -191,6 +192,17 @@ public struct AppContainer {
         #if DEBUG
         // A mock run has no insights found during last week: place them there, so the story's insight page can be seen.
         if debug.mockScenario != nil { Task { await reviewRepo.debugPlaceInsightsInPeriod() } }
+        // `-seedReviews`: the last weeks and months are made (every second one opened), so the Reviews list has something to list.
+        if debug.seedReviews {
+            Task {
+                let now = Date()
+                let calendar = await reviewRepo.calendar()
+                let periods = ReviewListBuilder.candidates(now: now, weekday: 1, calendar: calendar)
+                for (index, period) in periods.enumerated() {
+                    if case .review(let stored) = await reviewRepo.review(period, profile: UserProfileSnapshot()), index % 2 == 1 { await reviewRepo.markSeen(stored.id) }
+                }
+            }
+        }
         #endif
         self.reviewRepository = reviewRepo
         let insightsRepo = InsightsRepository(provider: provider, store: insightStore)
@@ -595,6 +607,8 @@ struct DebugLaunchOptions {
     let reviewPage: String?
     /// `-noctisNotificationTap <identifier>`: taps that notification after launch.
     let notificationTap: String?
+    /// `-seedReviews`: makes the last weeks' and months' reviews at launch.
+    let seedReviews: Bool
     let skipOnboarding: Bool
     let resetState: Bool
     let healthUnavailable: Bool
@@ -682,6 +696,7 @@ struct DebugLaunchOptions {
         forceTier = value(after: "-forceTier").flatMap(Tier.init(rawValue:))
         reviewPage = value(after: "-reviewPage")
         notificationTap = value(after: "-noctisNotificationTap")
+        seedReviews = arguments.contains("-seedReviews")
         paywallContext = value(after: "-paywallContext").flatMap(PaywallContext.init(rawValue:))
     }
 

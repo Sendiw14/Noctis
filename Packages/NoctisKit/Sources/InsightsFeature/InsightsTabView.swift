@@ -47,7 +47,7 @@ public struct InsightsTabView: View {
                         appModel.insightsPath.append(.historyInsight(id: id))
                     }
                 case .reviews:
-                    ReviewsListScreen()
+                    ReviewsListScreen(insights: viewModel)
                 case .review(let kind, let id):
                     ReviewStoryScreen(kind: kind, id: id, insights: viewModel)
                 }

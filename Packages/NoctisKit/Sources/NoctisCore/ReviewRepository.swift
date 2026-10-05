@@ -82,6 +82,27 @@ public actor ReviewRepository {
         }
     }
 
+    /// The nights Apple Health holds in each of `periods` (counted as a review counts them), for the Reviews list's "Not enough nights" rows; nil when Health cannot be read.
+    public func nightCounts(for periods: [ReviewPeriod], profile: UserProfileSnapshot) async -> [ReviewID: Int]? {
+        guard !periods.isEmpty, await provider.isHealthDataAvailable, await provider.authorizationStatus() == .authorized else { return nil }
+        let now = clock()
+        let zone = calendar().timeZone
+        let start = now.addingTimeInterval(-Double(ReviewInputsBuilder.historyDays) * 86_400 - 18 * 3600)
+        do {
+            async let sleep = provider.fetchSleepSamples(from: start, to: now)
+            async let hrv = provider.fetchHRVSamples(from: start, to: now)
+            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
+            let samples = try await (sleep, hrv, resting)
+            let nights = ReviewInputsBuilder.nights(
+                sleep: samples.0, hrv: samples.1, restingHeartRate: samples.2, needMinutes: Double(profile.needMinutes), now: now, timeZone: zone
+            )
+            let unique = Set(nights.map(\.night)).map { ReviewPeriod.morning(ofNight: $0) }
+            return Dictionary(uniqueKeysWithValues: periods.map { period in (period.id, unique.filter { period.contains(morning: $0) }.count) })
+        } catch {
+            return nil
+        }
+    }
+
     /// The person opened a review.
     public func markSeen(_ id: ReviewID) async {
         await store.markSeen(id)
