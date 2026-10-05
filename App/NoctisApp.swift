@@ -55,6 +55,7 @@ struct NoctisApp: App {
                 .environment(container.journalViewModel)
                 .environment(container.preferences)
                 .environment(\.appPreferences, container.preferences)
+                .environment(\.featureGate, container.featureGate)
                 .environment(container.notificationCoordinator)
                 .environment(\.notificationCoordinator, container.notificationCoordinator)
                 .environment(container.storeManager)

@@ -61,6 +61,8 @@ public struct AppContainer {
     /// Opens Wind-down when the evening notification is tapped.
     private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
+    /// What is free and what is Premium (R57): every screen asks it, and it asks the one feature table.
+    public let featureGate: FeatureGate
     public let modelContainer: ModelContainer
 
     /// `restarted`: the app starts over after "Delete all NOCTIS data", as a first launch would (a DEBUG launch flag that skips or
@@ -70,7 +72,9 @@ public struct AppContainer {
         // The launch budgets start counting here.
         NoctisSignpost.begin(.launchToFirstFrame)
         NoctisSignpost.begin(.launchToPopulated)
-        self.storeManager = StoreManager()
+        let store = StoreManager()
+        self.storeManager = store
+        self.featureGate = FeatureGate(entitlements: store.entitlementManager)
         let container: ModelContainer
         do {
             // Never synced: the profile, the alarm and the wind-down record stay on this device.
@@ -470,6 +474,7 @@ public struct AppContainer {
         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
         #if DEBUG
         if let summary = debug.subscriptionSummary() { storeManager.entitlementManager.debugSet(summary) }
+        if let tier = debug.forceTier { storeManager.entitlementManager.debugForce(tier) }
         #endif
         self.settingsViewModel = SettingsViewModel(
             preferences: preferences, notifications: coordinator, store: storeManager, health: HealthDataStatusReader(provider: provider),
@@ -550,6 +555,8 @@ struct DebugLaunchOptions {
     let mockJournal: String?
     /// `-mockWatch connected|notReachable|notInstalled|unpaired|unsupported|connecting`: the link to the Apple Watch plays a script.
     let mockWatch: String?
+    /// `-forceTier free|premium`: the tier is fixed, whatever the App Store says (R57). DEBUG only.
+    let forceTier: Tier?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -584,6 +591,7 @@ struct DebugLaunchOptions {
         mockNotifications = value(after: "-mockNotifications")
         mockSubscription = value(after: "-mockSubscription")
         mockWatch = value(after: "-mockWatch")
+        forceTier = value(after: "-forceTier").flatMap(Tier.init(rawValue:))
     }
 
     /// The summary the flag names, for the Subscription page's every state.

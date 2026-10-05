@@ -1,5 +1,6 @@
 import Foundation
 import NoctisWidgetKit
+import PremiumKit
 
 nonisolated extension DataInventory {
     /// What NOCTIS keeps. Hand-written, and held to the code by `DataInventoryTests` (APP_RULES.md R41): add a store, a
@@ -122,13 +123,17 @@ nonisolated extension DataInventory {
             ),
             DataCategory(
                 .appState, name: "Small app flags",
-                summary: "Small markers so the app does a thing once a day or once ever: the day Home last played its opening animation, whether you have seen Coach's introduction, and where you were in setup.",
-                contents: ["The last day each tab played its opening animation", "Whether Coach's first-run card was seen", "Setup answers not yet saved"],
+                summary: "Small markers so the app does a thing once a day or once ever: the day Home last played its opening animation, whether you have seen Coach's introduction, where you were in setup, which plan tier the App Store last reported (free or premium, one word), and how many of the free Coach questions you have used today (a count and a date, never a question).",
+                contents: [
+                    "The last day each tab played its opening animation", "Whether Coach's first-run card was seen", "Setup answers not yet saved",
+                    "The plan tier the App Store last reported: free, premium or lapsed", "The date, and how many free Coach questions were used that day",
+                ],
                 locations: [.defaults([
                     "noctis.home.lastWashDay", "noctis.home.lastIntroDay", "noctis.sleep.lastWashDay", "noctis.sleep.lastIntroDay",
                     "noctis.recovery.lastWashDay", "noctis.recovery.lastIntroDay", "noctis.insights.lastWashDay", "noctis.insights.lastIntroDay",
                     "noctis.coach.lastWashDay", "noctis.coach.firstRunSeen", "noctis.onboarding.step", "noctis.onboarding.selectedGoals",
                     "noctis.onboarding.wakeMinutes", "noctis.onboarding.needMinutes", "noctis.onboarding.sleepGoalHours",
+                    PremiumKeys.cachedTier, PremiumKeys.coachQuota,
                 ])],
                 inBackup: true, protection: .standard, deletion: .withEverything,
                 owner: "HomeFeature/HomeViewModel.swift", holdsUserContent: false, export: .included("appState")
@@ -189,7 +194,7 @@ nonisolated extension DataInventory {
             ),
             DataCategory(
                 .purchases, name: "Subscription",
-                summary: "Whether you have Premium, and which plan. Apple's App Store keeps this, with your Apple Account. NOCTIS asks the App Store and keeps nothing of its own.",
+                summary: "Whether you have Premium, and which plan. Apple's App Store keeps this, with your Apple Account. NOCTIS asks the App Store each time it opens; the only thing it keeps itself is one word, free or premium, in the small app flags, so the screens open the right way before the App Store has answered.",
                 contents: ["Your plan and its dates, held by the App Store"],
                 locations: [.system("the App Store")],
                 destination: .apple("the App Store"),
@@ -253,7 +258,7 @@ nonisolated extension DataInventory {
             NetworkUse(
                 token: "import StoreKit", purpose: "Buying, restoring and managing Premium through Apple's App Store.",
                 files: [
-                    "NoctisCore/Store/StoreManager.swift", "NoctisCore/Store/EntitlementManager.swift", "OnboardingFeature/PaywallScreen.swift",
+                    "NoctisCore/Store/StoreManager.swift", "NoctisCore/Store/EntitlementClient.swift", "OnboardingFeature/PaywallScreen.swift",
                     "ProfileFeature/SettingsPages.swift", "ProfileFeature/SettingsScreens.swift", "ProfileFeature/DataManagementViews.swift",
                 ],
                 categories: [.purchases]

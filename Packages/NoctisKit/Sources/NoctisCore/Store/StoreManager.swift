@@ -17,9 +17,8 @@ public enum StoreLoadState: Equatable, Sendable {
 }
 
 /// The StoreKit 2 seam: loads real products, drives a purchase, listens
-/// for out-of-band transaction updates (renewals, Ask to Buy approvals,
-/// changes made on another device), and keeps `EntitlementManager` in
-/// sync. Never fabricates a price or a product — every string the paywall
+/// for out-of-band transaction updates (through `EntitlementManager`, which
+/// listens), and keeps it in sync. Never fabricates a price or a product — every string the paywall
 /// shows comes from a real `Product` once `products` loads.
 @Observable
 @MainActor
@@ -29,18 +28,10 @@ public final class StoreManager {
     public var purchaseState: StorePurchaseState = .idle
     public let entitlementManager: EntitlementManager
 
-    private var updatesTask: Task<Void, Never>?
-
     public init(entitlementManager: EntitlementManager = EntitlementManager()) {
         self.entitlementManager = entitlementManager
-        updatesTask = Task { [entitlementManager] in
-            for await update in Transaction.updates {
-                if case .verified(let transaction) = update {
-                    await transaction.finish()
-                }
-                await entitlementManager.refresh()
-            }
-        }
+        // Renewals, refunds, Ask to Buy approvals and purchases made on another device reach the entitlement through its own listener.
+        entitlementManager.startListening()
     }
 
     public var yearlyProduct: Product? { products.first { $0.id == StoreProductID.yearly } }

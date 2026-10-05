@@ -1,34 +1,50 @@
 import Foundation
-import StoreKit
+import Observation
+import PremiumKit
 
-/// Built from `Transaction.currentEntitlements` — by definition that
-/// sequence only yields transactions the user is *currently* entitled to,
-/// so renewal and expiry are handled implicitly (an expired subscription
-/// simply stops appearing, no separate "is it expired" check needed).
-/// Revocation behaves the same way: a revoked transaction is excluded.
-/// Grace period is the one state that still counts as "entitled" here but
-/// needs its own signal (from `Product.SubscriptionInfo.status`) since the
-/// app should keep showing Premium content while billing retries.
+/// What the person is entitled to, kept current (APP_RULES.md R57). `EntitlementResolver` (pure, in `PremiumKit`) turns what the store reports into an
+/// `EntitlementState`; this asks the store (`EntitlementClient`: `Transaction.currentEntitlements` and the renewal info), listens for changes, remembers the last
+/// tier for the first frame, and says when the tier changes. Only verified transactions count: a revoked or expired one is free, a grace period counts as
+/// Premium until its own end, a family-shared plan counts as Premium.
+///
+/// Gating is presentation only: nothing here, or in anything that reads it, deletes or hides by deleting what a person recorded.
 @Observable
 @MainActor
 public final class EntitlementManager {
-    public private(set) var hasActivePremium = false
-    public private(set) var isInGracePeriod = false
+    public private(set) var state: EntitlementState
+    /// The store has answered at least once this launch (before that, `state` is the cached tier).
+    public private(set) var isResolved = false
     public private(set) var expirationDate: Date?
     public private(set) var willAutoRenew = true
     public private(set) var activeProductID: String?
-    public private(set) var isInTrial = false
     #if DEBUG
     /// `-mockSubscription`: a fixed answer for a screenshot, since the simulator's StoreKit has no purchase.
     public private(set) var debugSummary: SubscriptionSummary?
+    /// `-forceTier free|premium`: the tier is fixed, whatever the store says. DEBUG only.
+    private var debugForced = false
     #endif
 
-    public init() {}
+    private let client: any EntitlementClient
+    private let cache: EntitlementCache
+    private let clock: @Sendable () -> Date
+    private var listener: Task<Void, Never>?
+    /// Told when the tier changes: the new tier and the old.
+    @ObservationIgnored public var onTierChange: (@MainActor (_ new: Tier, _ old: Tier) -> Void)?
 
-    /// Grants Premium content the same as a normal active subscription —
-    /// Apple's guidance is to keep serving entitled content through a
-    /// billing grace period.
+    public init(client: any EntitlementClient = StoreKitEntitlementClient(), cache: EntitlementCache = EntitlementCache(), clock: @escaping @Sendable () -> Date = { Date() }) {
+        self.client = client
+        self.cache = cache
+        self.clock = clock
+        state = cache.read().provisionalState
+    }
+
+    public var tier: Tier { state.tier }
+    public var hasActivePremium: Bool { tier == .premium }
+    /// Premium content is served through a billing grace period (Apple's guidance), so this is the same as `hasActivePremium`.
     public var hasAccess: Bool { hasActivePremium }
+    public var isInGracePeriod: Bool { state == .premium(.grace) }
+    public var isInTrial: Bool { state == .premium(.trial) }
+    public var isFamilyShared: Bool { state == .premium(.familySharing) }
 
     /// What the Subscription page shows.
     public var summary: SubscriptionSummary {
@@ -36,53 +52,60 @@ public final class EntitlementManager {
         if let debugSummary { return debugSummary }
         #endif
         return SubscriptionSummary(
-            isPremium: hasActivePremium, plan: activeProductID.flatMap(SubscriptionSummary.Plan.init(productID:)), isTrial: isInTrial,
-            willRenew: willAutoRenew, endDate: expirationDate, isInGracePeriod: isInGracePeriod
+            isPremium: hasActivePremium, plan: activeProductID.flatMap(SubscriptionSummary.Plan.init(productID:)), isTrial: isInTrial, willRenew: willAutoRenew,
+            endDate: expirationDate, isInGracePeriod: isInGracePeriod, isFamilyShared: isFamilyShared, hasLapsed: state == .previouslyPremiumNowFree
         )
     }
 
     #if DEBUG
     public func debugSet(_ summary: SubscriptionSummary) {
         debugSummary = summary
-        hasActivePremium = summary.isPremium
+        let source: PremiumSource = summary.isFamilyShared ? .familySharing : summary.isInGracePeriod ? .grace : summary.isTrial ? .trial : .purchased
+        set(summary.isPremium ? .premium(source) : .free, remember: false)
+    }
+
+    /// `-forceTier`: Premium or free, fixed, with nothing asked of the store.
+    public func debugForce(_ tier: Tier) {
+        debugForced = true
+        set(tier == .premium ? .premium(.purchased) : .free, remember: false)
+        isResolved = true
     }
     #endif
 
+    /// Starts listening for the store's changes (a renewal, a refund, a purchase on another device). Called once, at launch.
+    public func startListening() {
+        guard listener == nil else { return }
+        let updates = client.updates()
+        listener = Task { [weak self] in
+            for await _ in updates { await self?.refresh() }
+        }
+    }
+
+    /// Asks the store and works out the state; the answer is remembered for the next first frame.
     public func refresh() async {
         #if DEBUG
-        if debugSummary != nil { return }
+        if debugForced || debugSummary != nil { return }
         #endif
-        var accessGranted = false
-        var latestExpiration: Date?
-        var latestProduct: String?
-        var trial = false
-        for await result in Transaction.currentEntitlements {
-            guard case .verified(let transaction) = result else { continue }
-            guard StoreProductID.all.contains(transaction.productID) else { continue }
-            accessGranted = true
-            // The newest period wins when more than one is current.
-            if latestExpiration == nil || (transaction.expirationDate ?? .distantPast) >= (latestExpiration ?? .distantPast) {
-                latestExpiration = transaction.expirationDate
-                latestProduct = transaction.productID
-                trial = transaction.offer?.type == .introductory && transaction.offer?.paymentMode == .freeTrial
-            }
-        }
-        hasActivePremium = accessGranted
-        expirationDate = latestExpiration
-        activeProductID = latestProduct
-        isInTrial = accessGranted && trial
+        let records = await client.records()
+        let renewal = await client.renewal()
+        let resolved = EntitlementResolver.resolve(
+            records: records, renewal: renewal, previous: cache.read(), productIDs: Set(StoreProductID.all), now: clock()
+        )
+        // The newest period wins when more than one is current.
+        let valid = records.filter { $0.isVerified && $0.revocationDate == nil && StoreProductID.all.contains($0.productID) }
+        let newest = valid.max { ($0.expirationDate ?? .distantPast) < ($1.expirationDate ?? .distantPast) }
+        expirationDate = resolved.tier == .premium ? newest?.expirationDate : nil
+        activeProductID = resolved.tier == .premium ? newest?.productID : nil
+        willAutoRenew = renewal?.willAutoRenew ?? true
+        isResolved = true
+        set(resolved)
+    }
 
-        guard accessGranted,
-              let products = try? await Product.products(for: StoreProductID.all),
-              let subscription = products.first?.subscription else {
-            isInGracePeriod = false
-            return
-        }
-        let statuses = (try? await subscription.status) ?? []
-        isInGracePeriod = statuses.contains { $0.state == .inGracePeriod }
-        if let renewalInfo = statuses.first(where: { $0.state == .subscribed || $0.state == .inGracePeriod })?.renewalInfo,
-           case .verified(let info) = renewalInfo {
-            willAutoRenew = info.willAutoRenew
-        }
+    /// `remember`: write the tier for the next first frame (a DEBUG screenshot's fixed tier is not remembered).
+    private func set(_ new: EntitlementState, remember: Bool = true) {
+        let old = state.tier
+        state = new
+        if remember { cache.write(CachedTier(new)) }
+        if new.tier != old { onTierChange?(new.tier, old) }
     }
 }

@@ -38,6 +38,7 @@ let package = Package(
         .library(name: "SoundCatalog", targets: ["SoundCatalog"]),
         .library(name: "SoundKit", targets: ["SoundKit"]),
         .library(name: "BreathingKit", targets: ["BreathingKit"]),
+        .library(name: "PremiumKit", targets: ["PremiumKit"]),
         .library(name: "NightKit", targets: ["NightKit"]),
         .library(name: "NightFeature", targets: ["NightFeature"]),
         .library(name: "JournalKit", targets: ["JournalKit"]),
@@ -77,6 +78,8 @@ let package = Package(
         // service that wraps AlarmKit. No UI; nonisolated like the other engines.
         // The breathing patterns and schedule, with no dependencies: the iPhone's breathing and the Apple Watch's both draw them.
         .target(name: "BreathingKit", swiftSettings: engineSwiftSettings),
+        // The feature table, the entitlement rules and the free Coach questions' arithmetic: pure, with no dependencies, so the widgets and the Watch can link it.
+        .target(name: "PremiumKit", swiftSettings: engineSwiftSettings),
         .target(
             name: "NightKit",
             dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit", "AlarmShared", "BreathingKit"],
@@ -84,7 +87,7 @@ let package = Package(
         ),
         .target(
             name: "NoctisCore",
-            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "SoundKit", "DesignSystem", "NoctisWidgetKit"],
+            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "SoundKit", "DesignSystem", "NoctisWidgetKit", "PremiumKit"],
             swiftSettings: noctisSwiftSettings
         ),
         .target(name: "OnboardingFeature", dependencies: ["DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
@@ -168,7 +171,7 @@ let package = Package(
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
                 "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot", "NoctisWidgetKit", "NoctisIntentKit", "NoctisWatchKit",
-                "BreathingKit",
+                "BreathingKit", "PremiumKit",
             ],
             swiftSettings: noctisSwiftSettings
         ),

@@ -388,7 +388,9 @@ nonisolated struct JournalPrivacyTests {
     /// The data inventory (APP_RULES.md R41) describes every store, the Journal's included, so it names it, in strings:
     /// the category's words, its entity and its owner. It holds no entry and has no way to read one: only the target's
     /// dependencies decide that, and `onlyTheReflectScreensAndTheAppDependOnTheJournalTarget` still holds them.
-    static let catalogue: Set<String> = ["NoctisCore/DataInventory+Shared.swift"]
+    ///
+    /// The feature table (APP_RULES.md R57) lists the Reflect and journal feature by name, as a tier and a line of plain words: it holds no entry either.
+    static let catalogue: Set<String> = ["NoctisCore/DataInventory+Shared.swift", "PremiumKit/FeatureTable.swift"]
 
     static func journalFiles(_ path: String) -> Bool {
         path.hasPrefix("JournalKit/") || path.hasPrefix("NightFeature/Journal") || path.hasPrefix("NightFeature/Reflect")

@@ -27,14 +27,14 @@ Status: **draft for owner review**. It was written from an audit of the code at 
 | Your profile | SwiftData `default.store` (`UserProfileRecord`) | No | Sleep need, wake time, goals; never the name | Yes | Standard | Delete all NOCTIS data |
 | Preferences | `UserDefaults`, `noctis.pref.*`, `noctis.winddown.*`, `noctis.breathing.*` | No | No | Yes | Standard | Data management, Reset preferences and goals |
 | Sound and meditation choices | `UserDefaults`, `noctis.sounds.*`, `noctis.meditation.*` | No | No | Yes | Standard | Data management, Reset preferences and goals |
-| Small app flags | `UserDefaults`, `noctis.*.lastWashDay`, `lastIntroDay`, `noctis.onboarding.*`, `noctis.coach.firstRunSeen` | No | No | Yes | Standard | Delete all NOCTIS data |
+| Small app flags | `UserDefaults`, `noctis.*.lastWashDay`, `lastIntroDay`, `noctis.onboarding.*`, `noctis.coach.firstRunSeen`, `noctis.entitlement.tier`, `noctis.coach.quota` | No | No | Yes | Standard | Delete all NOCTIS data |
 | Wake alarm | SwiftData `default.store` (`AlarmConfiguration`) and iOS AlarmKit | No | No | Yes (the store) | Standard | Delete all NOCTIS data (also cancels the alarm) |
 | Wind-down history | SwiftData `default.store` (`WindDownSession`) | No | No | Yes | Standard | Data management, Delete |
 | Journal | `Application Support/Noctis/Journal/journal.store` | No | No: no sleep, recovery, insights or Coach code can reach it (R35) | No | Complete while locked | Data management, Delete |
 | Coach conversations | `Application Support/Noctis/CoachHistory/coach-history.store` | No (Coach answers are made on the iPhone) | n/a | No | Complete while locked | Data management, Delete |
 | Scheduled reminders | iOS notification centre (local notifications only) | No | No | n/a | Apple-managed | Delete all NOCTIS data |
 | Diagnostic log | The iPhone's unified log (`Logger`, subsystem `com.noctis.app`) | No, unless the person shares a diagnostics report | No | n/a | Apple-managed | iOS clears it |
-| Subscription | The App Store (NOCTIS keeps nothing) | Apple's App Store handles purchase, restore and management | No | n/a | Apple-managed | Manage subscription (Apple) |
+| Subscription | The App Store (NOCTIS keeps one word beside it, free or premium, in the small app flags: `noctis.entitlement.tier`; and a count of free Coach questions used today in the same place: `noctis.coach.quota`) | Apple's App Store handles purchase, restore and management | No | n/a | Apple-managed | Manage subscription (Apple) |
 | Files iOS makes for the app | `Caches/com.noctis.app` (shader cache), iOS saved screen state, the app switcher's picture of the last screen | No | No | No | Apple-managed | iOS; Delete all clears the cache folder |
 | Export file | `tmp/NOCTIS-export.json`, only while "Export my data" is in use | Only if the person shares it | No | No | Standard | Removed on leaving Data management and at the next start |
 
