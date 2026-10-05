@@ -15,17 +15,22 @@ public struct InsightsScreen: View {
     let zoom: Namespace.ID
     let openInsight: (String) -> Void
     let openHistory: () -> Void
+    let openReviews: () -> Void
 
     @Environment(AppModel.self) private var appModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.featureGate) private var gate
     @State private var scrollPosition = ScrollPosition(edge: .top)
 
-    public init(viewModel: InsightsViewModel, zoom: Namespace.ID, openInsight: @escaping (String) -> Void, openHistory: @escaping () -> Void) {
+    public init(
+        viewModel: InsightsViewModel, zoom: Namespace.ID, openInsight: @escaping (String) -> Void, openHistory: @escaping () -> Void,
+        openReviews: @escaping () -> Void = {}
+    ) {
         self.viewModel = viewModel
         self.zoom = zoom
         self.openInsight = openInsight
         self.openHistory = openHistory
+        self.openReviews = openReviews
     }
 
     public var body: some View {
@@ -51,7 +56,7 @@ public struct InsightsScreen: View {
                 NoctisHaptics.soft()
             }
         ) {
-            InsightsContent(viewModel: viewModel, zoom: zoom, openInsight: openInsight)
+            InsightsContent(viewModel: viewModel, zoom: zoom, openInsight: openInsight, openReviews: openReviews)
         }
         // Any touch during the reveal skips to its end.
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in viewModel.skipReveal() }, including: viewModel.reveal != .none ? .all : .subviews)
@@ -132,6 +137,7 @@ struct InsightsContent: View {
     let viewModel: InsightsViewModel
     let zoom: Namespace.ID
     let openInsight: (String) -> Void
+    var openReviews: () -> Void = {}
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppModel.self) private var appModel
 
@@ -177,6 +183,11 @@ struct InsightsContent: View {
                     if let note = screen.note {
                         InsightsNoteCard(note: note)
                             .transition(.opacity)
+                    }
+                    // Reviews, above Recent: the weekly and monthly reviews (APP_RULES.md R63). Free for everyone; what is Premium inside them is marked there.
+                    if screen.showsInsights {
+                        InsightsReviewsRow(open: openReviews)
+                            .transition(.opacity.combined(with: .offset(y: 12)))
                     }
                     if !screen.groups.isEmpty {
                         InsightRowsSection(groups: screen.groups, zoom: zoom, viewModel: viewModel, open: openInsight)

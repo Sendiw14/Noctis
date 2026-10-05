@@ -9,10 +9,12 @@ public nonisolated enum NoctisNotification {
     public static let weeklyReview = "noctis.notification.weeklyReview"
 
     /// Where a tap on the notification with `identifier` goes. For Premium the evening reminder opens Wind-down without starting it (the person chose
-    /// to open it, not to begin); the free plan has no session, so it opens Tonight (APP_RULES.md R61). The others just open the app.
+    /// to open it, not to begin); the free plan has no session, so it opens Tonight (APP_RULES.md R61). The weekly one opens the latest weekly review, whose cover
+    /// is free (R63); its text stays as generic as it was. The morning one just opens the app.
     public static func route(for identifier: String, tier: Tier) -> AppRoute? {
         switch identifier {
         case windDown: tier == .premium ? .windDown(autostart: false) : .tonight
+        case weeklyReview: .review(kind: .weekly)
         default: nil
         }
     }

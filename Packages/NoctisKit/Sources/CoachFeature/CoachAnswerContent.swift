@@ -79,6 +79,8 @@ public nonisolated enum CoachDestinationText {
         case .sleep: intent == .bedtimeAdvice ? "See bedtime" : "Open Sleep"
         case .insights: "Open Insights"
         case .insight: "Open this insight"
+        case .reviews: "Open Reviews"
+        case .review: "Open this review"
         case .home: "Open Home"
         case .coach: "Open Coach"
         case .profile: "Open Profile"

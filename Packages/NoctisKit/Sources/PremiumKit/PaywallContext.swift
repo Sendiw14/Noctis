@@ -7,6 +7,7 @@ public nonisolated enum PaywallContext: String, Sendable, Equatable, CaseIterabl
     case recovery30D, recovery90D, recoveryFactors
     case sleepMonth, sleepNights, sleepQuality, sleepDetails
     case insightsAll, insightsRecords, insightsHistory, insightsFilters
+    case weeklyReview, monthlyReview
     case coachQuestions
     case tonightWindow
     case windDown, meditation, sounds
@@ -30,6 +31,8 @@ public nonisolated enum PaywallContext: String, Sendable, Equatable, CaseIterabl
         case .insightsRecords: "Unlock your records"
         case .insightsHistory: "Unlock your insight history"
         case .insightsFilters: "Unlock insights by category"
+        case .weeklyReview: "Unlock every page of your weekly review"
+        case .monthlyReview: "Unlock your monthly review"
         case .coachQuestions: "Unlock unlimited Coach questions"
         case .tonightWindow: "Unlock why this time, and your bedtime window"
         case .windDown: "Unlock wind-down sessions"
@@ -57,6 +60,8 @@ public nonisolated enum PaywallContext: String, Sendable, Equatable, CaseIterabl
         case .insightRecords: self = .insightsRecords
         case .insightHistory: self = .insightsHistory
         case .insightCategoryFilters: self = .insightsFilters
+        case .weeklyReviewFull: self = .weeklyReview
+        case .monthlyReview: self = .monthlyReview
         case .coachUnlimited, .siriAskCoachBeyondFree: self = .coachQuestions
         case .tonightPersonalizedWindow: self = .tonightWindow
         case .windDownSession: self = .windDown

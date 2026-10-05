@@ -4,6 +4,7 @@ import HomeFeature
 import InsightsKit
 import NoctisCore
 import Observation
+import ReviewKit
 import SwiftUI
 
 /// The Insights tab's view model: holds the latest `InsightsSnapshot`, the
@@ -60,6 +61,16 @@ public final class InsightsViewModel {
     /// How long the reveal takes, start to end.
     public static let revealDuration = 1.6
 
+    /// Where the reviews are made (APP_RULES.md R63), the person's review day, and what to do when one has been opened (Home's card goes).
+    private let reviews: ReviewRepository?
+    private let reviewWeekday: () -> Int
+    private let reviewOpened: () -> Void
+
+    /// The model of one review's page: the one `id` names, or the latest of `kind`.
+    public func reviewRoute(kind: ReviewKind, id: ReviewID?) -> ReviewRouteViewModel {
+        ReviewRouteViewModel(kind: kind, id: id, repository: reviews, profile: profile, weekday: reviewWeekday, clock: clock, locale: locale, opened: reviewOpened)
+    }
+
     public init(
         repository: InsightsRepository,
         profile: @escaping () -> UserProfileSnapshot,
@@ -72,8 +83,14 @@ public final class InsightsViewModel {
         calendar: Calendar = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
         revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) },
-        isUnlocked: @escaping (Feature) -> Bool = { _ in true }
+        isUnlocked: @escaping (Feature) -> Bool = { _ in true },
+        reviews: ReviewRepository? = nil,
+        reviewWeekday: @escaping () -> Int = { 1 },
+        reviewOpened: @escaping () -> Void = {}
     ) {
+        self.reviews = reviews
+        self.reviewWeekday = reviewWeekday
+        self.reviewOpened = reviewOpened
         self.isUnlocked = isUnlocked
         self.repository = repository
         self.profile = profile

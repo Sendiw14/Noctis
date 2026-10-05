@@ -85,6 +85,9 @@ public final class HomeViewModel {
     /// Premium's window around tonight's bedtime, from the Night feature (the app supplies it); nil is the free plan's one bedtime.
     private let bedtimeWindow: () async -> HomeBedtimeWindow?
     private var window: HomeBedtimeWindow?
+    /// The weekly and monthly review cards, from the reviews the app has made (the app supplies them): empty on most days, and never a count or a badge (APP_RULES.md R63).
+    private let reviewCardSource: () async -> [HomeReviewCard]
+    public private(set) var reviewCards: [HomeReviewCard] = []
     private var modeOverride: HomeMode?
     /// Whether the day's reveal has been decided (played, skipped, or
     /// already used up) by a screen with a score.
@@ -117,10 +120,12 @@ public final class HomeViewModel {
         locale: Locale = .autoupdatingCurrent,
         modeOverride: HomeMode? = nil,
         bedtimeWindow: @escaping () async -> HomeBedtimeWindow? = { nil },
+        reviewCards: @escaping () async -> [HomeReviewCard] = { [] },
         revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) }
     ) {
         self.revealSleep = revealSleep
         self.bedtimeWindow = bedtimeWindow
+        self.reviewCardSource = reviewCards
         self.repository = repository
         self.profile = profile
         self.connectHealth = connectHealth
@@ -177,6 +182,7 @@ public final class HomeViewModel {
         isRefreshing = true
         let fresh = await repository.refresh(profile: profile())
         window = await bedtimeWindow()
+        await refreshReviewCards()
         if revalidatingRestored {
             // What changed since the saved snapshot fades in; what
             // didn't stays put.
@@ -198,6 +204,13 @@ public final class HomeViewModel {
     public func tierChanged() async {
         window = await bedtimeWindow()
         updateClock(canReveal: false)
+    }
+
+    /// Asks the app which review cards there are: on every refresh, and when a review has just been opened (its card goes).
+    public func refreshReviewCards() async {
+        let cards = await reviewCardSource()
+        guard cards != reviewCards else { return }
+        withAnimation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion())) { reviewCards = cards }
     }
 
     /// "Connect Apple Health": onboarding's authorization flow, then a

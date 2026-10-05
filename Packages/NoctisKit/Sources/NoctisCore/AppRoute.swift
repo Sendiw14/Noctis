@@ -1,6 +1,7 @@
 import Foundation
 import InsightsKit
 import RecoveryKit
+import ReviewKit
 
 /// Every main-app destination, so widgets and notifications can deep-link
 /// (`noctis://recovery`) and the app can open one in code.
@@ -11,6 +12,8 @@ import RecoveryKit
 /// page is `noctis://insight?id=sleepDurationShift-3fa9c2d1`.
 /// Tonight, Wind-down, Sounds and the alarm are pages pushed over Home:
 /// `noctis://tonight`, `noctis://wind-down?autostart=1`, `noctis://sounds`, `noctis://alarm`.
+/// The reviews are `noctis://reviews` (the list) and `noctis://review?kind=weekly` (the latest of a kind) or `noctis://review?id=weekly-2026-09-26`
+/// (one of them); a notification opens the latest weekly review.
 /// Profile is `noctis://profile`; Settings is `noctis://settings`, or one of its pages:
 /// `noctis://settings?section=notifications` (also `health-data`, `appearance`, `subscription`, `wind-down`,
 /// `sounds`, `help`, `about`).
@@ -28,6 +31,10 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     case insights(category: InsightCategory? = nil)
     /// One insight's page over the Insights tab.
     case insight(id: String)
+    /// Every review so far, over the Insights tab.
+    case reviews
+    /// A review's page over the Insights tab: the one named by `id`, or the latest of `kind` (the week or month that has just ended) when there is none.
+    case review(kind: ReviewKind, id: ReviewID? = nil)
     /// Coach, on a question when given: the conversation opens with it asked.
     case coach(question: CoachQuestion? = nil)
     case profile
@@ -46,7 +53,9 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     public static let urlScheme = "noctis"
 
     /// Every destination, Sleep on its newest night.
-    public static let destinations: [AppRoute] = [.home, .sleep(), .recovery(), .insights(), .coach(), .profile, .settings(), .tonight, .windDown(), .sounds, .alarm]
+    public static let destinations: [AppRoute] = [
+        .home, .sleep(), .recovery(), .insights(), .coach(), .profile, .settings(), .tonight, .windDown(), .sounds, .alarm, .reviews, .review(kind: .weekly),
+    ]
 
     /// "home", "sleep", "recovery"…: the URL's host.
     public var name: String {
@@ -56,6 +65,8 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
         case .recovery: "recovery"
         case .insights: "insights"
         case .insight: "insight"
+        case .reviews: "reviews"
+        case .review: "review"
         case .coach: "coach"
         case .profile: "profile"
         case .settings: "settings"
@@ -80,6 +91,13 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
         case "insight":
             guard let argument, Self.isInsightID(argument) else { return nil }
             self = .insight(id: argument)
+        case "reviews": self = .reviews
+        case "review":
+            // "review", "review:monthly" or "review:weekly-2026-09-26" (a launch argument).
+            guard let argument else { self = .review(kind: .weekly); return }
+            let route = ReviewKind(rawValue: argument.lowercased()) != nil ? Self.review(kind: argument, id: nil) : Self.review(kind: nil, id: argument)
+            guard let route else { return nil }
+            self = route
         case "coach": self = .coach(question: argument.flatMap(CoachQuestion.init(token:)))
         case "profile": self = .profile
         case "settings": self = .settings(section: parts.dropFirst().first.flatMap(SettingsPage.init(token:)) ?? .root)
@@ -110,6 +128,12 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
             // An id is the type and a hash of the evidence: "bedtimeShift-3fa9c2d1". Anything else is no insight.
             guard let id = value("id"), Self.isInsightID(id) else { return nil }
             self = .insight(id: id)
+            return
+        }
+        if host == "review" {
+            // A review is named by its id or by its kind; an id that names no period is no review, and a kind that is not the id's own is none either.
+            guard let route = Self.review(kind: value("kind"), id: value("id")) else { return nil }
+            self = route
             return
         }
         guard let route = AppRoute(name: host) else { return nil }
@@ -152,6 +176,9 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
             if let question { items.append(URLQueryItem(name: "question", value: question.token)) }
         case .insight(let id):
             items.append(URLQueryItem(name: "id", value: id))
+        case .review(let kind, let id):
+            // The weekly review is the default, as Day is Sleep's: it is not spelled out.
+            if let id { items.append(URLQueryItem(name: "id", value: id.description)) } else if kind != .weekly { items.append(URLQueryItem(name: "kind", value: kind.rawValue)) }
         case .windDown(let autostart):
             if autostart { items.append(URLQueryItem(name: "autostart", value: "1")) }
         case .settings(let section):
@@ -170,9 +197,21 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
         case .home, .profile, .settings, .tonight, .windDown, .sounds, .alarm: .home
         case .sleep: .sleep
         case .recovery: .recovery
-        case .insights, .insight: .insights
+        case .insights, .insight, .reviews, .review: .insights
         case .coach: .coach
         }
+    }
+
+    /// A review from outside, from a URL's `kind` and `id`: `id` ("weekly-2026-09-26") must name a period (a month's last morning is its last day) and agree with `kind`
+    /// when both are given; with only a kind it is that kind's latest review, and with neither it is the latest weekly one. Anything else is no review.
+    static func review(kind: String?, id: String?) -> AppRoute? {
+        if let id {
+            guard let parsed = ReviewID(id), ReviewPeriod.period(for: parsed) != nil else { return nil }
+            if let kind, ReviewKind(rawValue: kind.lowercased()) != parsed.kind { return nil }
+            return .review(kind: parsed.kind, id: parsed)
+        }
+        guard let kind else { return .review(kind: .weekly) }
+        return ReviewKind(rawValue: kind.lowercased()).map { .review(kind: $0) }
     }
 
     /// A chip by its name ("sleep", "longTerm", "long-term"), case aside.

@@ -858,3 +858,50 @@ nonisolated struct DashedLine: Shape {
         return path
     }
 }
+
+
+// MARK: - Review cards
+
+/// "Your weekly review": the dates, an icon tile in the review's color and a chevron, or a lock for what Premium holds. No badge, no count, no urgency, and it goes by
+/// itself after three days (APP_RULES.md R63).
+struct ReviewCardView: View {
+    let card: HomeReviewCard
+    let locked: Bool
+    let open: () -> Void
+
+    var body: some View {
+        Button {
+            NoctisHaptics.selection()
+            open()
+        } label: {
+            NoctisAppCard {
+                HStack(spacing: NoctisSpacing.sm) {
+                    NoctisIconTile(
+                        systemImage: "calendar", fill: card.kind == .weekly ? NoctisAppColor.blockLavender : NoctisAppColor.blockSage, foreground: NoctisAppColor.blockInk, size: 40
+                    )
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(card.title)
+                            .noctisFont(17, .semibold, relativeTo: .body)
+                            .foregroundStyle(NoctisAppColor.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(card.detail)
+                            .noctisFont(13, relativeTo: .footnote)
+                            .foregroundStyle(.noctisInk3)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: NoctisSpacing.xs)
+                    if locked {
+                        LockGlyph(size: 14).foregroundStyle(.noctisInk3)
+                    } else {
+                        NoctisRowChevron()
+                    }
+                }
+            }
+        }
+        .buttonStyle(NoctisCardButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(locked ? "\(card.accessibilityLabel), Premium" : card.accessibilityLabel)
+        .accessibilityHint(locked ? "Opens what Premium includes." : "Opens your review.")
+        .accessibilityIdentifier("home.review.\(card.kind.rawValue)")
+    }
+}

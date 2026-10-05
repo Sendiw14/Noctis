@@ -99,6 +99,8 @@ struct HomeActions {
     var openInsight: (String) -> Void = { _ in }
     var dismissInsight: () -> Void = {}
     var hideInsights: () -> Void = {}
+    /// A review card opens that review (the weekly one for everyone, the monthly one for Premium; a locked monthly card opens the paywall).
+    var openReview: (HomeReviewCard) -> Void = { _ in }
 }
 
 /// "How am I today?" — one top-aligned scroll on the paper. Reads only
@@ -298,7 +300,11 @@ struct HomeView: View {
             share: { sharing = true },
             openInsight: { model.open(.insight(id: $0)) },
             dismissInsight: { removeInsight(viewModel.dismissInsight) },
-            hideInsights: { removeInsight(viewModel.hideInsights) }
+            hideInsights: { removeInsight(viewModel.hideInsights) },
+            openReview: { card in
+                // The weekly review's cover is free; the monthly review is Premium (R58): a tap on its lock opens the paywall, never on its own.
+                if gate.isUnlocked(card.feature) { model.open(.review(kind: card.kind, id: card.id)) } else { model.presentPaywall(for: card.feature) }
+            }
         )
     }
 
@@ -548,6 +554,11 @@ struct HomeContent: View {
                     removal: AnyTransition.scale(scale: 0.94, anchor: .top)
                         .combined(with: AnyTransition.opacity.animation(NoctisMotion.select))
                 ))
+        }
+        // Your weekly review (and, for the first days of a month, your monthly one): a calm card, there only while a review exists, is unopened and is recent.
+        ForEach(viewModel.reviewCards) { card in
+            ReviewCardView(card: card, locked: !gate.isUnlocked(card.feature)) { actions.openReview(card) }
+                .transition(.opacity)
         }
         if screen.mode == .day {
             Button(action: actions.openTonight) {

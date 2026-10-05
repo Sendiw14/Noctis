@@ -94,7 +94,7 @@ struct TonightRouteTests {
         #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .free) == .tonight)
         for tier in [Tier.free, .premium] {
             #expect(NoctisNotification.route(for: NoctisNotification.morningSummary, tier: tier) == nil)
-            #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == nil)
+            #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == .review(kind: .weekly), "the weekly reminder opens the latest weekly review on either plan")
             #expect(NoctisNotification.route(for: "noctis.notification.trialEnding", tier: tier) == nil)
             #expect(NoctisNotification.route(for: "somebody.else", tier: tier) == nil)
         }

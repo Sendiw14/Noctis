@@ -20,7 +20,9 @@ struct WindDownRoutingTests {
     @Test func theEveningNotificationOpensTheWindDownWithoutStartingItForPremium() {
         #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .premium) == .windDown(autostart: false))
         #expect(NoctisNotification.route(for: NoctisNotification.morningSummary, tier: .premium) == nil)
-        #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: .premium) == nil)
+        // The weekly reminder opens the latest weekly review, on either plan (its cover is free); the morning one just opens the app.
+        #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: .premium) == .review(kind: .weekly))
+        #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: .free) == .review(kind: .weekly))
         #expect(NoctisNotification.route(for: "something.else", tier: .premium) == nil)
     }
 

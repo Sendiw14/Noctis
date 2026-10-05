@@ -2,6 +2,7 @@ import DesignSystem
 import HomeFeature
 import InsightsKit
 import NoctisCore
+import ReviewKit
 import SwiftUI
 
 /// The Insights tab: its own navigation stack, with the Insights screen at
@@ -29,7 +30,8 @@ public struct InsightsTabView: View {
                 openHistory: {
                     viewModel.openHistory()
                     appModel.insightsPath.append(.history)
-                }
+                },
+                openReviews: { appModel.insightsPath.append(.reviews) }
             )
             .navigationDestination(for: InsightsRoute.self) { route in
                 switch route {
@@ -44,6 +46,10 @@ public struct InsightsTabView: View {
                         viewModel.markSeen(id: id)
                         appModel.insightsPath.append(.historyInsight(id: id))
                     }
+                case .reviews:
+                    ReviewsListScreen()
+                case .review(let kind, let id):
+                    ReviewRouteScreen(model: viewModel.reviewRoute(kind: kind, id: id))
                 }
             }
         }

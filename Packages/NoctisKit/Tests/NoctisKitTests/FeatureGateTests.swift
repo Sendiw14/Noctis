@@ -11,20 +11,21 @@ import Testing
 private nonisolated let tableFree: [Feature] = [
     .recoveryToday, .recovery7D, .sleepLast3Nights, .sleepWeek, .sleepQualityScore, .insightFeatured, .insightRecentOne, .coachQuestions, .coachHistory,
     .tonightSingleBedtime, .alarm, .breathing, .reflectJournal, .soundsFree, .widgetSmall, .widgetLockCircular, .watchRecoverySleepPages,
-    .watchRecoveryComplication, .watchBreathing, .siriRecoverySleepBedtime,
+    .watchRecoveryComplication, .watchBreathing, .siriRecoverySleepBedtime, .weeklyReviewCover,
 ]
 
 private nonisolated let tablePremium: [Feature] = [
     .recovery30D, .recovery90D, .recoveryFactorDetail, .sleepMonth, .sleepNightPicker14, .sleepQualityFactors, .sleepConsistencyBalanceTimingDetails,
     .insightAll, .insightRecords, .insightHistory, .insightCategoryFilters, .coachUnlimited, .tonightPersonalizedWindow, .windDownSession, .meditation,
     .soundsPremium, .widgetMediumLargeAndOtherLock, .watchHeartTonightPages, .watchOtherComplications, .siriStartWindDown, .siriAskCoachBeyondFree,
+    .weeklyReviewFull, .monthlyReview,
 ]
 
 struct FeatureTableTests {
     @Test func theFreeAndPremiumSetsAreExactlyTheOnesWritten() {
         #expect(Set(FeatureTable.features(in: .free)) == Set(tableFree) && FeatureTable.features(in: .free).count == tableFree.count)
         #expect(Set(FeatureTable.features(in: .premium)) == Set(tablePremium) && FeatureTable.features(in: .premium).count == tablePremium.count)
-        #expect(Feature.allCases.count == tableFree.count + tablePremium.count && Feature.allCases.count == 41, "every feature has one tier")
+        #expect(Feature.allCases.count == tableFree.count + tablePremium.count && Feature.allCases.count == 44, "every feature has one tier")
         #expect(Set(tableFree).isDisjoint(with: Set(tablePremium)))
     }
 

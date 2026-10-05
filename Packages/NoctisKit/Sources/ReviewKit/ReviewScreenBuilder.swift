@@ -98,6 +98,15 @@ public nonisolated enum ReviewScreenBuilder {
         )
     }
 
+    /// A period that has not ended: only a link made by hand reaches it. No count is claimed.
+    public static func notOver(period: ReviewPeriod, format: ReviewFormat = ReviewFormat()) -> ReviewNotReadyContent {
+        let words = Words(kind: period.kind)
+        return ReviewNotReadyContent(
+            title: "This review isn't ready yet", count: "Ready on \(format.weekdayDay(period.nextMorning))",
+            detail: "A \(words.period)'s review is made once the \(words.period) is over.", dateRange: dateRange(period, format)
+        )
+    }
+
     // MARK: Words that depend on the kind
 
     private struct Words {

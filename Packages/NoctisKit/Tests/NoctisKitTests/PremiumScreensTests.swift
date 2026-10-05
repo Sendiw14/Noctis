@@ -597,7 +597,7 @@ struct WindDownGatingTests {
         #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .premium) == .windDown(autostart: false))
         #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .free) == .tonight)
         for tier in [Tier.free, .premium] {
-            #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == nil)
+            #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == .review(kind: .weekly), "the weekly reminder opens the latest weekly review on either plan")
             #expect(NoctisNotification.route(for: NoctisNotification.morningSummary, tier: tier) == nil)
         }
     }

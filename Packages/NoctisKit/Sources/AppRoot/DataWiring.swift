@@ -20,6 +20,8 @@ public struct DataWiringInputs {
     public var insightFile: InsightFileStore
     /// The reviews' file (R39); nil where there is none (a test).
     public var reviewFile: ReviewFileStore?
+    /// Told after the reviews are deleted: Home's review card goes, and does not make the review again by itself.
+    public var afterReviewsDeleted: @MainActor () async -> Void
     public var snapshotStore: HomeSnapshotStore?
     public var notifications: NotificationScheduler
     public var roots: DataRoots
@@ -61,7 +63,8 @@ public struct DataWiringInputs {
         clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {},
         widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {},
         watch: WatchSyncService? = nil, sleepSounds: SleepSoundsPublisher? = nil, reloadControls: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {},
-        stopBackgroundUpdates: @escaping @MainActor () async -> Void = {}, reviewFile: ReviewFileStore? = nil
+        stopBackgroundUpdates: @escaping @MainActor () async -> Void = {}, reviewFile: ReviewFileStore? = nil,
+        afterReviewsDeleted: @escaping @MainActor () async -> Void = {}
     ) {
         self.model = model
         self.preferences = preferences
@@ -74,6 +77,7 @@ public struct DataWiringInputs {
         self.coachHistory = coachHistory
         self.insightFile = insightFile
         self.reviewFile = reviewFile
+        self.afterReviewsDeleted = afterReviewsDeleted
         self.snapshotStore = snapshotStore
         self.notifications = notifications
         self.roots = roots
@@ -128,7 +132,10 @@ public enum DataWiring {
                 await i.afterCoachDeleted()
             },
             .insightHistory: { i.insightFile.erase() },
-            .reviews: { i.reviewFile?.erase() },
+            .reviews: {
+                i.reviewFile?.erase()
+                await i.afterReviewsDeleted()
+            },
             .cachedSummaries: { i.snapshotStore?.erase() },
             .widgetSnapshot: {
                 await i.widgets?.forget()

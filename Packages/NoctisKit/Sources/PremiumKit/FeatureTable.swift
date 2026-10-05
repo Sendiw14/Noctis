@@ -18,6 +18,8 @@ public nonisolated enum Feature: String, Sendable, Equatable, CaseIterable, Hash
     case sleepLast3Nights, sleepWeek, sleepMonth, sleepNightPicker14, sleepQualityScore, sleepQualityFactors, sleepConsistencyBalanceTimingDetails
     // Insights
     case insightFeatured, insightRecentOne, insightAll, insightRecords, insightHistory, insightCategoryFilters
+    // Reviews
+    case weeklyReviewCover, weeklyReviewFull, monthlyReview
     // Coach
     case coachQuestions, coachHistory, coachUnlimited
     // Tonight and the night
@@ -34,13 +36,14 @@ public nonisolated enum Feature: String, Sendable, Equatable, CaseIterable, Hash
 
 /// The parts of the app a feature belongs to, for the comparison sheet's headings.
 public nonisolated enum FeatureArea: String, Sendable, CaseIterable, Equatable {
-    case recovery, sleep, insights, coach, night, sounds, widgets, watch, siri
+    case recovery, sleep, insights, reviews, coach, night, sounds, widgets, watch, siri
 
     public var title: String {
         switch self {
         case .recovery: "Recovery"
         case .sleep: "Sleep"
         case .insights: "Insights"
+        case .reviews: "Reviews"
         case .coach: "Coach"
         case .night: "Tonight and the night"
         case .sounds: "Sleep sounds"
@@ -57,11 +60,12 @@ public nonisolated enum FeatureTable {
         switch feature {
         case .recoveryToday, .recovery7D, .sleepLast3Nights, .sleepWeek, .sleepQualityScore, .insightFeatured, .insightRecentOne, .coachQuestions,
             .coachHistory, .tonightSingleBedtime, .alarm, .breathing, .reflectJournal, .soundsFree, .widgetSmall, .widgetLockCircular, .watchRecoverySleepPages,
-            .watchRecoveryComplication, .watchBreathing, .siriRecoverySleepBedtime:
+            .watchRecoveryComplication, .watchBreathing, .siriRecoverySleepBedtime, .weeklyReviewCover:
             .free
         case .recovery30D, .recovery90D, .recoveryFactorDetail, .sleepMonth, .sleepNightPicker14, .sleepQualityFactors, .sleepConsistencyBalanceTimingDetails,
             .insightAll, .insightRecords, .insightHistory, .insightCategoryFilters, .coachUnlimited, .tonightPersonalizedWindow, .windDownSession, .meditation,
-            .soundsPremium, .widgetMediumLargeAndOtherLock, .watchHeartTonightPages, .watchOtherComplications, .siriStartWindDown, .siriAskCoachBeyondFree:
+            .soundsPremium, .widgetMediumLargeAndOtherLock, .watchHeartTonightPages, .watchOtherComplications, .siriStartWindDown, .siriAskCoachBeyondFree,
+            .weeklyReviewFull, .monthlyReview:
             .premium
         }
     }
@@ -77,6 +81,7 @@ public nonisolated enum FeatureTable {
         case .recoveryToday, .recovery7D, .recovery30D, .recovery90D, .recoveryFactorDetail: .recovery
         case .sleepLast3Nights, .sleepWeek, .sleepMonth, .sleepNightPicker14, .sleepQualityScore, .sleepQualityFactors, .sleepConsistencyBalanceTimingDetails: .sleep
         case .insightFeatured, .insightRecentOne, .insightAll, .insightRecords, .insightHistory, .insightCategoryFilters: .insights
+        case .weeklyReviewCover, .weeklyReviewFull, .monthlyReview: .reviews
         case .coachQuestions, .coachHistory, .coachUnlimited: .coach
         case .tonightSingleBedtime, .tonightPersonalizedWindow, .alarm, .windDownSession, .meditation, .breathing, .reflectJournal: .night
         case .soundsFree, .soundsPremium: .sounds
@@ -107,6 +112,9 @@ public nonisolated enum FeatureTable {
         case .insightRecords: "Your records"
         case .insightHistory: "Your insight history"
         case .insightCategoryFilters: "Insights by category"
+        case .weeklyReviewCover: "The summary of your weekly review"
+        case .weeklyReviewFull: "Every page of your weekly review"
+        case .monthlyReview: "Your monthly review"
         case .coachQuestions: "3 Coach questions a day"
         case .coachHistory: "Your Coach history"
         case .coachUnlimited: "Unlimited Coach questions"
@@ -139,6 +147,7 @@ public nonisolated enum FeatureTable {
         case .recovery: "heart.text.square"
         case .sleep: "bed.double"
         case .insights: "lightbulb"
+        case .reviews: "calendar"
         case .coach: "sparkles"
         case .night: "moon.stars"
         case .sounds: "speaker.wave.2"

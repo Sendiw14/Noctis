@@ -6,6 +6,7 @@ import Testing
 @testable import HealthProviding
 @testable import InsightsKit
 @testable import NoctisCore
+@testable import ReviewKit
 
 struct AppRouteTests {
     @Test func everyRouteRoundTripsThroughItsURL() {
@@ -14,8 +15,34 @@ struct AppRouteTests {
             #expect(AppRoute(url: route.url) == route)
             #expect(AppRoute(name: route.name) == route)
         }
-        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach(), .profile, .settings(), .tonight, .windDown(), .sounds, .alarm])
-        #expect(AppRoute.destinations.map { $0.name } == ["home", "sleep", "recovery", "insights", "coach", "profile", "settings", "tonight", "wind-down", "sounds", "alarm"])
+        #expect(AppRoute.destinations == [.home, .sleep(), .recovery(), .insights(), .coach(), .profile, .settings(), .tonight, .windDown(), .sounds, .alarm, .reviews, .review(kind: .weekly)])
+        #expect(
+            AppRoute.destinations.map { $0.name } == ["home", "sleep", "recovery", "insights", "coach", "profile", "settings", "tonight", "wind-down", "sounds", "alarm", "reviews", "review"]
+        )
+    }
+
+    @Test func aReviewIsNamedByItsKindOrItsIdAndNeverByAnIdThatNamesNoPeriod() throws {
+        func route(_ text: String) -> AppRoute? { URL(string: text).flatMap { AppRoute(url: $0) } }
+        let id = try #require(ReviewID("weekly-2026-09-26"))
+        let month = try #require(ReviewID("monthly-2026-08-31"))
+        // The latest of a kind; the weekly one is the default.
+        #expect(AppRoute.review(kind: .weekly).url.absoluteString == "noctis://review" && route("noctis://review") == .review(kind: .weekly))
+        #expect(AppRoute.review(kind: .monthly).url.absoluteString == "noctis://review?kind=monthly" && route("noctis://review?kind=MONTHLY") == .review(kind: .monthly))
+        // One of them.
+        #expect(AppRoute.review(kind: .weekly, id: id).url.absoluteString == "noctis://review?id=weekly-2026-09-26")
+        #expect(route("noctis://review?id=weekly-2026-09-26") == .review(kind: .weekly, id: id) && route("noctis://review?id=monthly-2026-08-31&kind=monthly") == .review(kind: .monthly, id: month))
+        for route in [AppRoute.reviews, .review(kind: .weekly), .review(kind: .monthly), .review(kind: .weekly, id: id), .review(kind: .monthly, id: month)] {
+            #expect(AppRoute(url: route.url) == route)
+            #expect(route.tab == .insights)
+        }
+        // An id from outside is never trusted: it must name a period, and agree with the kind.
+        for bad in [
+            "noctis://review?id=monthly-2026-08-15", "noctis://review?id=weekly-2026-02-30", "noctis://review?id=weekly", "noctis://review?id=../../x", "noctis://review?id=",
+            "noctis://review?kind=yearly", "noctis://review?kind=monthly&id=weekly-2026-09-26", "noctis://review?id=Weekly-2026-09-26",
+        ] { #expect(route(bad) == nil, Comment(rawValue: bad)) }
+        // Launch arguments.
+        #expect(AppRoute(name: "review") == .review(kind: .weekly) && AppRoute(name: "review:monthly") == .review(kind: .monthly))
+        #expect(AppRoute(name: "review:weekly-2026-09-26") == .review(kind: .weekly, id: id) && AppRoute(name: "review:monthly-2026-08-15") == nil && AppRoute(name: "reviews") == .reviews)
     }
 
     @Test func sleepCarriesANightAndARangeThroughItsURL() throws {

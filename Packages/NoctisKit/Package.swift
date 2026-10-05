@@ -114,7 +114,7 @@ let package = Package(
         ),
         .target(
             name: "InsightsFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "HomeFeature"],
+            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "HomeFeature", "ReviewKit"],
             swiftSettings: noctisSwiftSettings
         ),
         // Coach's foundation: the router, facts and context, the validator, the providers

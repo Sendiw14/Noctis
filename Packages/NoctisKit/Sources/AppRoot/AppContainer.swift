@@ -213,7 +213,10 @@ public struct AppContainer {
         let homeRepository = HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore, widgets: widgetPublisher)
         let sleepRepository = SleepRepository(provider: provider)
         let recoveryRepository = RecoveryRepository(provider: provider)
-        self.homeViewModel = HomeViewModel(
+        // The reviews' cards (R63): which review day the person chose is read when it is needed, since the preferences are read further down.
+        let reviewWeekday = ReviewWeekdaySource()
+        let reviewCardProvider = ReviewCardProvider(repository: reviewRepo)
+        let homeVM = HomeViewModel(
             repository: homeRepository,
             profile: { model.profile },
             // "Connect Apple Health" reuses onboarding's authorization flow.
@@ -231,8 +234,10 @@ public struct AppContainer {
                 return recommendation.window.map {
                     HomeBedtimeWindow(startMinutes: $0.startMinutes, endMinutes: $0.endMinutes, centerMinutes: recommendation.centerMinutes)
                 }
-            }
+            },
+            reviewCards: { await reviewCardProvider.cards(profile: model.profile, weekday: reviewWeekday.current()) }
         )
+        self.homeViewModel = homeVM
         self.sleepViewModel = SleepViewModel(
             repository: sleepRepository,
             profile: { model.profile },
@@ -249,7 +254,11 @@ public struct AppContainer {
             repository: insightsRepository,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() },
-            isUnlocked: { gate.isUnlocked($0) }
+            isUnlocked: { gate.isUnlocked($0) },
+            reviews: reviewRepo,
+            reviewWeekday: { reviewWeekday.current() },
+            // A review that has been opened stops being a card on Home.
+            reviewOpened: { Task { await homeVM.refreshReviewCards() } }
         )
 
         // Coach (R29). Its history is local only, protected, out of backups and
@@ -312,6 +321,7 @@ public struct AppContainer {
         // The preferences (R38). Read after `-noctisResetState` has cleared what a fresh install would not have.
         let preferences = AppPreferences()
         self.preferences = preferences
+        reviewWeekday.current = { preferences.values.notifications.weeklyWeekday }
         NoctisHaptics.isEnabled = preferences.values.appHaptics
         // The reminders: the system's centre (a scripted one in DEBUG when a mock scenario or flag asks), the
         // bedtime engine's centre for the wind-down reminder, rebuilt whenever something they depend on changes.
@@ -516,7 +526,11 @@ public struct AppContainer {
                 model.onHealthAuthorizationRequested = nil
                 await background?.stopBackgroundDelivery()
             },
-            reviewFile: reviewFile
+            reviewFile: reviewFile,
+            afterReviewsDeleted: {
+                await reviewCardProvider.reviewsDeleted(weekday: reviewWeekday.current())
+                await homeVM.refreshReviewCards()
+            }
         ))
         self.dataManager = dataManager
         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
@@ -831,3 +845,9 @@ struct DebugLaunchOptions {
     }
 }
 #endif
+
+/// The weekday the person chose for their weekly review, read where it is needed: the preferences are made after the screens that show a review's card.
+@MainActor
+private final class ReviewWeekdaySource {
+    var current: () -> Int = { 1 }
+}

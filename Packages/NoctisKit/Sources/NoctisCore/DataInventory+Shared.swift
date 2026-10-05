@@ -305,7 +305,7 @@ nonisolated extension DataInventory {
             ),
             DeletableGroup(
                 id: "reviews", title: "Reviews", verb: .delete, categories: [.reviews],
-                removes: "Every weekly and monthly review NOCTIS has made, and whether you opened it. A recent one can be made again from your Health data when you ask for it.",
+                removes: "Every weekly and monthly review NOCTIS has made, and whether you opened it. A review you open later is made again from your Health data.",
                 keeps: "Your Health data, your Insights, your Journal and the rest of NOCTIS are not affected.", from: "this iPhone",
                 question: "Delete your reviews?", confirm: "Delete reviews", done: "Reviews deleted."
             ),

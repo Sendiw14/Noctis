@@ -169,6 +169,11 @@ public final class AppModel {
         case .insight(let id):
             // The page is pushed over the tab's root, on the chip it was on.
             insightsPath = [.insight(id: id)]
+        case .reviews:
+            insightsPath = [.reviews]
+        case .review(let kind, let id):
+            // A link or a notification never opens the Premium monthly review for a free person: it lands on the reviews (no paywall: nothing was tapped).
+            insightsPath = kind == .monthly && !isUnlocked(.monthlyReview) ? [.reviews] : [.review(kind: kind, id: id)]
         case .coach(let question):
             serial += 1
             coachDestination = CoachDestination(question: question, serial: serial)
