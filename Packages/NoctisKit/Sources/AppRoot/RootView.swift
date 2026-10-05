@@ -39,6 +39,13 @@ public struct RootView: View {
             }
         }
         .preferredColorScheme(AppAppearance.scheme(showingMain: showMain, appearance: preferences.values.appearance))
+        // The paywall, over whatever opened it: a locked thing was tapped (R58). Closing it, or cancelling a purchase, changes nothing; a purchase unlocks the
+        // screens in place (they read the feature gate).
+        .sheet(item: Bindable(model).paywall) { context in
+            UpgradePaywall(wakeMinutes: model.profile.typicalWakeMinutes, needMinutes: model.profile.needMinutes, context: context) {
+                model.dismissPaywall()
+            }
+        }
         .onOpenURL { url in
             // A URL from outside: only a widget's own links open anything (WidgetURLRouter, R44).
             if let route = WidgetURLRouter.route(for: url) { model.open(route) }

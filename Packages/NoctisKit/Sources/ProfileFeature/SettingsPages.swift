@@ -415,6 +415,7 @@ struct AppearanceSettingsView: View {
 struct SubscriptionSettingsView: View {
     let viewModel: SettingsViewModel
     @State private var scrollTick = 0
+    @State private var showsComparison = false
 
     var body: some View {
         let summary = viewModel.subscription
@@ -455,9 +456,21 @@ struct SubscriptionSettingsView: View {
                 }
             }
             .noctisRise(index: 1)
+            // The full list of what is free and what Premium adds, made from the one feature table (R59).
+            SettingsGroup("PREMIUM") {
+                NoctisRowCard {
+                    NoctisLinkRow(
+                        systemImage: "list.bullet.rectangle", fill: NoctisAppColor.blockButter, title: "What Premium includes",
+                        detail: "Everything on the free plan, and what Premium adds.", hint: "Opens the comparison of free and Premium.",
+                        identifier: "settings.subscription.compare"
+                    ) { showsComparison = true }
+                }
+            }
+            .noctisRise(index: 2)
             SettingsNote("Payments, renewals and cancellations are handled by the App Store, with your Apple Account.")
-                .noctisRise(index: 2)
+                .noctisRise(index: 3)
         }
+        .sheet(isPresented: $showsComparison) { PremiumComparisonSheet() }
         .manageSubscriptionsSheet(isPresented: Bindable(viewModel).showsManageSubscription)
         .fullScreenCover(isPresented: Bindable(viewModel).showsPaywall) {
             UpgradePaywall(wakeMinutes: viewModel.wakeMinutes, needMinutes: viewModel.needMinutes) {

@@ -475,6 +475,7 @@ public struct AppContainer {
         #if DEBUG
         if let summary = debug.subscriptionSummary() { storeManager.entitlementManager.debugSet(summary) }
         if let tier = debug.forceTier { storeManager.entitlementManager.debugForce(tier) }
+        if let context = debug.paywallContext { model.presentPaywall(context) }
         #endif
         self.settingsViewModel = SettingsViewModel(
             preferences: preferences, notifications: coordinator, store: storeManager, health: HealthDataStatusReader(provider: provider),
@@ -557,6 +558,8 @@ struct DebugLaunchOptions {
     let mockWatch: String?
     /// `-forceTier free|premium`: the tier is fixed, whatever the App Store says (R57). DEBUG only.
     let forceTier: Tier?
+    /// `-paywallContext recovery90D|...`: opens the paywall sheet over the app, as a tap on that locked thing would (a DEBUG aid for a screenshot).
+    let paywallContext: PaywallContext?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -592,6 +595,7 @@ struct DebugLaunchOptions {
         mockSubscription = value(after: "-mockSubscription")
         mockWatch = value(after: "-mockWatch")
         forceTier = value(after: "-forceTier").flatMap(Tier.init(rawValue:))
+        paywallContext = value(after: "-paywallContext").flatMap(PaywallContext.init(rawValue:))
     }
 
     /// The summary the flag names, for the Subscription page's every state.

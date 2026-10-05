@@ -2,6 +2,7 @@ import Foundation
 import HealthProviding
 import Observation
 import InsightsKit
+import PremiumKit
 import RecoveryKit
 
 /// App-wide state: the profile, Health authorization and navigation.
@@ -31,6 +32,8 @@ public final class AppModel {
     public private(set) var alarmDestination: AlarmDestination?
     /// The tab whose button was pressed while it was already showing.
     public private(set) var tabRetap: TabRetap?
+    /// The paywall, while it is open: only after a tap on a locked element or on "What Premium includes", never on launch or on entering a tab (R58).
+    public var paywall: PaywallContext?
     private var serial = 0
     /// Told after the profile changes (the wake time or the need moves the reminders).
     @ObservationIgnored public var onProfileChange: (() -> Void)?
@@ -45,6 +48,13 @@ public final class AppModel {
         self.profileStore = profileStore
         self.profile = profileStore.load()
     }
+
+    /// A locked thing was tapped: the paywall opens over the screen, saying what it unlocks.
+    public func presentPaywall(_ context: PaywallContext) { paywall = context }
+
+    public func presentPaywall(for feature: Feature) { paywall = PaywallContext(feature: feature) }
+
+    public func dismissPaywall() { paywall = nil }
 
     public var isOnboarded: Bool { profile.onboardingComplete }
     public var healthSourceName: String { healthProvider.sourceName }

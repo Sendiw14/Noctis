@@ -68,10 +68,6 @@ private struct BenefitRow: Identifiable {
     let icon: String
     let fill: Color
     let text: String
-    /// Whether the free tier already includes this — drives both the
-    /// benefit row's own subtitle and the compare sheet, from one source
-    /// of truth so they can never disagree (R13).
-    let includedFree: Bool
 }
 
 /// A plan card's own display data, mapped once from a real StoreKit
@@ -113,12 +109,13 @@ private struct TrialLength {
     }
 }
 
+/// What Premium adds (R58): depth, each line true of the app as it is (the full list, made from `FeatureTable`, is "Compare free and Premium").
 private let benefitRows: [BenefitRow] = [
-    BenefitRow(id: 0, icon: "moon.zzz.fill", fill: NoctisPaper.sage, text: "Sleep stages and timeline", includedFree: true),
-    BenefitRow(id: 1, icon: "heart.fill", fill: NoctisPaper.orange, text: "Recovery with your own baselines", includedFree: false),
-    BenefitRow(id: 2, icon: "chart.line.uptrend.xyaxis", fill: NoctisPaper.lavender, text: "Trends up to a year", includedFree: false),
-    BenefitRow(id: 3, icon: "sparkles", fill: NoctisPaper.cocoa, text: "AI Sleep Coach", includedFree: false),
-    BenefitRow(id: 4, icon: "speaker.wave.2.fill", fill: NoctisPaper.butter, text: "Wind-down, sounds and smart bedtime", includedFree: false),
+    BenefitRow(id: 0, icon: "heart.fill", fill: NoctisPaper.orange, text: "Recovery over 30 and 90 days"),
+    BenefitRow(id: 1, icon: "moon.zzz.fill", fill: NoctisPaper.sage, text: "A month of sleep, and what went into it"),
+    BenefitRow(id: 2, icon: "chart.line.uptrend.xyaxis", fill: NoctisPaper.lavender, text: "Every insight, your records and history"),
+    BenefitRow(id: 3, icon: "sparkles", fill: NoctisPaper.cocoa, text: "Unlimited Coach questions"),
+    BenefitRow(id: 4, icon: "speaker.wave.2.fill", fill: NoctisPaper.butter, text: "Wind-down, meditation and all six sounds"),
 ]
 
 /// Step after Plan — no progress bar (R7 exception), top bar hidden. Built
@@ -130,6 +127,8 @@ struct PaywallScreen: View {
     let wakeMinutes: Int
     let needMinutes: Int
     let onFinished: () -> Void
+    /// Why it was opened: the line above the title says exactly what the tapped thing unlocks (R58). Nil in onboarding.
+    var context: PaywallContext?
 
     @Environment(StoreManager.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -225,7 +224,7 @@ struct PaywallScreen: View {
                 .padding(.bottom, NoctisSpacing.sm)
                 .background(bottomFade(showsGradient: scrollMetrics.showsBottomFade))
         }
-        .sheet(isPresented: $showCompareSheet) { CompareSheet() }
+        .sheet(isPresented: $showCompareSheet) { PremiumComparisonSheet() }
         .alert(restoreAlertTitle, isPresented: restoreAlertBinding) {
             Button("OK") { restoreOutcome = nil }
         }
@@ -447,6 +446,15 @@ struct PaywallScreen: View {
             .frame(maxWidth: .infinity)
             .paywallBlock()
 
+            if let context, context != .general {
+                Text(context.line)
+                    .noctisFont(15, .semibold, relativeTo: .subheadline)
+                    .foregroundStyle(NoctisPaper.orangeText)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("paywall.context")
+                    .paywallBlock()
+            }
             NoctisTitle("Sleep", emphasis: "deeper.")
                 .paywallBlock()
             Text("Understand yourself.")
@@ -639,12 +647,12 @@ struct PaywallScreen: View {
             VStack(spacing: NoctisSpacing.sm) {
                 NoctisCTA("Loading plans", isLoading: true) {}
                     .disabled(true)
-                NoctisTextButton("Continue with limited version", action: dismissWithoutSubscribing)
+                NoctisTextButton("Continue with the free plan", action: dismissWithoutSubscribing)
             }
         case .unavailable:
             VStack(spacing: NoctisSpacing.sm) {
                 NoctisCTA("Try again", icon: "arrow.clockwise") { Task { await loadStore() } }
-                NoctisTextButton("Continue with limited version", action: dismissWithoutSubscribing)
+                NoctisTextButton("Continue with the free plan", action: dismissWithoutSubscribing)
             }
         case .ready:
             VStack(spacing: NoctisSpacing.xs) {
@@ -669,7 +677,7 @@ struct PaywallScreen: View {
                             .foregroundStyle(NoctisPaper.ink3)
                             .multilineTextAlignment(.center)
                     }
-                    NoctisTextButton("Continue with limited version", action: dismissWithoutSubscribing)
+                    NoctisTextButton("Continue with the free plan", action: dismissWithoutSubscribing)
                     footer
                 }
             }
@@ -979,110 +987,6 @@ private struct PlanCardSkeleton: View {
             .onAppear {
                 withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { pulse = true }
             }
-    }
-}
-
-// MARK: - Compare sheet
-
-private struct CompareRow: Identifiable {
-    let id: Int
-    let text: String
-    let free: Bool
-}
-
-private struct CompareSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    private var rows: [CompareRow] {
-        benefitRows.map { CompareRow(id: $0.id, text: $0.text, free: $0.includedFree) }
-    }
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    // At accessibility sizes each row carries its own
-                    // "Free"/"Premium" labels, so the column header goes.
-                    if !dynamicTypeSize.isAccessibilitySize {
-                        headerRow
-                        Rectangle().fill(NoctisPaper.hairline).frame(height: 1)
-                    }
-                    ForEach(rows) { row in
-                        compareRow(row)
-                        Rectangle().fill(NoctisPaper.hairline).frame(height: 1)
-                    }
-                }
-                .padding(.horizontal, NoctisSpacing.xl)
-                .padding(.top, NoctisSpacing.md)
-            }
-            .background(NoctisPaper.bg)
-            .navigationTitle("Free vs. Premium")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-    }
-
-    private var headerRow: some View {
-        HStack {
-            Text("").frame(maxWidth: .infinity, alignment: .leading)
-            Text("Free").noctisFont(13, .semibold, relativeTo: .footnote).frame(width: 84)
-            Text("Premium").noctisFont(13, .semibold, relativeTo: .footnote).frame(width: 84)
-        }
-        .foregroundStyle(NoctisPaper.ink2)
-        .padding(.vertical, NoctisSpacing.sm)
-    }
-
-    @ViewBuilder
-    private func compareRow(_ row: CompareRow) -> some View {
-        let text = Text(row.text)
-            .noctisFont(14, relativeTo: .subheadline)
-            .foregroundStyle(NoctisPaper.ink)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        if dynamicTypeSize.isAccessibilitySize {
-            // Stacked: the feature, then one labeled line per tier.
-            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                text
-                stackedCell("Free", included: row.free)
-                stackedCell("Premium", included: true)
-            }
-            .padding(.vertical, NoctisSpacing.sm)
-        } else {
-            HStack(alignment: .top) {
-                text
-                compareCell(included: row.free).frame(width: 84)
-                compareCell(included: true).frame(width: 84)
-            }
-            .padding(.vertical, NoctisSpacing.sm)
-        }
-    }
-
-    private func compareCell(included: Bool) -> some View {
-        VStack(spacing: 2) {
-            Image(systemName: included ? "checkmark.circle.fill" : "xmark.circle")
-                .noctisIcon(15, relativeTo: .caption2)
-                .foregroundStyle(included ? NoctisPaper.sage : NoctisPaper.ink3)
-            Text(included ? "Included" : "Not included")
-                .noctisFont(10, relativeTo: .caption2)
-                .foregroundStyle(NoctisPaper.ink3)
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    private func stackedCell(_ tier: String, included: Bool) -> some View {
-        HStack(spacing: NoctisSpacing.xs) {
-            Image(systemName: included ? "checkmark.circle.fill" : "xmark.circle")
-                .noctisIcon(15, relativeTo: .footnote)
-                .foregroundStyle(included ? NoctisPaper.sage : NoctisPaper.ink3)
-            Text("\(tier): \(included ? "Included" : "Not included")")
-                .noctisFont(13, relativeTo: .footnote)
-                .foregroundStyle(NoctisPaper.ink2)
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 

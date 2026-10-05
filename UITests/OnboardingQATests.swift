@@ -358,7 +358,7 @@ final class OnboardingQATests: XCTestCase {
 
         app = QA.launch(step: "paywall", goals: goals)
         QA.pause(3)
-        QA.tap(QA.button(app, "Continue with limited version"), in: app)
+        QA.tap(QA.button(app, "Continue with the free plan"), in: app)
         let viaLimited = app.tabBars.firstMatch.waitForExistence(timeout: 8)
         log += "paywall limited -> app: \(viaLimited)\n"
         app.terminate()
