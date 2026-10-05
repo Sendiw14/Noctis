@@ -1,5 +1,6 @@
 import Foundation
-import PremiumKit
+// The Watch kit builds on this one and asks the same table; re-exporting keeps its dependencies as they are (a leaf with no dependencies of its own).
+@_exported import PremiumKit
 
 // What the widgets do with the person's plan (APP_RULES.md R62). Pure: a family and a tier in, a decision and the words of a locked widget out. The tier is the one
 // word in the shared snapshot (the extension never calls StoreKit); what a tier includes is the one feature table's (R59). A missing snapshot is free.

@@ -1,11 +1,12 @@
 import Foundation
+import PremiumKit
 
 /// Sample snapshots for the widget gallery's preview and for the debug-build gallery (APP_RULES.md R45): the only place invented numbers
 /// exist. A real timeline never contains one: `WidgetTimelineBuilder.build` takes a snapshot from the store, and a preview entry is
 /// marked `isPreview` and drawn with a "Sample" tag.
 public enum WidgetSamples {
-    /// A snapshot in `state`, for the day of `now`.
-    public static func snapshot(_ state: WidgetDataState, now: Date, calendar: Calendar) -> WidgetSnapshot {
+    /// A snapshot in `state`, for the day of `now`. A sample is an unlocked one (Premium) unless the caller says otherwise: it shows what a surface can draw (R62).
+    public static func snapshot(_ state: WidgetDataState, now: Date, calendar: Calendar, tier: Tier = .premium) -> WidgetSnapshot {
         let plan = WidgetPlan(wakeMinutes: 7 * 60, needMinutes: 8 * 60, bedtimeMinutes: 23 * 60, windowStartMinutes: 22 * 60 + 45, windowEndMinutes: 23 * 60 + 15)
         let night = WidgetNight(asleepMinutes: 402, stages: WidgetStages(deep: 74, core: 236, rem: 92), bedtimeMinutes: 23 * 60 + 4, wakeMinutes: 6 * 60 + 52, quality: 81)
         let fullRing = [
@@ -23,7 +24,7 @@ public enum WidgetSamples {
         ]
         var snapshot = WidgetSnapshot(
             forDay: WidgetDay.today(at: now, calendar: calendar), generatedAt: now, plan: plan, state: state,
-            alarm: WidgetAlarm(minutes: 7 * 60, isOn: true)
+            alarm: WidgetAlarm(minutes: 7 * 60, isOn: true), tier: tier
         )
         switch state {
         case .full:

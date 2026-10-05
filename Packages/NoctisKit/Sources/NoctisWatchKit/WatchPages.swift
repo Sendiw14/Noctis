@@ -177,6 +177,8 @@ public struct WatchHeartPage: Equatable, Sendable {
     public var staleLine: String?
     public var sensitivity: WidgetSensitivity
     public var accessibilityLabel: String
+    /// The page is Premium and the person's plan does not include it: a locked card and no number (R62).
+    public var locked: WatchLockedContent?
 }
 
 // MARK: Tonight
@@ -202,6 +204,9 @@ public struct WatchTonightPage: Equatable, Sendable {
     public var alarmLine: String?
     public var sensitivity: WidgetSensitivity
     public var accessibilityLabel: String
+    /// The page is Premium and the person's plan does not include it: a locked card and no plan (R62). Breathing, which is free and needs nothing from the iPhone,
+    /// is still there below it.
+    public var locked: WatchLockedContent?
 }
 
 // MARK: Settings
@@ -267,6 +272,10 @@ public nonisolated enum WatchPages {
     // MARK: Heart
 
     public static func heart(_ input: WatchPageInput) -> WatchHeartPage {
+        if WatchGate.isLocked(.heart, tier: input.snapshot?.tier) {
+            let locked = WatchLockedContent(.heart)
+            return WatchHeartPage(message: nil, tiles: [], staleLine: nil, sensitivity: .plan, accessibilityLabel: locked.accessibilityLabel, locked: locked)
+        }
         guard input.state.showsNumbers, let snapshot = input.snapshot else {
             let message = input.message(for: .heart) ?? WatchMessage(glyph: "heart", title: WatchCopy.heartMissing)
             return WatchHeartPage(message: message, tiles: [], staleLine: nil, sensitivity: .health, accessibilityLabel: message.title)
@@ -296,6 +305,13 @@ public nonisolated enum WatchPages {
     // MARK: Tonight
 
     public static func tonight(_ input: WatchPageInput) -> WatchTonightPage {
+        if WatchGate.isLocked(.tonight, tier: input.snapshot?.tier) {
+            let locked = WatchLockedContent(.tonight)
+            return WatchTonightPage(
+                message: nil, bedtime: nil, windowText: nil, wakeLine: nil, countdown: .none, alarmLine: nil, sensitivity: .plan, accessibilityLabel: locked.accessibilityLabel,
+                locked: locked
+            )
+        }
         guard let snapshot = input.snapshot else {
             let message = WatchMessage(glyph: "iphone", title: WatchCopy.getStarted)
             return WatchTonightPage(message: message, bedtime: nil, windowText: nil, wakeLine: nil, countdown: .none, alarmLine: nil, sensitivity: .plan, accessibilityLabel: message.title)

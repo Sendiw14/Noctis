@@ -125,12 +125,16 @@ public nonisolated struct WatchComplicationContent: Equatable, Sendable {
     public var link: WatchLink
     /// One sentence for VoiceOver.
     public var accessibilityLabel: String
+    /// The kind is Premium and the person's plan does not include it: a plain "Premium" state with no number (R62).
+    public var isLocked = false
 
-    public var cornerLabel: String { kind.cornerLabel }
+    public var cornerLabel: String { isLocked ? "Premium" : kind.cornerLabel }
 
     /// The content while the Watch is locked: every Health word becomes "Unlock to see" (once, the lines after the first collapse into it), the gauge
     /// and the stage strip have no number.
     public func locked() -> WatchComplicationContent {
+        // A Premium state holds no Health value to hide.
+        if isLocked { return self }
         func hidesHealth(_ pieces: [WidgetLockPiece]) -> Bool { pieces.contains { if case .health = $0 { true } else { false } } }
         var lines: [[WidgetLockPiece]] = []
         var shown = false
@@ -179,6 +183,8 @@ public nonisolated enum WatchComplications {
         guard let snapshot = input.snapshot, state != .noSnapshotYet else {
             return message(kind, glyph: "iphone", lines: ["Open NOCTIS", "on your iPhone"], inline: "Open NOCTIS on iPhone", spoken: WatchCopy.getStarted, link: link)
         }
+        // The kinds the person's plan does not include: a plain "Premium" state, whatever the numbers are (R62).
+        if WatchGate.isLocked(kind, tier: snapshot.tier) { return premium(kind, link: link) }
         if kind == .bedtime { return bedtime(snapshot: snapshot, input: input, link: link) }
 
         guard state.showsNumbers else {
@@ -210,6 +216,17 @@ public nonisolated enum WatchComplications {
         guard kind == .recovery, let snapshot = input.snapshot else { return kind.link }
         let entry = WidgetTimelineBuilder.entry(for: snapshot, at: input.now, calendar: input.format.calendar)
         return entry.mode == .evening ? .tonight : .recovery
+    }
+
+    // MARK: Premium
+
+    /// What a complication the plan does not include says: a lock, "Premium" and a way to the app. Built from the kind alone, so no number can reach it.
+    static func premium(_ kind: WatchComplicationKind, link: WatchLink) -> WatchComplicationContent {
+        var content = message(
+            kind, glyph: "lock.fill", lines: ["Premium", "Open NOCTIS"], inline: "Premium", spoken: "\(kind.displayName). Premium. Opens NOCTIS.", link: link
+        )
+        content.isLocked = true
+        return content
     }
 
     // MARK: Messages
@@ -354,7 +371,7 @@ public nonisolated enum WatchComplicationSchedule {
     /// How much the Smart Stack should want `kind` at `date`: Recovery, Sleep and Sleep quality in the morning window (the wake time's half hour before to
     /// three hours after), Bedtime in the evening hour (the hour before bedtime and half an hour after); idle otherwise, and always idle with no summary.
     public static func relevance(_ kind: WatchComplicationKind, at date: Date, snapshot: WidgetSnapshot?, calendar: Calendar) -> WidgetRelevanceScore {
-        guard let snapshot else { return .idle }
+        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.tier) else { return .idle }
         switch kind {
         case .recovery, .sleep, .quality: return WidgetClock.morningRelevance(at: date, plan: snapshot.plan, calendar: calendar)
         case .bedtime: return WidgetClock.eveningRelevance(at: date, plan: snapshot.plan, calendar: calendar)
@@ -363,7 +380,7 @@ public nonisolated enum WatchComplicationSchedule {
 
     /// The window the Smart Stack is told about for `kind` (its `RelevantContext`): the morning window or the evening hour, as dates.
     public static func window(_ kind: WatchComplicationKind, snapshot: WidgetSnapshot?, from date: Date, calendar: Calendar) -> DateInterval? {
-        guard let snapshot else { return nil }
+        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.tier) else { return nil }
         switch kind {
         case .recovery, .sleep, .quality: return WidgetClock.morningWindow(snapshot.plan, from: date, calendar: calendar)
         case .bedtime: return WidgetClock.eveningWindow(snapshot.plan, from: date, calendar: calendar)

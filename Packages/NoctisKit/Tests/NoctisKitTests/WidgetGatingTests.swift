@@ -66,7 +66,8 @@ struct WidgetGateDecisionTests {
 
     @Test func theGalleryPreviewKeepsTheUnlockedDesign() {
         let preview = WidgetTimelineBuilder.previewEntry(WidgetSamples.snapshot(.full, now: GateFixture.morning, calendar: GateFixture.calendar), at: GateFixture.morning, calendar: GateFixture.calendar)
-        #expect(preview.isPreview && preview.snapshot?.tier == .free, "the sample is a free snapshot")
+        #expect(preview.isPreview && preview.snapshot?.tier == .premium, "a sample is the unlocked design, whatever the tier")
+        #expect(WidgetSamples.snapshot(.full, now: GateFixture.morning, calendar: GateFixture.calendar, tier: .free).tier == .free)
         for surface in WidgetSurface.allCases {
             #expect(!WidgetGate.isLocked(preview, in: surface), Comment(rawValue: "the widget gallery shows what \(surface.rawValue) is, tagged Sample"))
         }

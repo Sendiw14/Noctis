@@ -52,6 +52,17 @@ public struct WatchComplicationView: View {
 
     @ViewBuilder
     private var circular: some View {
+        if content.isLocked {
+            // A kind the plan does not include: the lock alone, whichever kind it is.
+            center(size: 17)
+                .widgetAccentable()
+        } else {
+            circularKind
+        }
+    }
+
+    @ViewBuilder
+    private var circularKind: some View {
         switch content.kind {
         case .recovery, .quality:
             if let gauge = shown.gauge {
@@ -126,7 +137,7 @@ public struct WatchComplicationView: View {
         center(size: 17)
             .widgetCurvesContent()
             .widgetLabel {
-                if shown.gauge != nil || content.kind == .recovery || content.kind == .quality {
+                if !content.isLocked, shown.gauge != nil || content.kind == .recovery || content.kind == .quality {
                     Gauge(value: shown.gauge ?? 0) {
                         Text(content.cornerLabel)
                     } currentValueLabel: {

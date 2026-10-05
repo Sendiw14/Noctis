@@ -106,6 +106,32 @@ struct WatchMessageView: View {
     }
 }
 
+/// A page the plan does not include (R62), Watch-sized: a lock and the one line, on the flat tile the pages use. There is nothing to buy on the Watch, so it says where to
+/// learn more and sells nothing.
+struct WatchLockedView: View {
+    let content: WatchLockedContent
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "lock.fill")
+                .noctisFont(22, .semibold, relativeTo: .title3)
+                .foregroundStyle(WatchTheme.quiet)
+                .accessibilityHidden(true)
+            Text(content.line)
+                .noctisFont(14, .semibold, relativeTo: .footnote)
+                .foregroundStyle(WatchTheme.ink)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.white.opacity(0.1)))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(content.accessibilityLabel)
+        .accessibilityIdentifier("watch.locked")
+    }
+}
+
 private struct WatchQuietLine: View {
     let text: String
 
@@ -220,7 +246,9 @@ struct HeartPageView: View {
             VStack(spacing: 10) {
                 WatchPageTitle(page: .heart)
                 if let stale = content.staleLine { WatchQuietLine(text: stale) }
-                if let message = content.message {
+                if let locked = content.locked {
+                    WatchLockedView(content: locked)
+                } else if let message = content.message {
                     WatchMessageView(message: message)
                 } else {
                     ForEach(content.tiles) { tile in
@@ -261,7 +289,9 @@ struct TonightPageView: View {
         ScrollView {
             VStack(spacing: 8) {
                 WatchPageTitle(page: .tonight)
-                if let message = content.message {
+                if let locked = content.locked {
+                    WatchLockedView(content: locked)
+                } else if let message = content.message {
                     WatchMessageView(message: message)
                 } else {
                     if let window = content.windowText {

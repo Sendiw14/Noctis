@@ -2,7 +2,7 @@
 import Foundation
 import NoctisWidgetKit
 
-/// `-watchMockSnapshot full|learning|sleepOnly|empty|stale|gap|waiting|noSnapshot` (APP_RULES.md R50): feeds the Watch app a sample snapshot without the
+/// `-watchMockSnapshot full|learning|sleepOnly|empty|stale|gap|waiting|noSnapshot [-watchTier free|premium]` (APP_RULES.md R50, R62; premium when no tier is named): feeds the Watch app a sample snapshot without the
 /// iPhone, so a screenshot or a test can show every state. A DEBUG aid and an explicit R13 exception: sample numbers appear nowhere else.
 struct WatchMock {
     let snapshot: WidgetSnapshot?
@@ -31,7 +31,9 @@ struct WatchMock {
         case "noSnapshot": value = nil
         default: value = WidgetSamples.snapshot(.full, now: now, calendar: calendar)
         }
-        snapshot = value
+        // The plan the sample snapshot says (R62): the Premium pages and complications are locked on `free`.
+        let tierName = arguments.firstIndex(of: "-watchTier").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
+        snapshot = value?.with(tier: tierName.flatMap(Tier.init(rawValue:)) ?? .premium)
         self.now = now
         receivedAt = value == nil ? nil : now.addingTimeInterval(-3 * 3600)
     }
