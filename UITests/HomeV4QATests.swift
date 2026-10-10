@@ -10,11 +10,11 @@ final class HomeV4QATests: XCTestCase {
         continueAfterFailure = false
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         if #available(iOS 27.0, *), XCUIDevice.shared.voiceOverService.isEnabled {
             try? XCUIDevice.shared.voiceOverService.disable()
         }
-        super.tearDown()
+        try await super.tearDown()
     }
 
     private func launchHome(_ scenario: String = "full", mode: String = "day", extra: [String] = []) -> XCUIApplication {

@@ -1,8 +1,9 @@
 /// Deterministic RNG so generated visuals (paper grain) are stable across
-/// launches instead of reshuffling every render. Mirrors
-/// `HealthProviding`'s own `SeededGenerator` — duplicated rather than
-/// shared since neither module depends on the other.
-struct SeededGenerator: RandomNumberGenerator {
+/// launches instead of reshuffling every render. Shipped (the grain is in
+/// Release); not the DEBUG-only `SeededGenerator` that drives the mock Health
+/// data, and named differently so a Release binary that contains
+/// "SeededGenerator" can only mean the mock leaked (QA_LEDGER.md).
+struct PaperGrainGenerator: RandomNumberGenerator {
     private var state: UInt64
 
     init(seed: UInt64) {

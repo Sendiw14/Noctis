@@ -45,7 +45,7 @@ final class TabScaffoldQATests: XCTestCase {
         let scale: CGFloat
         let data: [UInt8]
 
-        init?(_ screenshot: XCUIScreenshot) {
+        @MainActor init?(_ screenshot: XCUIScreenshot) {
             guard let cg = screenshot.image.cgImage else { return nil }
             var bytes = [UInt8](repeating: 0, count: cg.width * cg.height * 4)
             guard let context = CGContext(

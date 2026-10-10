@@ -11,11 +11,12 @@ final class HomeMotionQATests: XCTestCase {
     }
 
     /// A failed VoiceOver test must not leave VoiceOver on for the next.
-    override func tearDown() {
+    /// The async form of `tearDown`: it runs on the main actor, which `XCUIDevice` needs (the plain `tearDown()` is nonisolated).
+    override func tearDown() async throws {
         if #available(iOS 27.0, *), XCUIDevice.shared.voiceOverService.isEnabled {
             try? XCUIDevice.shared.voiceOverService.disable()
         }
-        super.tearDown()
+        try await super.tearDown()
     }
 
     private func launchHome(mode: String = "day", extra: [String] = [], reset: Bool = true) -> XCUIApplication {

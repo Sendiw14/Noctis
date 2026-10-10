@@ -2,6 +2,7 @@ import DesignSystem
 import Foundation
 import NoctisCore
 import Observation
+import OSLog
 import SwiftUI
 import SleepKit
 #if canImport(UIKit)
@@ -103,8 +104,9 @@ public final class HomeViewModel {
     private let revealSleep: @Sendable (Double) async -> Void
 
     #if DEBUG
-    /// DEBUG: print every new snapshot (`-noctisLogHomeSnapshot`).
+    /// DEBUG: log every new snapshot, privately (`-noctisLogHomeSnapshot`).
     public var debugLogsSnapshots = false
+    private static let snapshotLog = Logger(subsystem: NoctisSignpost.subsystem, category: "home-snapshot")
     #endif
 
     public init(
@@ -196,7 +198,8 @@ public final class HomeViewModel {
         // The first fresh answer is when launch counts as populated.
         NoctisSignpost.end(.launchToPopulated)
         #if DEBUG
-        if debugLogsSnapshots, let snapshot { print(snapshot.debugSummary) }
+        // Health numbers: private, so only a debugger attached to this build can read them.
+        if debugLogsSnapshots, let snapshot { Self.snapshotLog.debug("\(snapshot.debugSummary, privacy: .private)") }
         #endif
     }
 

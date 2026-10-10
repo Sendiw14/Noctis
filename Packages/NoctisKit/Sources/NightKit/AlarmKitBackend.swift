@@ -37,8 +37,9 @@ public struct AlarmKitBackend: AlarmBackend {
         } catch let error as AlarmManager.AlarmError where error == .maximumLimitReached {
             throw AlarmBackendError.limitReached
         } catch {
-            // The system's own description (a domain and a code), never the person's data.
-            Logger(subsystem: "com.noctis.app", category: "alarm").error("AlarmKit schedule threw \(String(describing: error), privacy: .public)")
+            // The system's error domain and code (constants), never its description and never the person's data.
+            let reported = error as NSError
+            Logger(subsystem: "com.noctis.app", category: "alarm").error("AlarmKit schedule threw \(reported.domain, privacy: .public) \(reported.code, privacy: .public)")
             throw AlarmBackendError.failed
         }
     }
@@ -127,20 +128,12 @@ public struct AlarmKitBackend: AlarmBackend {
     /// How the alarm presents itself. The word is "Alarm": it rings at a set time, and that is
     /// all it claims.
     static func presentation(for settings: AlarmSettings) -> AlarmPresentation {
-        let stop = AlarmButton(text: "Stop", textColor: .white, systemImageName: "stop.circle")
         let snooze = AlarmButton(text: "Snooze", textColor: .white, systemImageName: "bed.double.fill")
-        let alert: AlarmPresentation.Alert
-        if #available(iOS 26.1, *) {
-            alert = AlarmPresentation.Alert(
-                title: "Alarm", secondaryButton: settings.snoozeEnabled ? snooze : nil,
-                secondaryButtonBehavior: settings.snoozeEnabled ? .countdown : nil
-            )
-        } else {
-            alert = AlarmPresentation.Alert(
-                title: "Alarm", stopButton: stop, secondaryButton: settings.snoozeEnabled ? snooze : nil,
-                secondaryButtonBehavior: settings.snoozeEnabled ? .countdown : nil
-            )
-        }
+        // iOS 26.1 draws Stop itself, so the alert names only the secondary button.
+        let alert = AlarmPresentation.Alert(
+            title: "Alarm", secondaryButton: settings.snoozeEnabled ? snooze : nil,
+            secondaryButtonBehavior: settings.snoozeEnabled ? .countdown : nil
+        )
         let countdown = settings.snoozeEnabled ? AlarmPresentation.Countdown(title: "Snoozed") : nil
         return AlarmPresentation(alert: alert, countdown: countdown, paused: nil)
     }

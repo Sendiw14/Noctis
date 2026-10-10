@@ -15,7 +15,8 @@ let engineSwiftSettings: [SwiftSetting] = [
 let package = Package(
     name: "NoctisKit",
     defaultLocalization: "en",
-    platforms: [.iOS(.v26), .watchOS(.v26)],
+    // SwiftPM has no `.v26_1` constant in this toolchain's PackageDescription, so the version is a string.
+    platforms: [.iOS("26.1"), .watchOS(.v26)],
     products: [
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
         .library(name: "HealthProviding", targets: ["HealthProviding"]),

@@ -59,7 +59,8 @@ public final class CoreHapticsBreathing: BreathingHapticsPlaying {
             player = next
             try next.start(atTime: CHHapticTimeImmediate)
         } catch {
-            Self.log.error("could not play a breathing haptic: \(String(describing: error), privacy: .public)")
+            let reported = error as NSError
+            Self.log.error("could not play a breathing haptic: \(reported.domain, privacy: .public) \(reported.code, privacy: .public)")
         }
     }
 

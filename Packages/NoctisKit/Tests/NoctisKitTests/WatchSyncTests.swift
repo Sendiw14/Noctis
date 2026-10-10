@@ -866,6 +866,6 @@ struct WatchTargetStructureTests {
             #expect(text.hasPrefix("#if os(iOS)"), Comment(rawValue: name))
         }
         let package = try read("Packages/NoctisKit/Package.swift")
-        #expect(package.contains("platforms: [.iOS(.v26), .watchOS(.v26)]"))
+        #expect(package.contains("platforms: [.iOS(\"26.1\"), .watchOS(.v26)]"))
     }
 }

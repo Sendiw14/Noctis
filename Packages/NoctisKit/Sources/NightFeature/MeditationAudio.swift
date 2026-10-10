@@ -80,7 +80,8 @@ public final class SystemMeditationAudio: MeditationAudioPlaying {
                 try session.setActive(true)
                 activatedSession = true
             } catch {
-                Self.log.error("could not start the audio session: \(String(describing: error), privacy: .public)")
+                let reported = error as NSError
+                Self.log.error("could not start the audio session: \(reported.domain, privacy: .public) \(reported.code, privacy: .public)")
             }
         }
         for kind in MeditationChimeKind.allCases { _ = player(for: kind) }
@@ -125,7 +126,8 @@ public final class SystemMeditationAudio: MeditationAudioPlaying {
             players[kind] = player
             return player
         } catch {
-            Self.log.error("could not make the \(kind.rawValue, privacy: .public) chime: \(String(describing: error), privacy: .public)")
+            let reported = error as NSError
+            Self.log.error("could not make the \(kind.rawValue, privacy: .public) chime: \(reported.domain, privacy: .public) \(reported.code, privacy: .public)")
             return nil
         }
     }

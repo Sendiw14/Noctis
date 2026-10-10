@@ -170,15 +170,10 @@ struct RootTabView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .tint(tabTint)
-        // `tabViewBottomAccessory(isEnabled:)` is iOS 26.1; on 26.0 there's
-        // no accessory rather than one that can't hide by day. It is also off while the wind-down is
+        // `tabViewBottomAccessory(isEnabled:)` is iOS 26.1, the app's minimum (QA_LEDGER.md), so it can hide by day. It is also off while the wind-down is
         // showing: that screen is full-screen and dark, and the bedtime pill would float over it.
-        if #available(iOS 26.1, *) {
-            tabView.tabViewBottomAccessory(isEnabled: HomeBedtimeAccessory.isShown(for: home) && !model.isWindDownShowing && !model.isReviewStoryShowing) {
-                HomeBedtimeAccessory(viewModel: home, clock: clock) { model.open(.tonight) }
-            }
-        } else {
-            tabView
+        tabView.tabViewBottomAccessory(isEnabled: HomeBedtimeAccessory.isShown(for: home) && !model.isWindDownShowing && !model.isReviewStoryShowing) {
+            HomeBedtimeAccessory(viewModel: home, clock: clock) { model.open(.tonight) }
         }
     }
 

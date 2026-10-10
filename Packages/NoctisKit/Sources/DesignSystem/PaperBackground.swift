@@ -32,7 +32,7 @@ public struct PaperBackground: View {
         let speckA = isDarkPaper ? Color.black : NoctisPaper.ink
         let speckB = isDarkPaper ? NoctisAppColor.ink : Color.white
         return Canvas { context, size in
-            var generator = SeededGenerator(seed: 11)
+            var generator = PaperGrainGenerator(seed: 11)
             let count = Int(size.width * size.height / 900)
             for _ in 0..<count {
                 let x = CGFloat.random(in: 0...size.width, using: &generator)

@@ -307,7 +307,7 @@ public enum InsightEvidenceData: Sendable, Equatable, Codable {
         func list(_ values: [Double?]) -> String { values.map { $0.map { n($0) } ?? "-" }.joined(separator: ",") }
         switch self {
         case .baseline(let e):
-            return "baseline|\(e.night)|\(n(e.value))|\(n(e.baseline))|\(e.streakNights ?? 0)|\(e.recentNights.map { $0 == nil ? "-" : ($0! ? "1" : "0") }.joined())"
+            return "baseline|\(e.night)|\(n(e.value))|\(n(e.baseline))|\(e.streakNights ?? 0)|\(e.recentNights.map { $0.map { $0 ? "1" : "0" } ?? "-" }.joined())"
         case .pattern(let e):
             return "pattern|\(e.night)|\(e.earlyNights)|\(e.lateNights)|\(n(e.earlyMean, 1))|\(n(e.lateMean, 1))|\(n(e.medianBedtime))"
         case .recoveryDirection(let e):
