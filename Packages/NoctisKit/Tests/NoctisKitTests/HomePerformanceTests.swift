@@ -684,7 +684,7 @@ struct HomeLowPowerTests {
         await live.onAppear()
         flag.mark()
         NotificationCenter.default.post(name: .NSProcessInfoPowerStateDidChange, object: nil)
-        for _ in 0..<100 where !live.isLowPower { try await Task.sleep(for: .milliseconds(20)) }
+        _ = await waitFor { !(!live.isLowPower) }
         #expect(live.isLowPower)
         live.stopObserving()
     }

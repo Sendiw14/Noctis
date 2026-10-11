@@ -24,6 +24,7 @@ extension DataCategoryID {
         case .diagnosticLog: "doc.text"
         case .purchases: "star"
         case .systemFiles: "internaldrive"
+        case .setAsideFiles: "archivebox"
         case .exportFile: "square.and.arrow.up"
         case .widgetSnapshot: "rectangle.on.rectangle"
         case .watchSync: "applewatch"
@@ -35,7 +36,7 @@ extension DataCategoryID {
         switch self {
         case .appleHealth, .cachedSummaries, .widgetSnapshot, .watchSync, .sleepSoundsState, .memorySummaries, .systemFiles: NoctisAppColor.blockSage
         case .insightHistory, .reviews, .preferences, .soundSettings, .appState, .reminders: NoctisAppColor.blockButter
-        case .journal, .coachHistory, .profile, .exportFile: NoctisAppColor.blockLavender
+        case .journal, .coachHistory, .profile, .exportFile, .setAsideFiles: NoctisAppColor.blockLavender
         case .alarm, .windDownHistory, .diagnosticLog, .purchases: NoctisAppColor.fieldSand
         }
     }

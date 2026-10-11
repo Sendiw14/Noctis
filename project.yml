@@ -34,6 +34,18 @@ packages:
 fileGroups:
   - Noctis.storekit
 
+# The unit suite under the time zone, region, clock and first-weekday configurations in NOCTIS.xctestplan (QA part 2, 2.9):
+#   xcodebuild test -scheme NOCTIS-Unit -testPlan NOCTIS -destination 'platform=iOS Simulator,id=...'
+schemes:
+  NOCTIS-Unit:
+    build:
+      targets:
+        Noctis: [test]
+    test:
+      testPlans:
+        - path: NOCTIS.xctestplan
+          defaultPlan: true
+
 targets:
   Noctis:
     type: application

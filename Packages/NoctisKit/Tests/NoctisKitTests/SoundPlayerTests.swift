@@ -60,8 +60,13 @@ nonisolated final class ManualTime: @unchecked Sendable {
         await settle()
     }
 
+    /// Lets what was just woken run. The model's tasks sit on the main actor behind whatever else the suite queued there, and some work hops to
+    /// other executors, so eight turns are not always enough on a busy machine: the turns go round, once through a real 1 ms sleep (which hands
+    /// the other executors a chance), and round again.
     @MainActor
     func settle() async {
+        for _ in 0..<8 { await Task.yield() }
+        try? await Task.sleep(for: .milliseconds(1))
         for _ in 0..<8 { await Task.yield() }
     }
 }

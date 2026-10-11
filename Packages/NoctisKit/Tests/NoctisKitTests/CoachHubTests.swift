@@ -60,13 +60,10 @@ nonisolated final class StubAnswering: CoachAnswering, @unchecked Sendable {
     func modelAvailability() async -> CoachAvailability { availability }
 }
 
-/// Waits (briefly) for a condition the view model reaches on its own.
+/// Waits for a condition the view model reaches on its own (by state, with a long backstop: see `waitFor`).
 @MainActor
-func coachWait(_ condition: () -> Bool) async {
-    for _ in 0..<400 {
-        if condition() { return }
-        try? await Task.sleep(for: .milliseconds(10))
-    }
+func coachWait(_ condition: @MainActor () -> Bool) async {
+    _ = await waitFor { condition() }
 }
 
 struct CoachHubBuilderTests {

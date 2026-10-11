@@ -234,8 +234,7 @@ struct WatchSettingsViewModelTests {
 
     /// Waits for `condition` by the clock (the whole suite shares the main actor, so a count of turns is not a time).
     private func eventually(_ condition: @MainActor () -> Bool) async {
-        let deadline = ContinuousClock.now + .seconds(30)
-        while !condition(), ContinuousClock.now < deadline { try? await Task.sleep(for: .milliseconds(20)) }
+        _ = await waitFor { condition() }
     }
 
     @Test func theStatusFollowsTheLinkWhileThePageIsOpen() async {

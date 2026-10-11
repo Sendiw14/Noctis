@@ -21,6 +21,10 @@ public actor AlarmService {
     private var busy = false
     private var subscribers: [UUID: AsyncStream<AlarmStatus>.Continuation] = [:]
     private var observers: [Task<Void, Never>] = []
+    /// What was last written and what was last said, so asking again changes nothing and says nothing: `status()` is asked on every update by
+    /// whoever follows them (the widgets' publisher does), and a write and an update for each ask made a loop with no end (QA_LEDGER.md).
+    private var lastPersisted: AlarmSettings?
+    private var lastPublished: AlarmStatus?
 
     /// `defaultMinutes` is the wake time to start from, minutes since midnight (the profile's).
     public init(backend: any AlarmBackend, store: any AlarmSettingsStoring, defaultMinutes: @escaping @Sendable () async -> Int) {
@@ -31,10 +35,16 @@ public actor AlarmService {
 
     // MARK: Reading
 
-    /// The alarm as it is now, checked against the system.
+    /// The alarm as it is now, checked against the system. Nothing is written and nothing is said unless the answer changed.
     public func status() async -> AlarmStatus {
         await load()
         await reconcile()
+        return current()
+    }
+
+    /// The alarm as the service holds it, without asking the system: for whoever redraws something on every update.
+    public func peek() async -> AlarmStatus {
+        await load()
         return current()
     }
 
@@ -59,6 +69,8 @@ public actor AlarmService {
         let authorizations = backend.authorizationUpdates()
         observers = [
             Task { [weak self] in
+                // Whatever the system did before this subscription began: the system's sequence need not replay it.
+                await self?.catchUp()
                 for await update in alarms {
                     await self?.apply(update)
                 }
@@ -185,6 +197,14 @@ public actor AlarmService {
         publish()
     }
 
+    /// One look at the system's alarms, for an observer that started after something happened.
+    private func catchUp() async {
+        guard state.isActive, let alarms = try? await backend.alarms() else { return }
+        react(to: alarms)
+        await persist()
+        publish()
+    }
+
     private func react(to alarms: [BackendAlarm]) {
         guard state.isActive, let id = settings?.alarmKitID else { return }
         guard let alarm = alarms.first(where: { $0.id == id }) else {
@@ -211,6 +231,8 @@ public actor AlarmService {
         guard settings == nil else { return }
         settings = loaded
         state = loaded.lastState
+        // What the store handed over is already on disk.
+        if stored != nil { lastPersisted = loaded }
     }
 
     /// Takes the person's choices, keeping the bookkeeping.
@@ -264,7 +286,8 @@ public actor AlarmService {
     }
 
     private func persist() async {
-        guard let settings else { return }
+        guard let settings, settings != lastPersisted else { return }
+        lastPersisted = settings
         await store.save(settings)
     }
 
@@ -277,6 +300,8 @@ public actor AlarmService {
 
     private func publish() {
         let status = current()
+        guard status != lastPublished else { return }
+        lastPublished = status
         for continuation in subscribers.values { continuation.yield(status) }
     }
 

@@ -42,6 +42,8 @@ public actor BackgroundRefresher {
 
     private var inFlight: Task<Outcome, Never>?
     private var lastFinished: Date?
+    /// Wakes that arrived while a refresh was running and are waiting for it (coalesced): a test looks at this before it lets the refresh go.
+    public private(set) var waitingWakes = 0
 
     public init(
         isOnboarded: @escaping @Sendable () async -> Bool, isAuthorized: @escaping @Sendable () async -> Bool, refresh: @escaping @Sendable () async -> Void,
@@ -61,7 +63,9 @@ public actor BackgroundRefresher {
     /// One wake from Health. Returns when it is finished with, however it ended.
     public func handleWake() async -> Outcome {
         if let inFlight {
+            waitingWakes += 1
             _ = await inFlight.value
+            waitingWakes -= 1
             return .coalesced
         }
         let task = Task { await self.run() }

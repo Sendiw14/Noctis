@@ -230,8 +230,7 @@ struct EntitlementManagerTests {
         manager.startListening()
         client.set([record()])
         client.announce()
-        let deadline = ContinuousClock.now + .seconds(30)
-        while manager.tier != .premium, ContinuousClock.now < deadline { try? await Task.sleep(for: .milliseconds(10)) }
+        _ = await waitFor { manager.tier == .premium }
         #expect(manager.tier == .premium && manager.state == .premium(.purchased))
     }
 

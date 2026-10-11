@@ -24,8 +24,7 @@ public enum HomeBodyProbe {
         lock.withLock { counts.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ";") }
     }
 
-    /// The app's physical memory footprint, in megabytes.
-    public static var footprintMegabytes: Double {
+    private static var vmInfo: task_vm_info_data_t? {
         var info = task_vm_info_data_t()
         var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
         let result = withUnsafeMutablePointer(to: &info) {
@@ -33,7 +32,19 @@ public enum HomeBodyProbe {
                 task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
             }
         }
-        return result == KERN_SUCCESS ? Double(info.phys_footprint) / 1_048_576 : 0
+        return result == KERN_SUCCESS ? info : nil
+    }
+
+    /// The app's physical memory footprint, in megabytes.
+    public static var footprintMegabytes: Double {
+        vmInfo.map { Double($0.phys_footprint) / 1_048_576 } ?? 0
+    }
+
+    /// Memory the allocator has handed back to the system but not unmapped ("reusable"): it is not in the footprint until the allocator uses it
+    /// again, so the footprint alone swings by this much with no leak (QA_LEDGER.md: a 10 MB step in a run of twenty laps that was this). A leak is
+    /// what the footprint plus this grows by.
+    public static var reusableMegabytes: Double {
+        vmInfo.map { Double($0.reusable) / 1_048_576 } ?? 0
     }
 }
 
@@ -48,7 +59,7 @@ struct HomeDebugProbeView: View {
                 .frame(width: 2, height: 2)
                 .accessibilityElement()
                 .accessibilityIdentifier("debug.probe")
-                .accessibilityLabel(HomeBodyProbe.summary + ";lowPower=\(lowPower ? 1 : 0)")
+                .accessibilityLabel(HomeBodyProbe.summary + ";lowPower=\(lowPower ? 1 : 0)" + String(format: ";reusable=%.1f", HomeBodyProbe.reusableMegabytes))
                 .accessibilityValue(String(format: "%.1f", HomeBodyProbe.footprintMegabytes))
         }
         .allowsHitTesting(false)

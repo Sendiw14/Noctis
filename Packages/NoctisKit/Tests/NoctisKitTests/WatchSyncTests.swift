@@ -639,7 +639,7 @@ struct WatchSyncServiceTests {
         await service.publish(snapshot())
         session.watchAsked()
         // The request runs on its own task: wait for the second send.
-        for _ in 0..<100 where session.contexts.count < 2 { try await Task.sleep(for: .milliseconds(20)) }
+        _ = await waitFor { !(session.contexts.count < 2) }
         #expect(refreshes.count == 1 && session.contexts.count == 2)
     }
 

@@ -78,16 +78,9 @@ public struct AppContainer {
         self.storeManager = store
         let gate = FeatureGate(entitlements: store.entitlementManager)
         self.featureGate = gate
-        let container: ModelContainer
-        do {
-            // Never synced: the profile, the alarm and the wind-down record stay on this device.
-            container = try ModelContainer(
-                for: UserProfileRecord.self, AlarmConfiguration.self, WindDownSession.self,
-                configurations: ModelConfiguration(groupContainer: .none, cloudKitDatabase: .none)
-            )
-        } catch {
-            fatalError("Failed to initialize the local data store: \(error)")
-        }
+        // Never synced: the profile, the alarm and the wind-down record stay on this device. A file that will not open is set aside and the app
+        // starts empty (never a crash, never a loop); a locked one is left where it is (APP_RULES.md R65).
+        let (container, _) = NoctisStore.open()
         self.modelContainer = container
 
         let profileStore = ProfileStore(context: ModelContext(container))
@@ -99,12 +92,15 @@ public struct AppContainer {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         let debug = DebugLaunchOptions(arguments: arguments)
+        // `-noctisNow <ISO 8601>`: the app's clock starts at that instant and runs on, so a screenshot or a test sees the same morning at any hour.
+        let appClock: @Sendable () -> Date = debug.clock()
         // Before anything reads the tier (a route that opens at launch is clamped by it).
         if let tier = debug.forceTier { store.entitlementManager.debugForce(tier) }
         let provider: any HealthDataProviding
         if let scenario = debug.mockScenario {
             provider = MockHealthKitProvider(
                 scenario: scenario,
+                referenceDate: appClock(),
                 // The mock forgets its permission between launches; a
                 // finished onboarding already granted it.
                 startAuthorized: !debug.unauthorized
@@ -137,6 +133,7 @@ public struct AppContainer {
             model.open(route)
         }
         #else
+        let appClock: @Sendable () -> Date = { Date() }
         let provider = HealthKitProvider()
         self.model = AppModel(healthProvider: provider, profileStore: profileStore)
         self.model.featureGate = gate
@@ -188,14 +185,14 @@ public struct AppContainer {
         if debug.resetState { reviewFile.erase() }
         #endif
         let reviewStore = ReviewStore(file: reviewFile)
-        let reviewRepo = ReviewRepository(provider: provider, store: reviewStore, insights: insightStore)
+        let reviewRepo = ReviewRepository(provider: provider, store: reviewStore, insights: insightStore, clock: appClock)
         #if DEBUG
         // A mock run has no insights found during last week: place them there, so the story's insight page can be seen.
         if debug.mockScenario != nil { Task { await reviewRepo.debugPlaceInsightsInPeriod() } }
         // `-seedReviews`: the last weeks and months are made (every second one opened), so the Reviews list has something to list.
         if debug.seedReviews {
             Task {
-                let now = Date()
+                let now = appClock()
                 let calendar = await reviewRepo.calendar()
                 let periods = ReviewListBuilder.candidates(now: now, weekday: 1, calendar: calendar)
                 for (index, period) in periods.enumerated() {
@@ -205,7 +202,7 @@ public struct AppContainer {
         }
         #endif
         self.reviewRepository = reviewRepo
-        let insightsRepo = InsightsRepository(provider: provider, store: insightStore)
+        let insightsRepo = InsightsRepository(provider: provider, store: insightStore, clock: appClock)
         self.insightsRepository = insightsRepo
         // The widgets' summary (R44): one small file in the App Group, written after every refresh of Home's data. It is
         // erased with the rest; UI tests start without one.
@@ -222,13 +219,13 @@ public struct AppContainer {
         #endif
         let watchSync = WatchSyncService(session: watchSession, stored: { widgetStore?.load() })
         let widgetPublisher = WidgetPublisher(
-            store: widgetStore, inputs: widgetInputs, reload: { WidgetCenter.shared.reloadAllTimelines() },
+            store: widgetStore, inputs: widgetInputs, reload: { WidgetCenter.shared.reloadAllTimelines() }, clock: appClock,
             epoch: { watchSync.dataEpoch }, afterWrite: { await watchSync.publish($0) }, afterForget: { await watchSync.forget() }
         )
         // The repositories the tabs read: Coach reads the same snapshots (R20).
-        let homeRepository = HomeRepository(provider: provider, insights: insightsRepository, store: snapshotStore, widgets: widgetPublisher)
-        let sleepRepository = SleepRepository(provider: provider)
-        let recoveryRepository = RecoveryRepository(provider: provider)
+        let homeRepository = HomeRepository(provider: provider, clock: appClock, insights: insightsRepository, store: snapshotStore, widgets: widgetPublisher)
+        let sleepRepository = SleepRepository(provider: provider, clock: appClock)
+        let recoveryRepository = RecoveryRepository(provider: provider, clock: appClock)
         // The reviews' cards (R63): which review day the person chose is read when it is needed, since the preferences are read further down.
         let reviewWeekday = ReviewWeekdaySource()
         #if DEBUG
@@ -242,6 +239,7 @@ public struct AppContainer {
             profile: { model.profile },
             // "Connect Apple Health" reuses onboarding's authorization flow.
             connectHealth: { await model.requestHealthAuthorization() },
+            clock: appClock,
             modeOverride: modeOverride,
             // Tonight's block and the evening hero draw Premium's window; the free plan's is the one bedtime (R57).
             bedtimeWindow: {
@@ -250,7 +248,7 @@ public struct AppContainer {
                 let snapshot = await sleepRepository.refresh(profile: current)
                 let recommendation = BedtimeInputsBuilder.recommendation(
                     wakeMinutes: current.typicalWakeMinutes, needMinutes: current.needMinutes, timing: snapshot.timing, balance: snapshot.balance,
-                    consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent
+                    consistency: snapshot.consistency, now: appClock(), timeZone: .autoupdatingCurrent
                 )
                 return recommendation.window.map {
                     HomeBedtimeWindow(startMinutes: $0.startMinutes, endMinutes: $0.endMinutes, centerMinutes: recommendation.centerMinutes)
@@ -263,18 +261,21 @@ public struct AppContainer {
             repository: sleepRepository,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() },
+            clock: appClock,
             isUnlocked: { gate.isUnlocked($0) }
         )
         self.recoveryViewModel = RecoveryViewModel(
             repository: recoveryRepository,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() },
+            clock: appClock,
             isUnlocked: { gate.isUnlocked($0) }
         )
         self.insightsViewModel = InsightsViewModel(
             repository: insightsRepository,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() },
+            clock: appClock,
             isUnlocked: { gate.isUnlocked($0) },
             reviews: reviewRepo,
             reviewWeekday: { reviewWeekday.current() },
@@ -320,6 +321,7 @@ public struct AppContainer {
             history: coachHistory,
             profile: { model.profile },
             connectHealth: { await model.requestHealthAuthorization() },
+            clock: appClock,
             gate: gate
         )
         self.coachViewModel = coachVM
@@ -338,6 +340,7 @@ public struct AppContainer {
         self.tonightViewModel = TonightViewModel(
             sleep: sleepRepository, alarm: alarmService, profile: { model.profile },
             format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
+            clock: appClock,
             isUnlocked: { gate.isUnlocked($0) }
         )
         // The preferences (R38). Read after `-noctisResetState` has cleared what a fresh install would not have.
@@ -358,7 +361,7 @@ public struct AppContainer {
                 let snapshot = await sleepRepository.refresh(profile: model.profile)
                 return BedtimeInputsBuilder.recommendation(
                     wakeMinutes: wake, needMinutes: need, timing: snapshot.timing, balance: snapshot.balance,
-                    consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent,
+                    consistency: snapshot.consistency, now: appClock(), timeZone: .autoupdatingCurrent,
                     personalized: gate.isUnlocked(.tonightPersonalizedWindow)
                 ).centerMinutes
             },
@@ -408,10 +411,12 @@ public struct AppContainer {
             let personalized = await MainActor.run { gate.isUnlocked(.tonightPersonalizedWindow) }
             return BedtimeInputsBuilder.recommendation(
                 wakeMinutes: profile.typicalWakeMinutes, needMinutes: profile.needMinutes, timing: snapshot.timing, balance: snapshot.balance,
-                consistency: snapshot.consistency, now: Date(), timeZone: .autoupdatingCurrent, personalized: personalized
+                consistency: snapshot.consistency, now: appClock(), timeZone: .autoupdatingCurrent, personalized: personalized
             )
         }
-        widgetInputs.setAlarm { WidgetSnapshotMaker.alarm(await alarmService.status().settings) }
+        // The widgets redraw on every alarm update, so they read the alarm as the service holds it: asking the system again would answer with an
+        // update, which redraws the widgets, which asks again (QA_LEDGER.md: 40 million writes of one row).
+        widgetInputs.setAlarm { WidgetSnapshotMaker.alarm(await alarmService.peek().settings) }
         widgetInputs.setTier { await MainActor.run { gate.tier } }
         Task {
             for await _ in await alarmService.updates() { await widgetPublisher.republish() }
@@ -420,7 +425,8 @@ public struct AppContainer {
         self.profileViewModel = ProfileViewModel(
             sleep: sleepRepository, alarm: alarmService, health: HealthDataStatusReader(provider: provider), profile: { model.profile },
             edit: { model.apply($0) }, notifications: coordinator, preferences: preferences,
-            entitlements: storeManager.entitlementManager, format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
+            entitlements: storeManager.entitlementManager, format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
+            clock: appClock
         )
         // Sleep sounds (R31): the real engine, or in DEBUG a silent one that still renders the real
         // sounds for the meter, so a screenshot or a UI test makes no noise.
@@ -574,7 +580,7 @@ public struct AppContainer {
             preferences: preferences, notifications: coordinator, store: storeManager, health: HealthDataStatusReader(provider: provider),
             alarm: alarmService, profile: { model.profile }, connectHealth: { await model.requestHealthAuthorization() },
             hapticsAvailable: { breathing.hapticsAvailable }, format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
-            data: dataManager, watch: watchSync
+            clock: appClock, data: dataManager, watch: watchSync
         )
 
         #if DEBUG
@@ -659,6 +665,8 @@ struct DebugLaunchOptions {
     let forceTier: Tier?
     /// `-paywallContext recovery90D|...`: opens the paywall sheet over the app, as a tap on that locked thing would (a DEBUG aid for a screenshot).
     let paywallContext: PaywallContext?
+    /// `-noctisNow 2026-10-06T10:00:00+05:30`: the app's clock starts at that instant and runs on from there.
+    let pinnedNow: Date?
 
     init(arguments: [String]) {
         func value(after flag: String) -> String? {
@@ -698,6 +706,14 @@ struct DebugLaunchOptions {
         notificationTap = value(after: "-noctisNotificationTap")
         seedReviews = arguments.contains("-seedReviews")
         paywallContext = value(after: "-paywallContext").flatMap(PaywallContext.init(rawValue:))
+        pinnedNow = value(after: "-noctisNow").flatMap { try? Date($0, strategy: .iso8601) }
+    }
+
+    /// The clock the repositories and view models are given: the real one, or the pinned instant plus the time that has passed since launch.
+    func clock() -> @Sendable () -> Date {
+        guard let pinnedNow else { return { Date() } }
+        let launched = Date()
+        return { pinnedNow.addingTimeInterval(Date().timeIntervalSince(launched)) }
     }
 
     /// The summary the flag names, for the Subscription page's every state.
@@ -770,15 +786,15 @@ struct DebugLaunchOptions {
     func makeJournalStore(provider: JournalContainerProvider) -> any JournalStoring {
         guard mockJournal != nil || mockScenario != nil else { return JournalStore(provider: provider) }
         let words = mockJournal?.split(separator: ":").map(String.init) ?? []
-        let store = MemoryJournalStore(words.contains("filled") ? Self.sampleJournal() : [])
+        let store = MemoryJournalStore(words.contains("filled") ? sampleJournal() : [])
         store.failing = words.contains("unavailable")
         return store
     }
 
     /// A few entries over the last days, for a screenshot.
     @MainActor
-    static func sampleJournal() -> [JournalEntrySnapshot] {
-        let now = Date()
+    func sampleJournal() -> [JournalEntrySnapshot] {
+        let now = clock()()
         func entry(_ daysAgo: Double, hour: Int, energy: Int?, mood: Int?, focus: Int?, _ text: String) -> JournalEntrySnapshot {
             let day = now.addingTimeInterval(-daysAgo * 86_400)
             let date = Calendar.current.date(bySettingHour: hour, minute: 40, second: 0, of: day) ?? day

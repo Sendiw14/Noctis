@@ -41,7 +41,7 @@ struct BackgroundRefresherTests {
     private func refresher(
         onboarded: Bool = true, authorized: Bool = true, clock: Clock = Clock(), refreshes: Count = Count(), asked: Count = Count(),
         minimumInterval: TimeInterval = 60, timeBudget: TimeInterval = 20, hold: Gate? = nil,
-        sleep: @escaping @Sendable (TimeInterval) async -> Void = { _ in try? await Task.sleep(for: .seconds(3600)) }
+        sleep: @escaping @Sendable (TimeInterval) async -> Void = held
     ) -> BackgroundRefresher {
         BackgroundRefresher(
             isOnboarded: { onboarded },
@@ -85,8 +85,12 @@ struct BackgroundRefresherTests {
         let first = Task { await service.handleWake() }
         let second = Task { await service.handleWake() }
         let third = Task { await service.handleWake() }
-        // None has finished while the refresh is held.
-        try? await Task.sleep(for: .milliseconds(150))
+        // The refresh has started and is held, and the other two wakes are waiting for it: none has finished.
+        let ready = await waitFor {
+            let waiting = await service.waitingWakes
+            return refreshes.count == 1 && waiting == 2
+        }
+        #expect(ready)
         #expect(refreshes.count == 1, "one refresh for three wakes")
         await gate.release()
         let outcomes = await [first.value, second.value, third.value]

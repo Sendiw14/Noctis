@@ -1,0 +1,8 @@
+xcodebuild test -scheme NoctisKit-Package -destination 'platform=iOS Simulator,name=QA 17 Pro' -enableThreadSanitizer YES (Xcode 27.0, iOS 27.0 simulator)
+** TEST SUCCEEDED **
+exit=0 seconds=742
+​➜ Test renderLoadedPlanCards() skipped.
+​➜ Test renderingAllocatesNothing() skipped: "a sanitizer replaces the allocator, so the hook sees nothing"
+✔ Test run with 2477 tests in 329 suites passed after 721.958 seconds.
+➜ Test theHookCountsADeliberateAllocation() skipped: "a sanitizer replaces the allocator, so the hook sees nothing"
+ThreadSanitizer reports in the log: 0

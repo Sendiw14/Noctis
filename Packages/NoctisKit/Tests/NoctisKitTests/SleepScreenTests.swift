@@ -312,7 +312,7 @@ struct SleepViewModelTests {
         let earlier = snap.records[snap.records.count - 3].night
         model.select(night: earlier)
         #expect(model.selection?.night == earlier, "the picker moves before the content")
-        for _ in 0..<100 where model.screen?.day?.night != earlier { try await Task.sleep(for: .milliseconds(20)) }
+        _ = await waitFor { !(model.screen?.day?.night != earlier) }
         #expect(model.screen?.day?.night == earlier)
         #expect(model.screen?.selection.night == earlier)
     }
@@ -323,7 +323,7 @@ struct SleepViewModelTests {
         let night = try #require(model.selection?.night)
         model.select(range: .week)
         #expect(model.selection == SleepSelection(night: night, range: .week))
-        for _ in 0..<100 where model.model?.selection.range != .week { try await Task.sleep(for: .milliseconds(20)) }
+        _ = await waitFor { !(model.model?.selection.range != .week) }
         #expect(model.model?.week != nil)
     }
 

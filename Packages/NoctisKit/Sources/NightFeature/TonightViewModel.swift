@@ -67,7 +67,7 @@ public final class TonightViewModel {
         async let bedtime: Void = refreshBedtime()
         async let status: Void = refreshAlarm()
         _ = await (bedtime, status)
-        startObserving()
+        await startObserving()
     }
 
     public func onDisappear() {
@@ -104,10 +104,13 @@ public final class TonightViewModel {
         apply(await alarmService.status())
     }
 
-    private func startObserving() {
+    /// Subscribes to the system before it returns (and so before `onAppear` does): an alarm that rings right after the screen appears is not
+    /// missed because a task had not started yet. The task then forwards the service's own updates, which begin with how the alarm is now.
+    private func startObserving() async {
+        guard observing == nil else { return }
+        await alarmService.startObserving()
         guard observing == nil else { return }
         observing = Task { [weak self, alarmService] in
-            await alarmService.startObserving()
             for await status in await alarmService.updates() {
                 self?.apply(status)
             }

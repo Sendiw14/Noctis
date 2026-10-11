@@ -1,0 +1,9 @@
+xcodebuild test -scheme NoctisKit-Package -destination 'platform=iOS Simulator,name=QA 17 Pro' -enableAddressSanitizer YES -enableUndefinedBehaviorSanitizer YES (Xcode 27.0, iOS 27.0 simulator)
+** TEST SUCCEEDED **
+exit=0 seconds=715
+✔ Test run with 2477 tests in 329 suites passed after 644.019 seconds.
+➜ Test renderLoadedPlanCards() skipped.
+➜ Test renderingAllocatesNothing() skipped: "a sanitizer replaces the allocator, so the hook sees nothing"
+➜ Test theHookCountsADeliberateAllocation() skipped: "a sanitizer replaces the allocator, so the hook sees nothing"
+AddressSanitizer reports in the log: 0
+UBSan 'runtime error' lines in the log: 0

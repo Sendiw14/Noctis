@@ -97,6 +97,9 @@ public final class IntentRuntime {
     private var host: (any IntentHost)?
     private var waiters: [UUID: CheckedContinuation<(any IntentHost)?, Never>] = [:]
 
+    /// How many intents are waiting for the app to finish starting (what a test looks at before it lets the app arrive).
+    public var waitingForHost: Int { waiters.count }
+
     public init(environment: IntentEnvironment = .live, host: (any IntentHost)? = nil) {
         self.environment = environment
         self.host = host

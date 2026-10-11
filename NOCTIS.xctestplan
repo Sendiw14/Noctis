@@ -1,0 +1,140 @@
+{
+  "configurations": [
+    {
+      "id": "157F515F-7E0B-5DBF-93DF-D09ADD23A830",
+      "name": "Colombo, en_LK, 24 h, Monday first",
+      "options": {
+        "language": "en",
+        "region": "LK",
+        "environmentVariableEntries": [
+          {
+            "key": "TZ",
+            "value": "Asia/Colombo"
+          },
+          {
+            "key": "NOCTIS_EXPECT_TZ",
+            "value": "Asia/Colombo"
+          },
+          {
+            "key": "NOCTIS_EXPECT_REGION",
+            "value": "LK"
+          },
+          {
+            "key": "NOCTIS_EXPECT_HOUR12",
+            "value": "0"
+          },
+          {
+            "key": "NOCTIS_EXPECT_FIRST_WEEKDAY",
+            "value": "2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "C8311211-D6D5-529F-8C4A-0D733EAE9BF6",
+      "name": "Los Angeles, en_US, 12 h, Sunday first",
+      "options": {
+        "language": "en",
+        "region": "US",
+        "environmentVariableEntries": [
+          {
+            "key": "TZ",
+            "value": "America/Los_Angeles"
+          },
+          {
+            "key": "NOCTIS_EXPECT_TZ",
+            "value": "America/Los_Angeles"
+          },
+          {
+            "key": "NOCTIS_EXPECT_REGION",
+            "value": "US"
+          },
+          {
+            "key": "NOCTIS_EXPECT_HOUR12",
+            "value": "1"
+          },
+          {
+            "key": "NOCTIS_EXPECT_FIRST_WEEKDAY",
+            "value": "1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "9B4A2913-0026-5AD5-8FA3-383B2CCC6B7B",
+      "name": "Auckland, en_NZ, 12 h, Monday first",
+      "options": {
+        "language": "en",
+        "region": "NZ",
+        "environmentVariableEntries": [
+          {
+            "key": "TZ",
+            "value": "Pacific/Auckland"
+          },
+          {
+            "key": "NOCTIS_EXPECT_TZ",
+            "value": "Pacific/Auckland"
+          },
+          {
+            "key": "NOCTIS_EXPECT_REGION",
+            "value": "NZ"
+          },
+          {
+            "key": "NOCTIS_EXPECT_HOUR12",
+            "value": "1"
+          },
+          {
+            "key": "NOCTIS_EXPECT_FIRST_WEEKDAY",
+            "value": "2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "FC154E5E-BB63-5A5D-AFB0-CD2720E677C8",
+      "name": "Lord Howe, en_AU, 12 h, Monday first",
+      "options": {
+        "language": "en",
+        "region": "AU",
+        "environmentVariableEntries": [
+          {
+            "key": "TZ",
+            "value": "Australia/Lord_Howe"
+          },
+          {
+            "key": "NOCTIS_EXPECT_TZ",
+            "value": "Australia/Lord_Howe"
+          },
+          {
+            "key": "NOCTIS_EXPECT_REGION",
+            "value": "AU"
+          },
+          {
+            "key": "NOCTIS_EXPECT_HOUR12",
+            "value": "1"
+          },
+          {
+            "key": "NOCTIS_EXPECT_FIRST_WEEKDAY",
+            "value": "2"
+          }
+        ]
+      }
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": false,
+    "testTimeoutsEnabled": true,
+    "defaultTestExecutionTimeAllowance": 600
+  },
+  "testTargets": [
+    {
+      "parallelizable": false,
+      "target": {
+        "containerPath": "container:Packages/NoctisKit",
+        "identifier": "NoctisKitTests",
+        "name": "NoctisKitTests"
+      }
+    }
+  ],
+  "version": 1
+}

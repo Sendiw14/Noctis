@@ -201,9 +201,12 @@ public struct CoachHistoryErasure: NoctisErasable {
     }
 }
 
+/// The history store cannot be read right now because the iPhone is locked.
+public struct CoachHistoryStoreLocked: Error {}
+
 /// The container Coach's history lives in, apart from the app's other data.
 public enum CoachHistoryContainer {
-    public static let schema = Schema([AIConversation.self, AIMessage.self])
+    public static let schema = Schema(versionedSchema: CoachHistorySchemaV1.self)
 
     /// "Noctis/CoachHistory" in Application Support.
     public static var defaultDirectory: URL {
@@ -214,21 +217,38 @@ public enum CoachHistoryContainer {
     /// With `inMemory`, nothing touches disk (tests). Otherwise the store sits
     /// in `directory` with complete file protection, out of backups, and with
     /// no CloudKit database: it never leaves the device.
-    public static func make(directory: URL? = nil, inMemory: Bool = false) throws -> ModelContainer {
-        if inMemory {
-            return try ModelContainer(for: schema, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
-        }
+    ///
+    /// A store that will not open is set aside, never deleted, and a new one is made (`StoreRecovery`, APP_RULES.md R65): the conversations
+    /// in it are not shown, and not lost. While the iPhone is locked nothing is moved, and this throws so the caller asks again later.
+    public static func make(directory: URL? = nil, inMemory: Bool = false, recovery: StoreRecovery? = nil) throws -> ModelContainer {
+        if inMemory { return try memoryContainer() }
         let folder = directory ?? defaultDirectory
         try FileManager.default.createDirectory(
             at: folder, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete]
         )
-        let configuration = ModelConfiguration(
-            "CoachHistory", schema: schema, url: folder.appending(path: "coach-history.store", directoryHint: .notDirectory),
-            allowsSave: true, cloudKitDatabase: .none
-        )
-        let container = try ModelContainer(for: schema, configurations: configuration)
+        let url = folder.appending(path: "coach-history.store", directoryHint: .notDirectory)
+        let recovery = recovery ?? StoreRecovery.beside(folder: folder, up: 1)
+        let (container, outcome) = try recovery.open(.coachHistory, at: url, make: { try diskContainer(at: $0) }, inMemory: { try memoryContainer() })
+        // Locked: say so, so the next ask tries the real store again instead of keeping this stand-in for the whole run.
+        if outcome == .lockedLeftInPlace { throw CoachHistoryStoreLocked() }
         protect(folder)
         return container
+    }
+
+    private static func diskContainer(at url: URL) throws -> ModelContainer {
+        let configuration = ModelConfiguration("CoachHistory", schema: schema, url: url, allowsSave: true, cloudKitDatabase: .none)
+        let opened = try ModelContainer(for: schema, migrationPlan: CoachHistoryMigrationPlan.self, configurations: configuration)
+        let context = ModelContext(opened)
+        _ = try context.fetchCount(FetchDescriptor<AIConversation>())
+        _ = try context.fetchCount(FetchDescriptor<AIMessage>())
+        return opened
+    }
+
+    private static func memoryContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: schema, migrationPlan: CoachHistoryMigrationPlan.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        )
     }
 
     /// Complete protection and no backup, on the folder and what is in it.
@@ -245,4 +265,18 @@ public enum CoachHistoryContainer {
             try? manager.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: file.path)
         }
     }
+}
+
+// MARK: - Versions (APP_RULES.md R65)
+
+/// Version 1 of Coach's history store (`coach-history.store`).
+public enum CoachHistorySchemaV1: VersionedSchema {
+    public static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
+    public static var models: [any PersistentModel.Type] { [AIConversation.self, AIMessage.self] }
+}
+
+/// Every version of Coach's history store, oldest first.
+public enum CoachHistoryMigrationPlan: SchemaMigrationPlan {
+    public static var schemas: [any VersionedSchema.Type] { [CoachHistorySchemaV1.self] }
+    public static var stages: [MigrationStage] { [] }
 }

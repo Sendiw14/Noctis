@@ -174,6 +174,11 @@ public enum DataWiring {
                     try? FileManager.default.removeItem(at: i.roots.url(directory).appending(path: path, directoryHint: .isDirectory))
                 }
             },
+            .setAsideFiles: {
+                for case .folder(let directory, let path) in inventory[.setAsideFiles].locations {
+                    try? FileManager.default.removeItem(at: i.roots.url(directory).appending(path: path, directoryHint: .isDirectory))
+                }
+            },
             .exportFile: {
                 try? FileManager.default.removeItem(at: i.roots.url(.temporary).appending(path: DataExport.fileName, directoryHint: .notDirectory))
             },
@@ -253,6 +258,19 @@ public enum DataWiring {
             },
             .widgetSnapshot: { DataExport.fileObject(at: i.roots.url(.appGroup).appending(path: WidgetSnapshotStore.fileName, directoryHint: .notDirectory)) },
             .sleepSoundsState: { DataExport.fileObject(at: i.roots.url(.appGroup).appending(path: SleepSoundsStore.fileName, directoryHint: .notDirectory)) },
+            // A damaged file cannot be read, so the export lists what was set aside (which store, how big), not its bytes.
+            .setAsideFiles: {
+                var files: [[String: Any]] = []
+                let root = i.roots.url(.applicationSupport).appending(path: StoreRecovery.folderPath, directoryHint: .isDirectory)
+                for name in ((try? FileManager.default.contentsOfDirectory(atPath: root.path)) ?? []).sorted() {
+                    let folder = root.appending(path: name, directoryHint: .isDirectory)
+                    let bytes = ((try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []).reduce(0) { total, file in
+                        total + ((try? FileManager.default.attributesOfItem(atPath: folder.appending(path: file).path)[.size] as? Int) ?? 0)
+                    }
+                    files.append(["name": name, "bytes": bytes])
+                }
+                return ["files": files]
+            },
             .watchSync: {
                 var object: [String: Any] = [:]
                 if let sent = WatchSyncDefaults(defaults: i.defaults).lastSentAt { object["lastSentAt"] = ISO8601DateFormatter().string(from: sent) }

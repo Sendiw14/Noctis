@@ -229,7 +229,8 @@ struct IntentPerformTests {
         let host = FakeIntentHost()
         let under = runtime(snapshot(.full), host: nil, wait: 5)
         async let running: Void = run(StartWindDownIntent(length: .tenMinutes), under: under)
-        try await Task.sleep(for: .milliseconds(100))
+        // The app arrives only once the intent is waiting for it.
+        #expect(await waitFor { under.waitingForHost == 1 })
         under.install(host)
         try await running
         #expect(host.calls == ["windDown 10"], "a background launch finished starting: the intent found the app")

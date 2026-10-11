@@ -110,8 +110,10 @@ struct DataInventoryEntityTests {
         // The app's own store: the three models AppContainer opens.
         let appStore = Set(["UserProfileRecord", "AlarmConfiguration", "WindDownSession"])
         #expect(appStore.isSubset(of: registered))
+        // Opened through `NoctisStore` (R65), as the models of `NoctisSchemaV1`.
+        #expect(Set(NoctisSchemaV1.models.map { String(describing: $0) }) == appStore)
         let container = sources().first { relative($0.path) == "AppRoot/AppContainer.swift" }?.code ?? ""
-        for name in appStore { #expect(container.contains("\(name).self"), Comment(rawValue: "AppContainer no longer opens \(name)")) }
+        #expect(container.contains("NoctisStore.open("), "AppContainer opens the database through NoctisStore")
     }
 
     @Test func everyStoreIsLocalWithNoCloudKitDatabase() {

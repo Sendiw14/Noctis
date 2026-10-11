@@ -185,9 +185,11 @@ struct InsightFatigueTests {
         #expect(model.screen?.insight != nil)
         model.dismissInsight()
         #expect(model.screen?.insight == nil)
-        try await Task.sleep(for: .milliseconds(50))
-        await model.refresh()
-        #expect(model.screen?.insight == nil)
+        // The write goes through the repository actor: a rebuild after it keeps the insight away.
+        #expect(await waitFor {
+            await model.refresh()
+            return model.screen?.insight == nil
+        })
     }
 }
 
@@ -378,9 +380,7 @@ struct HomeLiveUpdateTests {
         await model.onAppear()
         #expect(!model.showsNewNight)
         provider.nightArrives()
-        for _ in 0..<100 where !model.showsNewNight {
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        _ = await waitFor { !(!model.showsNewNight) }
         #expect(model.showsNewNight)
         #expect(model.snapshot?.lastNight != nil)
         model.stopObserving()
@@ -393,10 +393,9 @@ struct HomeLiveUpdateTests {
                                   profile: { UserProfileSnapshot() }, clock: { clock })
         await model.onAppear()
         provider.emitChange()
-        for _ in 0..<100 where provider.sleepFetches < 2 {
-            try await Task.sleep(for: .milliseconds(20))
-        }
-        try await Task.sleep(for: .milliseconds(50))
+        _ = await waitFor { !(provider.sleepFetches < 2) }
+        // The rebuild the change started has finished: and it found no new night.
+        _ = await waitFor { !model.isRefreshing }
         #expect(!model.showsNewNight)
         model.stopObserving()
     }

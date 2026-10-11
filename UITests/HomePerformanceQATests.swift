@@ -167,24 +167,44 @@ final class HomePerformanceQATests: XCTestCase {
 
     /// Open Recovery, go back by the edge swipe the moment it is up, and
     /// open it again: the zoom has no state to get stuck in.
+    ///
+    /// Every step waits for the state it needs, never for a time. The race this test had: the navigation bar named "Recovery" exists from the
+    /// first frame of the zoom, so "it opened" was true while the push was still running, and the edge swipe was sent into a transition whose
+    /// pop gesture is not enabled yet. The same on the way back: Home's hero exists from the first frame of the pop, so "it came back" was true
+    /// while Recovery was still leaving. XCTest's own wait for the app to be idle hides both until the machine is busy.
+    /// What marks each end of a transition here: Recovery's own content (`recovery.hero`) is there and Home's hero is gone (covered) when the
+    /// push has finished; Recovery's bar is gone and Home's hero is hittable when the pop has.
     func testBackSwipeAfterTheRecoveryZoomAndZoomingAgain() {
         let app = launchHome()
         let hero = dayHero(app)
-        XCTAssertTrue(hero.waitForExistence(timeout: 10))
-        QA.pause(3)
+        // A launch on a busy machine is slow: these are backstops, not expectations.
+        XCTAssertTrue(hero.waitForExistence(timeout: 30))
+        XCTAssertTrue(waitUntil(hero, "isHittable == true", timeout: 30), "Home is on screen and the reveal is over.")
+        let recoveryBar = app.navigationBars["Recovery"]
+        let recoveryHero = app.descendants(matching: .any)["recovery.hero"]
         for round in 1...3 {
             hero.tap()
-            XCTAssertTrue(app.navigationBars["Recovery"].waitForExistence(timeout: 4), "Round \(round) opens.")
+            XCTAssertTrue(recoveryBar.waitForExistence(timeout: 10), "Round \(round) opens.")
+            XCTAssertTrue(recoveryHero.waitForExistence(timeout: 10), "Round \(round): Recovery's content is there.")
+            XCTAssertTrue(hero.waitForNonExistence(timeout: 10), "Round \(round): Home is covered, so the push is over.")
+            XCTAssertTrue(waitUntil(recoveryBar, "isHittable == true", timeout: 10), "Round \(round): the bar can be touched.")
             // The interactive back swipe from the left edge.
             let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.0, dy: 0.5))
             let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5))
             start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
-            if !hero.waitForExistence(timeout: 4) { QA.shot("interrupt-zoom-round-\(round)-stuck") }
-            XCTAssertTrue(hero.exists, "Round \(round) comes back.")
-            XCTAssertFalse(app.navigationBars["Recovery"].exists, "Round \(round) left Recovery.")
-            XCTAssertTrue(hero.isHittable)
+            let left = recoveryBar.waitForNonExistence(timeout: 10)
+            if !left { QA.shot("interrupt-zoom-round-\(round)-stuck") }
+            XCTAssertTrue(left, "Round \(round) left Recovery.")
+            XCTAssertTrue(hero.waitForExistence(timeout: 10), "Round \(round) comes back.")
+            XCTAssertTrue(waitUntil(hero, "isHittable == true", timeout: 10), "Round \(round): Home can be touched again.")
         }
         QA.shot("interrupt-zoom")
+    }
+
+    /// Waits until `predicate` holds for `element` (`isHittable == true`), by the state, with a timeout that is a backstop.
+    private func waitUntil(_ element: XCUIElement, _ predicate: String, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: predicate), object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
     // MARK: - The saved snapshot

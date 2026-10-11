@@ -36,7 +36,8 @@ public nonisolated final class InsightFileStore: NoctisErasable, @unchecked Send
         lock.withLock {
             guard let data = try? Data(contentsOf: fileURL) else { return nil }
             guard let library = try? JSONDecoder().decode(InsightLibrary.self, from: data), library.schema == Self.schemaVersion else {
-                remove()
+                // Unreadable, or written by another version: set aside whole (what the person marked is in it), never deleted, and started again.
+                StoreRecovery.beside(folder: fileURL.deletingLastPathComponent()).setAsideFile(.insights, fileURL)
                 return nil
             }
             return library

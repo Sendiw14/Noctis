@@ -217,7 +217,7 @@ struct RecoveryViewModelTests {
         await model.refresh()
         model.select(segment: .month)
         #expect(model.selection.segment == .month)
-        for _ in 0..<100 where model.screen?.segment != .month { try await Task.sleep(for: .milliseconds(20)) }
+        _ = await waitFor { !(model.screen?.segment != .month) }
         #expect(model.screen?.segment == .month && model.screen?.today == nil)
         #expect(model.model?.chart != nil)
     }
@@ -226,7 +226,7 @@ struct RecoveryViewModelTests {
         let model = model()
         await model.refresh()
         model.select(factor: .hrv, range: .month)
-        for _ in 0..<100 where model.model?.factor == nil { try await Task.sleep(for: .milliseconds(20)) }
+        _ = await waitFor { !(model.model?.factor == nil) }
         #expect(model.model?.factor?.kind == .hrv && model.model?.factor?.values.count == 30)
         // The screen behind it is still Today.
         #expect(model.screen?.today != nil)
@@ -236,7 +236,7 @@ struct RecoveryViewModelTests {
         let model = model()
         model.open(segment: .week)
         await model.refresh()
-        for _ in 0..<100 where model.screen?.segment != .week { try await Task.sleep(for: .milliseconds(20)) }
+        _ = await waitFor { !(model.screen?.segment != .week) }
         #expect(model.screen?.segment == .week)
     }
 

@@ -30,7 +30,7 @@ struct DataManagementCopyTests {
             #expect(group.keeps.contains("not affected") || group.keeps.contains("untouched") || group.keeps.contains("kept"), Comment(rawValue: group.id))
             #expect(!group.question.isEmpty && group.question.hasSuffix("?") && !group.confirm.isEmpty && group.done.hasSuffix("."), Comment(rawValue: group.id))
         }
-        #expect(shared.groups.map(\.id) == ["journal", "coach", "insights", "reviews", "windDown", "cache", "preferences"])
+        #expect(shared.groups.map(\.id) == ["journal", "coach", "insights", "reviews", "windDown", "cache", "preferences", "setAside"])
     }
 
     @Test func aResetSaysItIsAResetAndADeleteSaysItIsDeleted() {

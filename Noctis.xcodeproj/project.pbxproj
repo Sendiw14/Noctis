@@ -58,6 +58,7 @@
 		E344AB2E2256E78CD2896504 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E6A1598900D9096E32D4B12A /* AppShortcuts.xcstrings */; };
 		E5224541D5FE0D30636B117F /* NoctisWatchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8DFDA9704300023319D3E352 /* NoctisWatchKit */; };
 		EA7DA501DAE317EC1028F0CD /* RecoveryQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */; };
+		F16F81738ECDC6390853FAEC /* MemoryQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77454765E4DB6994F359B0BA /* MemoryQATests.swift */; };
 		F432F7BBD5A4F6990A6BA96C /* AppRoot in Frameworks */ = {isa = PBXBuildFile; productRef = 17C413CE67E2BAD13B2C2447 /* AppRoot */; };
 		F44796F3FE12B39F7FCDC5C0 /* TabScaffoldQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */; };
 		FD7DFD110E73258CC40240AB /* NoctisWidgetKit in Frameworks */ = {isa = PBXBuildFile; productRef = 26E8435DA1E232D8A580315D /* NoctisWidgetKit */; };
@@ -166,6 +167,7 @@
 		62661AAACE0CDE992D6E58D4 /* NoctisAlarmWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoctisAlarmWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		64BCF03BF4C8582FEE89933F /* WatchMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMock.swift; sourceTree = "<group>"; };
 		6F6B227D6C1D0125E6CB28A2 /* NOCTISWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NOCTISWatch.entitlements; sourceTree = "<group>"; };
+		77454765E4DB6994F359B0BA /* MemoryQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryQATests.swift; sourceTree = "<group>"; };
 		811601970E5BB83FD5627B7D /* Noctis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Noctis.entitlements; sourceTree = "<group>"; };
 		85F4213CBB03353749905D7E /* HomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQATests.swift; sourceTree = "<group>"; };
 		870C86CD797FAD52E87DC479 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -320,6 +322,7 @@
 				49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */,
 				CE9541D19A4C980942925904 /* HomeV4QATests.swift */,
 				2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */,
+				77454765E4DB6994F359B0BA /* MemoryQATests.swift */,
 				A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */,
 				FE6D414566DC2646DBC6FE09 /* QASupport.swift */,
 				4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */,
@@ -624,6 +627,7 @@
 				77C1193892B2A92697DBB77A /* HomeV3QATests.swift in Sources */,
 				182F75BB96926890C7F1111B /* HomeV4QATests.swift in Sources */,
 				7C879FB1FC08C5D2BC6C11F2 /* InsightsQATests.swift in Sources */,
+				F16F81738ECDC6390853FAEC /* MemoryQATests.swift in Sources */,
 				8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */,
 				7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */,
 				EA7DA501DAE317EC1028F0CD /* RecoveryQATests.swift in Sources */,

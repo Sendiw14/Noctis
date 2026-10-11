@@ -227,19 +227,17 @@ struct CoachConversationTests {
         model.setFeedback(.helpful, for: turn.id)
         #expect(model.turns[0].feedback == .helpful)
         let id = try #require(model.conversationID)
-        await coachWait { false } // let the save land
+        #expect(await waitFor { await history.turns(in: id).first?.feedback == .helpful }, "the save landed")
         var stored = await history.turns(in: id)
-        #expect(stored.first?.feedback == .helpful)
 
         model.setFeedback(.notHelpful, for: turn.id)
         #expect(model.turns[0].feedback == .notHelpful)
-        try? await Task.sleep(for: .milliseconds(150))
+        #expect(await waitFor { await history.turns(in: id).first?.feedback == .notHelpful })
         stored = await history.turns(in: id)
-        #expect(stored.first?.feedback == .notHelpful)
 
         model.setFeedback(.notHelpful, for: turn.id)
         #expect(model.turns[0].feedback == nil)
-        try? await Task.sleep(for: .milliseconds(150))
+        #expect(await waitFor { await history.turns(in: id).first?.feedback == nil })
         stored = await history.turns(in: id)
         #expect(stored.first?.feedback == nil)
     }

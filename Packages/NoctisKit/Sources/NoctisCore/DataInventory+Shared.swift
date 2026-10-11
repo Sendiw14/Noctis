@@ -224,6 +224,15 @@ nonisolated extension DataInventory {
                 export: .notStored("They are made and kept by iOS, not by NOCTIS.")
             ),
             DataCategory(
+                .setAsideFiles, name: "Files set aside",
+                summary: "If one of NOCTIS's own files can't be read, NOCTIS moves it here instead of deleting it, and starts a new one. It holds what that file held, which the app can no longer show you: your profile, your journal or Coach's conversations. There is usually nothing here.",
+                contents: ["A damaged NOCTIS file, only if one was found"],
+                locations: [.folder(.applicationSupport, StoreRecovery.folderPath)],
+                inBackup: false, protection: .completeWhileLocked, deletion: .button("Files set aside"),
+                owner: "NoctisCore/StoreRecovery.swift", holdsUserContent: true,
+                export: .included("setAsideFiles")
+            ),
+            DataCategory(
                 .exportFile, name: "Export file",
                 summary: "The file \"Export my data\" makes, when you ask for it. NOCTIS writes it to a temporary place and deletes it when you leave Data management and the next time it starts.",
                 contents: ["A copy of what NOCTIS stores, in one JSON file"],
@@ -326,6 +335,12 @@ nonisolated extension DataInventory {
                 removes: "Your preferences go back to their defaults: appearance, haptics, wind-down and sound defaults, and reminders. Your goals go back to Better sleep.",
                 keeps: "Your name, sleep need, wake time, alarm, Journal and the rest of NOCTIS are kept.", from: "this iPhone",
                 question: "Reset preferences and goals?", confirm: "Reset preferences and goals", done: "Preferences and goals reset."
+            ),
+            DeletableGroup(
+                id: "setAside", title: "Files set aside", verb: .delete, categories: [.setAsideFiles],
+                removes: "The damaged NOCTIS files that were put aside instead of being deleted, with whatever they still hold: it may be part of your profile, your Journal or your Coach conversations.",
+                keeps: "What NOCTIS is using now, and the rest of NOCTIS, are not affected.", from: "this iPhone",
+                question: "Delete the files set aside?", confirm: "Delete files set aside", done: "Files set aside deleted."
             ),
         ],
         retiredKeys: ["noctis.insights.history"],

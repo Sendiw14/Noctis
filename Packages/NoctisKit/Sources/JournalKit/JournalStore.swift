@@ -16,9 +16,12 @@ public protocol JournalStoring: AnyObject {
     func deleteAll() throws
 }
 
+/// The journal cannot be read right now because the iPhone is locked.
+public struct JournalStoreLocked: Error {}
+
 /// The container the journal lives in, apart from the app's other data and from Coach's history.
 public enum JournalContainer {
-    public static let schema = Schema([JournalEntry.self])
+    public static let schema = Schema(versionedSchema: JournalSchemaV1.self)
 
     /// "Noctis/Journal" in Application Support.
     public static var defaultDirectory: URL {
@@ -28,21 +31,36 @@ public enum JournalContainer {
 
     /// With `inMemory`, nothing touches disk (tests, screenshots). Otherwise the store sits in `directory`
     /// with complete file protection, out of backups, and with no CloudKit database: it never leaves the device.
-    public static func make(directory: URL? = nil, inMemory: Bool = false) throws -> ModelContainer {
-        if inMemory {
-            return try ModelContainer(for: schema, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
-        }
+    ///
+    /// A store that will not open is set aside, never deleted, and a new one is made (`StoreRecovery`, APP_RULES.md R65): the entries in it are
+    /// not shown, and not lost. While the iPhone is locked nothing is moved, and this throws so the caller asks again later.
+    public static func make(directory: URL? = nil, inMemory: Bool = false, recovery: StoreRecovery? = nil) throws -> ModelContainer {
+        if inMemory { return try memoryContainer() }
         let folder = directory ?? defaultDirectory
         try FileManager.default.createDirectory(
             at: folder, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete]
         )
-        let configuration = ModelConfiguration(
-            "Journal", schema: schema, url: folder.appending(path: "journal.store", directoryHint: .notDirectory),
-            allowsSave: true, cloudKitDatabase: .none
-        )
-        let container = try ModelContainer(for: schema, configurations: configuration)
+        let url = folder.appending(path: "journal.store", directoryHint: .notDirectory)
+        let recovery = recovery ?? StoreRecovery.beside(folder: folder, up: 1)
+        let (container, outcome) = try recovery.open(.journal, at: url, make: { try diskContainer(at: $0) }, inMemory: { try memoryContainer() })
+        if outcome == .lockedLeftInPlace { throw JournalStoreLocked() }
         protect(folder)
         return container
+    }
+
+    private static func diskContainer(at url: URL) throws -> ModelContainer {
+        let configuration = ModelConfiguration("Journal", schema: schema, url: url, allowsSave: true, cloudKitDatabase: .none)
+        let opened = try ModelContainer(for: schema, migrationPlan: JournalMigrationPlan.self, configurations: configuration)
+        let context = ModelContext(opened)
+        _ = try context.fetchCount(FetchDescriptor<JournalEntry>())
+        return opened
+    }
+
+    private static func memoryContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: schema, migrationPlan: JournalMigrationPlan.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        )
     }
 
     /// Complete protection and no backup, on the folder and on every file in it (the database and its
@@ -206,4 +224,18 @@ public struct JournalErasure: NoctisErasable {
         for entry in try context.fetch(FetchDescriptor<JournalEntry>()) { context.delete(entry) }
         try context.save()
     }
+}
+
+// MARK: - Versions (APP_RULES.md R65)
+
+/// Version 1 of the journal's store (`journal.store`).
+public enum JournalSchemaV1: VersionedSchema {
+    public static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
+    public static var models: [any PersistentModel.Type] { [JournalEntry.self] }
+}
+
+/// Every version of the journal's store, oldest first.
+public enum JournalMigrationPlan: SchemaMigrationPlan {
+    public static var schemas: [any VersionedSchema.Type] { [JournalSchemaV1.self] }
+    public static var stages: [MigrationStage] { [] }
 }

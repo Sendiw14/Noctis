@@ -278,9 +278,7 @@ struct HomeViewModelTests {
         await viewModel.onAppear()
         #expect(provider.sleepFetches == 1)
         provider.emitChange()
-        for _ in 0..<100 where provider.sleepFetches < 2 {
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        _ = await waitFor { !(provider.sleepFetches < 2) }
         #expect(provider.sleepFetches == 2)
         viewModel.stopObserving()
     }

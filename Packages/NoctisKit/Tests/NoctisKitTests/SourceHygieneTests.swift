@@ -204,6 +204,27 @@ struct SourceHygieneTests {
         }
     }
 
+
+    // MARK: Tests
+
+    /// R66: a test does not sleep for a guessed duration. The few sleeps that stay are a simulated slow dependency (`HomeRepositoryTests`' provider
+    /// latency), a backstop that returns the moment its condition is met (`AlarmServiceTests`), and the helpers themselves (`TestWaiting.swift`).
+    @Test func noTestSleepsForAGuessedDuration() {
+        let allowed: Set<String> = ["TestWaiting.swift", "HomeRepositoryTests.swift", "AlarmServiceTests.swift", "SourceHygieneTests.swift", "SoundPlayerTests.swift"]
+        let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Tests/NoctisKitTests"])
+        #expect(files.count > 50)
+        var found: [String] = []
+        for file in files where !allowed.contains((file.path as NSString).lastPathComponent) {
+            let code = SwiftCodeScanner.codeOnly(file.text)
+            for (index, line) in code.split(separator: "\n", omittingEmptySubsequences: false).enumerated()
+            where line.hasMatch(#"Task\.sleep\(|Thread\.sleep|usleep\(|\bsleep\([0-9]"#) {
+                // `held` is the one sleep that is meant never to end.
+                found.append("\(file.path):\(index + 1)")
+            }
+        }
+        #expect(found.isEmpty, Comment(rawValue: "Wait for the state (waitFor), or inject the timer:\n" + found.joined(separator: "\n")))
+    }
+
     // MARK: Force unwraps, try!, fatalError
 
     static let forcePattern = #"(?<=[\w)\]])!(?!=)|\btry!|\bas!|(?<![\w.])fatalError\s*\(|(?<![\w.])preconditionFailure\s*\("#
@@ -224,8 +245,8 @@ struct SourceHygieneTests {
             "A constant pattern: every Coach test that replaces a token compiles it (CoachTokenTests).",
         "Packages/NoctisKit/Sources/NoctisCore/DataInventory.swift::guard let category = categories.first(where: { $0.id == id }) else { preconditionFailure(\"\\(id) is not in the inventory\") }":
             "A lookup by an enum case in a table the inventory tests prove holds every case (DataInventoryTests).",
-        "Packages/NoctisKit/Sources/AppRoot/AppContainer.swift::fatalError(\"Failed to initialize the local data store: \\(error)\")":
-            "QA-003 (QA_LEDGER.md): the app stops when its store will not open. Replaced in QA part 2 by a quarantine and a fresh store; this entry goes with it.",
+        "Packages/NoctisKit/Sources/NoctisCore/NoctisStore.swift::return (try! inMemory(), .runningInMemory)":
+            "The last resort after a database could not be opened or replaced: an in-memory container of the app's own schema cannot fail short of an invalid model, which every test that opens one would hit (QA-003, R65).",
         "Packages/NoctisKit/Sources/HomeFeature/HomePreviews.swift::fatalError(\"Preview store: \\(error)\")":
             "Inside `#if DEBUG`, a SwiftUI preview of an in-memory store: not compiled into a Release build (the Release symbol check).",
     ]

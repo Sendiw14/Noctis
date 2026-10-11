@@ -15,6 +15,14 @@ import Testing
 struct SoundRealtimeSafetyTests {
     typealias MallocLogger = @convention(c) (UInt32, UInt, UInt, UInt, UInt, UInt32) -> Void
 
+    /// Thread and Address Sanitizer replace the allocator, so `malloc_logger` sees nothing under them: both tests below would prove nothing
+    /// there (the counting test fails, the zero test passes for the wrong reason). They run in every other configuration (QA_LEDGER.md).
+    nonisolated static let allocatorIsReplaced: Bool = {
+        let everything = UnsafeMutableRawPointer(bitPattern: -2)
+        let names: [String] = ["__tsan_init", "__asan_init", "__asan_version_mismatch_check_v8"]
+        return names.contains { name in dlsym(everything, name) != nil }
+    }()
+
     static let watched = Atomic<UInt>(0)
     static let count = Atomic<Int>(0)
 
@@ -38,7 +46,8 @@ struct SoundRealtimeSafetyTests {
         return count.load(ordering: .relaxed)
     }
 
-    @Test func theHookCountsADeliberateAllocation() throws {
+    @Test(.disabled(if: SoundRealtimeSafetyTests.allocatorIsReplaced, "a sanitizer replaces the allocator, so the hook sees nothing"))
+    func theHookCountsADeliberateAllocation() throws {
         let counted = try #require(Self.allocations {
             let box = UnsafeMutablePointer<Int>.allocate(capacity: 64)
             box.initialize(repeating: 1, count: 64)
@@ -47,7 +56,8 @@ struct SoundRealtimeSafetyTests {
         #expect(counted >= 1, "the malloc hook saw nothing, so it proves nothing")
     }
 
-    @Test func renderingAllocatesNothing() throws {
+    @Test(.disabled(if: SoundRealtimeSafetyTests.allocatorIsReplaced, "a sanitizer replaces the allocator, so the hook sees nothing"))
+    func renderingAllocatesNothing() throws {
         let renderer = SoundRenderer()
         let frames = 1156
         let l = UnsafeMutablePointer<Float>.allocate(capacity: frames)

@@ -128,6 +128,8 @@ public nonisolated enum DataCategoryID: String, Sendable, CaseIterable, Hashable
     case diagnosticLog
     case purchases
     case systemFiles
+    /// A NOCTIS database that could not be read, put aside whole instead of deleted (`StoreRecovery`, APP_RULES.md R65).
+    case setAsideFiles
     case exportFile
 
     public var id: String { rawValue }

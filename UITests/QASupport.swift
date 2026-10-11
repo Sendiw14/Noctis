@@ -37,9 +37,26 @@ enum QA {
         if isAX3 { arguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"] }
         // The main app's QA suites were written before Premium: they run as Premium unless a test asks for a tier.
         if extra.contains("-noctisSkipOnboarding"), !extra.contains("-forceTier") { arguments += ["-forceTier", "premium"] }
+        // The mock's last night only exists once it has ended, so a run at 8 AM and a run at 10 AM saw different data (a run between the
+        // mock's wake-up and 9 AM found no "last night" at all: QA_LEDGER.md). Every run is pinned to a morning (or, for the evening
+        // screens, an evening) of today in the device's zone, unless the test or QA_NOW says otherwise; the app's clock runs on from there.
+        if !extra.contains("-noctisNow"), !arguments.contains("-noctisNow") {
+            let evening = zip(extra, extra.dropFirst()).contains { $0 == "-homeMode" && $1 == "evening" }
+            arguments += ["-noctisNow", environment["QA_NOW"] ?? pinnedNow(hour: evening ? 21 : 10, minute: evening ? 30 : 0)]
+        }
         app.launchArguments = arguments + extra
         app.launch()
         return app
+    }
+
+    /// Today at `hour:minute` in the device's zone, as ISO 8601 with its offset.
+    static func pinnedNow(hour: Int, minute: Int) -> String {
+        let calendar = Calendar.current
+        let date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date()
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = calendar.timeZone
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.string(from: date)
     }
 
     static func pause(_ seconds: Double) {

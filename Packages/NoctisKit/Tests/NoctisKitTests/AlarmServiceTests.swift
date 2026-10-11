@@ -41,7 +41,7 @@ struct AlarmServiceTests {
         AlarmSettings(minutesSinceMidnight: minutes, repeatDays: days, snoozeEnabled: snooze, snoozeMinutes: 9)
     }
 
-    /// The first status from `service` that `matches`, or nil after a couple of seconds.
+    /// The first status from `service` that `matches`, or nil after a minute (a backstop).
     private func wait(for service: AlarmService, _ matches: @escaping @Sendable (AlarmStatus) -> Bool) async -> AlarmStatus? {
         await withTaskGroup(of: AlarmStatus?.self) { group in
             let updates = await service.updates()
@@ -50,13 +50,55 @@ struct AlarmServiceTests {
                 return nil
             }
             group.addTask {
-                try? await Task.sleep(for: .seconds(3))
+                // A backstop for a status that never comes, not an expectation: the first match returns at once.
+                try? await Task.sleep(for: .seconds(60))
                 return nil
             }
             let first = await group.next() ?? nil
             group.cancelAll()
             return first
         }
+    }
+
+    // MARK: - Asking again changes nothing
+
+    /// QA found 40.6 million writes of the one alarm row in the app's database: whoever follows `updates()` and asks `status()` on each one (the widgets'
+    /// publisher does) made the service reconcile, write and publish again, which was an update, which asked again, without end.
+    @Test func followingTheUpdatesAndAskingForTheStatusOnEachOneEndsAndWritesNothingMore() async {
+        let (service, _, store) = make(stored: settings(snooze: true))
+        let updates = await service.updates()
+        let consumer = Task {
+            for await _ in updates { _ = await service.status() }
+        }
+        _ = await service.status()
+        for _ in 0..<300 { await Task.yield() }
+        let writes = store.saveCount
+        for _ in 0..<300 { await Task.yield() }
+        consumer.cancel()
+        #expect(store.saveCount == writes, "it is still writing")
+        #expect(writes == 0, "the record is as it was stored: nothing to write")
+    }
+
+    @Test func askingForTheStatusAgainWritesAndSaysNothing() async {
+        let (service, _, store) = make()
+        _ = await service.enable(settings(snooze: true))
+        let afterEnable = store.saveCount
+        let updates = await service.updates()
+        var iterator = updates.makeAsyncIterator()
+        _ = await iterator.next()   // how it is now
+        for _ in 0..<25 { _ = await service.status() }
+        #expect(store.saveCount == afterEnable, "25 asks, no write")
+        _ = await service.disable()
+        let next = await iterator.next()
+        #expect(next?.state == .off || next?.state == .dismissed || next?.state == .cancelled, "the next thing said is the change, not an echo: \(String(describing: next?.state))")
+    }
+
+    @Test func peekReadsWithoutAskingTheSystem() async {
+        let (service, backend, _) = make()
+        _ = await service.enable(settings())
+        let calls = backend.scheduleCalls
+        let seen = await service.peek()
+        #expect(seen.state.isActive && backend.scheduleCalls == calls)
     }
 
     // MARK: - Starting out

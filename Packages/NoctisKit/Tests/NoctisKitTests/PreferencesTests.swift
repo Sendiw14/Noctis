@@ -490,9 +490,12 @@ struct NotificationCoordinatorTests {
 
     @Test func theLastRebuildWinsEvenIfAnEarlierOneIsSlow() async {
         var calls = 0
+        var secondAnswered = false
         let bench = Self.make(center: { _, _ in
             calls += 1
-            if calls == 1 { try? await Task.sleep(for: .milliseconds(120)); return 23 * 60 }
+            // The first answer comes after the second, whatever the machine is doing.
+            if calls == 1 { _ = await waitFor { secondAnswered }; return 23 * 60 }
+            secondAnswered = true
             return 22 * 60
         })
         defer { bench.defaults.removePersistentDomain(forName: bench.name) }

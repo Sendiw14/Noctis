@@ -65,6 +65,10 @@ public final class AVSoundEngineDriver: SoundEngineDriving {
         engine = nil
     }
 
+    /// What a test looks at after `stop()`: the engine and the meter's tap are both gone, and nothing else holds the engine.
+    var engineForTesting: AVAudioEngine? { engine }
+    var meterIsInstalled: Bool { meter != nil }
+
     private func build() {
         let engine = AVAudioEngine()
         let node = renderer.makeSourceNode(format: Self.format)

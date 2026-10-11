@@ -265,7 +265,7 @@ struct InsightsViewModelTests {
             repository: repository, profile: { UserProfileSnapshot() },
             introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey), washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
             reduceMotion: { reduceMotion }, lowPower: { false }, clock: { clock }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"),
-            revealSleep: { _ in try? await Task.sleep(for: .seconds(3600)) }
+            revealSleep: held
         )
     }
 
@@ -312,8 +312,7 @@ struct InsightsViewModelTests {
         #expect(model.insight(id: id)?.state == .new)
         model.markSeen(id: id)
         // The write goes through the repository actor.
-        try await Task.sleep(for: .milliseconds(300))
-        #expect(model.insight(id: id)?.state == .seen)
+        #expect(await waitFor { model.insight(id: id)?.state == .seen })
     }
 
     @Test func theRevealPlaysOncePerDayAndNeverUnderReduceMotion() async {

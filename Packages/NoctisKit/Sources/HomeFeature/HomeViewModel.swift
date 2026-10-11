@@ -102,6 +102,9 @@ public final class HomeViewModel {
     private var revealEnd: Task<Void, Never>?
     /// Waits out the reveal (tests hold it, so a slow run can't end it early).
     private let revealSleep: @Sendable (Double) async -> Void
+    /// Every timer this model starts (the reveal's end, the restored snapshot's grace, the mode boundary, the new-night banner, the morph's
+    /// signpost) waits through this one function. A test holds or releases it, so no assertion ever races a real clock (QA part 2).
+    private let sleep: @Sendable (Double) async -> Void
 
     #if DEBUG
     /// DEBUG: log every new snapshot, privately (`-noctisLogHomeSnapshot`).
@@ -123,9 +126,11 @@ public final class HomeViewModel {
         modeOverride: HomeMode? = nil,
         bedtimeWindow: @escaping () async -> HomeBedtimeWindow? = { nil },
         reviewCards: @escaping () async -> [HomeReviewCard] = { [] },
-        revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) }
+        sleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) },
+        revealSleep: (@Sendable (Double) async -> Void)? = nil
     ) {
-        self.revealSleep = revealSleep
+        self.sleep = sleep
+        self.revealSleep = revealSleep ?? sleep
         self.bedtimeWindow = bedtimeWindow
         self.reviewCardSource = reviewCards
         self.repository = repository
@@ -159,8 +164,8 @@ public final class HomeViewModel {
             revalidatingRestored = true
             if reveal == .pending {
                 awaitsFreshData = true
-                Task { [weak self] in
-                    try? await Task.sleep(for: .seconds(Self.restoreGrace))
+                Task { [weak self, sleep] in
+                    await sleep(Self.restoreGrace)
                     self?.awaitsFreshData = false
                 }
             }
@@ -301,8 +306,8 @@ public final class HomeViewModel {
     /// DEBUG `-homeModeFlipIn <seconds>`: flip day ↔ evening once, after
     /// `seconds`, to show the mode morph on demand.
     public func debugFlipMode(after seconds: Double) {
-        Task { [weak self] in
-            try? await Task.sleep(for: .seconds(seconds))
+        Task { [weak self, sleep] in
+            await sleep(seconds)
             guard let self else { return }
             self.modeOverride = self.header.mode == .day ? .evening : .day
             self.updateClock(canReveal: false)
@@ -353,8 +358,8 @@ public final class HomeViewModel {
         if let before = self.screen?.mode, before != screen.mode {
             // The day ↔ evening morph runs until the paper has crossfaded.
             NoctisSignpost.begin(.morph)
-            Task {
-                try? await Task.sleep(for: .seconds(HomeMorph.paperDuration + 0.2))
+            Task { [sleep] in
+                await sleep(HomeMorph.paperDuration + 0.2)
                 NoctisSignpost.end(.morph)
             }
         }
@@ -394,8 +399,8 @@ public final class HomeViewModel {
         guard let after = snapshot?.lastNight?.night, after != before else { return }
         showsNewNight = true
         bannerTask?.cancel()
-        bannerTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(HomeLiveUpdate.bannerSeconds))
+        bannerTask = Task { [weak self, sleep] in
+            await sleep(HomeLiveUpdate.bannerSeconds)
             guard !Task.isCancelled else { return }
             self?.showsNewNight = false
         }
@@ -408,8 +413,8 @@ public final class HomeViewModel {
         modeFlip?.cancel()
         scheduledModeChange = date
         let delay = max(date.timeIntervalSince(clock()), 0)
-        modeFlip = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(delay + 0.5))
+        modeFlip = Task { [weak self, sleep] in
+            await sleep(delay + 0.5)
             guard !Task.isCancelled, let self else { return }
             self.scheduledModeChange = nil
             self.updateClock(canReveal: false)

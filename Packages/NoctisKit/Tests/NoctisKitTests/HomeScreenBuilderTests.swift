@@ -435,18 +435,18 @@ struct HomeViewModelIntroTests {
 
     private func viewModel(scenario: MockScenario = .full, at date: Date, defaults: UserDefaults, reduceMotion: Bool = false,
                            connect: @escaping () async -> Void = {},
-                           revealSleep: @escaping @Sendable (Double) async -> Void = { try? await Task.sleep(for: .seconds($0)) }) -> HomeViewModel {
+                           sleep: @escaping @Sendable (Double) async -> Void = held) -> HomeViewModel {
         let provider = MockHealthKitProvider(scenario: scenario, referenceDate: date, calendar: Fixture.calendar(), startAuthorized: true)
         let repository = HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { date })
         return HomeViewModel(repository: repository, profile: { UserProfileSnapshot() }, connectHealth: connect,
                              introGate: HomeIntroGate(defaults: defaults), reduceMotion: { reduceMotion },
-                             clock: { date }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"), revealSleep: revealSleep)
+                             clock: { date }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"), sleep: sleep)
     }
 
     @Test func theRevealPlaysOncePerDay() async {
         let store = defaults()
-        // The reveal's own timer is held (never fires): a busy run can't end it under the test.
-        let morning = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: store, revealSleep: { _ in try? await Task.sleep(for: .seconds(3600)) })
+        // Every timer the model owns is held (it never fires, `held` below): no assertion here races a clock, busy machine or not.
+        let morning = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: store)
         // Dusk from the first frame: today's reveal is still to come.
         #expect(morning.reveal == .pending)
         await morning.refresh()
@@ -465,6 +465,33 @@ struct HomeViewModelIntroTests {
         let tomorrow = viewModel(at: Fixture.date(2026, 9, 25, 10), defaults: store)
         await tomorrow.refresh()
         #expect(tomorrow.reveal == .pending)
+    }
+
+    @Test func theRevealEndsWhenItsTimerFiresAndNotBefore() async {
+        let timer = ManualTimer()
+        let model = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: defaults(), sleep: { await timer.sleep($0) })
+        await model.refresh()
+        model.beginReveal()
+        #expect(model.reveal == .playing)
+        // Rebuilds while it plays do not end it: only its own timer does.
+        await model.refresh()
+        await model.refresh()
+        #expect(model.reveal == .playing)
+        #expect(await waitFor { await timer.requested.contains(HomeReveal.totalDuration) })
+        await timer.fire(seconds: HomeReveal.totalDuration)
+        #expect(await waitFor { model.reveal == .none })
+        model.stopObserving()
+    }
+
+    @Test func everyTimerTheModelStartsGoesThroughTheOneInjectedSleep() async {
+        let timer = ManualTimer()
+        let model = viewModel(at: Fixture.date(2026, 9, 24, 10), defaults: defaults(), sleep: { await timer.sleep($0) })
+        await model.refresh()
+        // The next mode boundary is a timer too, and it is the injected one: nothing the model owns waits on the real clock.
+        #expect(await waitFor { await timer.sleepers >= 1 })
+        let requested = await timer.requested
+        #expect(requested.allSatisfy { $0 > 0 })
+        model.stopObserving()
     }
 
     @Test func eveningNeverPlaysNorUsesUpTheReveal() async {
@@ -515,9 +542,7 @@ struct HomeViewModelIntroTests {
         #expect(model.reveal == .none)
         // The morph flips Home to day in place: no reveal over it.
         model.debugFlipMode(after: 0)
-        for _ in 0..<50 where model.screen?.mode != .day {
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        _ = await waitFor { !(model.screen?.mode != .day) }
         #expect(model.screen?.mode == .day)
         #expect(model.reveal == .none)
         // Coming back to the app is the day's first appearance.

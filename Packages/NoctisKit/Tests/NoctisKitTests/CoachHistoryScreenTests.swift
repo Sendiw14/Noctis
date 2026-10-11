@@ -115,7 +115,8 @@ struct CoachHistoryViewModelTests {
         await coachWait { !model.isSending }
         let turn = try #require(model.turns.first)
         model.setFeedback(.helpful, for: turn.id)
-        try? await Task.sleep(for: .milliseconds(200))
+        let conversation = try #require(model.conversationID)
+        #expect(await waitFor { await store.turns(in: conversation).first?.feedback == .helpful }, "the feedback was kept")
         await model.loadHistory()
         let id = try #require(model.history?.days.first?.rows.first?.id)
         model.endConversation()

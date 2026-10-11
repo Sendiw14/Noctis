@@ -28,7 +28,8 @@ public nonisolated final class ReviewFileStore: NoctisErasable, @unchecked Senda
         lock.withLock {
             guard let data = try? Data(contentsOf: fileURL) else { return nil }
             guard var library = try? JSONDecoder().decode(ReviewLibrary.self, from: data), library.schema == Self.schemaVersion else {
-                remove()
+                // Unreadable, or written by another version: set aside whole (a frozen review is in it), never deleted, and started again.
+                StoreRecovery.beside(folder: fileURL.deletingLastPathComponent()).setAsideFile(.reviews, fileURL)
                 return nil
             }
             library.dropUnreadable()

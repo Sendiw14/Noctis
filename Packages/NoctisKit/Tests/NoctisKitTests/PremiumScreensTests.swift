@@ -198,7 +198,7 @@ struct InsightsGatingTests {
             repository: repository, profile: { UserProfileSnapshot() },
             introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey), washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
             reduceMotion: { true }, lowPower: { false }, clock: { time }, calendar: Fixture.calendar(), locale: gatingLocale,
-            revealSleep: { _ in try? await Task.sleep(for: .seconds(3600)) }, isUnlocked: unlocked(tier)
+            revealSleep: held, isUnlocked: unlocked(tier)
         )
     }
 
@@ -244,7 +244,7 @@ struct InsightsGatingTests {
             repository: InsightsRepository(provider: provider, store: InsightStore(), timeZone: Fixture.newYork, clock: { time }), profile: { UserProfileSnapshot() },
             introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey), washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
             reduceMotion: { true }, lowPower: { false }, clock: { time }, calendar: Fixture.calendar(), locale: gatingLocale,
-            revealSleep: { _ in try? await Task.sleep(for: .seconds(3600)) }, isUnlocked: { FeatureTable.isIncluded($0, in: tier) }
+            revealSleep: held, isUnlocked: { FeatureTable.isIncluded($0, in: tier) }
         )
         await model.onAppear()
         model.select(filter: .heart)
@@ -273,9 +273,7 @@ struct CoachGatingTests {
     }
 
     private func settle(_ model: CoachViewModel) async {
-        // By the clock, with room: the whole suite shares the main actor, so a turn can take far longer than its sleep.
-        let deadline = ContinuousClock.now + .seconds(120)
-        while model.isSending, ContinuousClock.now < deadline { try? await Task.sleep(for: .milliseconds(5)) }
+        _ = await waitFor { !model.isSending }
     }
 
     private static let scripted = CoachResult(
