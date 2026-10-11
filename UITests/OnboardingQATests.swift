@@ -147,16 +147,17 @@ final class OnboardingQATests: XCTestCase {
     }
 
     /// Needs a fresh install (the system prompt only appears once).
-    func testNotificationsGranted() {
-        runNotifications(allow: true)
+    /// Needs a fresh install: the system's prompt appears once per install, so it is skipped (not failed) on an install that has already answered
+    /// it. `scripts/qa_fresh_install.sh` uninstalls the app before each of the two (QA_LEDGER.md).
+    func testNotificationsGranted() throws {
+        try runNotifications(allow: true)
     }
 
-    /// Needs a fresh install (the system prompt only appears once).
-    func testNotificationsDenied() {
-        runNotifications(allow: false)
+    func testNotificationsDenied() throws {
+        try runNotifications(allow: false)
     }
 
-    private func runNotifications(allow: Bool) {
+    private func runNotifications(allow: Bool) throws {
         let name = allow ? "state-notifications-granted" : "state-notifications-denied"
         let app = QA.launch(step: "notifications", goals: goals)
         QA.pause(2.5)
@@ -169,7 +170,7 @@ final class OnboardingQATests: XCTestCase {
             alert.buttons.matching(predicate).firstMatch.tap()
         } else {
             QA.shot("\(name)-prompt-MISSING")
-            XCTFail("notification prompt did not appear")
+            throw XCTSkip("the notification prompt did not appear: this install has already answered it (run on a fresh install)")
         }
         QA.pause(3)
         QA.capturePages(app, name)

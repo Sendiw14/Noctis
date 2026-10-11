@@ -56,14 +56,16 @@ final class HomePerformanceQATests: XCTestCase {
     }
 
     /// The probe's report: "HomeContent=2;HomeView=3;…" and the footprint.
-    private func probe(_ app: XCUIApplication) -> (counts: [String: Int], megabytes: Double) {
+    private func probe(_ app: XCUIApplication) -> (counts: [String: Int], megabytes: Double, reusable: Double) {
         let element = app.descendants(matching: .any)["debug.probe"]
         XCTAssertTrue(element.waitForExistence(timeout: 10), "Launch with -noctisDebugProbe.")
         let counts = element.label.split(separator: ";").reduce(into: [String: Int]()) { result, pair in
             let parts = pair.split(separator: "=")
             if parts.count == 2, let value = Int(parts[1]) { result[String(parts[0])] = value }
         }
-        return (counts, Double(element.value as? String ?? "") ?? 0)
+        // `reusable=` is memory the allocator holds and the footprint does not count; a leak is what the two grow by together (QA_LEDGER.md QA-043).
+        let reusable = element.label.split(separator: ";").first { $0.hasPrefix("reusable=") }.flatMap { Double($0.dropFirst("reusable=".count)) } ?? 0
+        return (counts, Double(element.value as? String ?? "") ?? 0, reusable)
     }
 
     private func mark(_ name: String) {
@@ -264,7 +266,9 @@ final class HomePerformanceQATests: XCTestCase {
     /// 20 tab switches and 5 Recovery zoom open/close cycles: the app's
     /// footprint doesn't grow. (Simulator smoke test; the budget is on a
     /// device.)
-    func testNoMemoryGrowthAfterTabSwitchesAndZoomCycles() {
+    func testNoMemoryGrowthAfterTabSwitchesAndZoomCycles() throws {
+        // A sanitizer holds what was freed (Address Sanitizer's quarantine, Thread Sanitizer's history): growth under one is not a leak signal.
+        try XCTSkipIf(QA.environment["QA_SANITIZED"] == "1", "memory is not measured under a sanitizer (QA_LEDGER.md QA-050)")
         let app = launchHome(extra: ["-noctisDebugProbe"])
         let hero = dayHero(app)
         XCTAssertTrue(hero.waitForExistence(timeout: 10))
@@ -273,7 +277,8 @@ final class HomePerformanceQATests: XCTestCase {
         app.tabBars.buttons["Sleep"].tap()
         app.tabBars.buttons["Home"].tap()
         QA.pause(1.5)
-        let baseline = probe(app).megabytes
+        let start = probe(app)
+        let baseline = start.megabytes + start.reusable
         for _ in 0..<10 {
             app.tabBars.buttons["Sleep"].tap()
             app.tabBars.buttons["Home"].tap()
@@ -285,9 +290,10 @@ final class HomePerformanceQATests: XCTestCase {
             XCTAssertTrue(hero.waitForExistence(timeout: 4))
         }
         QA.pause(3)
-        let after = probe(app).megabytes
-        QA.write("baseline \(baseline) MB, after \(after) MB", to: "memory.txt")
-        XCTAssertLessThan(after - baseline, 15, "Footprint grew from \(baseline) to \(after) MB.")
+        let end = probe(app)
+        let after = end.megabytes + end.reusable
+        QA.write("footprint + reusable: baseline \(baseline) MB, after \(after) MB (footprint alone \(start.megabytes) to \(end.megabytes))", to: "memory.txt")
+        XCTAssertLessThan(after - baseline, 15, "Footprint plus reusable memory grew from \(baseline) to \(after) MB.")
     }
 
     // MARK: - Hitches and signposts

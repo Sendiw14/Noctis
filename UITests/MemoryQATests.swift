@@ -12,8 +12,9 @@ final class MemoryQATests: XCTestCase {
     private static let laps = 20
     private static let budgetMegabytes = 5.0
 
-    override func setUp() {
+    override func setUpWithError() throws {
         continueAfterFailure = false
+        try XCTSkipIf(QA.environment["QA_SANITIZED"] == "1", "memory is not measured under a sanitizer: its quarantine and shadow memory are not the app's (QA_LEDGER.md QA-050)")
     }
 
     // MARK: Helpers

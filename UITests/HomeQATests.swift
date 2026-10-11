@@ -87,9 +87,11 @@ final class HomeQATests: XCTestCase {
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(recoveryCard(app).waitForExistence(timeout: 5))
 
+        // Profile is built (R36): its own screen, and back returns to Home.
         QA.tap(app.buttons["Profile"], in: app)
-        XCTAssertTrue(QA.text(app, containing: "Coming soon").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["profile.screen"].waitForExistence(timeout: 8), "Profile")
         app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(recoveryCard(app).waitForExistence(timeout: 5), "Home again")
 
         let lastNight = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Last night'")).firstMatch
         QA.tap(lastNight, in: app)

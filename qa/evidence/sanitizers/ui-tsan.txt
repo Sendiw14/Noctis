@@ -1,0 +1,8 @@
+The UI suite under Thread Sanitizer (xcodebuild test-without-building -enableThreadSanitizer YES, QA 17 Pro, iOS 27.0 simulator):
+run 1: ColorPass, HomeMotion, HomePerformance, Home, HomeV3, HomeV4, Insights, Onboarding, Recovery: 103 passed, 3 failed; ScreenCatalog: 1 of its 10 tests (stopped: see below)
+run 2: Sleep, TabScaffold, VoiceOver: 24 passed, 0 failed
+failed in run 1:
+  -[NoctisUITests.HomePerformanceQATests testNoMemoryGrowthAfterTabSwitchesAndZoomCycles]
+  -[NoctisUITests.HomeQATests testCardsOpenTheirDestinations]
+  -[NoctisUITests.OnboardingQATests testNotificationsGranted]
+ThreadSanitizer reports: 0 (grep 'ThreadSanitizer' over both logs: 0)

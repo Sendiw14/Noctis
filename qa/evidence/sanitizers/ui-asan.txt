@@ -1,0 +1,11 @@
+The UI suite under Address Sanitizer and Undefined Behavior Sanitizer (xcodebuild test-without-building -enableAddressSanitizer YES -enableUndefinedBehaviorSanitizer YES, QA 17 Pro, iOS 27.0 simulator):
+119 passed, 4 failed of 130 (ScreenCatalogQATests excluded: see ui-tsan.txt); the run was stopped at 123 tests because seven booted simulators had thrashed the Mac.
+failed:
+  -[NoctisUITests.HomePerformanceQATests testNoMemoryGrowthAfterTabSwitchesAndZoomCycles]
+  -[NoctisUITests.InsightsQATests testHideRemovesTheKindEverywhere]
+  -[NoctisUITests.OnboardingQATests testNotificationsDenied]
+  -[NoctisUITests.OnboardingQATests testNotificationsGranted]
+not reached: TabScaffoldQATests (5 tests), VoiceOverQATests.testVoiceOverOrderAndAdjustables, HomePerformanceQATests.testReduceMotionShowsTheEndStateAtOnce
+AddressSanitizer errors in the log: 0; UBSan 'runtime error' lines: 0
+The failures: HomePerformanceQATests memory growth (a sanitizer's quarantine, QA-050), OnboardingQATests x2 (notification prompt answered on this install, QA-051), InsightsQATests.testHideRemovesTheKindEverywhere (a UI query timed out under the overload, QA-052).
+Rerun alone, on a calm machine: see the next section of QA_LEDGER.md.
