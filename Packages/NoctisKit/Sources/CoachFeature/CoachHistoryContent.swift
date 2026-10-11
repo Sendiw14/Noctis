@@ -2,6 +2,7 @@ import CoachKit
 import Foundation
 import NoctisCore
 import HomeFeature
+import NoctisText
 
 /// One stored conversation in the list.
 public nonisolated struct CoachHistoryRow: Sendable, Equatable, Identifiable {
@@ -57,8 +58,7 @@ public nonisolated enum CoachHistoryBuilder {
     }
 
     static func detail(_ conversation: CoachConversationSummary, format: HomeFormat) -> String {
-        let count = conversation.turns.formatted(.number.locale(format.locale))
-        let questions = conversation.turns == 1 ? "\(count) question" : "\(count) questions"
+        let questions = NoctisCount.questions(conversation.turns, locale: format.locale)
         return "\(questions) · \(format.clock(conversation.updatedAt, in: format.calendar.timeZone))"
     }
 

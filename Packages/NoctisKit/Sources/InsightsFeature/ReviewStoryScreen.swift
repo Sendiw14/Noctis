@@ -5,6 +5,7 @@ import NoctisCore
 import PremiumKit
 import ReviewKit
 import SwiftUI
+import NoctisText
 
 /// A review's story (APP_RULES.md R63): a full-screen page pushed over Insights with the tab bar hidden, a horizontally paged story with progress segments across the top, a
 /// Close button, a Share button where something shareable is shown, and Back and Next buttons, so nothing depends on a gesture alone. A swipe pages it, and a tap on the left or
@@ -178,7 +179,7 @@ public struct ReviewStoryScreen: View {
             ReviewChangesPageView(page: changes, caption: page.kind == .changes ? "What changed" : "Major changes", style: style, revealed: revealed)
         case .insights(let insight):
             ReviewInsightPageView(
-                page: insight, caption: insight.insightIDs.count == 1 ? "Insight" : "Insights", style: style, detail: { model.insightDetail($0) },
+                page: insight, caption: NoctisCount.insightCaption(insight.insightIDs.count), style: style, detail: { model.insightDetail($0) },
                 open: { appModel.insightsPath.append(.insight(id: $0)) }
             )
         case .focus(let focus):

@@ -6,6 +6,7 @@ import NoctisCore
 import NoctisWidgetKit
 import RecoveryKit
 import SleepKit
+import NoctisText
 
 // Everything Home shows, as plain values: every string and number is
 // decided here, from `HomeSnapshot`, so the views only lay it out
@@ -797,7 +798,7 @@ public nonisolated enum HomeScreenBuilder {
             let ms = Int(factor.value.rounded())
             let percent = usual > 0 ? Int(((factor.value / usual - 1) * 100).rounded()) : 0
             let v1Sentence = percent == 0 ? "In line with your baseline." : "\(abs(percent))% \(percent > 0 ? "above" : "below") your baseline."
-            value = HomeFormat.quantityMetric(ms, unit: "ms", spokenUnit: "milliseconds")
+            value = HomeFormat.quantityMetric(ms, .millisecond)
             baseline = "baseline \(Int(usual.rounded())) ms"
             sentence = factor.range.map { rangeSentence($0, value: "\(ms) ms", baseline: "\(Int(usual.rounded())) ms") } ?? v1Sentence
         case .restingHeartRate:
@@ -805,7 +806,7 @@ public nonisolated enum HomeScreenBuilder {
             let bpm = Int(factor.value.rounded())
             let difference = bpm - Int(usual.rounded())
             let v1Sentence = difference == 0 ? "Same as your baseline." : "\(abs(difference)) bpm \(difference > 0 ? "above" : "below") your baseline."
-            value = HomeFormat.quantityMetric(bpm, unit: "bpm", spokenUnit: "beats per minute")
+            value = HomeFormat.quantityMetric(bpm, .beatsPerMinute)
             baseline = "baseline \(Int(usual.rounded())) bpm"
             sentence = factor.range.map { rangeSentence($0, value: "\(bpm) bpm", baseline: "\(Int(usual.rounded())) bpm") } ?? v1Sentence
         case .sleepConsistency:
@@ -1063,10 +1064,10 @@ public nonisolated struct HomeFormat: Sendable, Equatable {
         let hours = minutes / 60
         let remainder = minutes % 60
         var parts: [NoctisMetricValue.Part] = []
-        if hours > 0 { parts += [.number("\(hours)"), .unit("h")] }
+        if hours > 0 { parts += [.number("\(hours)"), .unit(NoctisUnit.hour.symbol)] }
         if remainder > 0 || hours == 0 {
             if !parts.isEmpty { parts.append(.space) }
-            parts += [.number("\(remainder)"), .unit("m")]
+            parts += [.number("\(remainder)"), .unit(NoctisUnit.minute.symbol)]
         }
         return NoctisMetricValue(parts: parts, spoken: spokenDuration(minutes))
     }
@@ -1076,14 +1077,19 @@ public nonisolated struct HomeFormat: Sendable, Equatable {
         let hours = minutes / 60
         let remainder = minutes % 60
         var words: [String] = []
-        if hours > 0 { words.append("\(hours) \(hours == 1 ? "hour" : "hours")") }
-        if remainder > 0 || hours == 0 { words.append("\(remainder) \(remainder == 1 ? "minute" : "minutes")") }
+        if hours > 0 { words.append(NoctisCount.hours(hours)) }
+        if remainder > 0 || hours == 0 { words.append(NoctisCount.minutes(remainder)) }
         return words.joined(separator: " ")
     }
 
-    /// 52 bpm, 48 ms as a metric.
-    public static func quantityMetric(_ value: Int, unit: String, spokenUnit: String) -> NoctisMetricValue {
-        NoctisMetricValue(parts: [.number("\(value)"), .unit(unit)], spoken: "\(value) \(spokenUnit)")
+    /// 52 bpm, 48 ms as a metric: the unit's symbol beside the number and its spoken form (R68).
+    public static func quantityMetric(_ value: Int, _ unit: NoctisUnit) -> NoctisMetricValue {
+        NoctisMetricValue(parts: [.number("\(value)"), .unit(unit.symbol)], spoken: unit.spoken(value))
+    }
+
+    /// A score or a count with no unit: "62".
+    public static func plainMetric(_ value: Int) -> NoctisMetricValue {
+        NoctisMetricValue(parts: [.number("\(value)")], spoken: "\(value)")
     }
 
     /// 11:00 PM as a metric: the period is the unit (none on 24-hour
@@ -1122,8 +1128,9 @@ public nonisolated struct HomeFormat: Sendable, Equatable {
     public static func compactDuration(_ minutes: Int, minutesWord: Bool = false) -> String {
         let hours = minutes / 60
         let remainder = minutes % 60
-        if hours == 0 { return minutesWord ? "\(remainder) min" : "\(remainder)m" }
-        return remainder == 0 ? "\(hours)h" : "\(hours)h \(remainder)m"
+        let h = NoctisUnit.hour.symbol, m = NoctisUnit.minute.symbol
+        if hours == 0 { return minutesWord ? "\(remainder) \(NoctisUnit.minuteShort.symbol)" : "\(remainder)\(m)" }
+        return remainder == 0 ? "\(hours)\(h)" : "\(hours)\(h) \(remainder)\(m)"
     }
 }
 

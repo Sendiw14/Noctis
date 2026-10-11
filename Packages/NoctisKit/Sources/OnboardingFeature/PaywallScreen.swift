@@ -3,6 +3,7 @@ import NoctisCore
 import StoreKit
 import SwiftUI
 import UserNotifications
+import NoctisText
 
 private enum PaywallLoadPhase: Equatable {
     case loading
@@ -96,16 +97,16 @@ private struct TrialLength {
     init?(_ product: Product?) {
         guard let offer = product?.subscription?.introductoryOffer, offer.paymentMode == .freeTrial else { return nil }
         var value = offer.period.value * max(offer.periodCount, 1)
-        let unit: String
+        let period: NoctisCount.Period
         switch offer.period.unit {
-        case .day: unit = "day"
-        case .week: value *= 7; unit = "day"
-        case .month: unit = "month"
-        case .year: unit = "year"
+        case .day: period = .day
+        case .week: value *= 7; period = .day
+        case .month: period = .month
+        case .year: period = .year
         @unknown default: return nil
         }
-        adjective = "\(value)-\(unit)"
-        phrase = "\(value) \(unit)\(value == 1 ? "" : "s")"
+        adjective = NoctisCount.adjective(value, period)
+        phrase = NoctisCount.period(value, period)
     }
 }
 

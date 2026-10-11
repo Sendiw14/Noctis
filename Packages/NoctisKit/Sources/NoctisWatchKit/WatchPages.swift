@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import NoctisWidgetKit
+import NoctisText
 
 // What each page of the Apple Watch app says, for every state (APP_RULES.md R50, R51): pure, built from the snapshot the iPhone sent and the clock, so
 // every sentence is a unit test and the views only lay them out. The Watch works nothing out: a number on a page is a number in the snapshot, and a
@@ -281,19 +282,19 @@ public nonisolated enum WatchPages {
             return WatchHeartPage(message: message, tiles: [], staleLine: nil, sensitivity: .health, accessibilityLabel: message.title)
         }
         var tiles: [WatchHeartTile] = []
-        func tile(_ kind: WidgetFactorKind, value: Int?, unit: String, spoken: String) {
+        func tile(_ kind: WidgetFactorKind, value: Int?, unit: NoctisUnit) {
             guard let value else { return }
             let scored = snapshot.recoveryFactors.first { $0.kind == kind }
-            let baseline = scored?.baseline.map { "baseline \(Int($0.rounded())) \(unit)" }
+            let baseline = scored?.baseline.map { "baseline \(Int($0.rounded())) \(unit.symbol)" }
             tiles.append(
                 WatchHeartTile(
-                    kind: kind, name: WatchCopy.factorName(kind), value: WidgetFormat.quantityMetric(value, unit: unit, spokenUnit: spoken), baseline: baseline,
+                    kind: kind, name: WatchCopy.factorName(kind), value: WidgetFormat.quantityMetric(value, unit), baseline: baseline,
                     sentence: scored?.range.map(WidgetCopy.rangePlace)
                 )
             )
         }
-        tile(.hrv, value: snapshot.factors?.hrv, unit: "ms", spoken: "milliseconds")
-        tile(.restingHeartRate, value: snapshot.factors?.restingHeartRate, unit: "bpm", spoken: "beats per minute")
+        tile(.hrv, value: snapshot.factors?.hrv, unit: .millisecond)
+        tile(.restingHeartRate, value: snapshot.factors?.restingHeartRate, unit: .beatsPerMinute)
         guard !tiles.isEmpty else {
             let message = WatchMessage(glyph: "heart", title: WatchCopy.heartMissing)
             return WatchHeartPage(message: message, tiles: [], staleLine: input.staleLine, sensitivity: .health, accessibilityLabel: message.title)

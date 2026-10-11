@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import SoundKit
+import NoctisText
 
 // What the Sounds screen says and shows, built from the player's state (APP_RULES.md R18, R20, R31).
 // Views lay it out; the words are here.
@@ -148,9 +149,9 @@ public enum SoundsBuilder {
         let total = Int(seconds.rounded(.up))
         if total >= 60 {
             let minutes = (total + 59) / 60
-            return "\(minutes) \(minutes == 1 ? "minute" : "minutes")"
+            return NoctisCount.minutes(minutes)
         }
-        return "\(total) \(total == 1 ? "second" : "seconds")"
+        return NoctisCount.seconds(total)
     }
 
     /// The timer sheet's rows, the chosen one marked.

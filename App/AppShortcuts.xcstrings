@@ -1,72 +1,78 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "Show my recovery in ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show my recovery in ${applicationName}"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Show my recovery in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show my recovery in ${applicationName}"
           }
         }
-      }
+      },
+      "comment" : "A phrase that starts an App Shortcut by voice (Siri). ${applicationName} is replaced by the app's name and must stay in the sentence. Say it the way a person would speak it."
     },
-    "Show my sleep in ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show my sleep in ${applicationName}"
+    "Show my sleep in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show my sleep in ${applicationName}"
           }
         }
-      }
+      },
+      "comment" : "A phrase that starts an App Shortcut by voice (Siri). ${applicationName} is replaced by the app's name and must stay in the sentence. Say it the way a person would speak it."
     },
-    "Start my wind-down in ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start my wind-down in ${applicationName}"
+    "Start my wind-down in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start my wind-down in ${applicationName}"
           }
         }
-      }
+      },
+      "comment" : "A phrase that starts an App Shortcut by voice (Siri). ${applicationName} is replaced by the app's name and must stay in the sentence. Say it the way a person would speak it."
     },
-    "What time should I sleep in ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What time should I sleep in ${applicationName}"
+    "What time should I sleep in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What time should I sleep in ${applicationName}"
           }
         }
-      }
+      },
+      "comment" : "A phrase that starts an App Shortcut by voice (Siri). ${applicationName} is replaced by the app's name and must stay in the sentence. Say it the way a person would speak it."
     },
-    "Start my sleep sounds in ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start my sleep sounds in ${applicationName}"
+    "Start my sleep sounds in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start my sleep sounds in ${applicationName}"
           }
         }
-      }
+      },
+      "comment" : "A phrase that starts an App Shortcut by voice (Siri). ${applicationName} is replaced by the app's name and must stay in the sentence. Say it the way a person would speak it."
     },
-    "Ask Coach in ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ask Coach in ${applicationName}"
+    "Ask Coach in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask Coach in ${applicationName}"
           }
         }
-      }
+      },
+      "comment" : "A phrase that starts an App Shortcut by voice (Siri). ${applicationName} is replaced by the app's name and must stay in the sentence. Say it the way a person would speak it."
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

@@ -1,0 +1,786 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "count.adjective.days" : {
+      "comment" : "A number of days as an adjective before a noun: \"a 7-day free trial\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld-day"
+          }
+        }
+      }
+    },
+    "count.adjective.months" : {
+      "comment" : "A number of months as an adjective before a noun: \"a 1-month free trial\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld-month"
+          }
+        }
+      }
+    },
+    "count.adjective.years" : {
+      "comment" : "A number of years as an adjective before a noun: \"a 1-year plan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld-year"
+          }
+        }
+      }
+    },
+    "count.awakenings" : {
+      "comment" : "A number of times the person woke in the night, as in \"3 awakenings\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld awakening"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld awakenings"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.days" : {
+      "comment" : "A number of days, as in \"30 days\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.freeQuestions" : {
+      "comment" : "A number of free Coach questions in a day: \"3 free questions\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld free question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld free questions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.hours" : {
+      "comment" : "A number of hours, as in \"8 hours\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hours"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.insights" : {
+      "comment" : "A number of insights, as in \"5 insights\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld insight"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld insights"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.minutes" : {
+      "comment" : "A number of minutes, as in \"45 minutes\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld minute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld minutes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.minutesLeft" : {
+      "comment" : "Time remaining in minutes: \"9 minutes left\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld minute left"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld minutes left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.months" : {
+      "comment" : "A number of months, as in \"3 months\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld month"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld months"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.moreNights" : {
+      "comment" : "A number of further nights still needed, inside a sentence: \"3 more nights of tracking\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more night"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more nights"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.nights" : {
+      "comment" : "A number of nights, as in \"14 nights\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld night"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld nights"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.otherNights" : {
+      "comment" : "A number of other nights, inside a sentence about a record that was equalled: \"Equalled on 2 other nights\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld other night"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld other nights"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.questions" : {
+      "comment" : "A number of questions asked of Coach, as in \"3 questions\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld questions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.remindersOn" : {
+      "comment" : "How many reminders are switched on, as in \"3 reminders on\". Plural variations: one, other. The space before \"on\" is a no-break space (U+00A0): the phrase is shown in a narrow row value, and it must wrap as \"3\" / \"reminders on\", never leave \"on\" alone. Keep a no-break space between the last two words in translations.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld reminder on"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld reminders on"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.seconds" : {
+      "comment" : "A number of seconds, as in \"20 seconds\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld second"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seconds"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.secondsLeft" : {
+      "comment" : "Time remaining in seconds: \"20 seconds left\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld second left"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seconds left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.values" : {
+      "comment" : "A number of saved settings, as in \"4 values\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld value"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld values"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.years" : {
+      "comment" : "A number of years, as in \"1 year\". Plural variations: one, other.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld year"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld years"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "review.insight.caption.one" : {
+      "comment" : "A caption over exactly one insight in a review story.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insight"
+          }
+        }
+      }
+    },
+    "review.insight.caption.other" : {
+      "comment" : "A caption over several insights in a review story.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insights"
+          }
+        }
+      }
+    },
+    "review.insights.headline.one" : {
+      "comment" : "The headline of the monthly review's insights page when exactly one insight is shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An insight from this month."
+          }
+        }
+      }
+    },
+    "review.insights.headline.other" : {
+      "comment" : "The headline of the monthly review's insights page when more than one insight is shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insights from this month."
+          }
+        }
+      }
+    },
+    "unit.beatsPerMinute.spoken" : {
+      "comment" : "A heart rate, spoken. Has plural variations.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld beat per minute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld beats per minute"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unit.beatsPerMinute.symbol" : {
+      "comment" : "The unit of a heart rate: \"52 bpm\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bpm"
+          }
+        }
+      }
+    },
+    "unit.hour.spoken" : {
+      "comment" : "A number of hours, spoken. Has plural variations: \"1 hour\", \"2 hours\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hours"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unit.hour.symbol" : {
+      "comment" : "The unit after a number of hours, drawn small beside it: \"6h 42m\". As short as the language allows.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "h"
+          }
+        }
+      }
+    },
+    "unit.millisecond.spoken" : {
+      "comment" : "Heart rate variability, spoken. Has plural variations.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld millisecond"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld milliseconds"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unit.millisecond.symbol" : {
+      "comment" : "The unit of heart rate variability: \"48 ms\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ms"
+          }
+        }
+      }
+    },
+    "unit.minute.spoken" : {
+      "comment" : "A number of minutes, spoken. Has plural variations.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld minute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld minutes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unit.minute.symbol" : {
+      "comment" : "The unit after a number of minutes beside hours: \"6h 42m\". One letter where the language has one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "m"
+          }
+        }
+      }
+    },
+    "unit.minuteShort.symbol" : {
+      "comment" : "The unit after a number of minutes on its own: \"30 min\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        }
+      }
+    },
+    "unit.perWeek.spoken" : {
+      "comment" : "A rate of change, spoken: \"2 per week\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld per week"
+          }
+        }
+      }
+    },
+    "unit.perWeek.symbol" : {
+      "comment" : "The unit of a rate of change per week: \"+2 / wk\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "/ wk"
+          }
+        }
+      }
+    },
+    "unit.percent.spoken" : {
+      "comment" : "A percentage, spoken: \"82 percent\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld percent"
+          }
+        }
+      }
+    },
+    "unit.percent.symbol" : {
+      "comment" : "The percent sign after a number: \"82%\". Keep the language's own spacing rule.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%"
+          }
+        }
+      }
+    },
+    "unit.point.spoken" : {
+      "comment" : "A number of recovery score points, spoken. Has plural variations.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld point"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld points"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unit.point.symbol" : {
+      "comment" : "The unit after a number of recovery score points: \"+4 points\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "points"
+          }
+        }
+      }
+    },
+    "unit.pointShort.symbol" : {
+      "comment" : "The short unit after a number of recovery score points in a small tile: \"62 pts\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pts"
+          }
+        }
+      }
+    },
+    "unit.second.spoken" : {
+      "comment" : "A number of seconds, spoken. Has plural variations.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld second"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seconds"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unit.second.symbol" : {
+      "comment" : "The unit after a number of seconds: \"20 s\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "s"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

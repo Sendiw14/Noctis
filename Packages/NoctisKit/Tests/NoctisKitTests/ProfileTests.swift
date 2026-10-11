@@ -207,11 +207,11 @@ struct ProfileBuilderTests {
         var preferences = NotificationPreferences()
         #expect(ProfileBuilder.notificationsValue(.denied, preferences) == "Off in Settings")
         #expect(ProfileBuilder.notificationsValue(.notDetermined, preferences) == "Not turned on")
-        #expect(ProfileBuilder.notificationsValue(.allowed, preferences) == "3 reminders on")
+        #expect(ProfileBuilder.notificationsValue(.allowed, preferences) == "3 reminders\u{00A0}on")
         preferences.weeklyIsOn = false
-        #expect(ProfileBuilder.notificationsValue(.allowed, preferences) == "2 reminders on")
+        #expect(ProfileBuilder.notificationsValue(.allowed, preferences) == "2 reminders\u{00A0}on")
         preferences.windDownIsOn = false
-        #expect(ProfileBuilder.notificationsValue(.allowed, preferences) == "1 reminder on")
+        #expect(ProfileBuilder.notificationsValue(.allowed, preferences) == "1 reminder\u{00A0}on")
         preferences.morningIsOn = false
         #expect(ProfileBuilder.notificationsValue(.allowed, preferences) == "All reminders off")
     }
@@ -439,7 +439,7 @@ struct ProfileViewModelTests {
         let content = model.content
         #expect(content.typicalBedtime != "Still learning" && content.learningNote == nil, "a full history gives typical times")
         #expect(content.status[0].value == "Data found")
-        #expect(content.status[1].value == "3 reminders on")
+        #expect(content.status[1].value == "3 reminders\u{00A0}on")
         #expect(content.alarmLine == nil, "no alarm is set")
     }
 

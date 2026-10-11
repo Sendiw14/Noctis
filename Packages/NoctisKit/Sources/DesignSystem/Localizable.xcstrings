@@ -10,7 +10,8 @@
             "value" : "Back"
           }
         }
-      }
+      },
+      "comment" : "The accessibility label of a back button (VoiceOver reads it; it is not drawn)."
     }
   },
   "version" : "1.0"

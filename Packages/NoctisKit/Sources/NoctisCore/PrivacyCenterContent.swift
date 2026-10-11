@@ -1,5 +1,6 @@
 import Foundation
 import HealthProviding
+import NoctisText
 
 /// The Privacy Center's words, all of them made from the inventory (APP_RULES.md R41): the sections, and one category's page.
 public nonisolated struct PrivacyCenterContent: Sendable, Equatable {
@@ -154,7 +155,7 @@ public nonisolated struct PrivacyCategoryContent: Sendable, Equatable {
         case .file(_, let path): "A file on this iPhone: \(path)"
         case .folder(_, let path): "Files on this iPhone, in the folder \(path)"
         case .database(_, let path): "A database on this iPhone: \(path)"
-        case .defaults(let keys): "Settings saved on this iPhone (\(keys.count) \(keys.count == 1 ? "value" : "values"))"
+        case .defaults(let keys): "Settings saved on this iPhone (\(NoctisCount.values(keys.count)))"
         case .system(let name): "Held by \(name), not by NOCTIS"
         case .memory: "Only in memory while the app is open"
         }

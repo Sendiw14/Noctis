@@ -1,5 +1,6 @@
 import Foundation
 import NightKit
+import NoctisText
 
 /// The breathing exercise's words (APP_RULES.md R33). Calm and plain. It says what it is and nothing
 /// about what it does for anyone's body, mood, anxiety or sleep.
@@ -37,7 +38,7 @@ public nonisolated enum BreathingCopy {
 
     /// "Inhale, 4 seconds": what VoiceOver says when a phase begins.
     public static func announcement(_ kind: BreathingPhaseKind, seconds: Int) -> String {
-        "\(phaseName(kind)), \(seconds) \(seconds == 1 ? "second" : "seconds")"
+        "\(phaseName(kind)), \(NoctisCount.seconds(seconds))"
     }
 
     /// "5 min left" to the nearest minute (a 5 minute Relax is 5:04, and must not say 6), then "90 s left" and
@@ -52,9 +53,9 @@ public nonisolated enum BreathingCopy {
         let whole = max(Int(seconds.rounded(.up)), 0)
         if whole > 90 {
             let count = roundedMinutes(whole)
-            return "\(count) \(count == 1 ? "minute" : "minutes") left"
+            return NoctisCount.minutesLeft(count)
         }
-        return "\(whole) \(whole == 1 ? "second" : "seconds") left"
+        return NoctisCount.secondsLeft(whole)
     }
 
     private static func roundedMinutes(_ seconds: Int) -> Int {

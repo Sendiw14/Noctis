@@ -2,6 +2,7 @@ import DesignSystem
 import Foundation
 import InsightsKit
 import SleepKit
+import NoctisText
 
 /// One side of a featured insight's two-number comparison.
 public nonisolated struct InsightNumber: Sendable, Equatable {
@@ -81,7 +82,7 @@ public nonisolated enum InsightScreenBuilder {
 
     public static func build(_ record: InsightRecord, format: HomeFormat) -> InsightContent {
         let words = words(for: record, format: format)
-        let confidence = "\(record.confidence.rawValue.capitalized) confidence · based on \(record.nightsUsed) \(record.nightsUsed == 1 ? "night" : "nights")"
+        let confidence = "\(record.confidence.rawValue.capitalized) confidence · based on \(NoctisCount.nights(record.nightsUsed))"
         let spokenNumbers = words.comparison.map { "\($0.label) \($0.value.spoken)" }.joined(separator: "; ")
         return InsightContent(
             id: record.id, type: record.type, category: record.category, confidence: record.confidence,
@@ -132,12 +133,12 @@ public nonisolated enum InsightScreenBuilder {
         InsightNumber(label: label, value: format.clockMetric(format.clock(minutesAfterNoon: minutesAfterNoon)))
     }
 
-    private static func number(_ label: String, _ value: Double, unit: String, spoken: String) -> InsightNumber {
-        InsightNumber(label: label, value: HomeFormat.quantityMetric(Int(value.rounded()), unit: unit, spokenUnit: spoken))
+    private static func number(_ label: String, _ value: Double, unit: NoctisUnit) -> InsightNumber {
+        InsightNumber(label: label, value: HomeFormat.quantityMetric(Int(value.rounded()), unit))
     }
 
     private static func nights(_ count: Int) -> String {
-        "\(count) \(count == 1 ? "night" : "nights")"
+        NoctisCount.nights(count)
     }
 
     private static func tonightBedtime(_ minutesAfterNoon: Double, _ format: HomeFormat) -> String {
@@ -252,8 +253,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "\(e.earlyNights) earlier and \(e.lateNights) later nights (effect size \(String(format: "%.1f", abs(e.effectSize))))."
             ),
             comparison: [
-                InsightNumber(label: "Earlier nights", value: HomeFormat.quantityMetric(early, unit: "pts", spokenUnit: "points")),
-                InsightNumber(label: "Later nights", value: HomeFormat.quantityMetric(late, unit: "pts", spokenUnit: "points")),
+                InsightNumber(label: "Earlier nights", value: HomeFormat.quantityMetric(early, .pointShort)),
+                InsightNumber(label: "Later nights", value: HomeFormat.quantityMetric(late, .pointShort)),
             ],
             join: .versus
         )
@@ -281,8 +282,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "Based on the last \(e.consecutiveDays) days of scores."
             ),
             comparison: [
-                InsightNumber(label: "7 days ago", value: HomeFormat.quantityMetric(e.startScore, unit: "", spokenUnit: "")),
-                InsightNumber(label: "Latest", value: HomeFormat.quantityMetric(e.latestScore, unit: "", spokenUnit: "")),
+                InsightNumber(label: "7 days ago", value: HomeFormat.plainMetric(e.startScore)),
+                InsightNumber(label: "Latest", value: HomeFormat.plainMetric(e.latestScore)),
             ].map(scoreNumber)
         )
     }
@@ -296,8 +297,8 @@ public nonisolated enum InsightScreenBuilder {
 
     private static func heartSignal(_ e: HeartSignalEvidence) -> Words {
         let isHRV = e.signal == .hrv
-        let unit = isHRV ? "ms" : "bpm"
-        let spoken = isHRV ? "milliseconds" : "beats per minute"
+        let unitKind: NoctisUnit = isHRV ? .millisecond : .beatsPerMinute
+        let unit = unitKind.symbol
         let name = isHRV ? "HRV" : "Resting heart rate"
         let low = Int(e.rangeLow.rounded())
         let high = Int(e.rangeHigh.rounded())
@@ -317,8 +318,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "Your normal range is built from \(nights(e.baselineNights))."
             ),
             comparison: [
-                number("Usual", e.baseline, unit: unit, spoken: spoken),
-                number("Last night", e.value, unit: unit, spoken: spoken),
+                number("Usual", e.baseline, unit: unitKind),
+                number("Last night", e.value, unit: unitKind),
             ]
         )
     }
@@ -344,8 +345,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "\(e.recentNights) recent and \(e.previousNights) earlier bedtimes."
             ),
             comparison: [
-                number("The 14 before", e.previousSD, unit: "min", spoken: "minutes"),
-                number("Last 14 nights", e.recentSD, unit: "min", spoken: "minutes"),
+                number("The 14 before", e.previousSD, unit: .minuteShort),
+                number("Last 14 nights", e.recentSD, unit: .minuteShort),
             ]
         )
     }
@@ -421,8 +422,8 @@ public nonisolated enum InsightScreenBuilder {
                 nights: "Your usual is built from \(nights(e.usualNights))."
             ),
             comparison: [
-                number("Usual", Double(usual), unit: "%", spoken: "percent"),
-                number("Last night", Double(share), unit: "%", spoken: "percent"),
+                number("Usual", Double(usual), unit: .percent),
+                number("Last night", Double(share), unit: .percent),
             ]
         )
     }
@@ -445,17 +446,17 @@ public nonisolated enum InsightScreenBuilder {
             title = "Your steadiest week in \(days) days"
             label = "spread of bedtimes"
             value = { "\(Int($0.rounded())) min" }
-            spoken = { HomeFormat.quantityMetric(Int($0.rounded()), unit: "min", spokenUnit: "minutes") }
+            spoken = { HomeFormat.quantityMetric(Int($0.rounded()), .minuteShort) }
         case .recordHighestRecovery:
             title = "Your highest Recovery in \(days) days"
             label = "Recovery score"
             value = { "\(Int($0.rounded()))" }
-            spoken = { scoreNumber(InsightNumber(label: "", value: HomeFormat.quantityMetric(Int($0.rounded()), unit: "", spokenUnit: ""))).value }
+            spoken = { scoreNumber(InsightNumber(label: "", value: HomeFormat.plainMetric(Int($0.rounded())))).value }
         default:
             title = "Your lowest resting heart rate in \(days) days"
             label = "resting heart rate"
             value = { "\(Int($0.rounded())) bpm" }
-            spoken = { HomeFormat.quantityMetric(Int($0.rounded()), unit: "bpm", spokenUnit: "beats per minute") }
+            spoken = { HomeFormat.quantityMetric(Int($0.rounded()), .beatsPerMinute) }
         }
         let higher = type == .recordLongestNight || type == .recordHighestRecovery
         return Words(
@@ -500,7 +501,7 @@ public nonisolated enum InsightScreenBuilder {
                 thresholds: ["Shown for a week after each one unlocks."],
                 nights: "Based on \(nights(e.nightsRecorded)) recorded."
             ),
-            comparison: [InsightNumber(label: "Nights recorded", value: NoctisMetricValue(parts: [.number("\(e.nightsRecorded)")], spoken: "\(e.nightsRecorded) nights"))]
+            comparison: [InsightNumber(label: "Nights recorded", value: NoctisMetricValue(parts: [.number("\(e.nightsRecorded)")], spoken: NoctisCount.nights(e.nightsRecorded)))]
         )
     }
 }

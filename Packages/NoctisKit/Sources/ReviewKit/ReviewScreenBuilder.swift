@@ -1,6 +1,7 @@
 import Foundation
 import RecoveryKit
 import SleepKit
+import NoctisText
 
 // Every word of a review, built from its numbers (APP_RULES.md R39). One type: the screens only lay out what it returns, and one lint test runs every string it can
 // make, in every scenario, through the banned-language list. The voice is calm and plain: it says what the numbers say ("Compared with the week before...", "This has
@@ -235,7 +236,7 @@ public nonisolated enum ReviewScreenBuilder {
     private static func recovery(_ record: ReviewRecord, _ words: Words, _ format: ReviewFormat) -> ReviewPageContent? {
         guard let recovery = record.recovery else { return nil }
         func extreme(_ label: String, _ value: ReviewExtreme) -> String {
-            let also = value.alsoOn > 0 ? ", and equalled on \(value.alsoOn) other night\(value.alsoOn == 1 ? "" : "s")" : ""
+            let also = value.alsoOn > 0 ? ", and equalled on \(NoctisCount.otherNights(value.alsoOn))" : ""
             return "The \(label) was \(ReviewFormat.number(value.value)), on \(format.weekdayDay(value.morning))\(also)."
         }
         var evidence = [extreme("highest", recovery.high), extreme("lowest", recovery.low)]
@@ -300,7 +301,7 @@ public nonisolated enum ReviewScreenBuilder {
 
     private static func records(_ record: ReviewRecord, _ format: ReviewFormat) -> ReviewPageContent? {
         guard let monthly = record.monthly else { return nil }
-        func also(_ extreme: ReviewExtreme) -> String { extreme.alsoOn > 0 ? ", and equalled on \(extreme.alsoOn) other night\(extreme.alsoOn == 1 ? "" : "s")" : "" }
+        func also(_ extreme: ReviewExtreme) -> String { extreme.alsoOn > 0 ? ", and equalled on \(NoctisCount.otherNights(extreme.alsoOn))" : "" }
         let longest = monthly.longestNight
         var evidence: [String] = []
         if let best = monthly.highestRecovery {

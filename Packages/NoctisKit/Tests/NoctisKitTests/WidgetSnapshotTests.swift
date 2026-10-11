@@ -211,7 +211,8 @@ struct WidgetSnapshotStoreTests {
             }
         }
         let package = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Package.swift"), encoding: .utf8)
-        #expect(package.contains(#".target(name: "NoctisWidgetKit", dependencies: ["DesignSystem", "PremiumKit"]"#), "the kit depends on the design tokens and the plan's names (a leaf with no dependencies) and nothing more")
+        #expect(package.contains(#".target(name: "NoctisWidgetKit", dependencies: ["NoctisText", "DesignSystem", "PremiumKit"]"#),
+                "the kit depends on the units and counts (a leaf with no dependencies), the design tokens and the plan's names (a leaf with no dependencies) and nothing more")
     }
 }
 

@@ -2,6 +2,7 @@ import DesignSystem
 import Foundation
 import NightKit
 import SoundKit
+import NoctisText
 
 /// The Wind-down screen's fixed words (APP_RULES.md R32). Calm and plain: no streak, no score, no
 /// shame, and nothing about what any of it does for anyone's sleep or health.
@@ -27,9 +28,9 @@ public nonisolated enum WindDownCountdown {
         let seconds = max(Int(remaining.rounded(.up)), 0)
         if seconds > 60 {
             let minutes = (seconds + 59) / 60
-            return NoctisMetricValue(parts: [.number("\(minutes)"), .unit("min")], spoken: "\(minutes) \(minutes == 1 ? "minute" : "minutes")")
+            return NoctisMetricValue(parts: [.number("\(minutes)"), .unit(NoctisUnit.minuteShort.symbol)], spoken: NoctisCount.minutes(minutes))
         }
-        return NoctisMetricValue(parts: [.number("\(seconds)"), .unit("s")], spoken: "\(seconds) \(seconds == 1 ? "second" : "seconds")")
+        return NoctisMetricValue(parts: [.number("\(seconds)"), .unit(NoctisUnit.second.symbol)], spoken: NoctisCount.seconds(seconds))
     }
 }
 

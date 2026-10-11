@@ -413,7 +413,7 @@ struct NoctisMetricTests {
         #expect(HomeFormat.spokenDuration(60) == "1 hour")
         #expect(HomeFormat.spokenDuration(61) == "1 hour 1 minute")
         #expect(HomeFormat.spokenDuration(45) == "45 minutes")
-        #expect(HomeFormat.quantityMetric(52, unit: "bpm", spokenUnit: "beats per minute").spoken == "52 beats per minute")
+        #expect(HomeFormat.quantityMetric(52, .beatsPerMinute).spoken == "52 beats per minute")
     }
 
     @Test func clockPeriodsAreUnits() {

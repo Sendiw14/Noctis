@@ -1,5 +1,6 @@
 import DesignSystem
 import Foundation
+import NoctisText
 
 // What each surface says for each entry, as data (APP_RULES.md R45): the words, the numbers, which of them are Health values (and so
 // hidden on a locked iPhone) and which are not. The views only lay it out, so every state's wording, every omission and every
@@ -236,10 +237,10 @@ public enum WidgetPresentationBuilder {
             rows.append(WidgetLine(label: "Sleep", value: WidgetFormat.durationMetric(night.asleepMinutes), sensitivity: .health, tint: .sleepDuration))
         }
         if let hrv = snapshot.factors?.hrv {
-            rows.append(WidgetLine(label: "HRV", value: WidgetFormat.quantityMetric(hrv, unit: "ms", spokenUnit: "milliseconds"), sensitivity: .health, tint: .hrv))
+            rows.append(WidgetLine(label: "HRV", value: WidgetFormat.quantityMetric(hrv, .millisecond), sensitivity: .health, tint: .hrv))
         }
         if let heart = snapshot.factors?.restingHeartRate {
-            rows.append(WidgetLine(label: "Resting HR", value: WidgetFormat.quantityMetric(heart, unit: "bpm", spokenUnit: "beats per minute"), sensitivity: .health, tint: .restingHeartRate))
+            rows.append(WidgetLine(label: "Resting HR", value: WidgetFormat.quantityMetric(heart, .beatsPerMinute), sensitivity: .health, tint: .restingHeartRate))
         }
 
         var night: WidgetNightBody?

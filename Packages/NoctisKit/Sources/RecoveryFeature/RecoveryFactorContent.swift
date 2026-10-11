@@ -4,6 +4,7 @@ import HomeFeature
 import NoctisCore
 import RecoveryKit
 import SleepKit
+import NoctisText
 
 // A factor's detail page: the words around its chart. Built by
 // `RecoveryScreenBuilder` from the snapshot's series and the render model's
@@ -181,8 +182,8 @@ nonisolated extension RecoveryScreenBuilder {
         switch kind {
         case .sleepDuration: HomeFormat.durationMetric(Int(value.rounded()))
         case .sleepConsistency: format.clockMetric(format.clock(minutesAfterNoon: value))
-        case .hrv: HomeFormat.quantityMetric(Int(value.rounded()), unit: "ms", spokenUnit: "milliseconds")
-        case .restingHeartRate: HomeFormat.quantityMetric(Int(value.rounded()), unit: "bpm", spokenUnit: "beats per minute")
+        case .hrv: HomeFormat.quantityMetric(Int(value.rounded()), .millisecond)
+        case .restingHeartRate: HomeFormat.quantityMetric(Int(value.rounded()), .beatsPerMinute)
         }
     }
 
@@ -220,7 +221,7 @@ nonisolated extension RecoveryScreenBuilder {
             let points = item.wholePoints
             tiles.append(RecoveryFactorTile(
                 id: "points", title: "In today's score",
-                value: NoctisMetricValue(parts: [.number("+\(points)"), .space, .unit("points")], spoken: "\(points) points"),
+                value: NoctisMetricValue(parts: [.number("+\(points)"), .space, .unit(NoctisUnit.point.symbol)], spoken: NoctisUnit.point.spoken(points)),
                 note: item.deltaPoints.map { "vs usual: \(HomeScreenBuilder.signed(Int($0.rounded())))" }
             ))
         }

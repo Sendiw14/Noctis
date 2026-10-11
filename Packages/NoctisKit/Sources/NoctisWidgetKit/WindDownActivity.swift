@@ -1,6 +1,7 @@
 #if os(iOS)
 import ActivityKit
 import Foundation
+import NoctisText
 
 // The wind-down's Live Activity (APP_RULES.md R49): what it holds, and what it says. Pure data and pure words, so every state is a unit
 // test, the extension draws it and the app (and the debug gallery) can draw the very same views.
@@ -96,7 +97,7 @@ public nonisolated enum WindDownActivityCopy {
     public static func spoken(_ state: WindDownActivityAttributes.ContentState, at date: Date, isStale: Bool = false) -> String {
         if state.phase == .ending || isStale { return "\(title). \(complete)." }
         let minutes = Int((state.remaining(at: date) / 60).rounded(.up))
-        let left = minutes == 1 ? "1 minute left" : "\(minutes) minutes left"
+        let left = NoctisCount.minutesLeft(minutes)
         return state.isPaused ? "\(title). \(paused). \(left)." : "\(title). \(left)."
     }
 }

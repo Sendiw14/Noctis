@@ -1,5 +1,6 @@
 import Foundation
 import PremiumKit
+import NoctisText
 
 /// What Siri and Shortcuts say (APP_RULES.md R47), built from the same snapshot, the same day rule and the same words as the
 /// widgets (R44, R45): "Your recovery is 70. Sleep was 6 hours 42 minutes." Pure, so every state is a unit test and every sentence goes
@@ -89,6 +90,6 @@ public enum WidgetSpoken {
 
     /// "14 hours", "2 days".
     static func hours(_ hours: Int) -> String {
-        hours < 48 ? "\(hours) \(hours == 1 ? "hour" : "hours")" : "\(hours / 24) days"
+        hours < 48 ? NoctisCount.hours(hours) : NoctisCount.days(hours / 24)
     }
 }

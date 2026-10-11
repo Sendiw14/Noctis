@@ -1,6 +1,7 @@
 import Foundation
 import RecoveryKit
 import SleepKit
+import NoctisText
 
 /// Makes a review story from a record (APP_RULES.md R63): every page, its numbers and its words, from the record alone. A page whose data does not exist is left out, never
 /// filled; "steady" is said only when something was compared and nothing moved. Calm, plain words: no cause, no medical wording, no streak, no shame, and nothing red.
@@ -33,7 +34,7 @@ public nonisolated enum ReviewStoryBuilder {
             if !record.topInsightIDs.isEmpty {
                 pages.append(ReviewStoryPage(
                     kind: .insights, tint: .cocoa,
-                    content: .insights(ReviewInsightsPage(headline: record.topInsightIDs.count == 1 ? "An insight from this month." : "Insights from this month.", insightIDs: Array(record.topInsightIDs.prefix(3))))
+                    content: .insights(ReviewInsightsPage(headline: NoctisCount.insightsFromThisMonth(record.topInsightIDs.count), insightIDs: Array(record.topInsightIDs.prefix(3))))
                 ))
             }
             if let page = records(record, format) { pages.append(ReviewStoryPage(kind: .records, tint: .paper, content: .records(page))) }
@@ -227,7 +228,7 @@ public nonisolated enum ReviewStoryBuilder {
     }
 
     private static func extremeText(_ label: String, _ value: ReviewExtreme, _ format: ReviewFormat) -> String {
-        let also = value.alsoOn > 0 ? ", and equalled on \(value.alsoOn) other night\(value.alsoOn == 1 ? "" : "s")" : ""
+        let also = value.alsoOn > 0 ? ", and equalled on \(NoctisCount.otherNights(value.alsoOn))" : ""
         return "\(label) \(ReviewFormat.whole(value.value)), on \(format.weekdayDay(value.morning))\(also)."
     }
 
@@ -347,7 +348,7 @@ public nonisolated enum ReviewStoryBuilder {
 
     private static func records(_ record: ReviewRecord, _ format: ReviewFormat) -> ReviewRecordsPage? {
         guard let monthly = record.monthly else { return nil }
-        func tie(_ extreme: ReviewExtreme) -> String? { extreme.alsoOn > 0 ? "Equalled on \(extreme.alsoOn) other night\(extreme.alsoOn == 1 ? "" : "s")" : nil }
+        func tie(_ extreme: ReviewExtreme) -> String? { extreme.alsoOn > 0 ? "Equalled on \(NoctisCount.otherNights(extreme.alsoOn))" : nil }
         var blocks: [ReviewRecordBlock] = []
         let longest = monthly.longestNight
         blocks.append(ReviewRecordBlock(

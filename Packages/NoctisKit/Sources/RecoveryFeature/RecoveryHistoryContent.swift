@@ -4,6 +4,7 @@ import HomeFeature
 import NoctisCore
 import RecoveryKit
 import SleepKit
+import NoctisText
 
 // Recovery over 7, 30 or 90 nights: the words around the line, the stat
 // tiles and the factor rows. Built by `RecoveryScreenBuilder` from the
@@ -37,6 +38,8 @@ public nonisolated struct RecoveryHistoryPointContent: Sendable, Equatable {
     public let night: SleepNightKey
     /// Against the usual range; nil for a day with no score or no baseline.
     public let position: RecoveryUsualPosition?
+    /// The day's recovery score, 0 to 100; nil for a day with no score (Audio Graph's height).
+    public let score: Int?
     /// The pill: "Tue · Recovery 76 · Sleep 7h 12m", or "Tue · No score".
     public let detail: String
     public let accessibilityLabel: String
@@ -106,13 +109,14 @@ nonisolated extension RecoveryScreenBuilder {
             let wake = day.night.adding(days: 1)
             let name = range == .week ? format.weekday(wake, width: .abbreviated) : format.weekdayMonthDay(wake)
             guard let score = day.score else {
-                return RecoveryHistoryPointContent(night: day.night, position: nil, detail: "\(name) · No score", accessibilityLabel: "\(format.wideDate(wake)), no score")
+                return RecoveryHistoryPointContent(night: day.night, position: nil, score: nil, detail: "\(name) · No score", accessibilityLabel: "\(format.wideDate(wake)), no score")
             }
             let sleep = HomeFormat.compactDuration(Int(score.asleepMinutes.rounded()))
             let position = history.stats.usualRange.map { RecoveryUsualPosition(score: score.score, usual: $0) }
             return RecoveryHistoryPointContent(
                 night: day.night,
                 position: position,
+                score: score.score,
                 detail: "\(name) · Recovery \(score.score) · Sleep \(sleep)",
                 accessibilityLabel: "\(format.wideDate(wake)), recovery \(score.score), slept \(HomeFormat.spokenDuration(Int(score.asleepMinutes.rounded())))"
             )
@@ -136,7 +140,7 @@ nonisolated extension RecoveryScreenBuilder {
         var usualLine: String?
         if let within = history.stats.daysInUsualRange {
             let total = history.stats.scoredDays
-            usualLine = "In your usual range on \(within) of \(total) \(total == 1 ? "day" : "days")."
+            usualLine = "In your usual range on \(within) of \(NoctisCount.days(total))."
         }
         let tiles = historyTiles(history.stats, format: format)
         let rows = RecoveryContributionEngine.factorOrder.compactMap { historyRow($0, segment: segment, snapshot: snapshot, format: format) }
@@ -152,7 +156,7 @@ nonisolated extension RecoveryScreenBuilder {
             xLabels: xLabels,
             showsDots: range == .week,
             isSmoothed: range == .quarter,
-            partialNote: history.isPartial ? "Showing \(history.spanNights) \(history.spanNights == 1 ? "night" : "nights")" : nil,
+            partialNote: history.isPartial ? "Showing \(NoctisCount.nights(history.spanNights))" : nil,
             bandCaption: band,
             tiles: tiles,
             usualLine: usualLine,
@@ -178,7 +182,7 @@ nonisolated extension RecoveryScreenBuilder {
         if let average = stats.average {
             let value = Int(average.rounded())
             tiles.append(RecoveryHistoryTile(
-                id: "average", title: "Average", value: number(value), note: "\(stats.scoredDays) \(stats.scoredDays == 1 ? "night" : "nights")", symbol: nil,
+                id: "average", title: "Average", value: number(value), note: NoctisCount.nights(stats.scoredDays), symbol: nil,
                 accessibilityLabel: "Average \(value)"
             ))
         }
@@ -212,7 +216,7 @@ nonisolated extension RecoveryScreenBuilder {
             }
             tiles.append(RecoveryHistoryTile(
                 id: "trend", title: "Trend",
-                value: NoctisMetricValue(parts: [.number(slope), .space, .unit("/ wk")], spoken: "\(slope) points a week"),
+                value: NoctisMetricValue(parts: [.number(slope), .space, .unit(NoctisUnit.perWeek.symbol)], spoken: "\(slope) \(NoctisUnit.point.symbol) \(NoctisUnit.perWeek.symbol)"),
                 note: direction, symbol: symbol, accessibilityLabel: trendWords(trend)
             ))
         }

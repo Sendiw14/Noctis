@@ -6,6 +6,7 @@ import NoctisCore
 import RecoveryKit
 import SleepAnalysisKit
 import SleepKit
+import NoctisText
 
 // The Sleep tab's presentation model: every string and readable value,
 // built by `SleepScreenBuilder` from a `SleepSnapshot` and a render model.
@@ -407,7 +408,7 @@ public nonisolated enum SleepScreenBuilder {
             let percent = Int((efficiency * 100).rounded())
             tiles.append(SleepDetailTile(
                 id: "efficiency", title: "Efficiency",
-                value: NoctisMetricValue(parts: [.number("\(percent)"), .unit("%")], spoken: "\(percent) percent"),
+                value: NoctisMetricValue(parts: [.number("\(percent)"), .unit(NoctisUnit.percent.symbol)], spoken: NoctisUnit.percent.spoken(percent)),
                 note: "asleep while in bed"
             ))
         }
@@ -417,7 +418,7 @@ public nonisolated enum SleepScreenBuilder {
         if metrics.awakeAfterOnsetMinutes != nil {
             tiles.append(SleepDetailTile(
                 id: "awakenings", title: "Awakenings",
-                value: NoctisMetricValue(parts: [.number("\(metrics.awakenings)")], spoken: "\(metrics.awakenings) \(metrics.awakenings == 1 ? "awakening" : "awakenings")"),
+                value: NoctisMetricValue(parts: [.number("\(metrics.awakenings)")], spoken: NoctisCount.awakenings(metrics.awakenings)),
                 note: nil
             ))
         }
@@ -483,7 +484,7 @@ public nonisolated enum SleepScreenBuilder {
 
     static func continuitySentence(awakenings: Int, awake: Int) -> String {
         if awakenings == 0 && awake == 0 { return "No awakenings recorded." }
-        let count = "\(awakenings) \(awakenings == 1 ? "awakening" : "awakenings")"
+        let count = NoctisCount.awakenings(awakenings)
         return "\(count), \(HomeFormat.compactDuration(awake, minutesWord: true)) awake after falling asleep."
     }
 

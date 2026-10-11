@@ -1,2052 +1,2238 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "coach.caution.building": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data is still building, so this is a fair guide rather than a firm guide."
-          }
-        }
-      }
-    },
-    "coach.caution.evidence": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This rests on limited evidence, so treat it as a rough guide."
-          }
-        }
-      }
-    },
-    "coach.caution.gap": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Last night isn't recorded, so this leans on your earlier nights."
-          }
-        }
-      }
-    },
-    "coach.caution.limited": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This rests on a short history, so treat it as a rough guide."
-          }
-        }
-      }
-    },
-    "coach.caution.noData": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "There is no sleep data to go on yet."
-          }
-        }
-      }
-    },
-    "coach.caution.noHeart": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heart data isn't included, so this leans on sleep alone."
-          }
-        }
-      }
-    },
-    "coach.caution.stale": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple Health hasn't updated recently, so this may not include your latest night."
-          }
-        }
-      }
-    },
-    "coach.confidence.high": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "High confidence"
-          }
-        }
-      }
-    },
-    "coach.confidence.line.one": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "{level} · based on {nights} night"
-          }
-        }
-      }
-    },
-    "coach.confidence.line.other": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "{level} · based on {nights} nights"
-          }
-        }
-      }
-    },
-    "coach.confidence.low": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Low confidence"
-          }
-        }
-      }
-    },
-    "coach.confidence.moderate": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moderate confidence"
-          }
-        }
-      }
-    },
-    "coach.footer": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach shares patterns from your data. It isn't medical advice."
-          }
-        }
-      }
-    },
-    "coach.pattern.note": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This is a pattern in your data, not proof of a cause."
-          }
-        }
-      }
-    },
-    "coach.q.bedtime": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "When should I sleep?"
-          }
-        }
-      }
-    },
-    "coach.q.consistency": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How can I improve consistency?"
-          }
-        }
-      }
-    },
-    "coach.q.focus": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What should I focus on today?"
-          }
-        }
-      }
-    },
-    "coach.q.insight.bedtimeShift": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my bedtime shift."
-          }
+  "sourceLanguage" : "en",
+  "strings" : {
+    "coach.caution.building" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data is still building, so this is a fair guide rather than a firm guide."
+          }
+        }
+      },
+      "comment" : "A line Coach adds under an answer ('caution.building'): how much to lean on it."
+    },
+    "coach.caution.evidence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This rests on limited evidence, so treat it as a rough guide."
+          }
+        }
+      },
+      "comment" : "A line Coach adds under an answer ('caution.evidence'): how much to lean on it."
+    },
+    "coach.caution.gap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last night isn't recorded, so this leans on your earlier nights."
+          }
+        }
+      },
+      "comment" : "A line Coach adds under an answer ('caution.gap'): how much to lean on it."
+    },
+    "coach.caution.limited" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This rests on a short history, so treat it as a rough guide."
+          }
+        }
+      },
+      "comment" : "A line Coach adds under an answer ('caution.limited'): how much to lean on it."
+    },
+    "coach.caution.noData" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is no sleep data to go on yet."
+          }
+        }
+      },
+      "comment" : "A line Coach adds under an answer ('caution.noData'): how much to lean on it."
+    },
+    "coach.caution.noHeart" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heart data isn't included, so this leans on sleep alone."
+          }
+        }
+      },
+      "comment" : "A line Coach adds under an answer ('caution.noHeart'): how much to lean on it."
+    },
+    "coach.caution.stale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health hasn't updated recently, so this may not include your latest night."
+          }
+        }
+      },
+      "comment" : "A line Coach adds under an answer ('caution.stale'): how much to lean on it."
+    },
+    "coach.confidence.high" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "High confidence"
+          }
+        }
+      },
+      "comment" : "A line Coach adds under an answer ('confidence.high'): how much to lean on it."
+    },
+    "coach.confidence.line.one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{level} · based on {nights} night"
+          }
         }
-      }
-    },
-    "coach.q.insight.consistencyChange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my bedtime spread."
-          }
+      },
+      "comment" : "A line Coach adds under an answer ('confidence.line.one'): how much to lean on it. Keeps the placeholders {level}, {nights} exactly: they are replaced by numbers, times or names already formatted."
+    },
+    "coach.confidence.line.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{level} · based on {nights} nights"
+          }
         }
-      }
-    },
-    "coach.q.insight.consistentBedtime": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my consistent bedtime streak."
-          }
+      },
+      "comment" : "A line Coach adds under an answer ('confidence.line.other'): how much to lean on it. Keeps the placeholders {level}, {nights} exactly: they are replaced by numbers, times or names already formatted."
+    },
+    "coach.confidence.low" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low confidence"
+          }
         }
-      }
-    },
-    "coach.q.insight.earlierBedtimePattern": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What does my earlier bedtime pattern show?"
-          }
+      },
+      "comment" : "A line Coach adds under an answer ('confidence.low'): how much to lean on it."
+    },
+    "coach.confidence.moderate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moderate confidence"
+          }
         }
-      }
-    },
-    "coach.q.insight.hrvBelowRange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my HRV lately."
-          }
+      },
+      "comment" : "A line Coach adds under an answer ('confidence.moderate'): how much to lean on it."
+    },
+    "coach.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coach shares patterns from your data. It isn't medical advice."
+          }
         }
-      }
-    },
-    "coach.q.insight.milestone": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What patterns can you see in my recorded nights?"
-          }
+      },
+      "comment" : "A line Coach adds under an answer ('footer.'): how much to lean on it."
+    },
+    "coach.pattern.note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is a pattern in your data, not proof of a cause."
+          }
         }
-      }
-    },
-    "coach.q.insight.recordBestConsistency": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my steadiest week."
-          }
+      },
+      "comment" : "A line Coach adds under an answer ('pattern.note'): how much to lean on it."
+    },
+    "coach.q.bedtime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When should I sleep?"
+          }
         }
-      }
-    },
-    "coach.q.insight.recordHighestRecovery": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my highest recovery."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('bedtime'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.consistency" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How can I improve consistency?"
+          }
         }
-      }
-    },
-    "coach.q.insight.recordLongestNight": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my longest night."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('consistency'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.focus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What should I focus on today?"
+          }
         }
-      }
-    },
-    "coach.q.insight.recordLowestRestingHeartRate": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my lowest resting heart rate."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('focus'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.bedtimeShift" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my bedtime shift."
+          }
         }
-      }
-    },
-    "coach.q.insight.recoveryDirection": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my recovery trend."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.bedtimeShift'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.consistencyChange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my bedtime spread."
+          }
         }
-      }
-    },
-    "coach.q.insight.restingHeartRateAboveRange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my resting heart rate lately."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.consistencyChange'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.consistentBedtime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my consistent bedtime streak."
+          }
         }
-      }
-    },
-    "coach.q.insight.sleepBalance": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my sleep balance this week."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.consistentBedtime'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.earlierBedtimePattern" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What does my earlier bedtime pattern show?"
+          }
         }
-      }
-    },
-    "coach.q.insight.sleepDurationShift": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my sleep duration shift."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.earlierBedtimePattern'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.hrvBelowRange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my HRV lately."
+          }
         }
-      }
-    },
-    "coach.q.insight.stageShare": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my deep and REM sleep."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.hrvBelowRange'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.milestone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What patterns can you see in my recorded nights?"
+          }
         }
-      }
-    },
-    "coach.q.insight.weekendShift": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tell me about my weekend bedtimes."
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.milestone'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.recordBestConsistency" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my steadiest week."
+          }
         }
-      }
-    },
-    "coach.q.recovery": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How is my recovery today?"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.recordBestConsistency'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.recordHighestRecovery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my highest recovery."
+          }
         }
-      }
-    },
-    "coach.q.recovery.higher": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Why is my recovery higher today?"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.recordHighestRecovery'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.recordLongestNight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my longest night."
+          }
         }
-      }
-    },
-    "coach.q.recovery.lower": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Why is my recovery lower today?"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.recordLongestNight'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.recordLowestRestingHeartRate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my lowest resting heart rate."
+          }
         }
-      }
-    },
-    "coach.q.sleep": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How did I sleep last night?"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.recordLowestRestingHeartRate'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.recoveryDirection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my recovery trend."
+          }
         }
-      }
-    },
-    "coach.q.sleep.higher": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Why was my sleep better last night?"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.recoveryDirection'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.restingHeartRateAboveRange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my resting heart rate lately."
+          }
         }
-      }
-    },
-    "coach.q.sleep.lower": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Why was my sleep worse last night?"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.restingHeartRateAboveRange'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.sleepBalance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my sleep balance this week."
+          }
         }
-      }
-    },
-    "coach.q.week": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What changed this week?"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.sleepBalance'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.sleepDurationShift" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my sleep duration shift."
+          }
         }
-      }
-    },
-    "coach.router.bedtimeAdvice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\bwhen should i (sleep|go to (bed|sleep)|turn in|be in bed|get to bed)\\b\n\\bwhat time should i (sleep|go to (bed|sleep)|turn in|be in bed)\\b\n\\b(best|ideal|good|right|target|optimal) (bed ?time|time to (sleep|go to bed))\\b\n\\bwhen to (sleep|go to bed)\\b\n\\bbed ?time (tonight|advice|suggestion|recommendation)\\b\n\\bwhat time (tonight|to sleep|to go to bed)\\b\n\\bshould i (sleep|go to bed) (earlier|later|now|tonight)\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.sleepDurationShift'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.stageShare" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my deep and REM sleep."
+          }
         }
-      }
-    },
-    "coach.router.consistencyHelp": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\bconsisten\\w*\n\\bbedtime (shift|change|spread|variation|streak)s?\\b\n\\bweekend\\b\n\\bsteadiest\\b\n\\bregular (schedule|routine|bed ?time|sleep)\\b\n\\b(same|fixed|steady) (time|schedule|routine|bed ?time)\\b\n\\broutine\\b\n\\bstay (on track|steady)\\b\n\\bschedule\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.stageShare'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.insight.weekendShift" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me about my weekend bedtimes."
+          }
         }
-      }
-    },
-    "coach.router.crisis": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\bkill(ing)? myself\\b\n\\bend(ing)? (my|my own) life\\b\n\\bend it all\\b\n\\bwant(ed)? to die\\b\n\\bwish i (was|were) (dead|gone)\\b\n\\bsuicid\\w*\n\\bself ?harm\\w*\n\\b(hurt|hurting|harm|harming|cut|cutting) myself\\b\n\\bdont want to (live|be here|exist|wake up|go on)\\b\n\\bno reason to live\\b\n\\bbetter off (dead|without me)\\b\n\\btake my (own )?life\\b\n\\b(not|isnt) worth living\\b\n\\blife (is not|isnt) worth\\b\n\\bcant go on (like this|anymore|any more)\\b\n\\b(tired|sick) of (living|being alive|life)\\b\n\\bdont want to be alive\\b\n\\bkill me\\b\n\\bend my (suffering|pain)\\b\n\\boverdos\\w*"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('insight.weekendShift'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.recovery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How is my recovery today?"
+          }
         }
-      }
-    },
-    "coach.router.direction.higher": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\b(better|higher|up|improv\\w*|increas\\w*|rose|rising|risen|more|longer|best|good|great)\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('recovery'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.recovery.higher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why is my recovery higher today?"
+          }
         }
-      }
-    },
-    "coach.router.direction.lower": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\b(worse|lower|lowest|low|down|drop\\w*|dip\\w*|fell|fall\\w*|decreas\\w*|less|shorter|worst|bad|poor\\w*)\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('recovery.higher'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.recovery.lower" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why is my recovery lower today?"
+          }
         }
-      }
-    },
-    "coach.router.direction.same": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\b(same|steady|unchanged|stable|flat|similar)\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('recovery.lower'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.sleep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How did I sleep last night?"
+          }
         }
-      }
-    },
-    "coach.router.exact": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\b(my|the) exact\\b\n\\bexact(ly)? (heart rate|hrv|bpm|number|numbers|reading|readings|value|values|score|time|minute|minutes)\\b\n\\bprecise(ly)? (heart rate|hrv|bpm|number|numbers|reading|readings|value|values)\\b\n\\braw (data|numbers|samples|readings|heart rate)\\b\n\\b(every|each) (heart rate|reading|sample|measurement)\\b\n\\bminute by minute\\b\n\\bhealth ?kit\\b\n\\bexport\\b\n\\ball my data\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('sleep'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.sleep.higher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why was my sleep better last night?"
+          }
         }
-      }
-    },
-    "coach.router.injection": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\bignore (all |any |your |the |these |previous |prior |above )*(rules|instructions|guidelines|prompt|directions)\\b\n\\bdisregard\\b.*\\b(rules|instructions|guidelines)\\b\n\\bforget (everything|all|your (rules|instructions))\\b\n\\b(pretend|imagine) (you are|youre|to be|you were)\\b\n\\byou are now\\b\n\\bact (as|like) (a|an|if)\\b\n\\brole ?play\\b\n\\b(system|hidden|secret) prompt\\b\n\\bdeveloper mode\\b\n\\bjailbreak\\b\n\\bdo anything now\\b\n\\breveal your (prompt|instructions|rules)\\b\n\\bbypass\\b\n\\boverride\\b\n\\bsay (that )?(i have|im)\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('sleep.higher'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.sleep.lower" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why was my sleep worse last night?"
+          }
         }
-      }
-    },
-    "coach.router.medical": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\b(diagnos\\w*|disorder|disease|syndrome|apn?oea|insomnia|narcolepsy|restless legs|depress\\w*|anxiety|adhd|bipolar|diabet\\w*|hypertension|arrhythmia|afib|atrial fibrillation|cancer|pregnan\\w*|infection|illness|symptom\\w*|medication\\w*|medicine|prescri\\w*|dosage|melatonin|supplement\\w*|sleeping pill\\w*|antidepressant\\w*|therapy|therapist|treatment|cure)\\b\n\\bdo i have\\b\n\\bam i (sick|ill|dying|unwell|healthy)\\b\n\\bwhats wrong with me\\b\n\\bis (it|this|that) (dangerous|serious|unhealthy|a problem)\\b\n\\b(heart|blood|lung) (attack|disease|condition|problem|pressure)\\b\n\\b(see|call|ask) (a|my) (doctor|physician|gp)\\b\n\\b(doctor|physician|medical|clinical|clinic|hospital|nurse)\\b\n\\bcondition\\b\n\\b(dangerous|unhealthy|abnormal|harmful|alarming|worried|worrying|worry|scared|afraid|frightened)\\b\n\\bchest (pain\\w*|tight\\w*|pressure|discomfort|hurts?)\\b\n\\b(pain|pains|painful|aching|aches?)\\b\n\\b(dizz\\w*|faint\\w*|light ?headed|vertigo|blacked out|black out|passed out|pass out)\\b\n\\b(palpitation\\w*|racing heart|pounding heart|heart (is |was |keeps |has been |feels |feel )?(racing|pounding|skipping|fluttering|flutter\\w*))\\b\n\\b(short(ness)? of breath|out of breath|breathless\\w*|cant breathe|cannot breathe|trouble breathing|difficulty breathing|hard to breathe)\\b\n\\b(nausea|nauseous|vomit\\w*|fever|feverish|bleeding|numb\\w*|seizure\\w*|stroke|migraine\\w*|headache\\w*)\\b\n\\bi feel (sick|ill|unwell|faint|weak|awful|terrible)\\b\n\\b(emergency|ambulance|911|999)\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('sleep.lower'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.q.week" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What changed this week?"
+          }
         }
-      }
-    },
-    "coach.router.patterns": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\bpatterns?\\b\n\\btrends?\\b\n\\binsights?\\b\n\\banything (interesting|unusual|notable|new)\\b\n\\bwhat do you (see|notice)\\b\n\\bstands? out\\b\n\\bnotice (anything|something)\\b"
-          }
+      },
+      "comment" : "A question Coach offers as a chip ('week'); it is also the text of the question when tapped. Phrase it as the person would ask it."
+    },
+    "coach.router.bedtimeAdvice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\bwhen should i (sleep|go to (bed|sleep)|turn in|be in bed|get to bed)\\b\n\\bwhat time should i (sleep|go to (bed|sleep)|turn in|be in bed)\\b\n\\b(best|ideal|good|right|target|optimal) (bed ?time|time to (sleep|go to bed))\\b\n\\bwhen to (sleep|go to bed)\\b\n\\bbed ?time (tonight|advice|suggestion|recommendation)\\b\n\\bwhat time (tonight|to sleep|to go to bed)\\b\n\\bshould i (sleep|go to bed) (earlier|later|now|tonight)\\b"
+          }
         }
-      }
-    },
-    "coach.router.recoveryChange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\brecovery\\b\n\\b(hrv|heart rate variability|resting heart rate|resting rate)\\b\n\\b(readiness|recovered)\\b\n\\bwhy (am i|do i feel) (so )?(tired|drained|exhausted|wiped)\\b"
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'bedtimeAdvice' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.consistencyHelp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\bconsisten\\w*\n\\bbedtime (shift|change|spread|variation|streak)s?\\b\n\\bweekend\\b\n\\bsteadiest\\b\n\\bregular (schedule|routine|bed ?time|sleep)\\b\n\\b(same|fixed|steady) (time|schedule|routine|bed ?time)\\b\n\\broutine\\b\n\\bstay (on track|steady)\\b\n\\bschedule\\b"
+          }
         }
-      }
-    },
-    "coach.router.sleepChange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\bhow did i sleep\\b\n\\bwhy did i sleep\\b\n\\bhow was my sleep\\b\n\\b(sleep|slept)\\b.*\\b(better|worse|more|less|longer|shorter|badly|well|lower|higher|same|different|usual|normal)\\b\n\\bdid i (sleep|slept)\\b\n\\b(deep|rem) sleep\\b\n\\b(longest|shortest) night\\b\n\\b(better|worse|more|less|longer|shorter)\\b.*\\b(sleep|slept)\\b\n\\blast night\\b\n\\bmy sleep\\b"
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'consistencyHelp' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.crisis" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\bkill(ing)? myself\\b\n\\bend(ing)? (my|my own) life\\b\n\\bend it all\\b\n\\bwant(ed)? to die\\b\n\\bwish i (was|were) (dead|gone)\\b\n\\bsuicid\\w*\n\\bself ?harm\\w*\n\\b(hurt|hurting|harm|harming|cut|cutting) myself\\b\n\\bdont want to (live|be here|exist|wake up|go on)\\b\n\\bno reason to live\\b\n\\bbetter off (dead|without me)\\b\n\\btake my (own )?life\\b\n\\b(not|isnt) worth living\\b\n\\blife (is not|isnt) worth\\b\n\\bcant go on (like this|anymore|any more)\\b\n\\b(tired|sick) of (living|being alive|life)\\b\n\\bdont want to be alive\\b\n\\bkill me\\b\n\\bend my (suffering|pain)\\b\n\\boverdos\\w*"
+          }
         }
-      }
-    },
-    "coach.router.todayFocus": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\bfocus\\b.*\\b(today|now)\\b\n\\b(today|now)\\b.*\\bfocus\\b\n\\bwhat should i (do|focus|prioriti[sz]e|work on|aim for)( on)?( today| now)?\\b\n\\bwhat matters (most )?today\\b\n\\bpriorit\\w*\n\\bplan (for )?(my )?(today|day)\\b\n\\badvice for today\\b\n\\bhow should i (spend|plan) my day\\b"
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'crisis' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.direction.higher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\b(better|higher|up|improv\\w*|increas\\w*|rose|rising|risen|more|longer|best|good|great)\\b"
+          }
         }
-      }
-    },
-    "coach.router.weekChange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\\b(this|past|last|previous) week\\b\n\\b(the|my) week\\b\n\\bweekly\\b\n^(?!.*\\blast night\\b).*\\bwhats? (has |have )?changed\\b\n\\bover the (last|past) (7|seven) days\\b"
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'direction.higher' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.direction.lower" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\b(worse|lower|lowest|low|down|drop\\w*|dip\\w*|fell|fall\\w*|decreas\\w*|less|shorter|worst|bad|poor\\w*)\\b"
+          }
         }
-      }
-    },
-    "coach.script.crisis": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You're not alone, and how you feel matters. If you might act on thoughts of harming yourself, please contact your local emergency services now. Reaching out to someone you trust can help too, and a helpline can talk with you at any hour."
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'direction.lower' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.direction.same" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\b(same|steady|unchanged|stable|flat|similar)\\b"
+          }
         }
-      }
-    },
-    "coach.script.crisis.help.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Find help"
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'direction.same' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.exact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\b(my|the) exact\\b\n\\bexact(ly)? (heart rate|hrv|bpm|number|numbers|reading|readings|value|values|score|time|minute|minutes)\\b\n\\bprecise(ly)? (heart rate|hrv|bpm|number|numbers|reading|readings|value|values)\\b\n\\braw (data|numbers|samples|readings|heart rate)\\b\n\\b(every|each) (heart rate|reading|sample|measurement)\\b\n\\bminute by minute\\b\n\\bhealth ?kit\\b\n\\bexport\\b\n\\ball my data\\b"
+          }
         }
-      }
-    },
-    "coach.script.crisis.help.url": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "https://findahelpline.com"
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'exact' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.injection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\bignore (all |any |your |the |these |previous |prior |above )*(rules|instructions|guidelines|prompt|directions)\\b\n\\bdisregard\\b.*\\b(rules|instructions|guidelines)\\b\n\\bforget (everything|all|your (rules|instructions))\\b\n\\b(pretend|imagine) (you are|youre|to be|you were)\\b\n\\byou are now\\b\n\\bact (as|like) (a|an|if)\\b\n\\brole ?play\\b\n\\b(system|hidden|secret) prompt\\b\n\\bdeveloper mode\\b\n\\bjailbreak\\b\n\\bdo anything now\\b\n\\breveal your (prompt|instructions|rules)\\b\n\\bbypass\\b\n\\boverride\\b\n\\bsay (that )?(i have|im)\\b"
+          }
         }
-      }
-    },
-    "coach.script.exact": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I explain patterns rather than exact readings. Home, Sleep and Recovery show your numbers, and I can explain what they suggest."
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'injection' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.medical" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\b(diagnos\\w*|disorder|disease|syndrome|apn?oea|insomnia|narcolepsy|restless legs|depress\\w*|anxiety|adhd|bipolar|diabet\\w*|hypertension|arrhythmia|afib|atrial fibrillation|cancer|pregnan\\w*|infection|illness|symptom\\w*|medication\\w*|medicine|prescri\\w*|dosage|melatonin|supplement\\w*|sleeping pill\\w*|antidepressant\\w*|therapy|therapist|treatment|cure)\\b\n\\bdo i have\\b\n\\bam i (sick|ill|dying|unwell|healthy)\\b\n\\bwhats wrong with me\\b\n\\bis (it|this|that) (dangerous|serious|unhealthy|a problem)\\b\n\\b(heart|blood|lung) (attack|disease|condition|problem|pressure)\\b\n\\b(see|call|ask) (a|my) (doctor|physician|gp)\\b\n\\b(doctor|physician|medical|clinical|clinic|hospital|nurse)\\b\n\\bcondition\\b\n\\b(dangerous|unhealthy|abnormal|harmful|alarming|worried|worrying|worry|scared|afraid|frightened)\\b\n\\bchest (pain\\w*|tight\\w*|pressure|discomfort|hurts?)\\b\n\\b(pain|pains|painful|aching|aches?)\\b\n\\b(dizz\\w*|faint\\w*|light ?headed|vertigo|blacked out|black out|passed out|pass out)\\b\n\\b(palpitation\\w*|racing heart|pounding heart|heart (is |was |keeps |has been |feels |feel )?(racing|pounding|skipping|fluttering|flutter\\w*))\\b\n\\b(short(ness)? of breath|out of breath|breathless\\w*|cant breathe|cannot breathe|trouble breathing|difficulty breathing|hard to breathe)\\b\n\\b(nausea|nauseous|vomit\\w*|fever|feverish|bleeding|numb\\w*|seizure\\w*|stroke|migraine\\w*|headache\\w*)\\b\n\\bi feel (sick|ill|unwell|faint|weak|awful|terrible)\\b\n\\b(emergency|ambulance|911|999)\\b"
+          }
         }
-      }
-    },
-    "coach.script.medical": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I can't diagnose or assess health conditions. If something about your sleep or health worries you, a doctor is the right person to ask. I can explain patterns in your data."
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'medical' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.patterns" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\bpatterns?\\b\n\\btrends?\\b\n\\binsights?\\b\n\\banything (interesting|unusual|notable|new)\\b\n\\bwhat do you (see|notice)\\b\n\\bstands? out\\b\n\\bnotice (anything|something)\\b"
+          }
         }
-      }
-    },
-    "coach.script.off": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach isn't available right now. Home, Sleep and Recovery have your latest numbers."
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'patterns' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.recoveryChange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\brecovery\\b\n\\b(hrv|heart rate variability|resting heart rate|resting rate)\\b\n\\b(readiness|recovered)\\b\n\\bwhy (am i|do i feel) (so )?(tired|drained|exhausted|wiped)\\b"
+          }
         }
-      }
-    },
-    "coach.script.unavailable": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I couldn't put an answer together right now. Home, Sleep and Recovery have your latest numbers."
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'recoveryChange' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.sleepChange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\bhow did i sleep\\b\n\\bwhy did i sleep\\b\n\\bhow was my sleep\\b\n\\b(sleep|slept)\\b.*\\b(better|worse|more|less|longer|shorter|badly|well|lower|higher|same|different|usual|normal)\\b\n\\bdid i (sleep|slept)\\b\n\\b(deep|rem) sleep\\b\n\\b(longest|shortest) night\\b\n\\b(better|worse|more|less|longer|shorter)\\b.*\\b(sleep|slept)\\b\n\\blast night\\b\n\\bmy sleep\\b"
+          }
         }
-      }
-    },
-    "coach.script.unknown": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I can help with questions about your sleep and recovery."
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'sleepChange' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.todayFocus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\bfocus\\b.*\\b(today|now)\\b\n\\b(today|now)\\b.*\\bfocus\\b\n\\bwhat should i (do|focus|prioriti[sz]e|work on|aim for)( on)?( today| now)?\\b\n\\bwhat matters (most )?today\\b\n\\bpriorit\\w*\n\\bplan (for )?(my )?(today|day)\\b\n\\badvice for today\\b\n\\bhow should i (spend|plan) my day\\b"
+          }
         }
-      }
-    },
-    "coach.tpl.ba.changed.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I don't have enough recorded nights to compare it with your usual bedtime yet."
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'todayFocus' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.router.weekChange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\\b(this|past|last|previous) week\\b\n\\b(the|my) week\\b\n\\bweekly\\b\n^(?!.*\\blast night\\b).*\\bwhats? (has |have )?changed\\b\n\\bover the (last|past) (7|seven) days\\b"
+          }
         }
-      }
-    },
-    "coach.tpl.ba.changed.usual": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your usual bedtime has been {{bedtime.usual}} over recent nights."
-          }
+      },
+      "comment" : "Words the router looks for in what the person types, to decide it is a 'weekChange' question. A list of words and phrases separated by |; give the language's own everyday ways of asking, not a literal translation."
+    },
+    "coach.script.crisis" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're not alone, and how you feel matters. If you might act on thoughts of harming yourself, please contact your local emergency services now. Reaching out to someone you trust can help too, and a helpline can talk with you at any hour."
+          }
         }
-      }
-    },
-    "coach.tpl.ba.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notice how the mornings after a steadier bedtime feel."
-          }
+      },
+      "comment" : "A fixed reply Coach gives for 'crisis' (it does not read the person's data). Must stay calm, short and kind; review with care."
+    },
+    "coach.script.crisis.help.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find help"
+          }
         }
-      }
-    },
-    "coach.tpl.ba.summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A bedtime near {{bedtime.suggested}} would fit your sleep need of {{sleep.need}} and a wake time of {{wake.typical}}."
-          }
+      },
+      "comment" : "A fixed reply Coach gives for 'crisis.help.title' (it does not read the person's data). Must stay calm, short and kind; review with care."
+    },
+    "coach.script.crisis.help.url" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://findahelpline.com"
+          }
         }
-      }
-    },
-    "coach.tpl.ba.tonight": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aim to be in bed near {{bedtime.suggested}} tonight."
-          }
+      },
+      "comment" : "A fixed reply Coach gives for 'crisis.help.url' (it does not read the person's data). Must stay calm, short and kind; review with care."
+    },
+    "coach.script.exact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I explain patterns rather than exact readings. Home, Sleep and Recovery show your numbers, and I can explain what they suggest."
+          }
         }
-      }
-    },
-    "coach.tpl.ch.changed.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No change in your bedtime spread stands out yet."
-          }
+      },
+      "comment" : "A fixed reply Coach gives for 'exact' (it does not read the person's data). Must stay calm, short and kind; review with care."
+    },
+    "coach.script.medical" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I can't diagnose or assess health conditions. If something about your sleep or health worries you, a doctor is the right person to ask. I can explain patterns in your data."
+          }
         }
-      }
-    },
-    "coach.tpl.ch.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Consistency tends to feel easiest when the evening routine is the same on most nights."
-          }
+      },
+      "comment" : "A fixed reply Coach gives for 'medical' (it does not read the person's data). Must stay calm, short and kind; review with care."
+    },
+    "coach.script.off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coach isn't available right now. Home, Sleep and Recovery have your latest numbers."
+          }
         }
-      }
-    },
-    "coach.tpl.ch.summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your bedtime has varied by about {{consistency.bedtimeVarMin}} across recent nights, around a usual of {{bedtime.usual}}."
-          }
+      },
+      "comment" : "A fixed reply Coach gives for 'off' (it does not read the person's data). Must stay calm, short and kind; review with care."
+    },
+    "coach.script.unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I couldn't put an answer together right now. Home, Sleep and Recovery have your latest numbers."
+          }
         }
-      }
-    },
-    "coach.tpl.ch.summary.noSpread": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I need a few more recorded nights to see how much your bedtime varies."
-          }
+      },
+      "comment" : "A fixed reply Coach gives for 'unavailable' (it does not read the person's data). Must stay calm, short and kind; review with care."
+    },
+    "coach.script.unknown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I can help with questions about your sleep and recovery."
+          }
         }
-      }
-    },
-    "coach.tpl.ch.summary.noUsual": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your bedtime has varied by about {{consistency.bedtimeVarMin}} across recent nights."
-          }
+      },
+      "comment" : "A fixed reply Coach gives for 'unknown' (it does not read the person's data). Must stay calm, short and kind; review with care."
+    },
+    "coach.tpl.ba.changed.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I don't have enough recorded nights to compare it with your usual bedtime yet."
+          }
         }
-      }
-    },
-    "coach.tpl.ch.tonight": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep tonight's bedtime within {{consistency.toleranceMin}} of {{bedtime.usual}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ba.changed.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ba.changed.usual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your usual bedtime has been {{bedtime.usual}} over recent nights."
+          }
         }
-      }
-    },
-    "coach.tpl.changed.prefix": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What stands out: "
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ba.changed.usual' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ba.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notice how the mornings after a steadier bedtime feel."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.balance.ahead": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "you are {{sleep.balance}} ahead of your sleep need over the past week"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ba.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ba.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A bedtime near {{bedtime.suggested}} would fit your sleep need of {{sleep.need}} and a wake time of {{wake.typical}}."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.balance.behind": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "you are {{sleep.balance}} behind your sleep need over the past week"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ba.summary' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ba.tonight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aim to be in bed near {{bedtime.suggested}} tonight."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.bedtime.earlier": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bedtime was {{bedtime.deltaVsUsual}} earlier than usual"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ba.tonight' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ch.changed.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No change in your bedtime spread stands out yet."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.bedtime.later": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bedtime was {{bedtime.deltaVsUsual}} later than usual"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ch.changed.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ch.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consistency tends to feel easiest when the evening routine is the same on most nights."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.bedtimeSpread": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bedtimes varied by about {{consistency.bedtimeVarMin}}"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ch.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ch.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your bedtime has varied by about {{consistency.bedtimeVarMin}} across recent nights, around a usual of {{bedtime.usual}}."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.deep": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "deep sleep was {{deep.share}} of your night against a usual of {{deep.usual}}"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ch.summary' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ch.summary.noSpread" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I need a few more recorded nights to see how much your bedtime varies."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.hrv": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HRV was {{hrv.today}} against a usual of {{hrv.baseline}}"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ch.summary.noSpread' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ch.summary.noUsual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your bedtime has varied by about {{consistency.bedtimeVarMin}} across recent nights."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.quality": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "sleep quality was {{sleep.quality}} against a usual of {{sleep.qualityUsual}}"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ch.summary.noUsual' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.ch.tonight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep tonight's bedtime within {{consistency.toleranceMin}} of {{bedtime.usual}}."
+          }
         }
-      }
-    },
-    "coach.tpl.clause.quality.only": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "sleep quality was {{sleep.quality}}"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'ch.tonight' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.changed.prefix" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What stands out: "
+          }
         }
-      }
-    },
-    "coach.tpl.clause.recoveryTrend.down": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "recovery has been lower by about {{week.recoveryTrend}} points a week"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'changed.prefix' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.balance.ahead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you are {{sleep.balance}} ahead of your sleep need over the past week"
+          }
         }
-      }
-    },
-    "coach.tpl.clause.recoveryTrend.up": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "recovery has been rising by about {{week.recoveryTrend}} points a week"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.balance.ahead' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.balance.behind" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you are {{sleep.balance}} behind your sleep need over the past week"
+          }
         }
-      }
-    },
-    "coach.tpl.clause.rem": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "REM sleep was {{rem.share}} of your night against a usual of {{rem.usual}}"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.balance.behind' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.bedtime.earlier" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bedtime was {{bedtime.deltaVsUsual}} earlier than usual"
+          }
         }
-      }
-    },
-    "coach.tpl.clause.rhr": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "resting heart rate was {{rhr.today}} against a usual of {{rhr.baseline}}"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.bedtime.earlier' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.bedtime.later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bedtime was {{bedtime.deltaVsUsual}} later than usual"
+          }
         }
-      }
-    },
-    "coach.tpl.clause.sleep.longer": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "sleep was {{sleep.deltaVsBaseline}} longer than usual"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.bedtime.later' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.bedtimeSpread" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bedtimes varied by about {{consistency.bedtimeVarMin}}"
+          }
         }
-      }
-    },
-    "coach.tpl.clause.sleep.shorter": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "sleep was {{sleep.deltaVsBaseline}} shorter than usual"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.bedtimeSpread' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.deep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "deep sleep was {{deep.share}} of your night against a usual of {{deep.usual}}"
+          }
         }
-      }
-    },
-    "coach.tpl.clause.usualBedtime": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "your usual bedtime has been {{bedtime.usual}}"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.deep' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.hrv" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HRV was {{hrv.today}} against a usual of {{hrv.baseline}}"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.balance.ahead": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ahead of your sleep need by"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.hrv' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.quality" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sleep quality was {{sleep.quality}} against a usual of {{sleep.qualityUsual}}"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.balance.behind": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Behind your sleep need by"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.quality' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.quality.only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sleep quality was {{sleep.quality}}"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.bedtime.earlier": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bedtime, earlier than usual by"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.quality.only' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.recoveryTrend.down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "recovery has been lower by about {{week.recoveryTrend}} points a week"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.bedtime.later": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bedtime, later than usual by"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.recoveryTrend.down' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.recoveryTrend.up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "recovery has been rising by about {{week.recoveryTrend}} points a week"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.bedtimeLast": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bedtime"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.recoveryTrend.up' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.rem" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REM sleep was {{rem.share}} of your night against a usual of {{rem.usual}}"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.bedtimeSuggested": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suggested bedtime"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.rem' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.rhr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "resting heart rate was {{rhr.today}} against a usual of {{rhr.baseline}}"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.bedtimeUsual": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usual bedtime"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.rhr' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.sleep.longer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sleep was {{sleep.deltaVsBaseline}} longer than usual"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.duration": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Time asleep"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.sleep.longer' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.sleep.shorter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sleep was {{sleep.deltaVsBaseline}} shorter than usual"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.hrv": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HRV"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.sleep.shorter' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.clause.usualBedtime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "your usual bedtime has been {{bedtime.usual}}"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.hrvBelow": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HRV lately"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'clause.usualBedtime' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.balance.ahead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahead of your sleep need by"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.need": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep need"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.balance.ahead' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.balance.behind" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behind your sleep need by"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.nights": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nights recorded"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.balance.behind' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.bedtime.earlier" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedtime, earlier than usual by"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.quality": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep quality"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.bedtime.earlier' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.bedtime.later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedtime, later than usual by"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.recovery": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recovery today"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.bedtime.later' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.bedtimeLast" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedtime"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.rhr": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resting heart rate"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.bedtimeLast' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.bedtimeSuggested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggested bedtime"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.rhrAbove": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resting heart rate lately"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.bedtimeSuggested' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.bedtimeUsual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usual bedtime"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.sleep.longer": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep, longer than usual by"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.bedtimeUsual' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.duration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time asleep"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.sleep.shorter": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep, shorter than usual by"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.duration' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.hrv" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HRV"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.spread": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bedtime spread"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.hrv' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.hrvBelow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HRV lately"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.weekRecovery": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Average recovery this week"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.hrvBelow' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.need" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep need"
+          }
         }
-      }
-    },
-    "coach.tpl.contrib.weekSleep": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Average night this week"
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.need' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.nights" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nights recorded"
+          }
         }
-      }
-    },
-    "coach.tpl.gap.changed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your earlier nights are still in your Sleep tab. Once a night is recorded, I can explain how it compares."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.nights' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.quality" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep quality"
+          }
         }
-      }
-    },
-    "coach.tpl.gap.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A missing night can simply mean the watch wasn't worn or Health hasn't synced yet."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.quality' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.recovery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery today"
+          }
         }
-      }
-    },
-    "coach.tpl.gap.summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No sleep was recorded for last night, so I can't compare today with your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.recovery' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.rhr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resting heart rate"
+          }
         }
-      }
-    },
-    "coach.tpl.insight.bedtimeShift.earlier": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests last night's bedtime was {{insight.bedtimeShift.delta}} earlier than usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.rhr' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.rhrAbove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resting heart rate lately"
+          }
         }
-      }
-    },
-    "coach.tpl.insight.bedtimeShift.later": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests last night's bedtime was {{insight.bedtimeShift.delta}} later than usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.rhrAbove' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.sleep.longer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep, longer than usual by"
+          }
         }
-      }
-    },
-    "coach.tpl.insight.consistencyChange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests your bedtime spread went from {{insight.consistencyChange.previousSD}} to {{insight.consistencyChange.recentSD}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.sleep.longer' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.sleep.shorter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep, shorter than usual by"
+          }
         }
-      }
-    },
-    "coach.tpl.insight.consistentBedtime": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests a steady bedtime: {{insight.consistentBedtime.streak}} nights in a row close to {{insight.consistentBedtime.usual}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.sleep.shorter' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.spread" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedtime spread"
+          }
         }
-      }
-    },
-    "coach.tpl.insight.earlierBedtimePattern": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compared with your recent baseline, nights with an earlier bedtime averaged {{insight.earlierBedtimePattern.earlyMean}} and nights with a later bedtime {{insight.earlierBedtimePattern.lateMean}}, on a blend of sleep continuity, stage balance and HRV."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.spread' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.weekRecovery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average recovery this week"
+          }
         }
-      }
-    },
-    "coach.tpl.insight.hrvBelowRange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests HRV has run below your usual range lately: {{insight.hrvBelowRange.value}} against a usual of {{insight.hrvBelowRange.baseline}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.weekRecovery' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.contrib.weekSleep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average night this week"
+          }
         }
-      }
-    },
-    "coach.tpl.insight.milestone": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your recorded nights have reached {{insight.milestone.nights}}, enough to start looking at more kinds of patterns."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'contrib.weekSleep' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.gap.changed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your earlier nights are still in your Sleep tab. Once a night is recorded, I can explain how it compares."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.recordBestConsistency": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests this was your steadiest week for bedtimes, varying by about {{insight.recordBestConsistency.value}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'gap.changed' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.gap.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A missing night can simply mean the watch wasn't worn or Health hasn't synced yet."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.recordHighestRecovery": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests today's recovery of {{insight.recordHighestRecovery.value}} is your highest in a while."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'gap.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.gap.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No sleep was recorded for last night, so I can't compare today with your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.recordLongestNight": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests last night was your longest in a while, at {{insight.recordLongestNight.value}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'gap.summary' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.bedtimeShift.earlier" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests last night's bedtime was {{insight.bedtimeShift.delta}} earlier than usual."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.recordLowestRestingHeartRate": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests your resting heart rate of {{insight.recordLowestRestingHeartRate.value}} is your lowest in a while."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.bedtimeShift.earlier' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.bedtimeShift.later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests last night's bedtime was {{insight.bedtimeShift.delta}} later than usual."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.recoveryDirection.down": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests recovery has been lower by about {{insight.recoveryDirection.perWeek}} points a week."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.bedtimeShift.later' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.consistencyChange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests your bedtime spread went from {{insight.consistencyChange.previousSD}} to {{insight.consistencyChange.recentSD}}."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.recoveryDirection.up": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests recovery has been rising by about {{insight.recoveryDirection.perWeek}} points a week."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.consistencyChange' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.consistentBedtime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests a steady bedtime: {{insight.consistentBedtime.streak}} nights in a row close to {{insight.consistentBedtime.usual}}."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.restingHeartRateAboveRange": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests resting heart rate has run above your usual range lately: {{insight.restingHeartRateAboveRange.value}} against a usual of {{insight.restingHeartRateAboveRange.baseline}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.consistentBedtime' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.earlierBedtimePattern" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compared with your recent baseline, nights with an earlier bedtime averaged {{insight.earlierBedtimePattern.earlyMean}} and nights with a later bedtime {{insight.earlierBedtimePattern.lateMean}}, on a blend of sleep continuity, stage balance and HRV."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.sleepBalance.ahead": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests you are {{insight.sleepBalance.minutes}} ahead of your sleep need over the past week."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.earlierBedtimePattern' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.hrvBelowRange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests HRV has run below your usual range lately: {{insight.hrvBelowRange.value}} against a usual of {{insight.hrvBelowRange.baseline}}."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.sleepBalance.behind": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests you are {{insight.sleepBalance.minutes}} behind your sleep need over the past week."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.hrvBelowRange' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.milestone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your recorded nights have reached {{insight.milestone.nights}}, enough to start looking at more kinds of patterns."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.sleepDurationShift.longer": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests last night was {{insight.sleepDurationShift.delta}} longer than your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.milestone' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.recordBestConsistency" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests this was your steadiest week for bedtimes, varying by about {{insight.recordBestConsistency.value}}."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.sleepDurationShift.shorter": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests last night was {{insight.sleepDurationShift.delta}} shorter than your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.recordBestConsistency' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.recordHighestRecovery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests today's recovery of {{insight.recordHighestRecovery.value}} is your highest in a while."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.stageShare.deep.less": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests deep sleep made up {{insight.stageShare.deep.share}} of last night, below your usual {{insight.stageShare.deep.usual}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.recordHighestRecovery' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.recordLongestNight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests last night was your longest in a while, at {{insight.recordLongestNight.value}}."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.stageShare.deep.more": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests deep sleep made up {{insight.stageShare.deep.share}} of last night, above your usual {{insight.stageShare.deep.usual}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.recordLongestNight' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.recordLowestRestingHeartRate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests your resting heart rate of {{insight.recordLowestRestingHeartRate.value}} is your lowest in a while."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.stageShare.rem.less": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests REM sleep made up {{insight.stageShare.rem.share}} of last night, below your usual {{insight.stageShare.rem.usual}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.recordLowestRestingHeartRate' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.recoveryDirection.down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests recovery has been lower by about {{insight.recoveryDirection.perWeek}} points a week."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.stageShare.rem.more": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests REM sleep made up {{insight.stageShare.rem.share}} of last night, above your usual {{insight.stageShare.rem.usual}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.recoveryDirection.down' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.recoveryDirection.up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests recovery has been rising by about {{insight.recoveryDirection.perWeek}} points a week."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.weekendShift.earlier": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests Friday and Saturday bedtimes ran {{insight.weekendShift.delta}} earlier than the rest of the week."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.recoveryDirection.up' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.restingHeartRateAboveRange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests resting heart rate has run above your usual range lately: {{insight.restingHeartRateAboveRange.value}} against a usual of {{insight.restingHeartRateAboveRange.baseline}}."
+          }
         }
-      }
-    },
-    "coach.tpl.insight.weekendShift.later": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data suggests Friday and Saturday bedtimes ran {{insight.weekendShift.delta}} later than the rest of the week."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.restingHeartRateAboveRange' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.sleepBalance.ahead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests you are {{insight.sleepBalance.minutes}} ahead of your sleep need over the past week."
+          }
         }
-      }
-    },
-    "coach.tpl.learning.changed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Patterns usually start to show after about a week of recorded nights, and firm up over a couple of weeks."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.sleepBalance.ahead' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.sleepBalance.behind" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests you are {{insight.sleepBalance.minutes}} behind your sleep need over the past week."
+          }
         }
-      }
-    },
-    "coach.tpl.learning.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A short history isn't a problem; it just isn't enough to compare yet."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.sleepBalance.behind' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.sleepDurationShift.longer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests last night was {{insight.sleepDurationShift.delta}} longer than your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.learning.summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I need more nights before I can say much. So far I can see {{history.nights}} of them."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.sleepDurationShift.longer' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.sleepDurationShift.shorter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests last night was {{insight.sleepDurationShift.delta}} shorter than your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.mismatch": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data points a different way from the question, so this is what it shows."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.sleepDurationShift.shorter' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.stageShare.deep.less" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests deep sleep made up {{insight.stageShare.deep.share}} of last night, below your usual {{insight.stageShare.deep.usual}}."
+          }
         }
-      }
-    },
-    "coach.tpl.noData.changed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach reads your nights from Apple Health. Once a night is recorded, I can explain what it suggests."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.stageShare.deep.less' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.stageShare.deep.more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests deep sleep made up {{insight.stageShare.deep.share}} of last night, above your usual {{insight.stageShare.deep.usual}}."
+          }
         }
-      }
-    },
-    "coach.tpl.noData.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connecting Apple Health and wearing your watch to bed is enough to get started."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.stageShare.deep.more' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.stageShare.rem.less" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests REM sleep made up {{insight.stageShare.rem.share}} of last night, below your usual {{insight.stageShare.rem.usual}}."
+          }
         }
-      }
-    },
-    "coach.tpl.noData.summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I don't have any sleep data to look at yet."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.stageShare.rem.less' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.stageShare.rem.more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests REM sleep made up {{insight.stageShare.rem.share}} of last night, above your usual {{insight.stageShare.rem.usual}}."
+          }
         }
-      }
-    },
-    "coach.tpl.pt.changed.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing stands out against your recent baseline yet."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.stageShare.rem.more' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.weekendShift.earlier" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests Friday and Saturday bedtimes ran {{insight.weekendShift.delta}} earlier than the rest of the week."
+          }
         }
-      }
-    },
-    "coach.tpl.pt.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A pattern describes your own nights; it isn't a rule for tomorrow."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.weekendShift.earlier' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.insight.weekendShift.later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data suggests Friday and Saturday bedtimes ran {{insight.weekendShift.delta}} later than the rest of the week."
+          }
         }
-      }
-    },
-    "coach.tpl.pt.summary.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No pattern stands out in your data at the moment."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'insight.weekendShift.later' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.learning.changed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patterns usually start to show after about a week of recorded nights, and firm up over a couple of weeks."
+          }
         }
-      }
-    },
-    "coach.tpl.pt.summary.some": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data has a few patterns worth a look."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'learning.changed' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.learning.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A short history isn't a problem; it just isn't enough to compare yet."
+          }
         }
-      }
-    },
-    "coach.tpl.rc.changed.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing stands out against your recent baseline, so today's number looks like ordinary day-to-day movement."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'learning.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.learning.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I need more nights before I can say much. So far I can see {{history.nights}} of them."
+          }
         }
-      }
-    },
-    "coach.tpl.rc.notice.higher": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notice what your recent evenings looked like; a higher score is worth understanding as much as a lower score."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'learning.summary' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.mismatch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data points a different way from the question, so this is what it shows."
+          }
         }
-      }
-    },
-    "coach.tpl.rc.notice.lower": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notice how your energy and mood feel through the day. A lower score is a prompt to look closer, not a verdict."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'mismatch' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.noData.changed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coach reads your nights from Apple Health. Once a night is recorded, I can explain what it suggests."
+          }
         }
-      }
-    },
-    "coach.tpl.rc.notice.same": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A steady score means your recent nights have looked alike, which is useful to know."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'noData.changed' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.noData.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting Apple Health and wearing your watch to bed is enough to get started."
+          }
         }
-      }
-    },
-    "coach.tpl.rc.summary.higher": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your recovery is {{recovery.score}} today, {{recovery.deltaVsUsual}} points above your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'noData.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.noData.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I don't have any sleep data to look at yet."
+          }
         }
-      }
-    },
-    "coach.tpl.rc.summary.lower": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your recovery is {{recovery.score}} today, {{recovery.deltaVsUsual}} points below your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'noData.summary' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.pt.changed.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing stands out against your recent baseline yet."
+          }
         }
-      }
-    },
-    "coach.tpl.rc.summary.noBaseline": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your recovery is {{recovery.score}} today. I need a few more nights to say how that compares with your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'pt.changed.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.pt.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A pattern describes your own nights; it isn't a rule for tomorrow."
+          }
         }
-      }
-    },
-    "coach.tpl.rc.summary.same": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your recovery is {{recovery.score}} today, in line with your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'pt.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.pt.summary.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No pattern stands out in your data at the moment."
+          }
         }
-      }
-    },
-    "coach.tpl.sc.changed.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing else stands out against your recent baseline."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'pt.summary.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.pt.summary.some" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data has a few patterns worth a look."
+          }
         }
-      }
-    },
-    "coach.tpl.sc.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notice how rested you feel after nights like this."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'pt.summary.some' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.rc.changed.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing stands out against your recent baseline, so today's number looks like ordinary day-to-day movement."
+          }
         }
-      }
-    },
-    "coach.tpl.sc.summary.higher": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You slept {{sleep.duration}} last night, {{sleep.deltaVsBaseline}} longer than your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'rc.changed.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.rc.notice.higher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notice what your recent evenings looked like; a higher score is worth understanding as much as a lower score."
+          }
         }
-      }
-    },
-    "coach.tpl.sc.summary.lower": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You slept {{sleep.duration}} last night, {{sleep.deltaVsBaseline}} shorter than your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'rc.notice.higher' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.rc.notice.lower" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notice how your energy and mood feel through the day. A lower score is a prompt to look closer, not a verdict."
+          }
         }
-      }
-    },
-    "coach.tpl.sc.summary.noBaseline": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You slept {{sleep.duration}} last night. I need a few more nights to say how that compares with your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'rc.notice.lower' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.rc.notice.same" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A steady score means your recent nights have looked alike, which is useful to know."
+          }
         }
-      }
-    },
-    "coach.tpl.sc.summary.same": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You slept {{sleep.duration}} last night, close to your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'rc.notice.same' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.rc.summary.higher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your recovery is {{recovery.score}} today, {{recovery.deltaVsUsual}} points above your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.sparse.changed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A few more recorded nights, with heart data if your watch records it, will let me say more."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'rc.summary.higher' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.rc.summary.lower" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your recovery is {{recovery.score}} today, {{recovery.deltaVsUsual}} points below your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.sparse.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your Sleep and Recovery tabs show what is recorded so far."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'rc.summary.lower' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.rc.summary.noBaseline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your recovery is {{recovery.score}} today. I need a few more nights to say how that compares with your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.sparse.summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I don't have enough in your data to answer that yet."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'rc.summary.noBaseline' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.rc.summary.same" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your recovery is {{recovery.score}} today, in line with your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.stale.changed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Once Health syncs again, I can explain how your latest night compares with your usual."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'rc.summary.same' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sc.changed.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing else stands out against your recent baseline."
+          }
         }
-      }
-    },
-    "coach.tpl.stale.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opening the Health app or wearing your watch to bed usually brings it up to date."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sc.changed.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sc.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notice how rested you feel after nights like this."
+          }
         }
-      }
-    },
-    "coach.tpl.stale.summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple Health hasn't updated in over a day, so I can't say how last night went."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sc.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sc.summary.higher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You slept {{sleep.duration}} last night, {{sleep.deltaVsBaseline}} longer than your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.changed.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing stands out against your recent baseline."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sc.summary.higher' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sc.summary.lower" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You slept {{sleep.duration}} last night, {{sleep.deltaVsBaseline}} shorter than your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notice how your energy holds up through the afternoon."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sc.summary.lower' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sc.summary.noBaseline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You slept {{sleep.duration}} last night. I need a few more nights to say how that compares with your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.summary.balance": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You are {{sleep.balance}} behind your sleep need this week, so an earlier night is the most useful thing to aim for."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sc.summary.noBaseline' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sc.summary.same" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You slept {{sleep.duration}} last night, close to your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.summary.heart": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your body may want an easier day: HRV has run below your usual range lately, at {{insight.hrvBelowRange.value}} against a usual of {{insight.hrvBelowRange.baseline}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sc.summary.same' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sparse.changed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A few more recorded nights, with heart data if your watch records it, will let me say more."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.summary.recovery": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your recovery is {{recovery.score}}, {{recovery.deltaVsUsual}} points below your usual, so a lighter day may suit it."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sparse.changed' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sparse.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Sleep and Recovery tabs show what is recorded so far."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.summary.rhr": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your body may want an easier day: resting heart rate has run above your usual range lately, at {{insight.restingHeartRateAboveRange.value}} against a usual of {{insight.restingHeartRateAboveRange.baseline}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sparse.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.sparse.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I don't have enough in your data to answer that yet."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.summary.sparse": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The most useful thing today is a bedtime near {{bedtime.suggested}}."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'sparse.summary' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.stale.changed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once Health syncs again, I can explain how your latest night compares with your usual."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.summary.steady": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your data looks steady today, so there is nothing to work around."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'stale.changed' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.stale.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening the Health app or wearing your watch to bed usually brings it up to date."
+          }
         }
-      }
-    },
-    "coach.tpl.tf.tonight": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aim to be in bed near {{bedtime.suggested}} tonight."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'stale.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.stale.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health hasn't updated in over a day, so I can't say how last night went."
+          }
         }
-      }
-    },
-    "coach.tpl.tonight.bedtime": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keeping tonight's bedtime near {{bedtime.suggested}} would fit your usual pattern."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'stale.summary' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.changed.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing stands out against your recent baseline."
+          }
         }
-      }
-    },
-    "coach.tpl.wc.changed.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing else stands out against your recent baseline."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'tf.changed.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notice how your energy holds up through the afternoon."
+          }
         }
-      }
-    },
-    "coach.tpl.wc.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notice which days felt easy and which felt heavy, and whether that lines up with the nights before."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'tf.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.summary.balance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are {{sleep.balance}} behind your sleep need this week, so an earlier night is the most useful thing to aim for."
+          }
         }
-      }
-    },
-    "coach.tpl.wc.summary.less": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Over the past week your sleep averaged {{week.avgSleep}} a night, {{week.avgSleepDelta}} less than the week before."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'tf.summary.balance' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.summary.heart" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your body may want an easier day: HRV has run below your usual range lately, at {{insight.hrvBelowRange.value}} against a usual of {{insight.hrvBelowRange.baseline}}."
+          }
         }
-      }
-    },
-    "coach.tpl.wc.summary.more": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Over the past week your sleep averaged {{week.avgSleep}} a night, {{week.avgSleepDelta}} more than the week before."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'tf.summary.heart' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.summary.recovery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your recovery is {{recovery.score}}, {{recovery.deltaVsUsual}} points below your usual, so a lighter day may suit it."
+          }
         }
-      }
-    },
-    "coach.tpl.wc.summary.noPrior": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Over the past week your sleep averaged {{week.avgSleep}} a night."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'tf.summary.recovery' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.summary.rhr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your body may want an easier day: resting heart rate has run above your usual range lately, at {{insight.restingHeartRateAboveRange.value}} against a usual of {{insight.restingHeartRateAboveRange.baseline}}."
+          }
         }
-      }
-    },
-    "coach.tpl.wc.summary.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I don't have enough recorded nights this week to compare."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'tf.summary.rhr' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.summary.sparse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The most useful thing today is a bedtime near {{bedtime.suggested}}."
+          }
         }
-      }
-    },
-    "coach.tpl.wc.summary.same": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Over the past week your sleep averaged {{week.avgSleep}} a night, about the same as the week before."
-          }
+      },
+      "comment" : "Coach's own sentence for the 'tf.summary.sparse' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.summary.steady" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data looks steady today, so there is nothing to work around."
+          }
         }
-      }
+      },
+      "comment" : "Coach's own sentence for the 'tf.summary.steady' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tf.tonight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aim to be in bed near {{bedtime.suggested}} tonight."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'tf.tonight' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.tonight.bedtime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeping tonight's bedtime near {{bedtime.suggested}} would fit your usual pattern."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'tonight.bedtime' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.wc.changed.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing else stands out against your recent baseline."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'wc.changed.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.wc.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notice which days felt easy and which felt heavy, and whether that lines up with the nights before."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'wc.notice' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.wc.summary.less" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over the past week your sleep averaged {{week.avgSleep}} a night, {{week.avgSleepDelta}} less than the week before."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'wc.summary.less' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.wc.summary.more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over the past week your sleep averaged {{week.avgSleep}} a night, {{week.avgSleepDelta}} more than the week before."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'wc.summary.more' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.wc.summary.noPrior" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over the past week your sleep averaged {{week.avgSleep}} a night."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'wc.summary.noPrior' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.wc.summary.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I don't have enough recorded nights this week to compare."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'wc.summary.none' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
+    },
+    "coach.tpl.wc.summary.same" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over the past week your sleep averaged {{week.avgSleep}} a night, about the same as the week before."
+          }
+        }
+      },
+      "comment" : "Coach's own sentence for the 'wc.summary.same' situation in an answer card, built from the person's data on this iPhone. Calm, plain and never medical advice; no cause is claimed."
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

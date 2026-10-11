@@ -1,5 +1,6 @@
 import DesignSystem
 import Foundation
+import NoctisText
 
 /// The words and numbers the widgets show, made the way Home makes them (a test holds the two to the same strings), with the
 /// calendar and locale passed in so every string is reproducible.
@@ -53,10 +54,10 @@ public nonisolated struct WidgetFormat: Sendable, Equatable {
         let hours = minutes / 60
         let remainder = minutes % 60
         var parts: [NoctisMetricValue.Part] = []
-        if hours > 0 { parts += [.number("\(hours)"), .unit("h")] }
+        if hours > 0 { parts += [.number("\(hours)"), .unit(NoctisUnit.hour.symbol)] }
         if remainder > 0 || hours == 0 {
             if !parts.isEmpty { parts.append(.space) }
-            parts += [.number("\(remainder)"), .unit("m")]
+            parts += [.number("\(remainder)"), .unit(NoctisUnit.minute.symbol)]
         }
         return NoctisMetricValue(parts: parts, spoken: spokenDuration(minutes))
     }
@@ -66,8 +67,8 @@ public nonisolated struct WidgetFormat: Sendable, Equatable {
         let hours = minutes / 60
         let remainder = minutes % 60
         var words: [String] = []
-        if hours > 0 { words.append("\(hours) \(hours == 1 ? "hour" : "hours")") }
-        if remainder > 0 || hours == 0 { words.append("\(remainder) \(remainder == 1 ? "minute" : "minutes")") }
+        if hours > 0 { words.append(NoctisCount.hours(hours)) }
+        if remainder > 0 || hours == 0 { words.append(NoctisCount.minutes(remainder)) }
         return words.joined(separator: " ")
     }
 
@@ -75,12 +76,13 @@ public nonisolated struct WidgetFormat: Sendable, Equatable {
     public static func compactDuration(_ minutes: Int) -> String {
         let hours = minutes / 60
         let remainder = minutes % 60
-        if hours == 0 { return "\(remainder)m" }
-        return remainder == 0 ? "\(hours)h" : "\(hours)h \(remainder)m"
+        let h = NoctisUnit.hour.symbol, m = NoctisUnit.minute.symbol
+        if hours == 0 { return "\(remainder)\(m)" }
+        return remainder == 0 ? "\(hours)\(h)" : "\(hours)\(h) \(remainder)\(m)"
     }
 
-    /// 52 bpm, 48 ms as a metric.
-    public static func quantityMetric(_ value: Int, unit: String, spokenUnit: String) -> NoctisMetricValue {
-        NoctisMetricValue(parts: [.number("\(value)"), .unit(unit)], spoken: "\(value) \(spokenUnit)")
+    /// 52 bpm, 48 ms as a metric: the unit's symbol beside the number and its spoken form (R68).
+    public static func quantityMetric(_ value: Int, _ unit: NoctisUnit) -> NoctisMetricValue {
+        NoctisMetricValue(parts: [.number("\(value)"), .unit(unit.symbol)], spoken: unit.spoken(value))
     }
 }

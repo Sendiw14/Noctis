@@ -1,4 +1,5 @@
 import Foundation
+import NoctisText
 
 // The free Coach questions (APP_RULES.md R57, R60): three a day on the local calendar, counted only when a real answer is delivered. Pure: the day's key, the
 // count and "now" in, the new count out, so the rollover at midnight, a daylight saving change and a change of time zone are unit tests.
@@ -54,9 +55,11 @@ public nonisolated enum CoachQuota {
 
     /// "2 of 3 free questions left today".
     public static func line(remaining: Int) -> String {
-        "\(remaining) of \(freeQuestionsPerDay) free \(freeQuestionsPerDay == 1 ? "question" : "questions") left today"
+        "\(remaining) of \(NoctisCount.freeQuestions(freeQuestionsPerDay)) left today"
     }
 
     public static let usedUpTitle = "You've used today's free questions."
+    /// The disabled composer's placeholder: the card above already says the rest, and a longer line was cut off on the iPhone SE (QA_LEDGER.md).
+    public static let usedUpPlaceholder = "No free questions left"
     public static let usedUpDetail = "They reset at midnight."
 }

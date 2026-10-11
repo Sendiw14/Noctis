@@ -1,6 +1,7 @@
 import DesignSystem
 import NoctisCore
 import SwiftUI
+import NoctisText
 
 private enum PlanBuildLine: Int, CaseIterable, Identifiable {
     case nights
@@ -391,7 +392,7 @@ struct PlanScreen: View {
     private func spokenDuration(_ minutes: Int) -> String {
         let hours = minutes / 60
         let mins = minutes % 60
-        let hourText = "\(hours) hour\(hours == 1 ? "" : "s")"
+        let hourText = NoctisCount.hours(hours)
         return mins == 0 ? hourText : "\(hourText) \(mins) minutes"
     }
 

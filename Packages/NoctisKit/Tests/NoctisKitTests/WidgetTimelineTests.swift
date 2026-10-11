@@ -400,7 +400,7 @@ struct WidgetDisplayTests {
             #expect(format.clock(minutesSinceMidnight: minutes) == home.clock(minutesSinceMidnight: minutes))
             #expect(format.clockMetric(minutesSinceMidnight: minutes) == home.clockMetric(home.clock(minutesSinceMidnight: minutes)))
         }
-        #expect(WidgetFormat.quantityMetric(54, unit: "ms", spokenUnit: "milliseconds") == HomeFormat.quantityMetric(54, unit: "ms", spokenUnit: "milliseconds"))
+        #expect(WidgetFormat.quantityMetric(54, .millisecond) == HomeFormat.quantityMetric(54, .millisecond))
         #expect(format.windowText(startMinutes: 22 * 60 + 45, endMinutes: 23 * 60 + 15) == "10:45\u{2009}–\u{2009}11:15 PM")
         #expect(format.windowText(startMinutes: 23 * 60 + 45, endMinutes: 15) == "11:45 PM\u{2009}–\u{2009}12:15 AM", "across midnight, both periods")
         let h24 = WidgetFormat(calendar: calendar, locale: Locale(identifier: "de_DE"))

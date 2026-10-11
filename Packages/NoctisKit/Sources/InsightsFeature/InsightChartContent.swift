@@ -2,6 +2,7 @@ import Foundation
 import HomeFeature
 import InsightsKit
 import SleepKit
+import NoctisText
 
 // The evidence charts, in unit space (R23): every position is 0...1 across
 // the plot (x from the left, y from the bottom), so a view only scales and
@@ -374,7 +375,7 @@ public nonisolated enum InsightChartBuilder {
                 return InsightPoint(x: 0.15 + 0.7 * spread, y: y(value), valueText: "\(Int(value.rounded()))")
             }
             return InsightDotGroup(
-                label: label, countText: "\(values.count) \(values.count == 1 ? "night" : "nights")",
+                label: label, countText: NoctisCount.nights(values.count),
                 meanText: "Average \(Int(mean.rounded()))", meanY: y(mean), dots: dots
             )
         }

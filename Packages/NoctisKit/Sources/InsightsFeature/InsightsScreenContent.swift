@@ -4,6 +4,7 @@ import HomeFeature
 import InsightsKit
 import NoctisCore
 import SleepKit
+import NoctisText
 
 /// The chip row's choices: All, then a category each.
 public nonisolated struct InsightChipContent: Sendable, Equatable, Identifiable {
@@ -243,7 +244,7 @@ public nonisolated enum InsightsScreenBuilder {
         }
         return InsightsLearningContent(
             title: "Insights unlock as we learn your nights",
-            detail: "\(nights) \(nights == 1 ? "night" : "nights") recorded so far.",
+            detail: "\(NoctisCount.nights(nights)) recorded so far.",
             nights: nights, rows: rows
         )
     }
@@ -277,7 +278,7 @@ public nonisolated enum InsightsScreenBuilder {
             tiles.append(tile(record, title: "Longest night", tone: .sage, value: HomeFormat.durationMetric(Int(record.value.rounded())), format: format))
         }
         if let record = byType[.recordBestConsistency] {
-            tiles.append(tile(record, title: "Best consistency", tone: .lavender, value: HomeFormat.quantityMetric(Int(record.value.rounded()), unit: "min", spokenUnit: "minutes"), format: format))
+            tiles.append(tile(record, title: "Best consistency", tone: .lavender, value: HomeFormat.quantityMetric(Int(record.value.rounded()), .minuteShort), format: format))
         }
         if let record = byType[.recordHighestRecovery] {
             let score = Int(record.value.rounded())
@@ -404,7 +405,7 @@ extension InsightsScreenBuilder {
         }
         let count = stored.count
         return InsightHistoryContent(
-            summary: count == 0 ? "Nothing yet." : "\(count) \(count == 1 ? "insight" : "insights") so far.",
+            summary: count == 0 ? "Nothing yet." : "\(NoctisCount.insights(count)) so far.",
             chips: chips, months: months, note: note
         )
     }

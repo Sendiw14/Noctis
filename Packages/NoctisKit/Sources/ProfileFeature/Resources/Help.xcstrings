@@ -1,182 +1,198 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "help.recovery.q": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How is my recovery score calculated?"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "help.recovery.q" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How is my recovery score calculated?"
           }
         }
-      }
+      },
+      "comment" : "Help article 'recovery': the question, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.recovery.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recovery is a score from 0 to 100 for how ready you are today. It is built from four things, each compared with your own recent normal: how long you slept against your sleep need (35 points), how steady your bedtime and wake time were (20), your heart rate variability (25) and your resting heart rate (20). HRV and resting heart rate are compared with your own last 14 nights, so what counts is how you differ from your own usual, not from anyone else. If your HRV is well below your usual and your resting heart rate well above it on the same morning, Recovery is held at 50 or less, however long you slept. This is model recovery-v3. It describes how last night compared with your own pattern; it isn't a medical measurement."
+    "help.recovery.a" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery is a score from 0 to 100 for how ready you are today. It is built from four things, each compared with your own recent normal: how long you slept against your sleep need (35 points), how steady your bedtime and wake time were (20), your heart rate variability (25) and your resting heart rate (20). HRV and resting heart rate are compared with your own last 14 nights, so what counts is how you differ from your own usual, not from anyone else. If your HRV is well below your usual and your resting heart rate well above it on the same morning, Recovery is held at 50 or less, however long you slept. This is model recovery-v3. It describes how last night compared with your own pattern; it isn't a medical measurement."
           }
         }
-      }
+      },
+      "comment" : "Help article 'recovery': the answer, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.quality.q": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How is sleep quality calculated?"
+    "help.quality.q" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How is sleep quality calculated?"
           }
         }
-      }
+      },
+      "comment" : "Help article 'quality': the question, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.quality.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep quality is a score from 0 to 100 for one night, from four things: how long you slept against your need (35 points), how unbroken the night was, from the time awake after falling asleep and the number of times you woke (25), how close your bedtime was to your usual (20) and the balance of deep, core and REM sleep (20). With 7 or more nights of stage data, the stages are compared with your own shares; before that, with typical ranges, which are approximate. If a part can't be worked out for a night, the other parts carry its points. This is model sleep-quality-v1. It isn't a medical measurement."
+    "help.quality.a" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep quality is a score from 0 to 100 for one night, from four things: how long you slept against your need (35 points), how unbroken the night was, from the time awake after falling asleep and the number of times you woke (25), how close your bedtime was to your usual (20) and the balance of deep, core and REM sleep (20). With 7 or more nights of stage data, the stages are compared with your own shares; before that, with typical ranges, which are approximate. If a part can't be worked out for a night, the other parts carry its points. This is model sleep-quality-v1. It isn't a medical measurement."
           }
         }
-      }
+      },
+      "comment" : "Help article 'quality': the answer, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.bedtime.q": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How is my bedtime worked out?"
+    "help.bedtime.q" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How is my bedtime worked out?"
           }
         }
-      }
+      },
+      "comment" : "Help article 'bedtime': the question, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.bedtime.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your bedtime is your wake time minus your sleep need. When the last 7 nights add up to an hour or more under your need, it moves earlier by a quarter of the gap, by no more than 30 minutes. Once 7 nights are recorded, it stays within 45 minutes of your usual bedtime, so it moves toward your target gradually. Before that it is one starting bedtime. The window is 15 minutes either side of that time, to the nearest 5 minutes. On the night the clocks change, it is corrected by the hour. This is model bedtime-v1."
+    "help.bedtime.a" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your bedtime is your wake time minus your sleep need. When the last 7 nights add up to an hour or more under your need, it moves earlier by a quarter of the gap, by no more than 30 minutes. Once 7 nights are recorded, it stays within 45 minutes of your usual bedtime, so it moves toward your target gradually. Before that it is one starting bedtime. The window is 15 minutes either side of that time, to the nearest 5 minutes. On the night the clocks change, it is corrected by the hour. This is model bedtime-v1."
           }
         }
-      }
+      },
+      "comment" : "Help article 'bedtime': the answer, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.missing.q": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Why is a number missing?"
+    "help.missing.q" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why is a number missing?"
           }
         }
-      }
+      },
+      "comment" : "Help article 'missing': the question, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.missing.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NOCTIS leaves a number out rather than guess it. Recovery needs at least 5 nights of history before it gives a score. Your typical bedtime and wake time need 7 recorded nights. \"Last night\" has to have ended within the last 24 hours, so if Apple Health hasn't updated for a day, Home says so instead of showing an old night. HRV and resting heart rate need a device that records them while you sleep; without them, those parts of Recovery are left out. Open Settings, then Health data, to see which kinds of Health data NOCTIS can find."
+    "help.missing.a" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOCTIS leaves a number out rather than guess it. Recovery needs at least 5 nights of history before it gives a score. Your typical bedtime and wake time need 7 recorded nights. \"Last night\" has to have ended within the last 24 hours, so if Apple Health hasn't updated for a day, Home says so instead of showing an old night. HRV and resting heart rate need a device that records them while you sleep; without them, those parts of Recovery are left out. Open Settings, then Health data, to see which kinds of Health data NOCTIS can find."
           }
         }
-      }
+      },
+      "comment" : "Help article 'missing': the answer, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.coach.q": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What can Coach do, and what can't it?"
+    "help.coach.q" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What can Coach do, and what can't it?"
           }
         }
-      }
+      },
+      "comment" : "Help article 'coach': the question, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.coach.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach answers questions about your own sleep and recovery in plain words: why today's score is what it is, how last night compared with your usual, when to go to bed. It works from numbers NOCTIS has already worked out. {neverSees} {written} Coach isn't medical advice and can't diagnose anything or say whether something is wrong with you. If something about your sleep or health worries you, a doctor is the right person to ask."
+    "help.coach.a" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coach answers questions about your own sleep and recovery in plain words: why today's score is what it is, how last night compared with your usual, when to go to bed. It works from numbers NOCTIS has already worked out. {neverSees} {written} Coach isn't medical advice and can't diagnose anything or say whether something is wrong with you. If something about your sleep or health worries you, a doctor is the right person to ask."
           }
         }
-      }
+      },
+      "comment" : "Help article 'coach': the answer, as shown in Settings > Help. Plain language; keep the claims as modest as the English. Keeps the placeholders {neverSees}, {written} exactly: they are replaced by numbers, times or names already formatted."
     },
-    "help.watch.q": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do I need an Apple Watch?"
+    "help.watch.q" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do I need an Apple Watch?"
           }
         }
-      }
+      },
+      "comment" : "Help article 'watch': the question, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.watch.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No. NOCTIS reads sleep, heart rate, resting heart rate, HRV and respiratory rate from Apple Health, from whichever app or device recorded them. Sleep alone is enough for your sleep, your bedtime and how steady your timing is. Recovery also uses HRV and resting heart rate, which need a device that records them while you sleep, such as an Apple Watch."
+    "help.watch.a" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No. NOCTIS reads sleep, heart rate, resting heart rate, HRV and respiratory rate from Apple Health, from whichever app or device recorded them. Sleep alone is enough for your sleep, your bedtime and how steady your timing is. Recovery also uses HRV and resting heart rate, which need a device that records them while you sleep, such as an Apple Watch."
           }
         }
-      }
+      },
+      "comment" : "Help article 'watch': the answer, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.storage.q": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Where is my data kept?"
+    "help.storage.q" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where is my data kept?"
           }
         }
-      }
+      },
+      "comment" : "Help article 'storage': the question, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.storage.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "{generated}"
+    "help.storage.a" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{generated}"
           }
         }
-      }
+      },
+      "comment" : "Help article 'storage': the answer, as shown in Settings > Help. Plain language; keep the claims as modest as the English. Keeps the placeholder {generated} exactly: they are replaced by numbers, times or names already formatted."
     },
-    "help.delete.q": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How do I delete my data?"
+    "help.delete.q" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How do I delete my data?"
           }
         }
-      }
+      },
+      "comment" : "Help article 'delete': the question, as shown in Settings > Help. Plain language; keep the claims as modest as the English."
     },
-    "help.delete.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "{generated}"
+    "help.delete.a" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{generated}"
           }
         }
-      }
+      },
+      "comment" : "Help article 'delete': the answer, as shown in Settings > Help. Plain language; keep the claims as modest as the English. Keeps the placeholder {generated} exactly: they are replaced by numbers, times or names already formatted."
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

@@ -5,6 +5,7 @@ import HomeFeature
 import NoctisCore
 import RecoveryKit
 import SleepKit
+import NoctisText
 
 // The Recovery tab's presentation model: every string and readable value,
 // built by `RecoveryScreenBuilder` from a `RecoverySnapshot` and its render
@@ -286,7 +287,7 @@ public nonisolated enum RecoveryScreenBuilder {
         case .low: "Low confidence"
         }
         let signals = "\(report.factorsUsed.count) of \(RecoveryFactorKind.allCases.count) signals"
-        let nights = "\(report.nights) \(report.nights == 1 ? "night" : "nights")"
+        let nights = NoctisCount.nights(report.nights)
         let sentence: String
         switch report.tier {
         case .high:
@@ -331,11 +332,11 @@ public nonisolated enum RecoveryScreenBuilder {
             let verb = kinds.count > 1 ? "weren't" : "wasn't"
             return "\(names(kinds).prefix(1).uppercased() + names(kinds).dropFirst()) \(verb) recorded last night. Wearing your Apple Watch to sleep tonight would bring \(kinds.count > 1 ? "them" : "it") back."
         case .keepTracking(let nights):
-            return "\(nights) more \(nights == 1 ? "night" : "nights") of tracking and the baselines that are still forming will be ready."
+            return "\(NoctisCount.moreNights(nights)) of tracking and the baselines that are still forming will be ready."
         case .wearWatchToSleep(let kinds):
             return "Wear your Apple Watch to sleep to add \(names(kinds))."
         case .reachHigh(let nights):
-            return "\(nights) more \(nights == 1 ? "night" : "nights") and this reaches high confidence."
+            return "\(NoctisCount.moreNights(nights)) and this reaches high confidence."
         }
     }
 }

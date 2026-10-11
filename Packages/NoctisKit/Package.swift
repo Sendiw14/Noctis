@@ -46,10 +46,14 @@ let package = Package(
         .library(name: "JournalKit", targets: ["JournalKit"]),
         .library(name: "ProfileFeature", targets: ["ProfileFeature"]),
         .library(name: "AppRoot", targets: ["AppRoot"]),
+        .library(name: "NoctisText", targets: ["NoctisText"]),
         // QA only (APP_RULES.md R67): the list of every screen and the Debug flags that reach it. Linked by the tests, never by the app.
         .library(name: "QACatalog", targets: ["QACatalog"]),
     ],
     targets: [
+        // The units and counts NOCTIS prints and speaks (APP_RULES.md R68): "6h 42m", "1 night", "2 nights", each from the string catalog with the
+        // language's plural variations. No dependency, nonisolated, so the engines, the widgets and the Watch can link it.
+        .target(name: "NoctisText", resources: [.process("Resources")], swiftSettings: engineSwiftSettings),
         .target(name: "DesignSystem", swiftSettings: noctisSwiftSettings),
         .target(name: "HealthProviding", swiftSettings: noctisSwiftSettings),
         .target(name: "SleepKit", dependencies: ["HealthProviding"], swiftSettings: engineSwiftSettings),
@@ -64,7 +68,7 @@ let package = Package(
         // nothing that reads Health, SwiftData or Coach, so a widget extension (and a Watch app later) can link it and
         // cannot reach them (and on `PremiumKit`, which depends on nothing: the snapshot carries the tier, and the widgets ask the one feature table what the
         // tier includes, APP_RULES.md R59). Nonisolated like the engines; the views are main-actor through `View`.
-        .target(name: "NoctisWidgetKit", dependencies: ["DesignSystem", "PremiumKit"], swiftSettings: engineSwiftSettings),
+        .target(name: "NoctisWidgetKit", dependencies: ["NoctisText", "DesignSystem", "PremiumKit"], swiftSettings: engineSwiftSettings),
         // What the Apple Watch app does with what the iPhone sends (APP_RULES.md R50, R51): the inbox that stores the snapshot and applies the data
         // epoch, and the pure builders of every page and state. It builds for watchOS and iOS (the tests run on iOS), depends on the widget kit
         // (the snapshot and its rules) and the design tokens through it, and on nothing that reads Health, SwiftData or Coach: the Watch runs no engines.
@@ -85,10 +89,10 @@ let package = Package(
         .target(name: "BreathingKit", swiftSettings: engineSwiftSettings),
         // The feature table, the entitlement rules, the free Coach questions' arithmetic and which sounds a plan includes: pure, with no dependency but the sound names, so the
         // widgets, the Watch and the intents can link it.
-        .target(name: "PremiumKit", dependencies: ["SoundCatalog"], swiftSettings: engineSwiftSettings),
+        .target(name: "PremiumKit", dependencies: ["NoctisText", "SoundCatalog"], swiftSettings: engineSwiftSettings),
         // The weekly and monthly reviews (APP_RULES.md R39): their periods, the engine that builds a record from the nights and the previous period, and the one
         // builder of their words. Pure and nonisolated like the other engines; it reuses the baseline, history and ranking engines and reads nothing itself.
-        .target(name: "ReviewKit", dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit", "InsightsKit"], swiftSettings: engineSwiftSettings),
+        .target(name: "ReviewKit", dependencies: ["NoctisText", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "InsightsKit"], swiftSettings: engineSwiftSettings),
         .target(
             name: "NightKit",
             dependencies: ["SleepKit", "RecoveryKit", "SleepAnalysisKit", "AlarmShared", "BreathingKit"],
@@ -96,28 +100,28 @@ let package = Package(
         ),
         .target(
             name: "NoctisCore",
-            dependencies: ["HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "SoundKit", "DesignSystem", "NoctisWidgetKit", "PremiumKit", "ReviewKit"],
+            dependencies: ["NoctisText", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "NightKit", "SoundKit", "DesignSystem", "NoctisWidgetKit", "PremiumKit", "ReviewKit"],
             swiftSettings: noctisSwiftSettings
         ),
-        .target(name: "OnboardingFeature", dependencies: ["DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
+        .target(name: "OnboardingFeature", dependencies: ["NoctisText", "DesignSystem", "NoctisCore"], swiftSettings: noctisSwiftSettings),
         .target(
             name: "HomeFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "NoctisWidgetKit"],
+            dependencies: ["NoctisText", "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "NoctisWidgetKit"],
             swiftSettings: noctisSwiftSettings
         ),
         .target(
             name: "SleepFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "HomeFeature"],
+            dependencies: ["NoctisText", "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "HomeFeature"],
             swiftSettings: noctisSwiftSettings
         ),
         .target(
             name: "RecoveryFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "HomeFeature"],
+            dependencies: ["NoctisText", "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "HomeFeature"],
             swiftSettings: noctisSwiftSettings
         ),
         .target(
             name: "InsightsFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "HomeFeature", "ReviewKit"],
+            dependencies: ["NoctisText", "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "InsightsKit", "HomeFeature", "ReviewKit"],
             swiftSettings: noctisSwiftSettings
         ),
         // Coach's foundation: the router, facts and context, the validator, the providers
@@ -134,7 +138,7 @@ let package = Package(
         // only `CoachViewModel`, which asks `AIService` (APP_RULES.md R20, R29).
         .target(
             name: "CoachFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "InsightsKit", "HomeFeature", "CoachKit"],
+            dependencies: ["NoctisText", "DesignSystem", "NoctisCore", "HealthProviding", "InsightsKit", "HomeFeature", "CoachKit"],
             swiftSettings: noctisSwiftSettings
         ),
         // The journal's model and store (APP_RULES.md R35): what a person chose to note about a day. Only
@@ -149,7 +153,7 @@ let package = Package(
         // It reads only `TonightViewModel` (APP_RULES.md R20, R30).
         .target(
             name: "NightFeature",
-            dependencies: ["DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit", "HomeFeature", "JournalKit", "NoctisWidgetKit"],
+            dependencies: ["NoctisText", "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit", "HomeFeature", "JournalKit", "NoctisWidgetKit"],
             resources: [.process("Resources")],
             swiftSettings: noctisSwiftSettings
         ),
@@ -159,7 +163,7 @@ let package = Package(
         .target(
             name: "ProfileFeature",
             dependencies: [
-                "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit",
+                "NoctisText", "DesignSystem", "NoctisCore", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "NightKit", "SoundKit",
                 "NightFeature", "HomeFeature", "OnboardingFeature",
             ],
             resources: [.process("Resources")],
@@ -182,7 +186,7 @@ let package = Package(
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
                 "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot", "NoctisWidgetKit", "NoctisIntentKit", "NoctisWatchKit",
-                "BreathingKit", "PremiumKit", "ReviewKit", "QACatalog",
+                "BreathingKit", "PremiumKit", "ReviewKit", "QACatalog", "NoctisText",
             ],
             swiftSettings: noctisSwiftSettings
         ),

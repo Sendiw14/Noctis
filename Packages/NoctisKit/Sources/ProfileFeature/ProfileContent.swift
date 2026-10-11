@@ -6,6 +6,7 @@ import NightKit
 import NoctisCore
 import SleepAnalysisKit
 import SleepKit
+import NoctisText
 
 /// One of the three status rows on Profile: where it opens, and the one word or phrase it carries.
 public nonisolated struct ProfileStatusRow: Sendable, Equatable, Identifiable {
@@ -148,7 +149,7 @@ public nonisolated enum ProfileBuilder {
         case .notDetermined: return "Not turned on"
         case .allowed:
             let count = [preferences.morningIsOn, preferences.windDownIsOn, preferences.weeklyIsOn].filter { $0 }.count
-            return count == 0 ? "All reminders off" : count == 1 ? "1 reminder on" : "\(count) reminders on"
+            return count == 0 ? "All reminders off" : NoctisCount.remindersOn(count)
         }
     }
 }

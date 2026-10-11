@@ -5,6 +5,7 @@ import NoctisCore
 import RecoveryKit
 import SleepAnalysisKit
 import SleepKit
+import NoctisText
 
 // The Week and Month content: bars, the consistency, balance and timing
 // cards and their detail sheets, the month's rhythm and quality strip. Built
@@ -209,6 +210,8 @@ public nonisolated struct SleepRhythmContent: Sendable, Equatable {
 public nonisolated struct SleepQualityDotContent: Sendable, Equatable {
     public let night: SleepNightKey
     public let band: QualityDotRender.Band?
+    /// The night's sleep quality, 0 to 100; nil for a night with no sleep (Audio Graph's height).
+    public let score: Int?
     /// "Tue, Sep 8 · 82": the number is always in the pill.
     public let detail: String
     public let accessibilityLabel: String
@@ -383,7 +386,7 @@ nonisolated extension SleepScreenBuilder {
             let date = format.weekdayMonthDay(dot.night.adding(days: 1))
             let number = dot.score.map { "\($0)" } ?? "no sleep"
             return SleepQualityDotContent(
-                night: dot.night, band: dot.band,
+                night: dot.night, band: dot.band, score: dot.score,
                 detail: "\(date) · \(number)",
                 accessibilityLabel: "\(format.wideDate(dot.night.adding(days: 1))), " + (dot.score.map { "sleep quality \($0)" } ?? "no sleep recorded")
             )
@@ -486,10 +489,10 @@ nonisolated extension SleepScreenBuilder {
         let remainder = minutes % 60
         var parts: [NoctisMetricValue.Part] = []
         if hours > 0 {
-            parts += [.number("\(hours)"), .unit("h")]
-            if remainder > 0 { parts += [.space, .number(remainder < 10 ? "0\(remainder)" : "\(remainder)"), .unit("m")] }
+            parts += [.number("\(hours)"), .unit(NoctisUnit.hour.symbol)]
+            if remainder > 0 { parts += [.space, .number(remainder < 10 ? "0\(remainder)" : "\(remainder)"), .unit(NoctisUnit.minute.symbol)] }
         } else {
-            parts += [.number("\(remainder)"), .unit("m")]
+            parts += [.number("\(remainder)"), .unit(NoctisUnit.minute.symbol)]
         }
         return NoctisMetricValue(parts: parts, spoken: HomeFormat.spokenDuration(minutes))
     }
