@@ -251,6 +251,9 @@ targets:
       - path: UITests
     dependencies:
       - target: Noctis
+      # The list of every screen and the Debug flags that reach it (R67): the matrix tests read it, the app never links it.
+      - package: NoctisKit
+        product: QACatalog
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.uitests

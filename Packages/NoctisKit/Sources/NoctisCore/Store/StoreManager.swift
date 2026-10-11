@@ -34,11 +34,32 @@ public final class StoreManager {
         entitlementManager.startListening()
     }
 
+    #if DEBUG
+    private static var debugLoadScript: String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-mockStoreLoad"), arguments.indices.contains(index + 1) else { return nil }
+        let value = arguments[index + 1]
+        return value == "loading" || value == "unavailable" ? value : nil
+    }
+    #endif
+
     public var yearlyProduct: Product? { products.first { $0.id == StoreProductID.yearly } }
     public var monthlyProduct: Product? { products.first { $0.id == StoreProductID.monthly } }
 
     public func loadProducts() async {
         loadState = .loading
+        #if DEBUG
+        // `-mockStoreLoad loading|unavailable`: the paywall in the state named, for a screenshot. The StoreKit configuration answers otherwise.
+        if let script = Self.debugLoadScript {
+            products = []
+            if script == "unavailable" {
+                loadState = .unavailable
+            } else {
+                try? await Task.sleep(for: .seconds(86_400))
+            }
+            return
+        }
+        #endif
         guard let fetched = try? await Product.products(for: StoreProductID.all), !fetched.isEmpty else {
             products = []
             loadState = .unavailable

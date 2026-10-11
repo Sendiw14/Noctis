@@ -138,3 +138,85 @@ enum QA {
 
     static var springboard: XCUIApplication { XCUIApplication(bundleIdentifier: "com.apple.springboard") }
 }
+
+// MARK: - Hierarchy checks (QA part 3, QA_COVERAGE.md 3.7)
+
+extension QA {
+    /// The window's safe area by its height: iPhone SE (667 pt) has none at the bottom; the Dynamic Island phones (874, 956 pt) have 62 and 34.
+    static func safeArea(windowHeight: CGFloat) -> (top: CGFloat, bottom: CGFloat) {
+        windowHeight <= 700 ? (20, 0) : (62, 34)
+    }
+
+    static func hierarchyChecks(_ app: XCUIApplication, at position: String) -> [String] {
+        guard let root = try? app.snapshot() else { return ["\(position): the accessibility snapshot could not be taken"] }
+        let window = app.windows.firstMatch.frame
+        let inset = safeArea(windowHeight: window.height)
+        var found: [String] = []
+
+        var leaves: [XCUIElementSnapshot] = []
+        var tabBar: XCUIElementSnapshot?
+        var insideTabBar = false
+        func walk(_ node: XCUIElementSnapshot) {
+            let wasInside = insideTabBar
+            if node.elementType == .tabBar { tabBar = node; insideTabBar = true }
+            if node.children.isEmpty, !insideTabBar { leaves.append(node) }
+            for child in node.children { walk(child) }
+            insideTabBar = wasInside
+        }
+        walk(root)
+
+        let interactive: Set<XCUIElement.ElementType> = [.button, .link, .switch, .slider, .stepper, .textField, .secureTextField, .searchField, .segmentedControl, .menuItem, .checkBox]
+        func describe(_ s: XCUIElementSnapshot) -> String {
+            let name = s.label.isEmpty ? (s.identifier.isEmpty ? "-" : "#\(s.identifier)") : "'\(s.label.prefix(40))'"
+            return "\(s.elementType.rawValue) \(name) \(Int(s.frame.width))x\(Int(s.frame.height)) at \(Int(s.frame.minX)),\(Int(s.frame.minY))"
+        }
+        func onScreen(_ f: CGRect) -> Bool { f.width > 0 && f.height > 0 && f.intersects(window) }
+
+        var all: [XCUIElementSnapshot] = []
+        func collect(_ node: XCUIElementSnapshot) {
+            all.append(node)
+            for child in node.children { collect(child) }
+        }
+        collect(root)
+
+        for s in all where interactive.contains(s.elementType) && s.isEnabled && onScreen(s.frame) {
+            // A container the whole width of the window that holds buttons is not a target of its own.
+            if s.frame.width >= window.width - 1, s.frame.height > 200 { continue }
+            if s.frame.width < 44 || s.frame.height < 44 { found.append("\(position): target under 44 pt: \(describe(s))") }
+            // A text field is named by its placeholder.
+            let named = !s.label.isEmpty || !(s.placeholderValue ?? "").isEmpty || !s.title.isEmpty
+            if !named { found.append("\(position): control with no label: \(describe(s))") }
+        }
+        for s in all where s.elementType == .image && s.label.isEmpty && onScreen(s.frame) && s.frame.width > 8 {
+            found.append("\(position): image with no label that is not hidden: \(describe(s))")
+        }
+        var previousLabel = ""
+        for s in leaves where onScreen(s.frame) && !s.label.isEmpty {
+            // Two day initials ("S", "S") or two numbers in a row are not a repeated label.
+            if s.label == previousLabel, s.label.count >= 4, s.elementType == .staticText || s.elementType == .button {
+                found.append("\(position): the same label twice in a row: \(describe(s))")
+            }
+            previousLabel = s.label
+        }
+        for s in all where onScreen(s.frame) && s.elementType != .window && s.elementType != .other && s.elementType != .scrollView && s.elementType != .application {
+            // An element that is mostly on screen and cut by the edge (a chip peeking in from a scroller is less than a half).
+            let visible = s.frame.intersection(window).width / max(s.frame.width, 1)
+            if (s.frame.minX < window.minX - 0.5 || s.frame.maxX > window.maxX + 0.5), s.frame.width < window.width * 1.5, visible >= 0.5, visible < 0.99 {
+                found.append("\(position): reaches past the screen's edge: \(describe(s))")
+            }
+        }
+        for s in leaves where onScreen(s.frame) && (s.elementType == .staticText || interactive.contains(s.elementType)) && s.frame.maxY > 0 {
+            // At the top of a page; scrolled content passes under the status bar by design.
+            if position == "top", s.frame.minY < inset.top - 1, s.frame.maxY > 4 { found.append("\(position): inside the status bar: \(describe(s))") }
+            if inset.bottom > 0, s.frame.maxY > window.height - inset.bottom + 1, s.frame.minY < window.height { found.append("\(position): inside the home indicator's area: \(describe(s))") }
+        }
+        if position == "bottom", let tabBar {
+            for s in leaves where s.elementType == .staticText || interactive.contains(s.elementType) {
+                if onScreen(s.frame), s.frame.intersects(tabBar.frame), s.frame.minY < tabBar.frame.minY - 1 {
+                    found.append("bottom: under the tab bar: \(describe(s))")
+                }
+            }
+        }
+        return Array(Set(found)).sorted()
+    }
+}

@@ -1,0 +1,370 @@
+{
+ "configurations": [
+  {
+   "name": "A-light",
+   "tier": "A",
+   "devices": [
+    "QASE",
+    "QA17Pro",
+    "QA17ProMax"
+   ],
+   "sets": "default text size (Large), light appearance",
+   "screens": "all"
+  },
+  {
+   "name": "A-dark",
+   "tier": "A",
+   "devices": [
+    "QASE",
+    "QA17Pro",
+    "QA17ProMax"
+   ],
+   "sets": "default text size (Large), dark appearance",
+   "screens": "all"
+  },
+  {
+   "name": "B-AX3-light",
+   "tier": "B",
+   "devices": [
+    "QASE",
+    "QA17Pro"
+   ],
+   "sets": "Accessibility Extra Large (AX3), light",
+   "screens": "tier1"
+  },
+  {
+   "name": "B-AX5-light",
+   "tier": "B",
+   "devices": [
+    "QASE",
+    "QA17Pro"
+   ],
+   "sets": "Accessibility Extra Extra Extra Large (AX5), light",
+   "screens": "all"
+  },
+  {
+   "name": "B-AX5-dark",
+   "tier": "B",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "AX5, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "C-ReduceMotion",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Reduce Motion, light",
+   "screens": "tier1"
+  },
+  {
+   "name": "C-ReduceMotion-dark",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Reduce Motion, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "C-IncreaseContrast",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Increase Contrast, light",
+   "screens": "tier1"
+  },
+  {
+   "name": "C-IncreaseContrast-dark",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Increase Contrast, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "C-BoldText",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Bold Text, light",
+   "screens": "tier1"
+  },
+  {
+   "name": "C-BoldText-dark",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Bold Text, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "C-ReduceTransparency",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Reduce Transparency, light",
+   "screens": "tier1"
+  },
+  {
+   "name": "C-ReduceTransparency-dark",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Reduce Transparency, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "C-DifferentiateWithoutColor",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Differentiate Without Color, light",
+   "screens": "tier1"
+  },
+  {
+   "name": "C-DifferentiateWithoutColor-dark",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Differentiate Without Color, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "C-ButtonShapes",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Button Shapes, light",
+   "screens": "tier1"
+  },
+  {
+   "name": "C-ButtonShapes-dark",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Button Shapes, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "C-OnOffLabels",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "On/Off Labels, light",
+   "screens": "tier1"
+  },
+  {
+   "name": "C-OnOffLabels-dark",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "On/Off Labels, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "C-SmartInvert",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Smart Invert, light",
+   "screens": "tier1"
+  },
+  {
+   "name": "C-SmartInvert-dark",
+   "tier": "C",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "Smart Invert, dark",
+   "screens": "tabs",
+   "ids": [
+    "home.day.full",
+    "home.evening.full",
+    "sleep.day.full",
+    "recovery.today.full",
+    "insights.all.full",
+    "coach.hub.full"
+   ]
+  },
+  {
+   "name": "D-DoubleLength",
+   "tier": "D",
+   "devices": [
+    "QASE",
+    "QA17Pro"
+   ],
+   "sets": "Double-Length pseudolanguage (-NSDoubleLocalizedStrings YES)",
+   "screens": "tier1",
+   "per_device": {
+    "QASE": "all",
+    "QA17Pro": "tier1"
+   }
+  },
+  {
+   "name": "D-Accented",
+   "tier": "D",
+   "devices": [
+    "QASE",
+    "QA17Pro"
+   ],
+   "sets": "Accented pseudolanguage (-NSAccentuateLocalizedStrings YES)",
+   "screens": "tier1"
+  },
+  {
+   "name": "D-RTL",
+   "tier": "D",
+   "devices": [
+    "QASE",
+    "QA17Pro"
+   ],
+   "sets": "Right-to-Left (-AppleTextDirection YES -NSForceRightToLeftWritingDirection YES)",
+   "screens": "all"
+  },
+  {
+   "name": "D-Bounded",
+   "tier": "D",
+   "devices": [
+    "QASE",
+    "QA17Pro"
+   ],
+   "sets": "Bounded String pseudolanguage (-NSSurroundLocalizedStrings YES)",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-en_LK",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "English, region Sri Lanka",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-de_DE",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "English, region Germany",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-ar_SA",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "English, region Saudi Arabia",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-si_LK",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "English, locale si_LK",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-ta_LK",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "English, locale ta_LK",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-th_TH",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "English, region Thailand (Buddhist calendar)",
+   "screens": "tier1"
+  }
+ ],
+ "scope": "B: AX3 for tier-one screens, AX5 for every screen; D: Double-Length for every screen on SE and tier-one on Pro, Right-to-Left for every screen, Accented and Bounded String for tier-one screens; C and E tier-one (the tabs also dark in C). What is outside this scope is UNVERIFIED, not run."
+}

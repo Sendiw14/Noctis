@@ -78,7 +78,8 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
     }
 
     /// A route by its name. Sleep and Recovery also take their range after
-    /// a colon ("sleep:week", "recovery:30d"), for launch arguments.
+    /// a colon ("sleep:week", "recovery:30d"), and Recovery a factor after that
+    /// ("recovery:30d:hrv"), for launch arguments.
     public init?(name: String) {
         let parts = name.lowercased().split(separator: ":", maxSplits: 1).map(String.init)
         // An insight's id keeps its case ("bedtimeShift-3fa9c2d1").
@@ -86,7 +87,11 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
         switch parts.first {
         case "home": self = .home
         case "sleep": self = .sleep(night: nil, range: parts.dropFirst().first.flatMap(SleepRange.init(rawValue:)) ?? .day)
-        case "recovery": self = .recovery(range: parts.dropFirst().first.flatMap(RecoverySegment.init(token:)) ?? .today, factor: nil)
+        case "recovery":
+            // "recovery", "recovery:30d" or "recovery:30d:hrv" (a factor's page, a launch argument).
+            let tokens = name.lowercased().split(separator: ":").map(String.init)
+            let factor = tokens.dropFirst(2).first.flatMap { token in RecoveryFactorKind.allCases.first { $0.rawValue.lowercased() == token } }
+            self = .recovery(range: tokens.dropFirst().first.flatMap(RecoverySegment.init(token:)) ?? .today, factor: factor)
         case "insights": self = .insights(category: parts.dropFirst().first.flatMap(Self.category(named:)))
         case "insight":
             guard let argument, Self.isInsightID(argument) else { return nil }

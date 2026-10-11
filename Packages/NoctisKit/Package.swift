@@ -46,6 +46,8 @@ let package = Package(
         .library(name: "JournalKit", targets: ["JournalKit"]),
         .library(name: "ProfileFeature", targets: ["ProfileFeature"]),
         .library(name: "AppRoot", targets: ["AppRoot"]),
+        // QA only (APP_RULES.md R67): the list of every screen and the Debug flags that reach it. Linked by the tests, never by the app.
+        .library(name: "QACatalog", targets: ["QACatalog"]),
     ],
     targets: [
         .target(name: "DesignSystem", swiftSettings: noctisSwiftSettings),
@@ -172,13 +174,15 @@ let package = Package(
             ],
             swiftSettings: noctisSwiftSettings
         ),
+        // Outside Sources/ on purpose: it names every Debug launch flag, which the source scans of the shipped code rightly forbid anywhere else.
+        .target(name: "QACatalog", path: "QA/QACatalog", swiftSettings: engineSwiftSettings),
         .testTarget(
             name: "NoctisKitTests",
             dependencies: [
                 "SleepKit", "RecoveryKit", "InsightsKit", "SleepAnalysisKit", "HealthProviding", "DesignSystem",
                 "NoctisCore", "OnboardingFeature", "HomeFeature", "SleepFeature", "RecoveryFeature", "InsightsFeature", "CoachKit", "CoachFeature",
                 "NightKit", "NightFeature", "AlarmShared", "SoundKit", "JournalKit", "ProfileFeature", "AppRoot", "NoctisWidgetKit", "NoctisIntentKit", "NoctisWatchKit",
-                "BreathingKit", "PremiumKit", "ReviewKit",
+                "BreathingKit", "PremiumKit", "ReviewKit", "QACatalog",
             ],
             swiftSettings: noctisSwiftSettings
         ),
