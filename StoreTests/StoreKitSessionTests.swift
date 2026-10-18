@@ -299,9 +299,12 @@ struct StoreKitSessionTests {
         let declined = try rig.transaction(StoreProductID.monthly)
         #expect(declined.state == .failed && !declined.pendingAskToBuyConfirmation, "the declined transaction is failed, not purchased")
         await rig.entitlements.refresh()
-        // StoreKitTest (iOS 27.0 simulator) lists the declined transaction in Transaction.currentEntitlements with a one-month end date; an App Store
-        // decline creates no transaction at all. Known simulator artifact: the day it stops, this line fails and the wrapper is removed. UNVERIFIED on a
-        // device with a Sandbox family organizer (QA_REPORT.md).
+        // THE KNOWN ISSUE, exactly (probed on the iOS 27.0 simulator, QA part 4): after a decline StoreKitTest hands the app a *verified* Transaction through
+        // Transaction.currentEntitlements and Transaction.all with id 0 and originalID 0, a purchase date of the request, an expiry one month on, no revocation date
+        // and a subscription status of RenewalState(rawValue: 0) (unknown). Its own SKTestTransaction says state failed. A real App Store decline creates no
+        // transaction at all, and no real transaction has id 0, so this is StoreKitTest's stand-in for a failed purchase, not something a device returns: it
+        // is not an app bug and the app does not special-case id 0 (that would be a hack around a simulator). The day StoreKitTest stops returning it, this
+        // check fails and the wrapper must be removed. A real decline is UNVERIFIED until a Sandbox family organizer declines one (QA_REPORT.md section 5).
         withKnownIssue("StoreKitTest reports a declined Ask to Buy as entitled", isIntermittent: true) {
             #expect(rig.tier == .free)
         }
