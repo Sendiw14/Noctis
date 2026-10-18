@@ -54,7 +54,14 @@ test alert covering the app was seen and discarded (QA-137). Not viewed: the wel
 
 ## 3. UNVERIFIED, with the reason
 
-{unver_lines}
+<!-- UNVERIFIED-LIST -->
+- **QA-020** (Min deployment, minor): How the app behaves on iOS 26.1 to 26.x at run time.
+- **QA-027** (Build, minor): A signed archive and App Store validation.
+- **QA-057** (Harness, minor): Smart Invert and Reduce Motion cannot be seen in a screenshot.
+- **QA-129** (Purchases, minor): StoreKitTest artifacts the app cannot tell from the real thing:
+- **QA-135** (Lifecycle, info): Not verifiable on the simulator:
+- **QA-138** (Privacy, info): Backup exclusion and protection per on-disk category, read back from real files made by the real stores (home snapshot, widgets' summary, Sleep sounds status, insights, reviews, Journal, Coach history):
+<!-- /UNVERIFIED-LIST -->
 - **QA coverage**: 1873 screen-by-configuration combinations were not produced or not looked at (QA_COVERAGE.md says which and why); several screens fixed in source in QA part 2 were not photographed again (onboarding Health rows, the journal's Delete all at accessibility sizes, Data management's Delete verb, Sleep month's caption, Delete-all padding).
 - **Welcome and paywall** on the 17 Pro and at sizes other than default and AX3 after QA-142 and QA-143.
 - **Main-thread stalls** in the UI during a 730-night run: no Instruments run (the simulator cannot run the Hitches instrument); the builders were timed only.
@@ -64,7 +71,37 @@ test alert covering the app was seen and discarded (QA-137). Not viewed: the wel
 
 The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 
-{open_lines}
+<!-- OPEN-LIST -->
+- **QA-004** (Release, major): The Terms of Use and Privacy Policy URLs (https://noctis.app/terms, /privacy) and the support address (support@noctis.app) are placeholders.
+- **QA-014** (Release, major): ROADMAP.md still lists 48 items;
+- **QA-016** (Info.plist, minor): ITSAppUsesNonExemptEncryption is not set, so App Store Connect asks the export-compliance question for every build.
+- **QA-071** (Layout, minor): Paywall resting cut (R14) on the 17 Pro:
+- **QA-078** (Data, minor): reviews.list and reviews.list.free show 'Nothing here yet':
+- **QA-081** (Localization, minor): Right-to-Left:
+- **QA-082** (Layout, minor): Pseudolanguages:
+- **QA-083** (Localization, minor): Right-to-Left:
+- **QA-084** (Localization, info): Under DoubleLength and Bounded String every unit token is doubled or bracketed, and a bare figure is buried or cut:
+- **QA-085** (Localization, minor): Right-to-Left mirrors every time axis:
+- **QA-086** (Layout, minor): Right-to-Left:
+- **QA-087** (Layout, minor): Insights opened on a category (Heart, Recovery, Timing, Consistency):
+- **QA-089** (Layout, minor): Loading skeletons wider than the SE's content:
+- **QA-090** (Layout, minor): Profile (SE):
+- **QA-092** (Layout, minor): Bold Text:
+- **QA-093** (Accessibility, minor): Accessibility sizes, Coach:
+- **QA-094** (Accessibility, minor): Accessibility sizes, Insights, Recovery and Sleep:
+- **QA-095** (Accessibility, minor): Accessibility sizes, Home evening and Tonight:
+- **QA-096** (Accessibility, minor): Accessibility sizes, Night:
+- **QA-097** (Accessibility, minor): Accessibility sizes, sheets and editors:
+- **QA-098** (Accessibility, minor): Accessibility sizes, shared parts:
+- **QA-099** (Harness, minor): Under D-DoubleLength and D-Bounded the Coach conversation does not reach the answer (the question route is chosen by label, which the pseudolanguage changes:
+- **QA-101** (Accessibility, minor): Accessibility sizes (AX5), the evening bedtime accessory (a tab bar accessory, system-sized) and the compact bar on Home evening are one line and are cut with an ellipsis ('Bedtime 10:30...', 'Bedtime ...
+- **QA-103** (Accessibility, minor): Onboarding at accessibility sizes:
+- **QA-108** (Accessibility, minor): Sleep sounds at AX3 and AX5 on an SE:
+- **QA-113** (Harness, minor): coach.history at AX3 and AX5 shows the Coach hub, not History (the route taps coach.history after going back from the answer and the history button is off screen at those sizes).
+- **QA-115** (Accessibility, minor): Data management at AX3 and AX5 (SE):
+- **QA-116** (Accessibility, minor): Sleep month at AX3 and AX5 (SE):
+- **QA-118** (Consistency, minor): HomeFormat.durationMetric/spokenDuration/quantityMetric and WidgetFormat.durationMetric/spokenDuration/quantityMetric are two copies of the same formatter.
+<!-- /OPEN-LIST -->
 
 Why they are open: **QA-004** and **QA-014** need the owner (real Terms, Privacy and support addresses; the roadmap items are unbuilt features by design). QA-016 needs the owner's
 export-compliance answer. The rest are layout and localization items from QA part 2 whose fix is in source and not photographed again (QA-082 to QA-116), harness gaps (QA-099, QA-113), or owner
