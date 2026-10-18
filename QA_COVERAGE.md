@@ -45,6 +45,10 @@ a zoomed crop where the text is small). Anything not viewed is `UNVERIFIED` and 
 - **Build.** A look before the fixes of QA part 2 saw the build of 2026-10-11; looks marked "FIXED BUILD" in their notes saw the build with the fixes of
   2026-10-12 (before the last edits, listed in the ledger as "fixed in source, UNVERIFIED as an image"); looks recorded from 2026-10-18 saw the final build.
 
+### What QA part 2 did not cover (read before trusting the totals)
+
+The FINDING total counts every combination whose latest look was a finding, including ones recorded on the pre-fix build whose fix is in source and was not re-photographed (the ledger row says so). Tiers C and E, D-Accented and the pseudo-script runs were not re-run on the final build; the AX5-dark and Smart Invert / Reduce Motion cells cannot be seen in a screenshot; the middles of long pages at accessibility sizes are not photographed. The audit and VoiceOver traversal tests exist (UITests/AuditQATests.swift, VoiceOverTraversalQATests.swift) and were run only for A-light on the 17 Pro.
+
 ## Totals
 
 | Planned | Produced | Viewed | PASS | FINDING | NOTE | UNVERIFIED |
