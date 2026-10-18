@@ -27,3 +27,22 @@ struct ReportHygieneTests {
         }
     }
 }
+
+// R19 (APP_RULES.md): no button or row may lead to an unbuilt feature, so no string in the app says one is. The matrix's hierarchy check looks for the same
+// words on every screen it photographs (UITests/QASupport.swift, "UNBUILT text").
+struct NothingUnbuiltIsReachableTests {
+    @Test func noUserFacingStringSaysAFeatureIsComingOrNotBuilt() throws {
+        let base = RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources")
+        let words = try Regex(#"(?i)coming soon|not built|under construction|not available yet|lorem ipsum|will be (added|available) (in a|soon)|stay tuned"#)
+        var hits: [String] = []
+        let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NOCTISWatch", "NOCTISWatchWidgets", "NoctisWidgets", "NoctisAlarmWidget"])
+        for file in files {
+            for (number, line) in file.text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                guard !trimmed.hasPrefix("//"), trimmed.contains("\""), (try? words.firstMatch(in: String(line))) != nil else { continue }
+                hits.append("\(file.path.replacingOccurrences(of: base.path + "/", with: "")):\(number + 1)")
+            }
+        }
+        #expect(hits.isEmpty, Comment(rawValue: "a string says something is unbuilt: \(hits.joined(separator: ", "))"))
+    }
+}

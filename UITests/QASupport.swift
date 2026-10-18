@@ -179,6 +179,12 @@ extension QA {
         }
         collect(root)
 
+        // R19: nothing reachable is unbuilt. Any text on screen that says so is a defect, wherever the screen was reached from.
+        let unbuilt = ["coming soon", "not built", "under construction", "not available yet", "lorem ipsum", "todo", "placeholder"]
+        for s in all where onScreen(s.frame) {
+            let text = (s.label + " " + String(describing: s.value ?? "")).lowercased()
+            if let word = unbuilt.first(where: { text.contains($0) }) { found.append("\(position): UNBUILT text (\(word)): \(describe(s))") }
+        }
         for s in all where interactive.contains(s.elementType) && s.isEnabled && onScreen(s.frame) {
             // A container the whole width of the window that holds buttons is not a target of its own.
             if s.frame.width >= window.width - 1, s.frame.height > 200 { continue }
