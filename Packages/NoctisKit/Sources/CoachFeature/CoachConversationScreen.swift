@@ -10,7 +10,12 @@ import SwiftUI
 struct CoachConversationScreen: View {
     let viewModel: CoachViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(AppModel.self) private var appModel
+
+    /// At accessibility sizes the follow-up chips are not pinned: with them and the field, an SE at AX5 had under half its height left for the answer
+    /// (QA part 3, QA-083). They go under the answer, in the page, where they are one more thing to scroll to.
+    private var pinsFollowUps: Bool { !dynamicTypeSize.isAccessibilitySize }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -19,6 +24,9 @@ struct CoachConversationScreen: View {
                     ForEach(viewModel.turns) { turn in
                         CoachTurnView(turn: turn, isLatest: turn.id == viewModel.turns.last?.id, viewModel: viewModel)
                             .id(turn.id)
+                    }
+                    if !pinsFollowUps, !viewModel.followUpQuestions.isEmpty {
+                        CoachFollowUpChips(questions: viewModel.followUpQuestions, stacked: true) { viewModel.followUp($0) }
                     }
                     // Today's free questions are used up (R60): one card, after the answers.
                     if viewModel.isLimited, !viewModel.isSending, let card = LockedCopy.card(for: .coachQuestions) {
@@ -45,12 +53,12 @@ struct CoachConversationScreen: View {
         .background { PaperBackground(adaptive: true).ignoresSafeArea() }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: NoctisSpacing.sm) {
-                if !viewModel.followUpQuestions.isEmpty {
+                if pinsFollowUps, !viewModel.followUpQuestions.isEmpty {
                     CoachFollowUpChips(questions: viewModel.followUpQuestions) { viewModel.followUp($0) }
                         .transition(.opacity)
                 }
                 CoachInputBar(
-                    viewModel: viewModel, placeholder: viewModel.isLimited ? CoachQuota.usedUpTitle : "Ask a follow-up", identifier: "coach.conversation"
+                    viewModel: viewModel, placeholder: viewModel.isLimited ? CoachQuota.usedUpPlaceholder : "Ask a follow-up", identifier: "coach.conversation"
                 ) { viewModel.followUp() }
             }
             .background(NoctisAppColor.bg)

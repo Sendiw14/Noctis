@@ -1,2152 +1,2152 @@
 [
   {
-    "area" : "onboarding",
-    "id" : "onboarding.welcome",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : true,
-    "title" : "Onboarding: Welcome"
-  },
-  {
-    "area" : "onboarding",
-    "id" : "onboarding.goal",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : true,
-    "title" : "Onboarding: Goal"
-  },
-  {
-    "area" : "onboarding",
-    "id" : "onboarding.rhythm",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : true,
-    "title" : "Onboarding: Rhythm"
-  },
-  {
-    "area" : "onboarding",
-    "id" : "onboarding.sample",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : true,
-    "title" : "Onboarding: Sample"
-  },
-  {
-    "area" : "onboarding",
-    "id" : "onboarding.health",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : true,
-    "title" : "Onboarding: Health"
-  },
-  {
-    "area" : "onboarding",
-    "id" : "onboarding.notifications",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : true,
-    "title" : "Onboarding: Notifications"
-  },
-  {
-    "area" : "onboarding",
-    "id" : "onboarding.plan",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : true,
-    "title" : "Onboarding: Plan"
-  },
-  {
-    "area" : "onboarding",
-    "id" : "onboarding.paywall",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : true,
-    "title" : "Onboarding: Paywall step"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.full",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : true,
-    "title" : "Home by day: full"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.full",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : true,
-    "title" : "Home in the evening: full"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home by day: sleepOnly"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home in the evening: sleepOnly"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.learning",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home by day: learning"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.learning",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home in the evening: learning"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.empty",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home by day: empty"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.empty",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home in the evening: empty"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.noPermission",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home by day: noPermission"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.noPermission",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home in the evening: noPermission"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.gap",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home by day: gap"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.gap",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home in the evening: gap"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.stale",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home by day: stale"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.stale",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home in the evening: stale"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.loading",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home by day: loading"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.loading",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home in the evening: loading"
-  },
-  {
-    "area" : "home",
-    "id" : "home.day.error",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home by day: error"
-  },
-  {
-    "area" : "home",
-    "id" : "home.evening.error",
-    "platform" : "iPhone",
-    "route" : "home",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Home in the evening: error"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.full",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : true,
-    "title" : "Sleep, day: full"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, day: sleepOnly"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.learning",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, day: learning"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.empty",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, day: empty"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.noPermission",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, day: noPermission"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.gap",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, day: gap"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.stale",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, day: stale"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.loading",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, day: loading"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.day.error",
-    "platform" : "iPhone",
-    "route" : "sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, day: error"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.full",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: full"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: sleepOnly"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.learning",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: learning"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.empty",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: empty"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.noPermission",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: noPermission"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.gap",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: gap"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.stale",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: stale"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.loading",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: loading"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.week.error",
-    "platform" : "iPhone",
-    "route" : "sleep:week",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, week: error"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.full",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: full"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: sleepOnly"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.learning",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: learning"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.empty",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: empty"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.noPermission",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: noPermission"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.gap",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: gap"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.stale",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: stale"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.loading",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: loading"
-  },
-  {
-    "area" : "sleep",
-    "id" : "sleep.month.error",
-    "platform" : "iPhone",
-    "route" : "sleep:month",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Sleep, month: error"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.full",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : true,
-    "title" : "Recovery, today: full"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, today: sleepOnly"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.learning",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, today: learning"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.empty",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, today: empty"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.noPermission",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, today: noPermission"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.gap",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, today: gap"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.stale",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, today: stale"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.loading",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, today: loading"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.today.error",
-    "platform" : "iPhone",
-    "route" : "recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, today: error"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.full",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: full"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: sleepOnly"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.learning",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: learning"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.empty",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: empty"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.noPermission",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: noPermission"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.gap",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: gap"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.stale",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: stale"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.loading",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: loading"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.7d.error",
-    "platform" : "iPhone",
-    "route" : "recovery:7d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 7d: error"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.full",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: full"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: sleepOnly"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.learning",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: learning"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.empty",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: empty"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.noPermission",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: noPermission"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.gap",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: gap"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.stale",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: stale"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.loading",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: loading"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.30d.error",
-    "platform" : "iPhone",
-    "route" : "recovery:30d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 30d: error"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.full",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: full"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: sleepOnly"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.learning",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: learning"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.empty",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: empty"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.noPermission",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: noPermission"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.gap",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: gap"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.stale",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: stale"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.loading",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: loading"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.90d.error",
-    "platform" : "iPhone",
-    "route" : "recovery:90d",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery, 90d: error"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.factor.sleepDuration",
-    "platform" : "iPhone",
-    "route" : "recovery:30d:sleepDuration",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery factor: sleepDuration"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.factor.sleepConsistency",
-    "platform" : "iPhone",
-    "route" : "recovery:30d:sleepConsistency",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery factor: sleepConsistency"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.factor.hrv",
-    "platform" : "iPhone",
-    "route" : "recovery:30d:hrv",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery factor: hrv"
-  },
-  {
-    "area" : "recovery",
-    "id" : "recovery.factor.restingHeartRate",
-    "platform" : "iPhone",
-    "route" : "recovery:30d:restingHeartRate",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Recovery factor: restingHeartRate"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.full",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : true,
-    "title" : "Insights: full"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.sleepOnly",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights: sleepOnly"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.learning",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights: learning"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.empty",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights: empty"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.noPermission",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights: noPermission"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.gap",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights: gap"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.stale",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights: stale"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.loading",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights: loading"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.all.error",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights: error"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.sleep",
-    "platform" : "iPhone",
-    "route" : "insights:sleep",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights, sleep chip"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.recovery",
-    "platform" : "iPhone",
-    "route" : "insights:recovery",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights, recovery chip"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.timing",
-    "platform" : "iPhone",
-    "route" : "insights:timing",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights, timing chip"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.consistency",
-    "platform" : "iPhone",
-    "route" : "insights:consistency",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights, consistency chip"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.heart",
-    "platform" : "iPhone",
-    "route" : "insights:heart",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights, heart chip"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.longTerm",
-    "platform" : "iPhone",
-    "route" : "insights:longTerm",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Insights, longTerm chip"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.detail",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "An insight's page"
-  },
-  {
-    "area" : "insights",
-    "id" : "insights.history",
-    "platform" : "iPhone",
-    "route" : "insights",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Insight history"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.hub.full",
-    "platform" : "iPhone",
-    "route" : "coach",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : true,
-    "title" : "Coach hub"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.hub.learning",
-    "platform" : "iPhone",
-    "route" : "coach",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Coach hub while learning"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.hub.empty",
-    "platform" : "iPhone",
-    "route" : "coach",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Coach hub with no data"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.hub.noPermission",
-    "platform" : "iPhone",
-    "route" : "coach",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Coach hub without Health access"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.answer",
-    "platform" : "iPhone",
-    "route" : "coach:recovery",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Coach answer"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.answer.misbehaving",
-    "platform" : "iPhone",
-    "route" : "coach:recovery",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Coach answer the model got wrong"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.answer.unavailable",
-    "platform" : "iPhone",
-    "route" : "coach:recovery",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Coach with the model unavailable"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.history",
-    "platform" : "iPhone",
-    "route" : "coach",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Coach history"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.privacy",
-    "platform" : "iPhone",
-    "route" : "coach",
-    "scrolls" : false,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Coach privacy sheet"
-  },
-  {
-    "area" : "coach",
-    "id" : "coach.quota",
-    "platform" : "iPhone",
-    "route" : "coach",
-    "scrolls" : true,
-    "surface" : "tab",
-    "tierOne" : false,
-    "title" : "Coach, free plan with the day's questions used"
-  },
-  {
-    "area" : "night",
-    "id" : "night.tonight",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : true,
-    "title" : "Tonight"
-  },
-  {
-    "area" : "night",
-    "id" : "night.tonight.free",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Tonight, free plan"
-  },
-  {
-    "area" : "night",
-    "id" : "night.alarm",
-    "platform" : "iPhone",
-    "route" : "alarm",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Alarm sheet"
-  },
-  {
-    "area" : "night",
-    "id" : "night.alarm.denied",
-    "platform" : "iPhone",
-    "route" : "alarm",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Alarm sheet, denied"
-  },
-  {
-    "area" : "night",
-    "id" : "night.sounds.silent",
-    "platform" : "iPhone",
-    "route" : "sounds",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Sleep sounds"
-  },
-  {
-    "area" : "night",
-    "id" : "night.sounds.playing",
-    "platform" : "iPhone",
-    "route" : "sounds",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Sleep sounds, playing"
-  },
-  {
-    "area" : "night",
-    "id" : "night.sounds.timer",
-    "platform" : "iPhone",
-    "route" : "sounds",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Sleep sounds, with a timer"
-  },
-  {
-    "area" : "night",
-    "id" : "night.sounds.interrupted",
-    "platform" : "iPhone",
-    "route" : "sounds",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Sleep sounds, interrupted"
-  },
-  {
-    "area" : "night",
-    "id" : "night.windDown.prestart",
-    "platform" : "iPhone",
-    "route" : "wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : true,
-    "title" : "Wind-down, before starting"
-  },
-  {
-    "area" : "night",
-    "id" : "night.windDown.running30",
-    "platform" : "iPhone",
-    "route" : "wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : true,
-    "title" : "Wind-down, 30% in"
-  },
-  {
-    "area" : "night",
-    "id" : "night.windDown.running90",
-    "platform" : "iPhone",
-    "route" : "wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : true,
-    "title" : "Wind-down, 90% in"
-  },
-  {
-    "area" : "night",
-    "id" : "night.windDown.finished",
-    "platform" : "iPhone",
-    "route" : "wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : true,
-    "title" : "Wind-down, finished"
-  },
-  {
-    "area" : "night",
-    "id" : "night.windDown.reduced",
-    "platform" : "iPhone",
-    "route" : "wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Wind-down, running, reduced"
-  },
-  {
-    "area" : "night",
-    "id" : "night.breathing.prestart",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Breathing, before starting"
-  },
-  {
-    "area" : "night",
-    "id" : "night.breathing.running",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Breathing, running"
-  },
-  {
-    "area" : "night",
-    "id" : "night.breathing.finished",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Breathing, finished"
-  },
-  {
-    "area" : "night",
-    "id" : "night.meditation.prestart",
-    "platform" : "iPhone",
-    "route" : "wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Meditation, before starting"
-  },
-  {
-    "area" : "night",
-    "id" : "night.meditation.running",
-    "platform" : "iPhone",
-    "route" : "wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Meditation, running"
-  },
-  {
-    "area" : "night",
-    "id" : "night.meditation.finished",
-    "platform" : "iPhone",
-    "route" : "wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Meditation, finished"
-  },
-  {
-    "area" : "night",
-    "id" : "night.reflect.empty",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Reflect, empty"
-  },
-  {
-    "area" : "night",
-    "id" : "night.reflect.draft",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Reflect, a draft"
-  },
-  {
-    "area" : "night",
-    "id" : "night.journal.filled",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Journal with entries"
-  },
-  {
-    "area" : "night",
-    "id" : "night.journal.empty",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Journal, empty"
-  },
-  {
-    "area" : "night",
-    "id" : "night.journal.unavailable",
-    "platform" : "iPhone",
-    "route" : "tonight",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Journal, unavailable"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.list",
-    "platform" : "iPhone",
-    "route" : "reviews",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Reviews"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.list.free",
-    "platform" : "iPhone",
-    "route" : "reviews",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Reviews, free plan"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.weekly.cover",
-    "platform" : "iPhone",
-    "route" : "review:weekly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Weekly review: cover"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.weekly.sleep",
-    "platform" : "iPhone",
-    "route" : "review:weekly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Weekly review: sleep"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.weekly.consistency",
-    "platform" : "iPhone",
-    "route" : "review:weekly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Weekly review: consistency"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.weekly.recovery",
-    "platform" : "iPhone",
-    "route" : "review:weekly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Weekly review: recovery"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.weekly.changes",
-    "platform" : "iPhone",
-    "route" : "review:weekly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Weekly review: changes"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.weekly.insight",
-    "platform" : "iPhone",
-    "route" : "review:weekly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Weekly review: insight"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.weekly.focus",
-    "platform" : "iPhone",
-    "route" : "review:weekly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Weekly review: focus"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.monthly.cover",
-    "platform" : "iPhone",
-    "route" : "review:monthly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Monthly review: cover"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.monthly.sleepPattern",
-    "platform" : "iPhone",
-    "route" : "review:monthly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Monthly review: sleepPattern"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.monthly.recoveryPattern",
-    "platform" : "iPhone",
-    "route" : "review:monthly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Monthly review: recoveryPattern"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.monthly.timing",
-    "platform" : "iPhone",
-    "route" : "review:monthly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Monthly review: timing"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.monthly.majorChanges",
-    "platform" : "iPhone",
-    "route" : "review:monthly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Monthly review: majorChanges"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.monthly.insights",
-    "platform" : "iPhone",
-    "route" : "review:monthly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Monthly review: insights"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.monthly.records",
-    "platform" : "iPhone",
-    "route" : "review:monthly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Monthly review: records"
-  },
-  {
-    "area" : "reviews",
-    "id" : "reviews.monthly.locked",
-    "platform" : "iPhone",
-    "route" : "review:monthly",
-    "scrolls" : false,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Monthly review, free plan"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.paywall.loaded",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : true,
-    "title" : "Paywall, with the plans loaded"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.paywall.loading",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : true,
-    "title" : "Paywall, plans loading"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.paywall.unavailable",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : true,
-    "title" : "Paywall, store unavailable"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.compare",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Compare plans sheet"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.paywall.recovery30D",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Paywall from recovery30D"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.paywall.sleepMonth",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Paywall from sleepMonth"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.paywall.coachQuestions",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Paywall from coachQuestions"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.paywall.windDown",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Paywall from windDown"
-  },
-  {
-    "area" : "premium",
-    "id" : "premium.paywall.weeklyReview",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Paywall from weeklyReview"
-  },
-  {
-    "area" : "profile",
-    "id" : "profile.screen",
-    "platform" : "iPhone",
-    "route" : "profile",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Profile"
-  },
-  {
-    "area" : "profile",
-    "id" : "profile.screen.learning",
-    "platform" : "iPhone",
-    "route" : "profile",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Profile while learning"
-  },
-  {
-    "area" : "profile",
-    "id" : "profile.editor.need",
-    "platform" : "iPhone",
-    "route" : "profile",
-    "scrolls" : false,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Profile: sleep need editor"
-  },
-  {
-    "area" : "profile",
-    "id" : "profile.editor.wake",
-    "platform" : "iPhone",
-    "route" : "profile",
-    "scrolls" : false,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Profile: wake time editor"
-  },
-  {
-    "area" : "profile",
-    "id" : "profile.editor.name",
-    "platform" : "iPhone",
-    "route" : "profile",
-    "scrolls" : false,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Profile: name editor"
-  },
-  {
-    "area" : "profile",
-    "id" : "profile.editor.goals",
-    "platform" : "iPhone",
-    "route" : "profile",
-    "scrolls" : false,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Profile: goals editor"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.root",
-    "platform" : "iPhone",
-    "route" : "settings",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : true,
-    "title" : "Settings: root"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.notifications",
-    "platform" : "iPhone",
-    "route" : "settings:notifications",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: notifications"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.health-data",
-    "platform" : "iPhone",
-    "route" : "settings:health-data",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: health-data"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.appearance",
-    "platform" : "iPhone",
-    "route" : "settings:appearance",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: appearance"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.subscription",
-    "platform" : "iPhone",
-    "route" : "settings:subscription",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: subscription"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.wind-down",
-    "platform" : "iPhone",
-    "route" : "settings:wind-down",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: wind-down"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.sounds",
-    "platform" : "iPhone",
-    "route" : "settings:sounds",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: sounds"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.help",
-    "platform" : "iPhone",
-    "route" : "settings:help",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: help"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.about",
-    "platform" : "iPhone",
-    "route" : "settings:about",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: about"
-  },
-  {
-    "area" : "privacy",
-    "id" : "settings.privacy-center",
-    "platform" : "iPhone",
-    "route" : "settings:privacy-center",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: privacy-center"
-  },
-  {
-    "area" : "privacy",
-    "id" : "settings.data-management",
-    "platform" : "iPhone",
-    "route" : "settings:data-management",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: data-management"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.apple-watch",
-    "platform" : "iPhone",
-    "route" : "settings:apple-watch",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: apple-watch"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.subscription.free",
-    "platform" : "iPhone",
-    "route" : "settings:subscription",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: subscription, free"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.notifications.denied",
-    "platform" : "iPhone",
-    "route" : "settings:notifications",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: notifications, denied"
-  },
-  {
-    "area" : "settings",
-    "id" : "settings.health-data.unauthorized",
-    "platform" : "iPhone",
-    "route" : "settings:health-data",
-    "scrolls" : true,
-    "surface" : "pushed",
-    "tierOne" : false,
-    "title" : "Settings: Health data, no access"
-  },
-  {
-    "area" : "privacy",
-    "id" : "privacy.deleteAll",
-    "platform" : "iPhone",
-    "route" : "settings:data-management",
-    "scrolls" : false,
-    "surface" : "sheet",
-    "tierOne" : false,
-    "title" : "Delete all NOCTIS data, sheet"
-  },
-  {
-    "area" : "widgets",
-    "id" : "widgets.gallery.premium",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "gallery",
-    "tierOne" : false,
-    "title" : "Widget gallery, Premium"
-  },
-  {
-    "area" : "widgets",
-    "id" : "widgets.gallery.free",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "gallery",
-    "tierOne" : false,
-    "title" : "Widget gallery, free"
-  },
-  {
-    "area" : "widgets",
-    "id" : "widgets.gallery.dark",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "gallery",
-    "tierOne" : false,
-    "title" : "Widget gallery, dark"
-  },
-  {
-    "area" : "widgets",
-    "id" : "widgets.gallery.accented",
-    "platform" : "iPhone",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "gallery",
-    "tierOne" : false,
-    "title" : "Widget gallery, accented"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.page.recovery",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch: recovery"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.page.sleep",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch: sleep"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.page.heart",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch: heart"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.page.tonight",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch: tonight"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.page.settings",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch: settings"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.state.learning",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch, learning"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.state.sleepOnly",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch, sleepOnly"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.state.empty",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch, empty"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.state.stale",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch, stale"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.state.gap",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch, gap"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.state.waiting",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch, waiting"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.state.noSnapshot",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch, noSnapshot"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.breathing.picker",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch breathing: picker"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.breathing.running",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch breathing: running:calm:5:30"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.breathing.done",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "fullScreen",
-    "tierOne" : false,
-    "title" : "Apple Watch breathing: done"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.complication.recovery",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "gallery",
-    "tierOne" : false,
-    "title" : "Complications: recovery"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.complication.sleep",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "gallery",
-    "tierOne" : false,
-    "title" : "Complications: sleep"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.complication.bedtime",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "gallery",
-    "tierOne" : false,
-    "title" : "Complications: bedtime"
-  },
-  {
-    "area" : "watch",
-    "id" : "watch.complication.quality",
-    "platform" : "watch",
-    "route" : "",
-    "scrolls" : true,
-    "surface" : "gallery",
-    "tierOne" : false,
-    "title" : "Complications: quality"
+    "area": "onboarding",
+    "id": "onboarding.welcome",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": true,
+    "title": "Onboarding: Welcome"
+  },
+  {
+    "area": "onboarding",
+    "id": "onboarding.goal",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": true,
+    "title": "Onboarding: Goal"
+  },
+  {
+    "area": "onboarding",
+    "id": "onboarding.rhythm",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": true,
+    "title": "Onboarding: Rhythm"
+  },
+  {
+    "area": "onboarding",
+    "id": "onboarding.sample",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": true,
+    "title": "Onboarding: Sample"
+  },
+  {
+    "area": "onboarding",
+    "id": "onboarding.health",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": true,
+    "title": "Onboarding: Health"
+  },
+  {
+    "area": "onboarding",
+    "id": "onboarding.notifications",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": true,
+    "title": "Onboarding: Notifications"
+  },
+  {
+    "area": "onboarding",
+    "id": "onboarding.plan",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": true,
+    "title": "Onboarding: Plan"
+  },
+  {
+    "area": "onboarding",
+    "id": "onboarding.paywall",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": true,
+    "title": "Onboarding: Paywall step"
+  },
+  {
+    "area": "home",
+    "id": "home.day.full",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": true,
+    "title": "Home by day: full"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.full",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": true,
+    "title": "Home in the evening: full"
+  },
+  {
+    "area": "home",
+    "id": "home.day.sleepOnly",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home by day: sleepOnly"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.sleepOnly",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home in the evening: sleepOnly"
+  },
+  {
+    "area": "home",
+    "id": "home.day.learning",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home by day: learning"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.learning",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home in the evening: learning"
+  },
+  {
+    "area": "home",
+    "id": "home.day.empty",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home by day: empty"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.empty",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home in the evening: empty"
+  },
+  {
+    "area": "home",
+    "id": "home.day.noPermission",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home by day: noPermission"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.noPermission",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home in the evening: noPermission"
+  },
+  {
+    "area": "home",
+    "id": "home.day.gap",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home by day: gap"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.gap",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home in the evening: gap"
+  },
+  {
+    "area": "home",
+    "id": "home.day.stale",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home by day: stale"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.stale",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home in the evening: stale"
+  },
+  {
+    "area": "home",
+    "id": "home.day.loading",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home by day: loading"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.loading",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home in the evening: loading"
+  },
+  {
+    "area": "home",
+    "id": "home.day.error",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home by day: error"
+  },
+  {
+    "area": "home",
+    "id": "home.evening.error",
+    "platform": "iPhone",
+    "route": "home",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Home in the evening: error"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.full",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": true,
+    "title": "Sleep, day: full"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.sleepOnly",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, day: sleepOnly"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.learning",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, day: learning"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.empty",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, day: empty"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.noPermission",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, day: noPermission"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.gap",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, day: gap"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.stale",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, day: stale"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.loading",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, day: loading"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.day.error",
+    "platform": "iPhone",
+    "route": "sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, day: error"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.full",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: full"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.sleepOnly",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: sleepOnly"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.learning",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: learning"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.empty",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: empty"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.noPermission",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: noPermission"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.gap",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: gap"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.stale",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: stale"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.loading",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: loading"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.week.error",
+    "platform": "iPhone",
+    "route": "sleep:week",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, week: error"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.full",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: full"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.sleepOnly",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: sleepOnly"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.learning",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: learning"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.empty",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: empty"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.noPermission",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: noPermission"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.gap",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: gap"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.stale",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: stale"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.loading",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: loading"
+  },
+  {
+    "area": "sleep",
+    "id": "sleep.month.error",
+    "platform": "iPhone",
+    "route": "sleep:month",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Sleep, month: error"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.full",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": true,
+    "title": "Recovery, today: full"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.sleepOnly",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, today: sleepOnly"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.learning",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, today: learning"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.empty",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, today: empty"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.noPermission",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, today: noPermission"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.gap",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, today: gap"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.stale",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, today: stale"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.loading",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, today: loading"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.today.error",
+    "platform": "iPhone",
+    "route": "recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, today: error"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.full",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: full"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.sleepOnly",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: sleepOnly"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.learning",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: learning"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.empty",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: empty"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.noPermission",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: noPermission"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.gap",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: gap"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.stale",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: stale"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.loading",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: loading"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.7d.error",
+    "platform": "iPhone",
+    "route": "recovery:7d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 7d: error"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.full",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: full"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.sleepOnly",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: sleepOnly"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.learning",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: learning"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.empty",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: empty"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.noPermission",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: noPermission"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.gap",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: gap"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.stale",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: stale"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.loading",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: loading"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.30d.error",
+    "platform": "iPhone",
+    "route": "recovery:30d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 30d: error"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.full",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: full"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.sleepOnly",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: sleepOnly"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.learning",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: learning"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.empty",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: empty"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.noPermission",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: noPermission"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.gap",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: gap"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.stale",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: stale"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.loading",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: loading"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.90d.error",
+    "platform": "iPhone",
+    "route": "recovery:90d",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery, 90d: error"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.factor.sleepDuration",
+    "platform": "iPhone",
+    "route": "recovery:30d:sleepDuration",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery factor: sleepDuration"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.factor.sleepConsistency",
+    "platform": "iPhone",
+    "route": "recovery:30d:sleepConsistency",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery factor: sleepConsistency"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.factor.hrv",
+    "platform": "iPhone",
+    "route": "recovery:30d:hrv",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery factor: hrv"
+  },
+  {
+    "area": "recovery",
+    "id": "recovery.factor.restingHeartRate",
+    "platform": "iPhone",
+    "route": "recovery:30d:restingHeartRate",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Recovery factor: restingHeartRate"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.full",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": true,
+    "title": "Insights: full"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.sleepOnly",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights: sleepOnly"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.learning",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights: learning"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.empty",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights: empty"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.noPermission",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights: noPermission"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.gap",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights: gap"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.stale",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights: stale"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.loading",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights: loading"
+  },
+  {
+    "area": "insights",
+    "id": "insights.all.error",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights: error"
+  },
+  {
+    "area": "insights",
+    "id": "insights.sleep",
+    "platform": "iPhone",
+    "route": "insights:sleep",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights, sleep chip"
+  },
+  {
+    "area": "insights",
+    "id": "insights.recovery",
+    "platform": "iPhone",
+    "route": "insights:recovery",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights, recovery chip"
+  },
+  {
+    "area": "insights",
+    "id": "insights.timing",
+    "platform": "iPhone",
+    "route": "insights:timing",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights, timing chip"
+  },
+  {
+    "area": "insights",
+    "id": "insights.consistency",
+    "platform": "iPhone",
+    "route": "insights:consistency",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights, consistency chip"
+  },
+  {
+    "area": "insights",
+    "id": "insights.heart",
+    "platform": "iPhone",
+    "route": "insights:heart",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights, heart chip"
+  },
+  {
+    "area": "insights",
+    "id": "insights.longTerm",
+    "platform": "iPhone",
+    "route": "insights:longTerm",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Insights, longTerm chip"
+  },
+  {
+    "area": "insights",
+    "id": "insights.detail",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "An insight's page"
+  },
+  {
+    "area": "insights",
+    "id": "insights.history",
+    "platform": "iPhone",
+    "route": "insights",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Insight history"
+  },
+  {
+    "area": "coach",
+    "id": "coach.hub.full",
+    "platform": "iPhone",
+    "route": "coach",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": true,
+    "title": "Coach hub"
+  },
+  {
+    "area": "coach",
+    "id": "coach.hub.learning",
+    "platform": "iPhone",
+    "route": "coach",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Coach hub while learning"
+  },
+  {
+    "area": "coach",
+    "id": "coach.hub.empty",
+    "platform": "iPhone",
+    "route": "coach",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Coach hub with no data"
+  },
+  {
+    "area": "coach",
+    "id": "coach.hub.noPermission",
+    "platform": "iPhone",
+    "route": "coach",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Coach hub without Health access"
+  },
+  {
+    "area": "coach",
+    "id": "coach.answer",
+    "platform": "iPhone",
+    "route": "coach:recovery",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Coach answer"
+  },
+  {
+    "area": "coach",
+    "id": "coach.answer.misbehaving",
+    "platform": "iPhone",
+    "route": "coach:recovery",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Coach answer the model got wrong"
+  },
+  {
+    "area": "coach",
+    "id": "coach.answer.unavailable",
+    "platform": "iPhone",
+    "route": "coach:recovery",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Coach with the model unavailable"
+  },
+  {
+    "area": "coach",
+    "id": "coach.history",
+    "platform": "iPhone",
+    "route": "coach",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Coach history"
+  },
+  {
+    "area": "coach",
+    "id": "coach.privacy",
+    "platform": "iPhone",
+    "route": "coach",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Coach privacy sheet"
+  },
+  {
+    "area": "coach",
+    "id": "coach.quota",
+    "platform": "iPhone",
+    "route": "coach",
+    "scrolls": true,
+    "surface": "tab",
+    "tierOne": false,
+    "title": "Coach, free plan with the day's questions used"
+  },
+  {
+    "area": "night",
+    "id": "night.tonight",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": true,
+    "title": "Tonight"
+  },
+  {
+    "area": "night",
+    "id": "night.tonight.free",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Tonight, free plan"
+  },
+  {
+    "area": "night",
+    "id": "night.alarm",
+    "platform": "iPhone",
+    "route": "alarm",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Alarm sheet"
+  },
+  {
+    "area": "night",
+    "id": "night.alarm.denied",
+    "platform": "iPhone",
+    "route": "alarm",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Alarm sheet, denied"
+  },
+  {
+    "area": "night",
+    "id": "night.sounds.silent",
+    "platform": "iPhone",
+    "route": "sounds",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Sleep sounds"
+  },
+  {
+    "area": "night",
+    "id": "night.sounds.playing",
+    "platform": "iPhone",
+    "route": "sounds",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Sleep sounds, playing"
+  },
+  {
+    "area": "night",
+    "id": "night.sounds.timer",
+    "platform": "iPhone",
+    "route": "sounds",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Sleep sounds, with a timer"
+  },
+  {
+    "area": "night",
+    "id": "night.sounds.interrupted",
+    "platform": "iPhone",
+    "route": "sounds",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Sleep sounds, interrupted"
+  },
+  {
+    "area": "night",
+    "id": "night.windDown.prestart",
+    "platform": "iPhone",
+    "route": "wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": true,
+    "title": "Wind-down, before starting"
+  },
+  {
+    "area": "night",
+    "id": "night.windDown.running30",
+    "platform": "iPhone",
+    "route": "wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": true,
+    "title": "Wind-down, 30% in"
+  },
+  {
+    "area": "night",
+    "id": "night.windDown.running90",
+    "platform": "iPhone",
+    "route": "wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": true,
+    "title": "Wind-down, 90% in"
+  },
+  {
+    "area": "night",
+    "id": "night.windDown.finished",
+    "platform": "iPhone",
+    "route": "wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": true,
+    "title": "Wind-down, finished"
+  },
+  {
+    "area": "night",
+    "id": "night.windDown.reduced",
+    "platform": "iPhone",
+    "route": "wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Wind-down, running, reduced"
+  },
+  {
+    "area": "night",
+    "id": "night.breathing.prestart",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Breathing, before starting"
+  },
+  {
+    "area": "night",
+    "id": "night.breathing.running",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Breathing, running"
+  },
+  {
+    "area": "night",
+    "id": "night.breathing.finished",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Breathing, finished"
+  },
+  {
+    "area": "night",
+    "id": "night.meditation.prestart",
+    "platform": "iPhone",
+    "route": "wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Meditation, before starting"
+  },
+  {
+    "area": "night",
+    "id": "night.meditation.running",
+    "platform": "iPhone",
+    "route": "wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Meditation, running"
+  },
+  {
+    "area": "night",
+    "id": "night.meditation.finished",
+    "platform": "iPhone",
+    "route": "wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Meditation, finished"
+  },
+  {
+    "area": "night",
+    "id": "night.reflect.empty",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Reflect, empty"
+  },
+  {
+    "area": "night",
+    "id": "night.reflect.draft",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Reflect, a draft"
+  },
+  {
+    "area": "night",
+    "id": "night.journal.filled",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Journal with entries"
+  },
+  {
+    "area": "night",
+    "id": "night.journal.empty",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Journal, empty"
+  },
+  {
+    "area": "night",
+    "id": "night.journal.unavailable",
+    "platform": "iPhone",
+    "route": "tonight",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Journal, unavailable"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.list",
+    "platform": "iPhone",
+    "route": "reviews",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Reviews"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.list.free",
+    "platform": "iPhone",
+    "route": "reviews",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Reviews, free plan"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.weekly.cover",
+    "platform": "iPhone",
+    "route": "review:weekly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Weekly review: cover"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.weekly.sleep",
+    "platform": "iPhone",
+    "route": "review:weekly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Weekly review: sleep"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.weekly.consistency",
+    "platform": "iPhone",
+    "route": "review:weekly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Weekly review: consistency"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.weekly.recovery",
+    "platform": "iPhone",
+    "route": "review:weekly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Weekly review: recovery"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.weekly.changes",
+    "platform": "iPhone",
+    "route": "review:weekly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Weekly review: changes"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.weekly.insight",
+    "platform": "iPhone",
+    "route": "review:weekly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Weekly review: insight"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.weekly.focus",
+    "platform": "iPhone",
+    "route": "review:weekly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Weekly review: focus"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.monthly.cover",
+    "platform": "iPhone",
+    "route": "review:monthly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Monthly review: cover"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.monthly.sleepPattern",
+    "platform": "iPhone",
+    "route": "review:monthly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Monthly review: sleepPattern"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.monthly.recoveryPattern",
+    "platform": "iPhone",
+    "route": "review:monthly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Monthly review: recoveryPattern"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.monthly.timing",
+    "platform": "iPhone",
+    "route": "review:monthly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Monthly review: timing"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.monthly.majorChanges",
+    "platform": "iPhone",
+    "route": "review:monthly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Monthly review: majorChanges"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.monthly.insights",
+    "platform": "iPhone",
+    "route": "review:monthly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Monthly review: insights"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.monthly.records",
+    "platform": "iPhone",
+    "route": "review:monthly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Monthly review: records"
+  },
+  {
+    "area": "reviews",
+    "id": "reviews.monthly.locked",
+    "platform": "iPhone",
+    "route": "review:monthly",
+    "scrolls": true,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Monthly review, free plan"
+  },
+  {
+    "area": "premium",
+    "id": "premium.paywall.loaded",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": true,
+    "title": "Paywall, with the plans loaded"
+  },
+  {
+    "area": "premium",
+    "id": "premium.paywall.loading",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": true,
+    "title": "Paywall, plans loading"
+  },
+  {
+    "area": "premium",
+    "id": "premium.paywall.unavailable",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": true,
+    "title": "Paywall, store unavailable"
+  },
+  {
+    "area": "premium",
+    "id": "premium.compare",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Compare plans sheet"
+  },
+  {
+    "area": "premium",
+    "id": "premium.paywall.recovery30D",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Paywall from recovery30D"
+  },
+  {
+    "area": "premium",
+    "id": "premium.paywall.sleepMonth",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Paywall from sleepMonth"
+  },
+  {
+    "area": "premium",
+    "id": "premium.paywall.coachQuestions",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Paywall from coachQuestions"
+  },
+  {
+    "area": "premium",
+    "id": "premium.paywall.windDown",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Paywall from windDown"
+  },
+  {
+    "area": "premium",
+    "id": "premium.paywall.weeklyReview",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Paywall from weeklyReview"
+  },
+  {
+    "area": "profile",
+    "id": "profile.screen",
+    "platform": "iPhone",
+    "route": "profile",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Profile"
+  },
+  {
+    "area": "profile",
+    "id": "profile.screen.learning",
+    "platform": "iPhone",
+    "route": "profile",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Profile while learning"
+  },
+  {
+    "area": "profile",
+    "id": "profile.editor.need",
+    "platform": "iPhone",
+    "route": "profile",
+    "scrolls": false,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Profile: sleep need editor"
+  },
+  {
+    "area": "profile",
+    "id": "profile.editor.wake",
+    "platform": "iPhone",
+    "route": "profile",
+    "scrolls": false,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Profile: wake time editor"
+  },
+  {
+    "area": "profile",
+    "id": "profile.editor.name",
+    "platform": "iPhone",
+    "route": "profile",
+    "scrolls": false,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Profile: name editor"
+  },
+  {
+    "area": "profile",
+    "id": "profile.editor.goals",
+    "platform": "iPhone",
+    "route": "profile",
+    "scrolls": false,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Profile: goals editor"
+  },
+  {
+    "area": "settings",
+    "id": "settings.root",
+    "platform": "iPhone",
+    "route": "settings",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": true,
+    "title": "Settings: root"
+  },
+  {
+    "area": "settings",
+    "id": "settings.notifications",
+    "platform": "iPhone",
+    "route": "settings:notifications",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: notifications"
+  },
+  {
+    "area": "settings",
+    "id": "settings.health-data",
+    "platform": "iPhone",
+    "route": "settings:health-data",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: health-data"
+  },
+  {
+    "area": "settings",
+    "id": "settings.appearance",
+    "platform": "iPhone",
+    "route": "settings:appearance",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: appearance"
+  },
+  {
+    "area": "settings",
+    "id": "settings.subscription",
+    "platform": "iPhone",
+    "route": "settings:subscription",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: subscription"
+  },
+  {
+    "area": "settings",
+    "id": "settings.wind-down",
+    "platform": "iPhone",
+    "route": "settings:wind-down",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: wind-down"
+  },
+  {
+    "area": "settings",
+    "id": "settings.sounds",
+    "platform": "iPhone",
+    "route": "settings:sounds",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: sounds"
+  },
+  {
+    "area": "settings",
+    "id": "settings.help",
+    "platform": "iPhone",
+    "route": "settings:help",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: help"
+  },
+  {
+    "area": "settings",
+    "id": "settings.about",
+    "platform": "iPhone",
+    "route": "settings:about",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: about"
+  },
+  {
+    "area": "privacy",
+    "id": "settings.privacy-center",
+    "platform": "iPhone",
+    "route": "settings:privacy-center",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: privacy-center"
+  },
+  {
+    "area": "privacy",
+    "id": "settings.data-management",
+    "platform": "iPhone",
+    "route": "settings:data-management",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: data-management"
+  },
+  {
+    "area": "settings",
+    "id": "settings.apple-watch",
+    "platform": "iPhone",
+    "route": "settings:apple-watch",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: apple-watch"
+  },
+  {
+    "area": "settings",
+    "id": "settings.subscription.free",
+    "platform": "iPhone",
+    "route": "settings:subscription",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: subscription, free"
+  },
+  {
+    "area": "settings",
+    "id": "settings.notifications.denied",
+    "platform": "iPhone",
+    "route": "settings:notifications",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: notifications, denied"
+  },
+  {
+    "area": "settings",
+    "id": "settings.health-data.unauthorized",
+    "platform": "iPhone",
+    "route": "settings:health-data",
+    "scrolls": true,
+    "surface": "pushed",
+    "tierOne": false,
+    "title": "Settings: Health data, no access"
+  },
+  {
+    "area": "privacy",
+    "id": "privacy.deleteAll",
+    "platform": "iPhone",
+    "route": "settings:data-management",
+    "scrolls": true,
+    "surface": "sheet",
+    "tierOne": false,
+    "title": "Delete all NOCTIS data, sheet"
+  },
+  {
+    "area": "widgets",
+    "id": "widgets.gallery.premium",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "gallery",
+    "tierOne": false,
+    "title": "Widget gallery, Premium"
+  },
+  {
+    "area": "widgets",
+    "id": "widgets.gallery.free",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "gallery",
+    "tierOne": false,
+    "title": "Widget gallery, free"
+  },
+  {
+    "area": "widgets",
+    "id": "widgets.gallery.dark",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "gallery",
+    "tierOne": false,
+    "title": "Widget gallery, dark"
+  },
+  {
+    "area": "widgets",
+    "id": "widgets.gallery.accented",
+    "platform": "iPhone",
+    "route": "",
+    "scrolls": true,
+    "surface": "gallery",
+    "tierOne": false,
+    "title": "Widget gallery, accented"
+  },
+  {
+    "area": "watch",
+    "id": "watch.page.recovery",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch: recovery"
+  },
+  {
+    "area": "watch",
+    "id": "watch.page.sleep",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch: sleep"
+  },
+  {
+    "area": "watch",
+    "id": "watch.page.heart",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch: heart"
+  },
+  {
+    "area": "watch",
+    "id": "watch.page.tonight",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch: tonight"
+  },
+  {
+    "area": "watch",
+    "id": "watch.page.settings",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch: settings"
+  },
+  {
+    "area": "watch",
+    "id": "watch.state.learning",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch, learning"
+  },
+  {
+    "area": "watch",
+    "id": "watch.state.sleepOnly",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch, sleepOnly"
+  },
+  {
+    "area": "watch",
+    "id": "watch.state.empty",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch, empty"
+  },
+  {
+    "area": "watch",
+    "id": "watch.state.stale",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch, stale"
+  },
+  {
+    "area": "watch",
+    "id": "watch.state.gap",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch, gap"
+  },
+  {
+    "area": "watch",
+    "id": "watch.state.waiting",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch, waiting"
+  },
+  {
+    "area": "watch",
+    "id": "watch.state.noSnapshot",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch, noSnapshot"
+  },
+  {
+    "area": "watch",
+    "id": "watch.breathing.picker",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch breathing: picker"
+  },
+  {
+    "area": "watch",
+    "id": "watch.breathing.running",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch breathing: running:calm:5:30"
+  },
+  {
+    "area": "watch",
+    "id": "watch.breathing.done",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "fullScreen",
+    "tierOne": false,
+    "title": "Apple Watch breathing: done"
+  },
+  {
+    "area": "watch",
+    "id": "watch.complication.recovery",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "gallery",
+    "tierOne": false,
+    "title": "Complications: recovery"
+  },
+  {
+    "area": "watch",
+    "id": "watch.complication.sleep",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "gallery",
+    "tierOne": false,
+    "title": "Complications: sleep"
+  },
+  {
+    "area": "watch",
+    "id": "watch.complication.bedtime",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "gallery",
+    "tierOne": false,
+    "title": "Complications: bedtime"
+  },
+  {
+    "area": "watch",
+    "id": "watch.complication.quality",
+    "platform": "watch",
+    "route": "",
+    "scrolls": false,
+    "surface": "gallery",
+    "tierOne": false,
+    "title": "Complications: quality"
   }
 ]

@@ -22,13 +22,16 @@ public struct NoctisRowCard<Content: View>: View {
 
 /// The hairline between two rows, indented past the icon tile.
 public struct NoctisRowDivider: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     public init() {}
 
     public var body: some View {
         Rectangle()
             .fill(NoctisAppColor.hairline)
             .frame(height: 1)
-            .padding(.leading, NoctisRow<EmptyView>.tile + NoctisSpacing.sm)
+            // Indented past the icon tile, which is not there at accessibility sizes (see NoctisRow).
+            .padding(.leading, dynamicTypeSize.isAccessibilitySize ? 0 : NoctisRow<EmptyView>.tile + NoctisSpacing.sm)
             .accessibilityHidden(true)
     }
 }
@@ -58,7 +61,19 @@ public struct NoctisRow<Accessory: View>: View {
         self.accessory = accessory()
     }
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     public var body: some View {
+        Group {
+            if dynamicTypeSize.isAccessibilitySize { stacked } else { inline }
+        }
+        .padding(.vertical, NoctisSpacing.xs)
+        .frame(minHeight: 56)
+        .contentShape(Rectangle())
+    }
+
+    /// The icon, the title and its line, the value and the accessory in one row.
+    private var inline: some View {
         HStack(spacing: NoctisSpacing.sm) {
             NoctisIconTile(systemImage: systemImage, fill: fill, foreground: NoctisAppColor.blockInk, size: Self.tile)
             VStack(alignment: .leading, spacing: 2) {
@@ -73,6 +88,9 @@ public struct NoctisRow<Accessory: View>: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            // The title is laid out first: when the row is tight (an SE, "3 reminders on" beside "Notifications") it is the value that
+            // wraps at a space, not the title that breaks inside its word ("Notification / s").
+            .layoutPriority(1)
             Spacer(minLength: NoctisSpacing.xs)
             if let value {
                 Text(value)
@@ -83,9 +101,40 @@ public struct NoctisRow<Accessory: View>: View {
             }
             accessory
         }
-        .padding(.vertical, NoctisSpacing.xs)
-        .frame(minHeight: 56)
-        .contentShape(Rectangle())
+    }
+
+    /// At accessibility sizes the value goes under the title and the icon tile goes: beside a 40pt tile and a value, "Subscription" at AX5
+    /// had a column of 90pt and broke into "Sub / scri / ptio / n". The title takes up to three lines and, where one word is wider than the
+    /// row, scales down to its word (never below 0.6) instead of breaking it; the line under it and the value take the width.
+    private var stacked: some View {
+        HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .noctisFont(17, .semibold, relativeTo: .body)
+                    .foregroundStyle(NoctisAppColor.ink)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.6)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let detail {
+                    Text(detail)
+                        .noctisFont(13, relativeTo: .footnote)
+                        .foregroundStyle(.noctisInk3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if let value {
+                    Text(value)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(.noctisInk2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .contentTransition(.numericText())
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
+            accessory
+        }
     }
 }
 
@@ -100,7 +149,7 @@ public struct NoctisRowChevron: View {
     public init() {}
 
     public var body: some View {
-        Image(systemName: "chevron.right")
+        Image(systemName: "chevron.forward")
             .font(.system(size: 15, weight: .semibold))
             .foregroundStyle(.noctisInk3)
             .accessibilityHidden(true)

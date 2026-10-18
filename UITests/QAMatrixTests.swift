@@ -1,5 +1,6 @@
 import QACatalog
 import StoreKitTest
+import UIKit
 import XCTest
 
 /// QA part 3 (QA_COVERAGE.md, APP_RULES.md R67): every screen in `ScreenCatalog` visited under one configuration.
@@ -51,6 +52,10 @@ final class QAMatrixTests: XCTestCase {
         return ScreenCatalog.iPhone.filter { screen in
             guard screen.area == area else { return false }
             if environment["QA_TIER1"] == "1", !screen.tierOne { return false }
+            // The core pass leaves out the states that lay a tab out as another state does (gap, sleep only, no permission, loading); a later pass
+            // without the list does them.
+            let skipped = (environment["QA_SKIP_STATES"] ?? "").split(separator: ",").map(String.init)
+            if let last = screen.id.split(separator: ".").last, skipped.contains(String(last)), [.home, .sleep, .recovery, .insights].contains(screen.area) { return false }
             return only.isEmpty || only.contains { screen.id.hasPrefix($0) }
         }
     }
@@ -72,11 +77,21 @@ final class QAMatrixTests: XCTestCase {
     private func visit(_ screen: CatalogScreen) {
         let started = Date()
         let directory = outputDirectory
+        // A rewalk visits only the screens a walk found not to move (a marker file), with the walk that tries the page from three heights, and
+        // keeps the top picture that was viewed.
+        let rewalk = environment["QA_REWALK"] == "1"
+        let markerURL = directory.appendingPathComponent("\(screen.id)__noscroll.txt")
+        if rewalk {
+            guard screen.scrolls, FileManager.default.fileExists(atPath: markerURL.path) else { return }
+            try? FileManager.default.removeItem(at: markerURL)
+        }
         // Resume skips a screen whose top was photographed and whose bottom was, or that was found not to scroll (a marker file).
         if environment["QA_RESUME"] == "1", FileManager.default.fileExists(atPath: directory.appendingPathComponent("\(screen.id)__top.png").path) {
             let bottom = FileManager.default.fileExists(atPath: directory.appendingPathComponent("\(screen.id)__bottom.png").path)
             let marker = FileManager.default.fileExists(atPath: directory.appendingPathComponent("\(screen.id)__noscroll.txt").path)
-            if bottom || marker || !screen.scrolls { return }
+            // A walk that stopped at the old page limit of 10 left a p9 and called the next page the bottom: it is walked again.
+            let stale = FileManager.default.fileExists(atPath: directory.appendingPathComponent("\(screen.id)__p9.png").path)
+            if (bottom || marker || !screen.scrolls) && !stale { return }
         }
 
         // The plans the paywall shows come from the App Store; on a simulator they come from `Noctis.storekit` through a test session that lives as long as
@@ -99,8 +114,13 @@ final class QAMatrixTests: XCTestCase {
         if probe.waitForExistence(timeout: 20) { environmentText = probe.value as? String ?? "probe unreadable" }
         saveText(environmentText, "\(screen.id)__env.txt")
         var failures: [String] = []
-        for (key, expected) in expectations where !environmentText.split(separator: ";").contains(Substring("\(key)=\(expected)")) {
-            failures.append("\(key) is not \(expected) in the app: \(environmentText)")
+        // Onboarding pins itself to Light whatever the system says (R5), and the widget gallery is a harness with no probe: neither is a
+        // configuration that did not take effect.
+        for (key, expected) in expectations where screen.surface != .gallery {
+            let wanted = key == "colorScheme" && screen.showsOnboarding ? "light" : expected
+            if !environmentText.split(separator: ";").contains(Substring("\(key)=\(wanted)")) {
+                failures.append("\(key) is not \(wanted) in the app: \(environmentText)")
+            }
         }
         if !failures.isEmpty { XCTFail("\(screen.id) under \(configuration): the configuration did not take effect: \(failures.joined(separator: " | "))") }
 
@@ -111,11 +131,15 @@ final class QAMatrixTests: XCTestCase {
             switch step {
             case .tapTab(let label): tap(app.tabBars.buttons[label], in: app, what: "\(screen.id): the \(label) tab")
             case .tapLabel(let label): tap(QA.button(app, label), in: app, what: "\(screen.id): the '\(label)' button")
+            case .tapLabelPrefix(let prefix): tap(QA.element(app, labelBeginsWith: prefix), in: app, what: "\(screen.id): the element labelled '\(prefix)…'")
             case .tapIdentifier(let identifier): tap(element(app, identifier), in: app, what: "\(screen.id): \(identifier)")
             case .scrollToTop:
                 for _ in 0..<6 { app.swipeDown() }
             case .waitFor(let identifier):
                 if !element(app, identifier).waitForExistence(timeout: 20) { XCTFail("\(screen.id): \(identifier) did not appear") }
+            case .waitForPrefix(let prefix):
+                let match = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix)).firstMatch
+                if !match.waitForExistence(timeout: 20) { XCTFail("\(screen.id): nothing named \(prefix)… appeared") }
             case .back:
                 tap(app.navigationBars.buttons.firstMatch, in: app, what: "\(screen.id): the back button")
             }
@@ -126,22 +150,25 @@ final class QAMatrixTests: XCTestCase {
         var produced: [String] = []
         var issues: [String] = []
         let top = XCUIScreen.main.screenshot().pngRepresentation
-        save(top, "\(screen.id)__top.png")
+        if !rewalk { save(top, "\(screen.id)__top.png") }
         produced.append("top")
         let checks = environment["QA_CHECKS"] != "0"
         if checks { issues += QA.hierarchyChecks(app, at: "top") }
 
         if screen.scrolls {
-            let pages = scrollToTheBottom(app, maximum: screen.surface == .gallery ? 12 : 10)
+            let result = scrollToTheBottom(app, maximum: screen.surface == .gallery ? 12 : 30)
+            let pages = result.pages
             for (index, page) in pages.enumerated() {
-                let name = index == pages.count - 1 ? "bottom" : "p\(index + 1)"
+                let name = index == pages.count - 1 && result.reachedEnd ? "bottom" : "p\(index + 1)"
                 save(page, "\(screen.id)__\(name).png")
                 produced.append(name)
             }
-            if !pages.isEmpty {
-                if checks { issues += QA.hierarchyChecks(app, at: "bottom") }
-            } else {
+            if pages.isEmpty {
                 saveText("the page did not move", "\(screen.id)__noscroll.txt")
+            } else if !result.reachedEnd {
+                saveText("stopped at the page limit, not at the bottom", "\(screen.id)__nobottom.txt")
+            } else if checks {
+                issues += QA.hierarchyChecks(app, at: "bottom")
             }
         }
         saveText(issues.isEmpty ? "none" : issues.joined(separator: "\n"), "\(screen.id)__checks.txt")
@@ -189,22 +216,95 @@ final class QAMatrixTests: XCTestCase {
         return candidates.filter { $0.exists && $0.frame.height > 200 && $0.frame.width > 200 }.max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
     }
 
-    /// Drags the page's scroller up until the screen stops changing; every page after the top is returned (the last one is the bottom).
-    private func scrollToTheBottom(_ app: XCUIApplication, maximum: Int) -> [Data] {
-        guard let scrollView = scroller(app) else { return [] }
+    /// How different two screenshots of the middle of the screen are: a 48 x 96 grey picture of each, the mean difference out of 255.
+    private static func meanDifference(_ a: Data, _ b: Data) -> Double {
+        if a == b { return 0 }
+        func picture(_ data: Data) -> [UInt8]? {
+            guard let image = UIImage(data: data)?.cgImage else { return nil }
+            let width = 48, height = 96
+            var pixels = [UInt8](repeating: 0, count: width * height)
+            guard let context = CGContext(
+                data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(),
+                bitmapInfo: CGImageAlphaInfo.none.rawValue
+            ) else { return nil }
+            context.interpolationQuality = .medium
+            // The middle of the screen only: the status bar, the tab bar and the bedtime accessory change by themselves while the page does not (the
+            // accessory folds and unfolds with each swipe), and that kept a walk from ever saying it had reached the bottom.
+            let crop = CGRect(x: 0, y: CGFloat(image.height) * 0.10, width: CGFloat(image.width), height: CGFloat(image.height) * 0.68)
+            guard let middle = image.cropping(to: crop) else { return nil }
+            context.draw(middle, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return pixels
+        }
+        guard let x = picture(a), let y = picture(b), x.count == y.count else { return 255 }
+        var total = 0
+        for index in 0..<x.count { total += abs(Int(x[index]) - Int(y[index])) }
+        return Double(total) / Double(x.count)
+    }
+
+    private static func similar(_ a: Data, _ b: Data) -> Bool { meanDifference(a, b) < 2.0 }
+
+    /// Flings the page's scroller up until the screen stops changing twice running. `reachedEnd` is false when the limit stopped it first: the last
+    /// page is then not the bottom, and the matrix says so instead of calling it that. Every page between is returned only when `QA_PAGES=1` (the
+    /// reference configuration); otherwise just the last one is.
+    private func scrollToTheBottom(_ app: XCUIApplication, maximum: Int) -> (pages: [Data], reachedEnd: Bool) {
+        guard let scrollView = scroller(app) else { return ([], true) }
+        let everyPage = environment["QA_PAGES"] == "1"
         var pages: [Data] = []
+        var last: Data?
         var previous = XCUIScreen.main.screenshot().pngRepresentation
+        var unchanged = 0
+        var beforePrevious: Data?
+        var trace: [String] = []
+        // Where the drag starts, as a fraction of the height. 70% first: below that sit the tab bar and, in the evening, the bedtime accessory,
+        // which a drag that starts on it does not scroll under (a walk that began at 85% and 90% never moved the evening Home). A page that did
+        // not move at all is tried again from 45% and 20%: on a small screen a pinned bar (the Coach's suggestions and field, a wheel picker) is
+        // what is under 70%, and a drag that starts on it moves nothing behind it.
+        let starts: [CGFloat] = [0.7, 0.45, 0.2]
+        var startIndex = 0
+        defer { if environment["QA_TRACE"] == "1" { saveText(trace.joined(separator: " "), "walk-trace.txt") } }
         for _ in 0..<maximum {
-            // Starting in the 24 pt side margin: no ruler, ring or chart gesture is triggered.
-            scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
-                .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.25)), withVelocity: .slow, thenHoldForDuration: 0.4)
-            QA.pause(0.6)
-            let current = XCUIScreen.main.screenshot().pngRepresentation
-            if current == previous { break }
-            pages.append(current)
+            let start = starts[startIndex]
+            // Starting in the 24 pt side margin: no ruler, ring or chart gesture is triggered. A fast drag: the page flings and settles.
+            scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: start))
+                .press(
+                    forDuration: 0.02,
+                    thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: everyPage ? max(0.02, start - 0.5) : max(0.02, start - 0.6))),
+                    withVelocity: everyPage ? .slow : .fast, thenHoldForDuration: everyPage ? 0.4 : 0.1
+                )
+            QA.pause(everyPage ? 0.6 : 1.1)
+            var current = XCUIScreen.main.screenshot().pngRepresentation
+            // A page that is still settling (a fling's end, a rubber band coming back from the bottom) is looked at again before it is called moved:
+            // a small difference is waited out, a large one is a page that moved.
+            let difference = Self.meanDifference(current, previous)
+            trace.append(String(format: "%.2f", difference))
+            if difference >= 2.0, difference < 16.0 {
+                QA.pause(1.6)
+                current = XCUIScreen.main.screenshot().pngRepresentation
+                trace.append(String(format: "(settled %.2f)", Self.meanDifference(current, previous)))
+            }
+            // The same page, give or take what moves by itself (a countdown, a drifting glow): compared as a small picture.
+            // At the bottom the tab bar folds and unfolds with each swipe (the rubber band is a scroll back up), and that moves the page's end by the
+            // height of the bar: the walk then alternates between two pictures. Back at the picture from two swipes ago is the end as well.
+            let alternating = beforePrevious.map { Self.similar(current, $0) } ?? false
+            if Self.similar(current, previous) || alternating {
+                // Nothing has moved yet: the drag may have started on something that does not scroll the page. Higher up, then.
+                if last == nil, startIndex < starts.count - 1 {
+                    startIndex += 1
+                    trace.append("(from \(starts[startIndex]))")
+                    continue
+                }
+                // A drag that did not take is not the end: it has to fail twice.
+                unchanged += 1
+                if unchanged >= 2 || alternating { return (everyPage ? pages : (last.map { [$0] } ?? []), true) }
+                continue
+            }
+            unchanged = 0
+            if everyPage { pages.append(current) }
+            last = current
+            beforePrevious = previous
             previous = current
         }
-        return pages
+        return (everyPage ? pages : (last.map { [$0] } ?? []), false)
     }
 
     // MARK: Tests, one per area

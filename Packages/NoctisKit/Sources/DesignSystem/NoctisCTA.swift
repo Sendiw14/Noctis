@@ -14,14 +14,14 @@ public struct NoctisCTA: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// `icon` defaults to R10's standard trailing `arrow.right`; a screen
+    /// `icon` defaults to R10's standard trailing `arrow.forward` (it points the way reading goes: left in a right-to-left language); a screen
     /// may override it for a CTA whose action isn't "go forward" — e.g.
     /// Paywall's error-state "Try again", which reads as a retry
     /// (`arrow.clockwise`), not forward progress.
     /// `adaptive`: the main app's CTA, which follows Light/Dark (cocoa with
     /// an ivory label in Light, ivory with a #2B1D14 label in Dark).
     /// Onboarding keeps the fixed light CTA.
-    public init(_ title: String, isLoading: Bool = false, icon: String = "arrow.right", adaptive: Bool = false, action: @escaping () -> Void) {
+    public init(_ title: String, isLoading: Bool = false, icon: String = "arrow.forward", adaptive: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.isLoading = isLoading
         self.icon = icon
@@ -52,6 +52,10 @@ public struct NoctisCTA: View {
                         Text(title)
                             .noctisFont(17, .semibold, relativeTo: .body)
                             .multilineTextAlignment(.center)
+                            // A single long word does not break inside itself: at AX5 on an SE "Allow Notifications" broke into
+                            // "Notification / s" because the word is wider than the capsule. It shrinks to fit its word first.
+                            .lineLimit(3)
+                            .minimumScaleFactor(0.6)
                         Image(systemName: icon)
                             .noctisIcon(15)
                     }
@@ -120,7 +124,13 @@ public struct NoctisTextButton: View {
                 .noctisFont(15, .medium, relativeTo: .subheadline)
                 .foregroundStyle(adaptive ? NoctisAppColor.ink2 : NoctisPaper.ink2)
                 .multilineTextAlignment(.center)
+                // 44pt tall at the default size from the padding (a 15pt line is about 18pt), and taller with the text: a `minHeight` frame
+                // left a two-line "Health data settings" at AX5 in a 44pt slot, where it overprinted "Open Health" above it and hung out of
+                // its card (seen in B-AX5 on an SE, home.evening.empty).
+                .padding(.vertical, 13)
                 .frame(minWidth: 44, minHeight: 44)
+                // The whole label, wrapped, outermost: the button is as tall as its lines ("Health data se…" before).
+                .fixedSize(horizontal: false, vertical: true)
                 // `.plain` hit-tests only drawn pixels without this — the
                 // 44pt frame was layout only, leaving an 18pt-tall target.
                 .contentShape(Rectangle())

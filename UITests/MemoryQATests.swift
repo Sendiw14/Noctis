@@ -14,7 +14,8 @@ final class MemoryQATests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        try XCTSkipIf(QA.environment["QA_SANITIZED"] == "1", "memory is not measured under a sanitizer: its quarantine and shadow memory are not the app's (QA_LEDGER.md QA-050)")
+        let sanitized = ProcessInfo.processInfo.environment["QA_SANITIZED"] == "1"
+        try XCTSkipIf(sanitized, "memory is not measured under a sanitizer: its quarantine and shadow memory are not the app's (QA_LEDGER.md QA-050)")
     }
 
     // MARK: Helpers

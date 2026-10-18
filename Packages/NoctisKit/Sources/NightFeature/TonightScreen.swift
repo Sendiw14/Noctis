@@ -97,7 +97,7 @@ private struct TonightSections: View {
                 .noctisRise(index: 1)
             }
             let locked = viewModel.windDownLocked
-            NoctisCTA("Start wind-down", icon: locked ? "lock.fill" : "arrow.right", adaptive: true) {
+            NoctisCTA("Start wind-down", icon: locked ? "lock.fill" : "arrow.forward", adaptive: true) {
                 if locked { model.presentPaywall(.windDown) } else { model.push(.windDown(autostart: false)) }
             }
             .accessibilityIdentifier("tonight.windDown")
@@ -126,13 +126,16 @@ private struct TonightSections: View {
 /// The window (or the one bedtime) at 44pt, the wake line and the evening strip.
 struct TonightHeroCard: View {
     let content: TonightContent
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         NoctisAppCard {
             VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
                 NoctisCaption(content.heroCaption, style: .noctisInk3)
                 NoctisMetric(content.hero, size: 44)
-                    .lineLimit(1)
+                    // One line, scaled down to 0.6; at accessibility sizes a window ("10:15 - 10:45PM") is two lines, never cut to "10:15 - 10:45..."
+                    // with the meridiem lost.
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                     .minimumScaleFactor(0.6)
                 Text(content.wakeLine)
                     .noctisFont(15, relativeTo: .subheadline)
@@ -170,6 +173,14 @@ struct TonightHeroCard: View {
 /// wake marker in cocoa. Drawn once; nothing here moves.
 struct TonightStripView: View {
     let strip: TonightStrip
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// Five hour labels sit by fraction along the strip; at accessibility sizes they overprint each other ("6 PM10 PM2 AM6 AM10 AM" on a
+    /// 17 Pro at AX5), so the strip keeps its two ends: the window and the wake time are written in full above it.
+    private var labels: [TonightStrip.Label] {
+        guard dynamicTypeSize.isAccessibilitySize, strip.labels.count > 2 else { return strip.labels }
+        return [strip.labels[0], strip.labels[strip.labels.count - 1]]
+    }
 
     var body: some View {
         VStack(spacing: 6) {
@@ -188,7 +199,7 @@ struct TonightStripView: View {
             }
             .frame(height: 22)
             NoctisFractionLayout {
-                ForEach(strip.labels, id: \.position) { label in
+                ForEach(labels, id: \.position) { label in
                     Text(label.text)
                         .noctisFont(12, .medium, relativeTo: .caption2)
                         .foregroundStyle(.noctisInk3)
@@ -312,17 +323,28 @@ struct TonightLinkRow: View {
     let hint: String
     let identifier: String
     let open: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: open) {
             NoctisAppCard {
                 HStack(spacing: NoctisSpacing.sm) {
-                    NoctisIconTile(systemImage: symbol, fill: fill, foreground: NoctisAppColor.blockInk, size: 40)
+                    // The tile is decoration: at accessibility sizes the name has its width ("Breathin / g" on an SE at AX5 was the word broken
+                    // to fit beside a 40 pt tile that scaled with the text; it still broke after the fixedSize and the layout priority).
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        NoctisIconTile(systemImage: symbol, fill: fill, foreground: NoctisAppColor.blockInk, size: 40)
+                    }
                     Text(title)
                         .noctisFont(17, .semibold, relativeTo: .body)
                         .foregroundStyle(NoctisAppColor.ink)
+                        .multilineTextAlignment(.leading)
+                        // Whole words, in as many lines as it needs, and a word wider than the row scales down to fit it before it is broken.
+                        .lineLimit(3)
+                        .minimumScaleFactor(0.6)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .layoutPriority(1)
                     Spacer(minLength: 0)
-                    Image(systemName: "chevron.right")
+                    Image(systemName: "chevron.forward")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(.noctisInk3)
                         .accessibilityHidden(true)

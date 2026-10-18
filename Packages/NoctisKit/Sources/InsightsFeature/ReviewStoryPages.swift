@@ -402,7 +402,7 @@ struct ReviewInsightPageView: View {
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: NoctisSpacing.xs)
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(style.quiet)
                     .accessibilityHidden(true)
@@ -425,7 +425,7 @@ struct ReviewInsightPageView: View {
         } label: {
             HStack(spacing: 6) {
                 Text("Read more").noctisFont(17, .semibold, relativeTo: .body)
-                Image(systemName: "chevron.right").noctisIcon(14)
+                Image(systemName: "chevron.forward").noctisIcon(14)
             }
             .foregroundStyle(style.ink)
             .frame(minHeight: 44)
@@ -501,7 +501,7 @@ struct ReviewRecordsPageView: View {
             ForEach(page.blocks) { block in
                 NoctisColorBlock(fill: block.kind == .longestNight ? NoctisAppColor.blockSage : NoctisAppColor.blockLavender) {
                     VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                        NoctisCaption(block.title.uppercased(), style: NoctisAppColor.blockInk.opacity(0.8))
+                        NoctisCaption(block.title.uppercased(), style: NoctisAppColor.blockInk)
                         if let minutes = block.minutes {
                             NoctisMetric(HomeFormat.durationMetric(minutes), size: 44, relativeTo: .largeTitle, tone: .block)
                         } else if let score = block.score {

@@ -171,6 +171,7 @@ public struct JournalListView: View {
     let back: (() -> Void)?
     let backTitle: String
     @State private var confirmingDeleteAll = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     public init(viewModel: JournalViewModel, back: (() -> Void)? = nil, backTitle: String = ReflectCopy.title) {
         self.viewModel = viewModel
@@ -183,7 +184,7 @@ public struct JournalListView: View {
             if let back {
                 Button(action: back) {
                     HStack(spacing: 6) {
-                        Image(systemName: "chevron.left").font(.system(size: 15, weight: .semibold))
+                        Image(systemName: "chevron.backward").font(.system(size: 15, weight: .semibold))
                         Text(backTitle).noctisFont(17, .medium, relativeTo: .body)
                     }
                     .foregroundStyle(NoctisNight.ivory)
@@ -193,14 +194,6 @@ public struct JournalListView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("journal.back")
             }
-            Text(ReflectCopy.journal)
-                .noctisFont(24, .semibold, relativeTo: .title2)
-                .foregroundStyle(NoctisNight.ivory)
-                .accessibilityAddTraits(.isHeader)
-            Text(ReflectCopy.privacyLine)
-                .noctisFont(13, relativeTo: .footnote)
-                .foregroundStyle(NoctisNight.ivory2)
-                .accessibilityIdentifier("journal.privacy")
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -208,52 +201,31 @@ public struct JournalListView: View {
         .accessibilityIdentifier("journal.list")
     }
 
-    @ViewBuilder
-    private var content: some View {
-        if viewModel.availability == .unavailable {
-            Text(ReflectCopy.unavailable)
-                .noctisFont(15, relativeTo: .subheadline)
+    /// The title and the privacy line: the top of the page's own scrolling, so that at accessibility sizes (where the line alone is five lines)
+    /// they and the entries move together instead of leaving the entries a few points of a pinned panel.
+    private var header: some View {
+        VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+            Text(ReflectCopy.journal)
+                .noctisFont(24, .semibold, relativeTo: .title2)
+                .foregroundStyle(NoctisNight.ivory)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Text(ReflectCopy.privacyLine)
+                .noctisFont(13, relativeTo: .footnote)
                 .foregroundStyle(NoctisNight.ivory2)
-                .padding(.top, NoctisSpacing.lg)
-                .accessibilityIdentifier("journal.unavailable")
-            Spacer(minLength: 0)
-        } else if viewModel.entries.isEmpty {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(ReflectCopy.emptyTitle)
-                    .noctisFont(17, .semibold, relativeTo: .body)
-                    .foregroundStyle(NoctisNight.ivory)
-                Text(ReflectCopy.emptyLine)
-                    .noctisFont(15, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisNight.ivory2)
-            }
-            .padding(.top, NoctisSpacing.lg)
-            .accessibilityIdentifier("journal.empty")
-            Spacer(minLength: 0)
-        } else {
-            List {
-                ForEach(viewModel.entries) { entry in
-                    JournalRow(entry: entry)
-                        .listRowBackground(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(NoctisNight.ivory.opacity(0.08)).padding(.vertical, 3))
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 3, leading: 0, bottom: 3, trailing: 0))
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                viewModel.delete(entry.id)
-                            } label: {
-                                Label(ReflectCopy.delete, systemImage: "trash")
-                            }
-                            .accessibilityIdentifier("journal.delete")
-                        }
-                        .accessibilityAction(named: ReflectCopy.delete) { viewModel.delete(entry.id) }
-                }
-            }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .scrollIndicators(.hidden)
-            Button { confirmingDeleteAll = true } label: {
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("journal.privacy")
+        }
+    }
+
+    private var deleteAllButton: some View {
+        Button { confirmingDeleteAll = true } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "trash").font(.system(size: 14, weight: .semibold)).accessibilityHidden(true)
-                    Text(ReflectCopy.deleteAll).noctisFont(15, .medium, relativeTo: .subheadline)
+                    Text(ReflectCopy.deleteAll)
+                        .noctisFont(15, .medium, relativeTo: .subheadline)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .foregroundStyle(NoctisNight.ivory2)
                 .frame(minHeight: 44)
@@ -270,12 +242,86 @@ public struct JournalListView: View {
             } message: {
                 Text(ReflectCopy.deleteAllMessage)
             }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if viewModel.availability == .unavailable {
+            ScrollView {
+                VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+                    header
+                    Text(ReflectCopy.unavailable)
+                        .noctisFont(15, relativeTo: .subheadline)
+                        .foregroundStyle(NoctisNight.ivory2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, NoctisSpacing.lg)
+                        .accessibilityIdentifier("journal.unavailable")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+        } else if viewModel.entries.isEmpty {
+            ScrollView {
+                VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
+                    header
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(ReflectCopy.emptyTitle)
+                            .noctisFont(17, .semibold, relativeTo: .body)
+                            .foregroundStyle(NoctisNight.ivory)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(ReflectCopy.emptyLine)
+                            .noctisFont(15, relativeTo: .subheadline)
+                            .foregroundStyle(NoctisNight.ivory2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.top, NoctisSpacing.lg)
+                    .accessibilityIdentifier("journal.empty")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+        } else {
+            List {
+                header
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: NoctisSpacing.xs, trailing: 0))
+                ForEach(viewModel.entries) { entry in
+                    JournalRow(entry: entry)
+                        .listRowBackground(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(NoctisNight.ivory.opacity(0.08)).padding(.vertical, 3))
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 3, leading: 0, bottom: 3, trailing: 0))
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                viewModel.delete(entry.id)
+                            } label: {
+                                Label(ReflectCopy.delete, systemImage: "trash")
+                            }
+                            .accessibilityIdentifier("journal.delete")
+                        }
+                        .accessibilityAction(named: ReflectCopy.delete) { viewModel.delete(entry.id) }
+                }
+                // At accessibility sizes the button is the last row of the list instead of a bar pinned under it: pinned it took a third of an SE
+                // and the entries above it did not scroll (the harness reported "the page did not move" at AX5).
+                if dynamicTypeSize.isAccessibilitySize {
+                    deleteAllButton
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
+            if !dynamicTypeSize.isAccessibilitySize { deleteAllButton }
         }
     }
 }
 
 private struct JournalRow: View {
     let entry: JournalEntrySnapshot
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -291,7 +337,8 @@ private struct JournalRow: View {
                 Text(entry.text)
                     .noctisFont(15, relativeTo: .subheadline)
                     .foregroundStyle(NoctisNight.ivory)
-                    .lineLimit(4)
+                    // Four lines at the sizes it was drawn for; all of the person's own words at accessibility sizes.
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 4)
             }
         }
         .padding(NoctisSpacing.md)

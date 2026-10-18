@@ -7,15 +7,28 @@ import SwiftUI
 struct ProfileEditorSheet: View {
     let sheet: ProfileViewModel.Sheet
     let viewModel: ProfileViewModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    @ViewBuilder
+    private var editor: some View {
+        switch sheet {
+        case .name: NameEditor(viewModel: viewModel)
+        case .need: RhythmEditor(kind: .need, viewModel: viewModel)
+        case .wake: RhythmEditor(kind: .wake, viewModel: viewModel)
+        case .goals: GoalsEditor(viewModel: viewModel)
+        }
+    }
 
     var body: some View {
         NavigationStack {
             Group {
-                switch sheet {
-                case .name: NameEditor(viewModel: viewModel)
-                case .need: RhythmEditor(kind: .need, viewModel: viewModel)
-                case .wake: RhythmEditor(kind: .wake, viewModel: viewModel)
-                case .goals: GoalsEditor(viewModel: viewModel)
+                // At accessibility sizes the editor is taller than the sheet: it scrolls. Without that the five goal rows were squeezed to
+                // their minimum height and their wrapped names overprinted each other ("Better sleep" over "More energy").
+                if dynamicTypeSize.isAccessibilitySize {
+                    ScrollView { editor }
+                        .scrollBounceBehavior(.basedOnSize)
+                } else {
+                    editor
                 }
             }
             .background(PaperBackground(adaptive: true).ignoresSafeArea())

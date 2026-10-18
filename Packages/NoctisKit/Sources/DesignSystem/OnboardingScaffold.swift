@@ -36,6 +36,14 @@ public struct OnboardingScaffold<Hero: View, Bottom: View>: View {
     private let hero: Hero
     private let bottom: Bottom
 
+    /// At accessibility sizes the title (three or four lines of 38pt-and-scaling type) took 40 to 55 percent of an SE and the pinned bottom stack
+    /// another 30 to 60 (a three-line button over a three-line link), leaving a goal screen a sliver of its first option at rest and the Health
+    /// step's title cut by its own button (QA part 2, onboarding.goal and onboarding.health at AX5). There the title is the first thing in the scroll
+    /// content and the bottom stack is its last: the 24pt gap to the content (R6) and the unclipped title (R3) are unchanged, nothing is pinned
+    /// over text, and the whole page scrolls (the paywall's way, R10's "always a single ScrollView").
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private var stacksOnPage: Bool { dynamicTypeSize.isAccessibilitySize }
+
     @State private var scrollViewportHeight: CGFloat = 400
     /// Content height including its own top/bottom padding but excluding
     /// the end runway — the runway is derived from it, so it can't feed
@@ -86,14 +94,26 @@ public struct OnboardingScaffold<Hero: View, Bottom: View>: View {
                             .padding(.top, NoctisSpacing.sm)
                     }
 
-                    NoctisTitle(title, emphasis: titleEmphasis)
-                        .padding(.horizontal, NoctisSpacing.xl)
-                        .padding(.top, NoctisSpacing.md)
+                    if !stacksOnPage {
+                        NoctisTitle(title, emphasis: titleEmphasis)
+                            .padding(.horizontal, NoctisSpacing.xl)
+                            .padding(.top, NoctisSpacing.md)
+                    }
 
                     ScrollView {
-                        VStack(spacing: NoctisSpacing.md) {
-                            hero
-                            captionView
+                        VStack(spacing: NoctisSpacing.xl) {
+                            if stacksOnPage {
+                                NoctisTitle(title, emphasis: titleEmphasis)
+                                    .noctisTextBlock()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            VStack(spacing: NoctisSpacing.md) {
+                                hero
+                                captionView
+                            }
+                            if stacksOnPage {
+                                bottom.padding(.bottom, NoctisSpacing.sm)
+                            }
                         }
                         .padding(.horizontal, NoctisSpacing.xl)
                         .padding(.top, Self.contentTopPadding)
@@ -137,7 +157,7 @@ public struct OnboardingScaffold<Hero: View, Bottom: View>: View {
                     .task(id: RestBandInputs(content: naturalContentHeight, viewport: unbandedViewportHeight, blocks: scrollFrames.textBlocks)) {
                         try? await Task.sleep(for: .milliseconds(120))
                         guard !Task.isCancelled else { return }
-                        let band = restingBand
+                        let band = stacksOnPage ? 0 : restingBand
                         if abs(band - restBand) > 0.5 {
                             withAnimation(.easeOut(duration: 0.2)) { restBand = band }
                         }
@@ -163,11 +183,13 @@ public struct OnboardingScaffold<Hero: View, Bottom: View>: View {
         // stack's top, where its fade is drawn — the default 8pt gap left
         // content visible below the viewport every fade calculation used.
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottom
-                .padding(.horizontal, NoctisSpacing.xl)
-                .padding(.top, NoctisSpacing.lg + restBand)
-                .padding(.bottom, NoctisSpacing.sm)
-                .background(bottomFade(showsGradient: fades.bottom))
+            if !stacksOnPage {
+                bottom
+                    .padding(.horizontal, NoctisSpacing.xl)
+                    .padding(.top, NoctisSpacing.lg + restBand)
+                    .padding(.bottom, NoctisSpacing.sm)
+                    .background(bottomFade(showsGradient: fades.bottom))
+            }
         }
     }
 
@@ -199,7 +221,7 @@ public struct OnboardingScaffold<Hero: View, Bottom: View>: View {
     /// viewport of runway.
     private var endRunway: CGFloat {
         let overflow = naturalContentHeight - scrollViewportHeight
-        guard overflow > 0, !(rowFrames.isEmpty && textBlocks.isEmpty) else { return 0 }
+        guard overflow > 0, !stacksOnPage, !(rowFrames.isEmpty && textBlocks.isEmpty) else { return 0 }
         let fade = Self.fadeHeight
         func textIsClean(_ offset: CGFloat) -> Bool {
             textBlocks.allSatisfy { $0.maxY <= offset - NoctisScrollEdges.hiddenMargin || $0.minY >= offset + fade }
@@ -284,7 +306,7 @@ public struct OnboardingScaffold<Hero: View, Bottom: View>: View {
     private var backButton: some View {
         if let onBack {
             Button(action: onBack) {
-                Image(systemName: "chevron.left")
+                Image(systemName: "chevron.backward")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(NoctisPaper.ink)
                     .frame(width: 44, height: 44)

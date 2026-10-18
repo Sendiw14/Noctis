@@ -617,6 +617,16 @@ struct EveningCountdownView: View {
 /// minute's `TimelineView`; the track and the span are drawn once.
 struct NightStripView: View {
     let content: EveningHeroContent
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// The tick labels are placed by fraction of the strip; at accessibility sizes four of them (6 PM, 12 AM, 6 AM, 10 AM) do not fit side by
+    /// side ("6 AM10 AM" ran into one on a 17 Pro at AX3), so the strip keeps its first and its last one: the window itself is read in the
+    /// line under it ("Wake 7:00 AM · 8h need") and in the bedtime above.
+    private var labels: [EveningHeroContent.StripLabel] {
+        let all = content.stripLabels
+        guard dynamicTypeSize.isAccessibilitySize, all.count > 2 else { return all }
+        return [all[0], all[all.count - 1]]
+    }
 
     var body: some View {
         VStack(spacing: 6) {
@@ -636,7 +646,7 @@ struct NightStripView: View {
             }
             .frame(height: 22)
             NoctisFractionLayout {
-                ForEach(content.stripLabels, id: \.position) { label in
+                ForEach(labels, id: \.position) { label in
                     Text(label.text)
                         .noctisFont(12, .medium, relativeTo: .caption2)
                         .foregroundStyle(.noctisInk3)
@@ -659,6 +669,7 @@ struct CompactRecoveryCard: View {
     let openDetail: (RecoveryFactorKind?) -> Void
     @Environment(\.homeMorph) private var morph
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         switch content {
@@ -690,7 +701,7 @@ struct CompactRecoveryCard: View {
                             }
                         }
                         Spacer(minLength: 0)
-                        Image(systemName: "chevron.right")
+                        Image(systemName: "chevron.forward")
                             .noctisIcon(15)
                             .foregroundStyle(.noctisInk3)
                             .accessibilityHidden(true)
@@ -724,16 +735,27 @@ struct CompactRecoveryCard: View {
         }
     }
 
+    /// The ring beside the words; above them at accessibility sizes, where a 72pt ring beside the text left it a column of about 150pt
+    /// (seven lines for "NOCTIS reads sleep from Apple Health..." on an SE at AX5).
+    private func ringAndText<Text: View>(@ViewBuilder text: () -> Text) -> some View {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.md))
+            : AnyLayout(HStackLayout(spacing: NoctisSpacing.md))
+        return layout {
+            DormantRingView(diameter: 72, glyphSize: 18)
+                .frame(width: 72)
+            text()
+            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
+        }
+    }
+
     private func learningRow(nights: Int, required: Int, text: String) -> some View {
         NoctisAppCard {
-            HStack(spacing: NoctisSpacing.md) {
-                DormantRingView(diameter: 72, glyphSize: 18)
-                    .frame(width: 72)
+            ringAndText {
                 VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
                     DormantTextView(title: "Learning your baseline", detail: text, alignment: .leading)
                     LearningDots(nights: nights, required: required)
                 }
-                Spacer(minLength: 0)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -743,11 +765,8 @@ struct CompactRecoveryCard: View {
     private func row(title: String?, detail: String?, action: DormantAction?) -> some View {
         NoctisAppCard {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-                HStack(spacing: NoctisSpacing.md) {
-                    DormantRingView(diameter: 72, glyphSize: 18)
-                        .frame(width: 72)
+                ringAndText {
                     DormantTextView(title: title, detail: detail, alignment: .leading)
-                    Spacer(minLength: 0)
                 }
                 if let action {
                     DormantActionView(action: action)

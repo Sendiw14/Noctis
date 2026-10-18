@@ -70,15 +70,33 @@ struct RecoveryHistoryChartCard: View {
         return reveal == .playing ? NoctisMotion.fade.delay(HomeReveal.ringDuration * 0.75) : NoctisMotion.fade
     }
 
+    /// Whole: the word does not break ("Recover / y" on an SE at AX5).
+    private var legendWord: some View {
+        Text("Recovery")
+            .noctisFont(13, relativeTo: .footnote)
+            .foregroundStyle(.noctisInk3)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+    }
+
     var body: some View {
         NoctisAppCard {
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
-                HStack(alignment: .firstTextBaseline) {
-                    NoctisCaption(content.caption, style: .noctisInk3)
-                    Spacer(minLength: NoctisSpacing.xs)
-                    Text("Recovery")
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(.noctisInk3)
+                // Side by side when they fit; the word under the date range when the range would wrap beside it ("SEP 13 / - OCT / 12" in a
+                // third of an SE at AX5, with a gap of white under it).
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline) {
+                        NoctisCaption(content.caption, style: .noctisInk3)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                        Spacer(minLength: NoctisSpacing.xs)
+                        legendWord
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        NoctisCaption(content.caption, style: .noctisInk3)
+                            .fixedSize(horizontal: false, vertical: true)
+                        legendWord
+                    }
                 }
                 RecoveryPillRow(
                     text: current.map { content.points[$0].detail },
@@ -100,6 +118,12 @@ struct RecoveryHistoryChartCard: View {
         .accessibilityLabel(content.accessibilityLabel)
         .accessibilityValue(current.map { content.points[$0].accessibilityLabel } ?? "")
         .accessibilityHint("Swipe up or down to go through the nights.")
+        .accessibilityChartDescriptor(NoctisAudioGraph(
+            title: content.accessibilityLabel, summary: "One point a day, its recovery score from 0 to 100. Swipe up or down on the chart to go through the days.",
+            xTitle: "Day", yTitle: "Recovery score",
+            points: content.points.enumerated().map { index, point in NoctisGraphPoint(x: "Day \(index + 1)", y: point.score.map(Double.init), spoken: point.accessibilityLabel) },
+            yRange: 0...100, yDescription: { "score \(Int($0.rounded()))" }
+        ))
         .accessibilityAdjustableAction { direction in
             let last = content.points.count - 1
             switch direction {
@@ -117,11 +141,15 @@ struct RecoveryHistoryChartCard: View {
                 Text(label.text)
                     .noctisFont(12, relativeTo: .caption)
                     .foregroundStyle(.noctisInk3)
+                    .lineLimit(1)
                     .frame(width: axisWidth, alignment: .trailing)
                     .noctisVerticalFraction(label.position)
             }
         }
         .frame(width: axisWidth, height: Self.height)
+        // The axis ticks stop growing at a large standard size: the chart is a fixed height, and at AX5 "100" was cut to "10" over "75" and the
+        // date labels overprinted each other ("Sep 13 Sep 28 Oct 12" became one smear). The values are also in the pill and in the stat tiles.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
     private var xAxis: some View {
@@ -135,6 +163,7 @@ struct RecoveryHistoryChartCard: View {
             }
         }
         .frame(minHeight: 16)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
     // MARK: Plot
@@ -385,8 +414,70 @@ struct RecoveryHistoryFactorRowView: View {
     let line: FactorLineRender?
     let open: () -> Void
     @Environment(\.featureGate) private var gate
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     static let sparkHeight: CGFloat = 36
+
+    private var name: some View {
+        Text(row.name)
+            .noctisFont(15, .semibold, relativeTo: .subheadline)
+            .foregroundStyle(NoctisAppColor.ink)
+    }
+
+    @ViewBuilder
+    private var average: some View {
+        if let average = row.average {
+            Text("avg")
+                .noctisFont(13, relativeTo: .footnote)
+                .foregroundStyle(.noctisInk3)
+            NoctisMetric(average, size: 17, relativeTo: .body)
+        }
+    }
+
+    @ViewBuilder
+    private var trailingGlyph: some View {
+        if gate.isUnlocked(.recoveryFactorDetail) {
+            Image(systemName: "chevron.forward")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.noctisInk3)
+                .accessibilityHidden(true)
+        } else {
+            LockGlyph(size: 13).foregroundStyle(.noctisInk3)
+        }
+    }
+
+    /// At accessibility sizes: the tile and the chevron on one line, the name under them on a line of its own and whole (scaled down to fit its
+    /// word, never below half), the average under that. Beside a tile and a chevron "Consistency" had 110pt and broke ("Consiste / ncy").
+    private var accessibilityHeader: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                NoctisIconTile(systemImage: row.kind.symbol, fill: row.kind.tint, foreground: NoctisAppColor.onFill, size: 40)
+                Spacer(minLength: NoctisSpacing.xs)
+                trailingGlyph
+            }
+            name.lineLimit(1).minimumScaleFactor(0.5)
+            HStack(spacing: 4) { average }
+        }
+    }
+
+    @ViewBuilder
+    private func header(stacked: Bool) -> some View {
+        HStack(alignment: .center, spacing: NoctisSpacing.sm) {
+            NoctisIconTile(systemImage: row.kind.symbol, fill: row.kind.tint, foreground: NoctisAppColor.onFill, size: 40)
+            if stacked {
+                VStack(alignment: .leading, spacing: 2) {
+                    name.fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 4) { average }
+                }
+                Spacer(minLength: NoctisSpacing.xs)
+            } else {
+                name.fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: NoctisSpacing.xs)
+                average
+            }
+            trailingGlyph
+        }
+    }
 
     var body: some View {
         Button {
@@ -395,25 +486,14 @@ struct RecoveryHistoryFactorRowView: View {
         } label: {
             NoctisAppCard {
                 VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
-                    HStack(alignment: .center, spacing: NoctisSpacing.sm) {
-                        NoctisIconTile(systemImage: row.kind.symbol, fill: row.kind.tint, foreground: NoctisAppColor.onFill, size: 40)
-                        Text(row.name)
-                            .noctisFont(15, .semibold, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink)
-                        Spacer(minLength: NoctisSpacing.xs)
-                        if let average = row.average {
-                            Text("avg")
-                                .noctisFont(13, relativeTo: .footnote)
-                                .foregroundStyle(.noctisInk3)
-                            NoctisMetric(average, size: 17, relativeTo: .body)
-                        }
-                        if gate.isUnlocked(.recoveryFactorDetail) {
-                            Image(systemName: "chevron.right")
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(.noctisInk3)
-                                .accessibilityHidden(true)
-                        } else {
-                            LockGlyph(size: 13).foregroundStyle(.noctisInk3)
+                    // The name stays on one line, whole: when it and the average do not both fit (the iPhone SE's width, an accessibility
+                    // text size), the average goes under the name instead of the name breaking inside a word (QA_LEDGER.md).
+                    if dynamicTypeSize.isAccessibilitySize {
+                        accessibilityHeader
+                    } else {
+                        ViewThatFits(in: .horizontal) {
+                            header(stacked: false)
+                            header(stacked: true)
                         }
                     }
                     if let line {

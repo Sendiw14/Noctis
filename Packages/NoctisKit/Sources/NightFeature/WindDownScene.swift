@@ -15,8 +15,11 @@ struct WindDownScene: View {
     /// nothing is drawn behind the words and controls that fill the rest of the screen.
     var backdrop = false
 
-    /// Where the moon rests in a backdrop: the top-right, level with the back button.
-    static let backdropMoon = (x: 0.86, y: 0.105)
+    /// Where the moon rests in a backdrop: the top corner opposite the back button, level with it (top-right; top-left in a
+    /// right-to-left language, where the back button moves to the right and the moon would otherwise sit on its words).
+    static func backdropMoon(isRightToLeft: Bool) -> (x: Double, y: Double) {
+        (x: isRightToLeft ? 0.14 : 0.86, y: 0.105)
+    }
     /// Stars in a backdrop stay above this fraction of the height.
     static let backdropStarLimit = 0.1
 
@@ -56,14 +59,21 @@ struct WindDownScene: View {
         }
     }()
 
+    /// At accessibility sizes the words grow into the sky and the moon and stars (placed by fraction of the height, beside no text only at
+    /// the default size) would sit behind them: like the tab fields' motifs, they are left out there; the hills and the night colour stay.
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.layoutDirection) private var layoutDirection
+
     var body: some View {
-        Canvas { context, size in
+        let showsSky = backdrop || !dynamicTypeSize.isAccessibilitySize
+        let backdropMoon = Self.backdropMoon(isRightToLeft: layoutDirection == .rightToLeft)
+        return Canvas { context, size in
             let p = progress
             context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(NoctisNight.sky(WindDownVisuals.background(p))))
 
             // Stars: a star past the twelfth fades in over the 4% of the session before it counts.
             let count = WindDownVisuals.starCount(p)
-            for (index, star) in Self.stars.enumerated() {
+            for (index, star) in Self.stars.enumerated() where showsSky {
                 if backdrop, star.y >= Self.backdropStarLimit { continue }
                 var alpha = star.alpha
                 if index >= WindDownVisuals.starsAtStart {
@@ -79,12 +89,12 @@ struct WindDownScene: View {
             }
 
             // The moon: a 64pt ivory crescent along its arc.
-            let moon = backdrop ? Self.backdropMoon : WindDownVisuals.moon(p)
+            let moon = backdrop ? backdropMoon : WindDownVisuals.moon(p)
             let center = CGPoint(x: moon.x * size.width, y: moon.y * size.height)
             let radius: CGFloat = 32
             let disc = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
             let bite = Path(ellipseIn: CGRect(x: center.x - radius * 0.45, y: center.y - radius * 1.1, width: radius * 1.9, height: radius * 1.9))
-            context.fill(disc.subtracting(bite), with: .color(NoctisNight.moon))
+            if showsSky { context.fill(disc.subtracting(bite), with: .color(NoctisNight.moon)) }
 
             // The hills: two flat silhouettes that sink as the session goes on.
             let sink = CGFloat(WindDownVisuals.hillSink(p))

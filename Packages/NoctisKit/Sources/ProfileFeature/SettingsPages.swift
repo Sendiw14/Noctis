@@ -275,7 +275,7 @@ struct HealthDataSettingsView: View {
 
     private func buttons(_ health: HealthDataStatus) -> some View {
         VStack(spacing: NoctisSpacing.xs) {
-            NoctisCTA(HealthCopy.openHealthButton, icon: "arrow.up.right", adaptive: true) { viewModel.openHealth() }
+            NoctisCTA(HealthCopy.openHealthButton, icon: "arrow.up.forward", adaptive: true) { viewModel.openHealth() }
                 .accessibilityIdentifier("settings.health.open")
                 .accessibilityHint("Opens the Health app.")
             if health.canRequestAccess && health.hasAnyData {
@@ -438,7 +438,7 @@ struct SubscriptionSettingsView: View {
             .noctisRise(index: 0)
             VStack(spacing: NoctisSpacing.xs) {
                 if summary.isPremium {
-                    NoctisCTA("Manage subscription", icon: "arrow.up.right", adaptive: true) { viewModel.showsManageSubscription = true }
+                    NoctisCTA("Manage subscription", icon: "arrow.up.forward", adaptive: true) { viewModel.showsManageSubscription = true }
                         .accessibilityIdentifier("settings.subscription.manage")
                         .accessibilityHint("Opens your subscription in the App Store.")
                 } else {

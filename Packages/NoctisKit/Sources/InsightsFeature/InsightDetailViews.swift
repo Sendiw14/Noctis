@@ -371,7 +371,7 @@ struct InsightDetailHeader: View {
     private var join: some View {
         switch content.join {
         case .arrow:
-            Image(systemName: "arrow.right")
+            Image(systemName: "arrow.forward")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(ink)
                 .accessibilityHidden(true)
@@ -466,6 +466,7 @@ struct InsightHistoryRowView: View {
     let zoom: Namespace.ID
     let viewModel: InsightsViewModel
     let open: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: open) {
@@ -484,7 +485,8 @@ struct InsightHistoryRowView: View {
                         .noctisFont(15, relativeTo: .subheadline)
                         .foregroundStyle(row.dismissed ? .noctisInk3 : .noctisInk2)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(3)
+                        // The whole line at accessibility sizes (it was cut to "Deep sleep was 4% of la..." at AX5 on an SE).
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: NoctisSpacing.xs) {
                         Text(row.date)
@@ -501,7 +503,7 @@ struct InsightHistoryRowView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.noctisInk3)
                     .accessibilityHidden(true)

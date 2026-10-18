@@ -183,4 +183,22 @@ struct LocalizationReadinessTests {
         }
         #expect(hits.isEmpty, "physical directions in layout (use leading and trailing): \(hits)")
     }
+
+    /// QA part 3 (the D-RTL run): a "chevron.right" at a row's trailing edge pointed into the row in a right-to-left language, because that symbol
+    /// does not mirror. The symbols that mean "on" and "back" are the forward and backward ones, which do.
+    @Test nonisolated func directionalSymbolsAreForwardAndBackwardNeverRightAndLeft() throws {
+        // `arrow.up.right` is an arrow that stays put as well: the one that says "opens in another app" is `arrow.up.forward` (up and to the
+        // left in a right-to-left language, as in Apple's own apps).
+        let pattern = try NSRegularExpression(pattern: #""(chevron\.(left|right)|arrow\.(left|right)|arrow\.up\.right)""#)
+        // Trends and the sleep-need line read "steady" or "up" and mean it physically; they are not navigation.
+        let allowed: Set<String> = ["ReviewStoryCharts.swift", "RecoveryHistoryContent.swift"]
+        var hits: [String] = []
+        for url in Self.files(under: "Packages/NoctisKit/Sources", extension: "swift") where !allowed.contains(url.lastPathComponent) {
+            let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+            for line in Self.code(text) where pattern.firstMatch(in: line.text, range: NSRange(line.text.startIndex..., in: line.text)) != nil {
+                hits.append("\(url.lastPathComponent):\(line.number)")
+            }
+        }
+        #expect(hits.isEmpty, "use chevron.forward, chevron.backward, arrow.forward and arrow.up.forward, which mirror: \(hits)")
+    }
 }

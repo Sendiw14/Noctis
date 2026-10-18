@@ -61,13 +61,10 @@ struct RecoveryHeroView: View {
         VStack(spacing: NoctisSpacing.md) {
             ring
             VStack(spacing: NoctisSpacing.xs) {
-                HStack(spacing: NoctisSpacing.xs) {
-                    if let chip = content.chip {
-                        DeltaChipView(chip: chip)
-                    }
-                    Text(content.comparisonPhrase)
-                        .noctisFont(15, relativeTo: .subheadline)
-                        .foregroundStyle(.noctisInk2)
+                // The chip and its phrase in one row when they fit; one under the other when they do not ("−17 vs your us…" on an SE at AX5).
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: NoctisSpacing.xs) { deltaChip; comparison }
+                    VStack(spacing: NoctisSpacing.xxs) { deltaChip; comparison }
                 }
                 if let why = content.why {
                     Text(why)
@@ -118,6 +115,19 @@ struct RecoveryHeroView: View {
         }
     }
 
+    @ViewBuilder
+    private var deltaChip: some View {
+        if let chip = content.chip { DeltaChipView(chip: chip) }
+    }
+
+    private var comparison: some View {
+        Text(content.comparisonPhrase)
+            .noctisFont(15, relativeTo: .subheadline)
+            .foregroundStyle(.noctisInk2)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+    }
+
     private var ring: some View {
         NoctisRingLayout(maxDiameter: Self.ringDiameter, narrowDiameter: Self.narrowRingDiameter, narrowBelowWidth: Self.narrowBelowWidth) {
             NoctisRecoveryRing(
@@ -135,7 +145,8 @@ struct RecoveryHeroView: View {
                     .contentTransition(.numericText(value: Double(shownScore)))
                     .foregroundStyle(NoctisAppColor.ink)
                 Text("Recovery")
-                    .noctisFont(15, relativeTo: .subheadline)
+                    // Capped at 1.3x: the ring has one diameter, and at AX5 the word grew into the gap in the arc where the 'usual' tick sits.
+                    .noctisFont(15, relativeTo: .subheadline, maxScale: 1.3)
                     .foregroundStyle(.noctisInk2)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
@@ -255,15 +266,15 @@ struct RecoveryFactorCard: View {
                     HStack(alignment: .top, spacing: NoctisSpacing.sm) {
                         NoctisIconTile(systemImage: row.kind.symbol, fill: row.kind.tint, foreground: NoctisAppColor.onFill, size: 40)
                         VStack(alignment: .leading, spacing: NoctisSpacing.xxs) {
-                            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                                Text(row.name)
-                                    .noctisFont(17, .semibold, relativeTo: .body)
-                                    .foregroundStyle(NoctisAppColor.ink)
-                                NoctisMetric(row.value, size: 17, relativeTo: .body)
-                                if let suffix = row.valueSuffix {
-                                    Text(suffix)
+                            // One line when it fits; the name over its value when it does not (Bold Text on a 17 Pro: "Consistenc / y 30m off"
+                            // broke the word in the name to make room for the value).
+                            ViewThatFits(in: .horizontal) {
+                                HStack(alignment: .firstTextBaseline, spacing: 6) { nameAndValue }
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(row.name)
                                         .noctisFont(17, .semibold, relativeTo: .body)
                                         .foregroundStyle(NoctisAppColor.ink)
+                                    HStack(alignment: .firstTextBaseline, spacing: 6) { valueAndSuffix }
                                 }
                             }
                             Text(row.baseline)
@@ -286,7 +297,7 @@ struct RecoveryFactorCard: View {
                         }
                         // A lock where the chevron would be, while the detail is Premium: the tap opens what Premium includes (R58).
                         if gate.isUnlocked(.recoveryFactorDetail) {
-                            Image(systemName: "chevron.right")
+                            Image(systemName: "chevron.forward")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(.noctisInk3)
                                 .padding(.top, 6)
@@ -308,6 +319,24 @@ struct RecoveryFactorCard: View {
         .accessibilityHint(gate.isUnlocked(.recoveryFactorDetail) ? "Opens the details." : "Premium. Opens what Premium includes.")
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("recovery.factor.\(row.kind.rawValue)")
+    }
+
+    @ViewBuilder
+    private var nameAndValue: some View {
+        Text(row.name)
+            .noctisFont(17, .semibold, relativeTo: .body)
+            .foregroundStyle(NoctisAppColor.ink)
+        valueAndSuffix
+    }
+
+    @ViewBuilder
+    private var valueAndSuffix: some View {
+        NoctisMetric(row.value, size: 17, relativeTo: .body)
+        if let suffix = row.valueSuffix {
+            Text(suffix)
+                .noctisFont(17, .semibold, relativeTo: .body)
+                .foregroundStyle(NoctisAppColor.ink)
+        }
     }
 }
 
@@ -346,6 +375,9 @@ struct RecoveryConfidenceCard: View {
                                 Text(item.name)
                                     .noctisFont(15, .medium, relativeTo: .subheadline)
                                     .foregroundStyle(item.isUsed ? NoctisAppColor.ink : NoctisAppColor.ink2)
+                                    // One line, whole: "Consistenc / y" at AX5 on an SE; it scales down to its word before it breaks it.
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
                                 if let reason = item.reason {
                                     Text(reason)
                                         .noctisFont(13, relativeTo: .footnote)
@@ -359,6 +391,7 @@ struct RecoveryConfidenceCard: View {
                 Text(content.basedOn)
                     .noctisFont(13, .medium, relativeTo: .footnote)
                     .foregroundStyle(.noctisInk3)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let step = content.nextStep {
                     Text(step)
                         .noctisFont(15, relativeTo: .subheadline)

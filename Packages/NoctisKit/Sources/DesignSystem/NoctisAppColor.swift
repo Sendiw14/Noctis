@@ -84,15 +84,15 @@ public nonisolated struct NoctisAppPalette: Sendable {
 
     public static let light = NoctisAppPalette(
         bg: "F8F5EE", surface: "FFFFFF", hairline: "E9E3D8", track: "ECE6DA",
-        ink: "2B1D14", ink2: "6B5B4E", ink3: "7A6B5E", orangeText: "C2571A",
+        ink: "2B1D14", ink2: "6B5B4E", ink3: "7A6B5E", orangeText: "B14F18",
         sage: "9DB073", orange: "E07B39", butter: "F2CE6B", lavender: "A08CEB", cocoa: "4A2F22",
         ctaFill: "4A2F22", ctaLabel: "F8F5EE", onFill: "2B1D14",
         nightPanel: "4A2F22", nightInk: "F8F5EE", nightBorder: "4A2F22",
         blockLavender: "A08CEB", blockButter: "F2CE6B", blockInk: "2B1D14",
-        ringTrack: "ECE6DA", weekHighlight: "4A2F22", lavenderText: "7B63D6",
+        ringTrack: "ECE6DA", weekHighlight: "4A2F22", lavenderText: "705AC3",
         dusk: "E6E0EE", eveningPaper: "F2EDEF", eveningInk3: "78695C", nightDeep: "8C7AE6", blockCocoa: "4A2F22", progressDot: "4A2F22",
-        blockSage: "A9BC84", coreTint: "EDA877", sectionSage: "6B8A3E", sectionLavender: "6B55C4", sectionButter: "8A6A1F",
-        fieldApricot: "F0B27F", fieldRose: "EBA79E", sectionApricot: "B4622A", sectionRose: "A4524A",
+        blockSage: "A9BC84", coreTint: "EDA877", sectionSage: "587133", sectionLavender: "6B55C4", sectionButter: "8A6A1F",
+        fieldApricot: "F0B27F", fieldRose: "EBA79E", sectionApricot: "9E5625", sectionRose: "A4524A",
         fieldSand: "E6D9BF", sectionSand: "7F6535", destructive: "B3261E", destructiveLabel: "FFFFFF"
     )
 

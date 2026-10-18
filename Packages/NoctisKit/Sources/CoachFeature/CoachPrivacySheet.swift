@@ -7,6 +7,9 @@ import SwiftUI
 /// delete it, and that Coach isn't medical advice.
 struct CoachPrivacySheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private static let title = "How Coach uses your data"
 
     /// The kinds of facts (never their values) a question can see: from the data inventory (APP_RULES.md R41).
     static var sees: [String] { PrivacyStatements.coachSees(.shared) }
@@ -24,6 +27,15 @@ struct CoachPrivacySheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: NoctisSpacing.lg) {
+                    // An inline navigation title is one line and was cut at accessibility sizes ("How Coach uses your d…" on an SE at AX3):
+                    // there the title is the page's own heading, which wraps.
+                    if dynamicTypeSize.isAccessibilitySize {
+                        Text(Self.title)
+                            .noctisFont(28, .bold, relativeTo: .title)
+                            .foregroundStyle(NoctisAppColor.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
+                    }
                     section("WHAT A QUESTION CAN SEE") {
                         VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                             ForEach(Self.sees, id: \.self) { line in
@@ -47,7 +59,7 @@ struct CoachPrivacySheet: View {
             }
             .scrollClipDisabled()
             .background { PaperBackground(adaptive: true).ignoresSafeArea() }
-            .navigationTitle("How Coach uses your data")
+            .navigationTitle(dynamicTypeSize.isAccessibilitySize ? "" : Self.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

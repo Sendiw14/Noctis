@@ -27,11 +27,15 @@ struct CoachInputBar: View {
                     .transition(.opacity)
             }
             HStack(alignment: .bottom, spacing: NoctisSpacing.sm) {
+                // The placeholder in the quiet ink, not the system's placeholder grey (measured 1.7:1 on the white field in Light and 2.5:1 in Dark;
+                // the quiet ink is 4.5:1 or better on the surface in both, NoctisAppContrastTests).
                 TextField(
-                    placeholder,
                     text: Binding(get: { viewModel.draft }, set: { viewModel.setDraft($0) }),
+                    prompt: Text(placeholder).foregroundStyle(.noctisInk3),
                     axis: .vertical
-                )
+                ) {
+                    Text(placeholder)
+                }
                 .lineLimit(1...4)
                 .noctisFont(17, relativeTo: .body)
                 .foregroundStyle(NoctisAppColor.ink)
@@ -39,9 +43,13 @@ struct CoachInputBar: View {
                 .submitLabel(.send)
                 .focused($focused)
                 .onSubmit { if viewModel.canSend { send() } }
+                // The field is the whole bar, not only its text: 48 pt to tap, and a tap anywhere in it types (QA_LEDGER.md: the field's frame
+                // was the 21 pt of its text, inside the padding).
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .padding(.horizontal, NoctisSpacing.md)
-                .padding(.vertical, NoctisSpacing.sm)
-                .frame(minHeight: 48)
+                .padding(.vertical, 2)
+                .contentShape(Rectangle())
+                .onTapGesture { focused = true }
                 .background(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(NoctisAppColor.surface)

@@ -61,6 +61,11 @@ struct InsightChipRow: View {
             }
             .scrollIndicators(.hidden)
             .scrollClipDisabled()
+            // Opened on a filter (a deep link, a return to the tab): the selected chip is in view, not "Cons" at the edge.
+            .onAppear {
+                guard let selected else { return }
+                proxy.scrollTo(selected.rawValue, anchor: .center)
+            }
             .onChange(of: selected) { _, category in
                 withAnimation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion)) {
                     proxy.scrollTo(category?.rawValue ?? "all", anchor: .center)
@@ -205,7 +210,7 @@ struct InsightComparisonView: View {
     private var joinView: some View {
         switch join {
         case .arrow:
-            Image(systemName: "arrow.right")
+            Image(systemName: "arrow.forward")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(NoctisAppColor.butter)
                 .accessibilityHidden(true)
@@ -272,7 +277,7 @@ struct InsightFeaturedCard: View {
                     Text("Read more")
                         .noctisFont(15, .semibold, relativeTo: .subheadline)
                         .foregroundStyle(NoctisPaper.bg)
-                    Image(systemName: "chevron.right")
+                    Image(systemName: "chevron.forward")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(NoctisAppColor.butter)
                 }
@@ -339,6 +344,7 @@ struct InsightRowView: View {
     let zoom: Namespace.ID
     let viewModel: InsightsViewModel
     let open: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: open) {
@@ -354,11 +360,13 @@ struct InsightRowView: View {
                         .noctisFont(15, relativeTo: .subheadline)
                         .foregroundStyle(.noctisInk2)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(3)
+                        // Three lines at the sizes it was drawn for; the whole sentence at accessibility sizes, where the evidence is the point
+                        // ("Deep sleep was 4% of last night, 7 points belo…" at AX3 cut the figure that says how much).
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.noctisInk3)
                     .accessibilityHidden(true)
@@ -504,16 +512,11 @@ struct InsightMilestoneRowView: View {
                     .noctisFont(15, relativeTo: .subheadline)
                     .foregroundStyle(.noctisInk2)
                     .fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: 5) {
-                    ForEach(0..<row.dots, id: \.self) { index in
-                        Circle()
-                            .fill(index < row.filled ? NoctisAppColor.progressDot : NoctisAppColor.track)
-                            .frame(width: 8, height: 8)
-                    }
-                    Text("\(row.milestone) nights")
-                        .noctisFont(12, .medium, relativeTo: .caption)
-                        .foregroundStyle(.noctisInk3)
-                        .padding(.leading, 4)
+                // The dots and their count on one line; the count under the dots when they do not fit (at AX3 "14 nights" was cut to "14 nig…"
+                // beside ten dots, and at AX5 it broke into "14 / nights").
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 5) { dots; count.padding(.leading, 4) }
+                    VStack(alignment: .leading, spacing: 4) { HStack(spacing: 5) { dots }; count }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -522,6 +525,23 @@ struct InsightMilestoneRowView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(row.accessibilityLabel)
         .accessibilityIdentifier("insights.milestone.\(row.milestone)")
+    }
+
+    @ViewBuilder
+    private var dots: some View {
+        ForEach(0..<row.dots, id: \.self) { index in
+            Circle()
+                .fill(index < row.filled ? NoctisAppColor.progressDot : NoctisAppColor.track)
+                .frame(width: 8, height: 8)
+        }
+    }
+
+    private var count: some View {
+        Text("\(row.milestone) nights")
+            .noctisFont(12, .medium, relativeTo: .caption)
+            .foregroundStyle(.noctisInk3)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
     }
 }
 
@@ -535,6 +555,8 @@ struct InsightsNoteCard: View {
                 Text(note.title)
                     .noctisFont(17, .semibold, relativeTo: .body)
                     .foregroundStyle(NoctisAppColor.ink)
+                    // Its whole height: at AX3 the title alone was cut ("No consistency i…") while the line under it, which had this, wrapped.
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(note.detail)
                     .noctisFont(15, relativeTo: .subheadline)
                     .foregroundStyle(.noctisInk2)
@@ -616,8 +638,10 @@ struct InsightsSkeletonView: View {
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
             HStack(spacing: NoctisSpacing.xs) {
+                // Up to 84pt each, less where the row is narrower: four fixed 84pt capsules are 360pt, wider than an SE's 335pt of content, and
+                // they made the whole skeleton 360pt wide (7pt side margins instead of 20).
                 ForEach(0..<4, id: \.self) { _ in
-                    Capsule().fill(NoctisAppColor.track).frame(width: 84, height: 44)
+                    Capsule().fill(NoctisAppColor.track).frame(height: 44).frame(maxWidth: 84)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

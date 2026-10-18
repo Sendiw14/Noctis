@@ -264,3 +264,6 @@ targets:
         # found"). LM_FILTER_WARNINGS does not quiet it; LM_SKIP_METADATA_EXTRACTION (in Xcode's build service, not in its spec files) does.
         # The app's own extraction is untouched.
         LM_SKIP_METADATA_EXTRACTION: YES
+        # StoreKitTest's own header (SKTestTransaction.h) uses SKPaymentTransactionState, which StoreKit deprecated in iOS 18: a warning in the SDK's
+        # header, raised in every file that imports the module (the QA matrix starts a test session for the paywall's plans). Suppressed here only.
+        OTHER_SWIFT_FLAGS: "$(inherited) -Xcc -Wno-deprecated-declarations"

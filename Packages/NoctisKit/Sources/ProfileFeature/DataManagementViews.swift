@@ -118,6 +118,9 @@ struct DataManagementView: View {
             .buttonStyle(.plain)
             .noctisFont(15, .semibold, relativeTo: .subheadline)
             .foregroundStyle(NoctisAppColor.destructive)
+            // One line, its own width: in a stacked row at AX3 and AX5 "Delete" was given a 40pt column and broke into "De / let / e".
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())
             .accessibilityLabel("\(group.verb.rawValue) \(group.title)")
@@ -147,6 +150,11 @@ struct DeleteAllSheet: View {
     @Environment(\.restartApp) private var restart
     @State private var started = false
     @State private var showsManage = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// Pinned under the list, except at accessibility sizes: there the warning and the red button are over half an SE's height and left the list
+    /// a sliver ("Everything NOCTIS stores" and nothing else at AX5). They are the end of the page instead.
+    private var pinsBottom: Bool { !dynamicTypeSize.isAccessibilitySize }
 
     private var manager: DataManager { viewModel.data }
     private var finished: Bool { manager.deleteAllReport != nil }
@@ -156,6 +164,7 @@ struct DeleteAllSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: NoctisSpacing.md) {
                     if started { progress } else { confirmation }
+                    if !pinsBottom { bottom }
                 }
                 .padding(NoctisSpacing.md)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -170,7 +179,7 @@ struct DeleteAllSheet: View {
                     }
                 }
             }
-            .safeAreaInset(edge: .bottom) { bottom }
+            .safeAreaInset(edge: .bottom) { if pinsBottom { bottom } }
         }
         .interactiveDismissDisabled(started)
         .presentationDetents([.large])
@@ -264,7 +273,7 @@ struct DeleteAllSheet: View {
     private var bottom: some View {
         VStack(spacing: NoctisSpacing.xs) {
             if finished {
-                NoctisCTA(DataManagementCopy.done, icon: "arrow.right", adaptive: true) {
+                NoctisCTA(DataManagementCopy.done, icon: "arrow.forward", adaptive: true) {
                     dismiss()
                     restart()
                 }
@@ -284,6 +293,11 @@ struct DeleteAllSheet: View {
                     Text(DataManagementCopy.deleteAllConfirm)
                         .noctisFont(17, .semibold, relativeTo: .body)
                         .foregroundStyle(NoctisAppColor.destructiveLabel)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        // The label's own room: a two-line "Delete everything" at AX5 touched the capsule's top and bottom edges in a bare minHeight.
+                        .padding(.vertical, NoctisSpacing.sm)
+                        .padding(.horizontal, NoctisSpacing.md)
                         .frame(maxWidth: .infinity, minHeight: 56)
                         .background(NoctisAppColor.destructive, in: Capsule())
                         .contentShape(Capsule())

@@ -42,6 +42,22 @@ private struct BreathingSetup: View {
     let viewModel: BreathingViewModel
 
     var body: some View {
+        // The options scroll and "Begin" stays under them: at accessibility sizes three patterns, three lengths and the line did not fit above it.
+        VStack(alignment: .leading, spacing: NoctisSpacing.md) {
+            ScrollView {
+                options
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+            NightPrimaryButton(title: BreathingCopy.begin, symbol: "wind") { viewModel.begin() }
+                .accessibilityIdentifier("breathing.begin")
+                .padding(.bottom, NoctisSpacing.md)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var options: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.lg) {
             Text(BreathingCopy.line)
                 .noctisFont(17, relativeTo: .body)
@@ -49,29 +65,23 @@ private struct BreathingSetup: View {
                 .accessibilityIdentifier("breathing.line")
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                 NightCaption(BreathingCopy.patternCaption)
-                HStack(spacing: NoctisSpacing.xs) {
-                    ForEach(BreathingPattern.all) { pattern in
-                        BreathingPatternChip(pattern: pattern, isSelected: viewModel.patternID == pattern.id) {
-                            viewModel.choose(pattern: pattern.id)
-                            NoctisHaptics.selection()
-                        }
-                    }
+                // Side by side when they fit; one under the other when large text cannot have three in a row ("4-4-…", "2…" at AX5).
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: NoctisSpacing.xs) { patternChips }
+                    VStack(spacing: NoctisSpacing.xs) { patternChips }
                 }
                 Text(BreathingCopy.summary(viewModel.pattern))
                     .noctisFont(15, relativeTo: .subheadline)
                     .foregroundStyle(NoctisNight.ivory2)
+                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityLabel(BreathingCopy.spokenSummary(viewModel.pattern))
                     .accessibilityIdentifier("breathing.summary")
             }
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                 NightCaption(BreathingCopy.durationCaption)
-                HStack(spacing: NoctisSpacing.xs) {
-                    ForEach(BreathingSchedule.durations, id: \.self) { minutes in
-                        NightChip(title: "\(minutes) min", isSelected: viewModel.minutes == minutes, identifier: "breathing.minutes.\(minutes)") {
-                            viewModel.choose(minutes: minutes)
-                            NoctisHaptics.selection()
-                        }
-                    }
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: NoctisSpacing.xs) { durationChips }
+                    VStack(alignment: .leading, spacing: NoctisSpacing.xs) { durationChips }
                 }
             }
             if viewModel.hapticsAvailable {
@@ -89,12 +99,27 @@ private struct BreathingSetup: View {
                 .frame(minHeight: 44)
                 .accessibilityIdentifier("breathing.haptics")
             }
-            Spacer(minLength: NoctisSpacing.lg)
-            NightPrimaryButton(title: BreathingCopy.begin, symbol: "wind") { viewModel.begin() }
-                .accessibilityIdentifier("breathing.begin")
-                .padding(.bottom, NoctisSpacing.md)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var patternChips: some View {
+        ForEach(BreathingPattern.all) { pattern in
+            BreathingPatternChip(pattern: pattern, isSelected: viewModel.patternID == pattern.id) {
+                viewModel.choose(pattern: pattern.id)
+                NoctisHaptics.selection()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var durationChips: some View {
+        ForEach(BreathingSchedule.durations, id: \.self) { minutes in
+            NightChip(title: "\(minutes) min", isSelected: viewModel.minutes == minutes, identifier: "breathing.minutes.\(minutes)") {
+                viewModel.choose(minutes: minutes)
+                NoctisHaptics.selection()
+            }
+        }
     }
 }
 
@@ -109,9 +134,15 @@ private struct BreathingPatternChip: View {
             VStack(spacing: 2) {
                 Text(pattern.title)
                     .noctisFont(15, .semibold, relativeTo: .subheadline)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                // One line: "4-4-4-4" broke into "4-4-4- / 4" in a third of an SE at AX3. With it unbreakable, three chips in a row no longer
+                // fit there, so the row falls back to the column (ViewThatFits) instead of wrapping a number.
                 Text(pattern.rhythm)
                     .noctisFont(12, .medium, relativeTo: .caption)
                     .foregroundStyle(isSelected ? NoctisNight.night.opacity(0.7) : NoctisNight.ivory2)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .foregroundStyle(isSelected ? NoctisNight.night : NoctisNight.ivory)
             .frame(maxWidth: .infinity, minHeight: 56)

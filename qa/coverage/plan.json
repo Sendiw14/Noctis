@@ -30,7 +30,7 @@
     "QA17Pro"
    ],
    "sets": "Accessibility Extra Large (AX3), light",
-   "screens": "tier1"
+   "screens": "all"
   },
   {
    "name": "B-AX5-light",
@@ -275,11 +275,7 @@
     "QA17Pro"
    ],
    "sets": "Double-Length pseudolanguage (-NSDoubleLocalizedStrings YES)",
-   "screens": "tier1",
-   "per_device": {
-    "QASE": "all",
-    "QA17Pro": "tier1"
-   }
+   "screens": "all"
   },
   {
    "name": "D-Accented",
@@ -289,7 +285,7 @@
     "QA17Pro"
    ],
    "sets": "Accented pseudolanguage (-NSAccentuateLocalizedStrings YES)",
-   "screens": "tier1"
+   "screens": "all"
   },
   {
    "name": "D-RTL",
@@ -309,7 +305,7 @@
     "QA17Pro"
    ],
    "sets": "Bounded String pseudolanguage (-NSSurroundLocalizedStrings YES)",
-   "screens": "tier1"
+   "screens": "all"
   },
   {
    "name": "E-en_LK",
@@ -364,7 +360,64 @@
    ],
    "sets": "English, region Thailand (Buddhist calendar)",
    "screens": "tier1"
+  },
+  {
+   "name": "D-PseudoSi",
+   "tier": "D",
+   "devices": [
+    "QASE",
+    "QA17Pro"
+   ],
+   "sets": "-pseudoScript si: units and counts as Sinhala words",
+   "screens": "tier1"
+  },
+  {
+   "name": "D-PseudoTa",
+   "tier": "D",
+   "devices": [
+    "QASE",
+    "QA17Pro"
+   ],
+   "sets": "-pseudoScript ta: units and counts as Tamil words",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-lang-si",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "the device language Sinhala (si_LK): no translation yet, so English",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-lang-ta",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "the device language Tamil (ta_LK): no translation yet, so English",
+   "screens": "tier1"
+  },
+  {
+   "name": "E-lang-ar",
+   "tier": "E",
+   "devices": [
+    "QA17Pro"
+   ],
+   "sets": "the device language Arabic (ar_SA): no translation yet, so English, left to right",
+   "screens": "tier1"
+  },
+  {
+   "name": "W-default",
+   "tier": "W",
+   "devices": [
+    "Watch12-46mm"
+   ],
+   "sets": "Apple Watch Series 12 (46mm), watchOS 27.0, light is the only appearance; default text size; mock snapshots by launch flag (not the catalog's iPhone configurations)",
+   "screens": "all",
+   "platform": "watch"
   }
  ],
- "scope": "B: AX3 for tier-one screens, AX5 for every screen; D: Double-Length for every screen on SE and tier-one on Pro, Right-to-Left for every screen, Accented and Bounded String for tier-one screens; C and E tier-one (the tabs also dark in C). What is outside this scope is UNVERIFIED, not run."
+ "scope": "Every screen in A (3 devices, light and dark), B (SE and Pro: AX3 and AX5 light; AX5 dark for the six tabs on Pro) and D (SE and Pro: Double-Length, Accented, Right-to-Left, Bounded String); the tier-one screens (23: the tabs, Tonight, Wind-down, onboarding, the paywall, Settings) in C (Pro: eight settings, light; the six tabs also dark) and E (Pro: six regions). Anything outside that is UNVERIFIED, not run."
 }

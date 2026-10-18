@@ -39,9 +39,10 @@ struct SleepNightPicker: View {
     var locked: Set<SleepNightKey> = []
     let choose: (SleepNightKey) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    static let itemWidth: CGFloat = 44
-    static let itemHeight: CGFloat = 60
+    /// 44 x 60 at the default size, growing with the text up to 1.6x: at AX5 the day numbers ("11") and the initial were wider than a 44pt cell
+    /// and the strip read "5 6 7 8 9 ... ..." with ellipses.
+    @NoctisScaledLength(relativeTo: .body) private var itemWidth: CGFloat = 44
+    @NoctisScaledLength(relativeTo: .body) private var itemHeight: CGFloat = 60
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -62,7 +63,7 @@ struct SleepNightPicker: View {
                 }
             }
         }
-        .frame(height: Self.itemHeight)
+        .frame(height: itemHeight)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Nights")
         .accessibilityIdentifier("sleep.nightPicker")
@@ -74,14 +75,17 @@ struct SleepNightPicker: View {
             VStack(spacing: 2) {
                 Text(item.initial)
                     .noctisFont(13, .medium, relativeTo: .footnote)
+                    .lineLimit(1)
                 Text(item.day)
                     .noctisFont(17, .semibold, relativeTo: .body)
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 if locked.contains(item.night) { LockGlyph(size: 12) }
             }
             .foregroundStyle(isSelected ? NoctisAppColor.nightInk : NoctisAppColor.blockInk)
             .opacity(item.hasData || isSelected ? 1 : 0.55)
-            .frame(width: Self.itemWidth, height: Self.itemHeight)
+            .frame(width: itemWidth, height: itemHeight)
             .background {
                 if isSelected {
                     Capsule(style: .continuous).fill(NoctisAppColor.blockCocoa)
@@ -99,15 +103,21 @@ struct SleepNightPicker: View {
 /// A night with nothing recorded.
 struct SleepNoNightView: View {
     let content: SleepNoNightContent
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        NoctisAppCard {
-            HStack(spacing: NoctisSpacing.md) {
+        // The ring above the words at accessibility sizes: beside them it left a 190pt column and "recorded" broke into "recorde / d".
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.md))
+            : AnyLayout(HStackLayout(spacing: NoctisSpacing.md))
+        return NoctisAppCard {
+            layout {
                 DormantRingView(diameter: 72, glyphSize: 18, onField: true)
                     .frame(width: 72)
                 DormantTextView(title: content.title, detail: content.detail, alignment: .leading)
-                Spacer(minLength: 0)
+                if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel([content.title, content.detail].compactMap { $0 }.joined(separator: " "))
@@ -474,6 +484,8 @@ struct SleepQualityCard: View {
                     Text("How this is calculated")
                         .noctisFont(17, .semibold, relativeTo: .body)
                         .foregroundStyle(NoctisAppColor.ink)
+                        // 44 pt of row to tap (QA_LEDGER.md: the label was 28 pt).
+                        .frame(minHeight: 44, alignment: .leading)
                 }
                 .tint(NoctisAppColor.ink2)
             }
@@ -528,6 +540,8 @@ struct SleepQualityScoreCard: View {
                     Text("How this is calculated")
                         .noctisFont(17, .semibold, relativeTo: .body)
                         .foregroundStyle(NoctisAppColor.ink)
+                        // 44 pt of row to tap (QA_LEDGER.md: the label was 28 pt).
+                        .frame(minHeight: 44, alignment: .leading)
                 }
                 .tint(NoctisAppColor.ink2)
             }
@@ -594,16 +608,19 @@ struct SleepFactorRow: View {
 /// Two columns of tiles; a tile with no value isn't made.
 struct SleepDetailsGrid: View {
     let tiles: [SleepDetailTile]
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// Two tiles across; one at accessibility sizes, where half a screen broke "Awakenings" into "Awaken / ings" and "Awakeni / ngs".
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: NoctisSpacing.md, alignment: .top), count: dynamicTypeSize.isAccessibilitySize ? 1 : 2)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
             NoctisCaption("DETAILS", style: .noctisInk3)
                 .padding(.leading, NoctisSpacing.xxs)
             LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: NoctisSpacing.md, alignment: .top),
-                    GridItem(.flexible(), spacing: NoctisSpacing.md, alignment: .top),
-                ],
+                columns: columns,
                 spacing: NoctisSpacing.md
             ) {
                 ForEach(tiles) { tile in

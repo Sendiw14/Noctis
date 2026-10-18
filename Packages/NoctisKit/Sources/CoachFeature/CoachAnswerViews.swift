@@ -295,7 +295,7 @@ struct CoachDestinationRow: View {
 
     private var buttons: some View {
         ForEach(Array(destinations.enumerated()), id: \.offset) { _, route in
-            CoachPillButton(title: CoachDestinationText.title(route, intent: intent), identifier: "coach.open.\(route.name)", symbol: "arrow.right") {
+            CoachPillButton(title: CoachDestinationText.title(route, intent: intent), identifier: "coach.open.\(route.name)", symbol: "arrow.forward") {
                 open(route)
             }
         }
@@ -338,13 +338,20 @@ struct CoachFeedbackRow: View {
     let choose: (CoachFeedback) -> Void
 
     var body: some View {
-        HStack(spacing: NoctisSpacing.sm) {
-            button(.helpful, title: "Helpful", symbol: selected == .helpful ? "hand.thumbsup.fill" : "hand.thumbsup")
-            button(.notHelpful, title: "Not helpful", symbol: selected == .notHelpful ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+        // Side by side when both fit; stacked when large text cannot have them in one row (at AX5 each broke inside its word: "Helpf / ul").
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: NoctisSpacing.sm) { buttons }
+            VStack(alignment: .leading, spacing: NoctisSpacing.sm) { buttons }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("coach.feedback")
+    }
+
+    @ViewBuilder
+    private var buttons: some View {
+        button(.helpful, title: "Helpful", symbol: selected == .helpful ? "hand.thumbsup.fill" : "hand.thumbsup")
+        button(.notHelpful, title: "Not helpful", symbol: selected == .notHelpful ? "hand.thumbsdown.fill" : "hand.thumbsdown")
     }
 
     private func button(_ feedback: CoachFeedback, title: String, symbol: String) -> some View {
@@ -353,6 +360,8 @@ struct CoachFeedbackRow: View {
             HStack(spacing: NoctisSpacing.xs) {
                 Image(systemName: symbol).noctisIcon(14, .semibold, relativeTo: .subheadline)
                 Text(title).noctisFont(15, .semibold, relativeTo: .subheadline)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .foregroundStyle(isSelected ? NoctisAppColor.blockInk : NoctisAppColor.ink)
             .padding(.horizontal, NoctisSpacing.md)
@@ -384,7 +393,7 @@ struct CoachPlainCard: View {
                     .foregroundStyle(NoctisAppColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 if let link = answer.helpLink {
-                    CoachPillButton(title: link.title, identifier: "coach.findHelp", symbol: "arrow.up.right") { openURL(link.url) }
+                    CoachPillButton(title: link.title, identifier: "coach.findHelp", symbol: "arrow.up.forward") { openURL(link.url) }
                         .accessibilityHint("Opens findahelpline.com in your browser.")
                 }
                 if !answer.suggestions.isEmpty {
@@ -415,7 +424,7 @@ struct CoachSuggestionButton: View {
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .noctisIcon(12, .semibold, relativeTo: .footnote)
                     .foregroundStyle(.noctisInk3)
                     .accessibilityHidden(true)
@@ -433,9 +442,37 @@ struct CoachSuggestionButton: View {
 /// The questions to ask next: chips above the input, at most three.
 struct CoachFollowUpChips: View {
     let questions: [CoachQuestion]
+    /// In the page (accessibility sizes): one under the other, wrapping, instead of a row that scrolls sideways under the answer.
+    var stacked = false
     let ask: (CoachQuestion) -> Void
 
     var body: some View {
+        if stacked {
+            VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+                ForEach(questions, id: \.self) { question in
+                    Button { ask(question) } label: {
+                        Text(CoachQuestionText.text(question))
+                            .noctisFont(15, .semibold, relativeTo: .subheadline)
+                            .foregroundStyle(NoctisAppColor.ink)
+                            .multilineTextAlignment(.leading)
+                            .padding(.horizontal, NoctisSpacing.md)
+                            .padding(.vertical, NoctisSpacing.xs)
+                            .frame(minHeight: 44, alignment: .leading)
+                            .background(NoctisAppColor.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
+                            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("coach.followup.\(question.token)")
+                }
+            }
+            .accessibilityIdentifier("coach.followups")
+        } else {
+            scrolling
+        }
+    }
+
+    private var scrolling: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: NoctisSpacing.xs) {
                 ForEach(questions, id: \.self) { question in

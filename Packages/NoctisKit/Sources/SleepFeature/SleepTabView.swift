@@ -283,8 +283,10 @@ struct SleepFieldSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.md) {
             HStack(spacing: NoctisSpacing.xs) {
+                // Up to 44pt each, less where the row is narrower: seven fixed 44pt capsules are 356pt, wider than an SE's 335pt of content,
+                // and they widened the whole skeleton past the 20pt side margins.
                 ForEach(0..<7, id: \.self) { _ in
-                    Capsule().fill(NoctisAppColor.blockInk.opacity(0.10)).frame(width: 44, height: 56)
+                    Capsule().fill(NoctisAppColor.blockInk.opacity(0.10)).frame(height: 56).frame(maxWidth: 44)
                 }
             }
             HStack(spacing: NoctisSpacing.md) {

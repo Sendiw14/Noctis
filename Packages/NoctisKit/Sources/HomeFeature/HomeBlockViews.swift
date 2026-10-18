@@ -320,7 +320,7 @@ struct TonightBlockView: View {
                 NoctisCaption("TONIGHT", style: NoctisAppColor.blockInk)
                 Spacer(minLength: 0)
                 // The block is a button: it opens Tonight.
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(NoctisAppColor.blockInk)
                     .accessibilityHidden(true)
@@ -493,7 +493,7 @@ struct InsightEvidenceChart: View {
                     if index > 0 {
                         Group {
                             if join == .arrow {
-                                Image(systemName: "arrow.right").font(.system(size: 14, weight: .semibold))
+                                Image(systemName: "arrow.forward").font(.system(size: 14, weight: .semibold))
                             } else {
                                 Text("vs").noctisFont(13, .semibold, relativeTo: .footnote)
                             }
@@ -622,9 +622,7 @@ struct WeekCardView: View {
         #endif
         NoctisAppCard {
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
-                HStack(alignment: .firstTextBaseline) {
-                    NoctisCaption("THIS WEEK", style: .noctisInk3)
-                    Spacer(minLength: NoctisSpacing.xs)
+                NoctisCaptionRow("THIS WEEK") {
                     HStack(spacing: 6) {
                         DashedLine()
                             .stroke(NoctisAppColor.orange, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
@@ -636,14 +634,13 @@ struct WeekCardView: View {
                 }
                 chart
                 if let average = content.average {
-                    HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Text("Avg")
-                            .noctisFont(15, .semibold, relativeTo: .subheadline)
-                            .foregroundStyle(NoctisAppColor.ink)
-                        NoctisMetric(average, size: 17, relativeTo: .body)
-                            .contentTransition(.numericText())
-                            .animation(reduceMotion ? nil : NoctisMotion.settle, value: average)
+                    // The label beside the figure; when a longer word for a unit (or a larger text size) leaves the figure no room, the figure
+                    // goes under the label instead of being cut to its first digit.
+                    ViewThatFits(in: .horizontal) {
+                        averageLine(average, stacked: false)
+                        averageLine(average, stacked: true)
                     }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
                 if content.bars.contains(where: { $0.stages != nil }) {
                     stageLegend
@@ -665,6 +662,18 @@ struct WeekCardView: View {
             case .decrement: selected = max((selected ?? last + 1) - 1, 0)
             @unknown default: break
             }
+        }
+    }
+
+    private func averageLine(_ average: NoctisMetricValue, stacked: Bool) -> some View {
+        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 5))
+        return layout {
+            Text("Avg")
+                .noctisFont(15, .semibold, relativeTo: .subheadline)
+                .foregroundStyle(NoctisAppColor.ink)
+            NoctisMetric(average, size: 17, relativeTo: .body)
+                .contentTransition(.numericText())
+                .animation(reduceMotion ? nil : NoctisMotion.settle, value: average)
         }
     }
 

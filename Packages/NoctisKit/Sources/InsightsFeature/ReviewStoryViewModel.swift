@@ -49,7 +49,7 @@ extension ReviewPageTint {
         switch self {
         case .cocoa: NoctisAppColor.nightInk.opacity(raised ? 0.9 : 0.7)
         case .paper: raised ? NoctisAppColor.ink : NoctisAppColor.ink2
-        default: NoctisAppColor.blockInk.opacity(raised ? 1 : (section?.quietOpacity(target: NoctisFieldInkStyle.summaryOpacity, dark: dark) ?? 0.8))
+        default: NoctisAppColor.blockInk.opacity(raised ? 1 : (section?.quietOpacity(target: NoctisFieldInkStyle.summaryOpacity, dark: dark) ?? (dark ? 1 : 0.9)))
         }
     }
 

@@ -81,9 +81,15 @@ public struct SoundsScreen: View {
 private struct SoundGrid: View {
     let viewModel: SoundsViewModel
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// Two tiles across; one at accessibility sizes, where a name in half a screen broke inside its word ("Brow / n", "Ocea / n", "Fire…").
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: NoctisSpacing.md), count: dynamicTypeSize.isAccessibilitySize ? 1 : 2)
+    }
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: NoctisSpacing.md), GridItem(.flexible(), spacing: NoctisSpacing.md)], spacing: NoctisSpacing.md) {
+        LazyVGrid(columns: columns, spacing: NoctisSpacing.md) {
             ForEach(Array(viewModel.tiles.enumerated()), id: \.element.id) { index, tile in
                 SoundTileView(tile: tile, level: viewModel.level) {
                     // A Premium sound on the free plan opens the paywall (R58); the others play.
@@ -122,6 +128,7 @@ struct SoundTileView: View {
                         .noctisFont(17, .semibold, relativeTo: .body)
                         .foregroundStyle(NoctisAppColor.ink)
                         .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(tile.stateText ?? " ")
                         .noctisFont(13, relativeTo: .footnote)
                         .foregroundStyle(.noctisInk3)
@@ -208,28 +215,45 @@ struct NowPlayingBar: View {
     let viewModel: SoundsViewModel
     let showsFade: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         NoctisAppCard {
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
-                HStack(spacing: NoctisSpacing.sm) {
-                    SoundTile(symbol: content.symbol, tone: content.tone, size: 40)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(content.title)
-                            .noctisFont(17, .semibold, relativeTo: .body)
-                            .foregroundStyle(NoctisAppColor.ink)
-                        Text(content.stateText)
-                            .noctisFont(13, relativeTo: .footnote)
-                            .foregroundStyle(.noctisInk3)
-                            .accessibilityIdentifier("sounds.state")
+                // The tile and the name above, the timer and play under them, at accessibility sizes: in one row the name took a 40pt column
+                // ("Oce / an", "Paus / ed by / iPho / ne" on an SE at AX5) and the timer's pill ran over the play button.
+                let layout = dynamicTypeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.sm))
+                    : AnyLayout(HStackLayout(spacing: NoctisSpacing.sm))
+                layout {
+                    HStack(spacing: NoctisSpacing.sm) {
+                        SoundTile(symbol: content.symbol, tone: content.tone, size: 40)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(content.title)
+                                .noctisFont(17, .semibold, relativeTo: .body)
+                                .foregroundStyle(NoctisAppColor.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(content.stateText)
+                                .noctisFont(13, relativeTo: .footnote)
+                                .foregroundStyle(.noctisInk3)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier("sounds.state")
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityElement(children: .combine)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityElement(children: .combine)
-                    SoundTimerButton(content: content) { viewModel.presentTimer() }
-                    PlayPauseButton(content: content) { viewModel.togglePlayPause() }
+                    HStack(spacing: NoctisSpacing.sm) {
+                        if dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
+                        SoundTimerButton(content: content) { viewModel.presentTimer() }
+                        PlayPauseButton(content: content) { viewModel.togglePlayPause() }
+                    }
                 }
-                SoundWaveform(bars: viewModel.bars)
-                    .frame(height: 36)
+                // The waveform is a picture of the level and is not read; at accessibility sizes it is left out so the pinned card, already
+                // the tile, the name, the state, the timer, the play button and the volume, is less than half of an SE (it was 48% at AX5).
+                if !dynamicTypeSize.isAccessibilitySize {
+                    SoundWaveform(bars: viewModel.bars)
+                        .frame(height: 36)
+                }
                 HStack(spacing: NoctisSpacing.xs) {
                     Image(systemName: "speaker.fill")
                         .font(.system(size: 13))
@@ -297,9 +321,14 @@ private struct SoundTimerButton: View {
                 Image(systemName: "timer")
                     .font(.system(size: 15, weight: .semibold))
                     .accessibilityHidden(true)
+                // One line, whole: "29:56" broke between its digits on the iPhone SE (QA_LEDGER.md). The pill keeps its width; the
+                // text shrinks a little before it would wrap.
                 Text(content.timerText)
                     .noctisFont(15, .semibold, relativeTo: .subheadline)
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .fixedSize(horizontal: true, vertical: false)
                     .contentTransition(.numericText(countsDown: true))
                     .animation(reduceMotion ? nil : NoctisMotion.settle, value: content.timerText)
             }

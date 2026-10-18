@@ -24,6 +24,29 @@ struct NoctisAppContrastTests {
         #expect(value >= 3.0, "\(mode): orangeText on bg contrast \(value) < 3:1 (display)")
     }
 
+    /// QA part 3 (QA_LEDGER.md): the accessibility audit found small text in these inks (a toolbar's Cancel in the section's ink, the paywall's context
+    /// line, "Delete all conversations", the Sleep tab's label) at 4.1 to 4.3:1 on the paper. They are text colors as well as accents, so 4.5:1 on the
+    /// paper, the card and the sheet, in both modes.
+    @Test(arguments: modes)
+    func theAccentInksReadAsSmallTextOnThePaperTheCardAndTheSheet(_ mode: String, _ palette: NoctisAppPalette) {
+        let inks: [(String, String)] = [
+            ("orangeText", palette.orangeText), ("lavenderText", palette.lavenderText), ("sectionApricot", palette.sectionApricot),
+            ("sectionSage", palette.sectionSage), ("sectionLavender", palette.sectionLavender), ("sectionButter", palette.sectionButter),
+            ("sectionRose", palette.sectionRose), ("sectionSand", palette.sectionSand),
+        ]
+        let sheet = mode == "light" ? "FCFCF4" : palette.surface
+        for (name, ink) in inks {
+            for (onName, on) in [("bg", palette.bg), ("surface", palette.surface), ("sheet", sheet)] {
+                let value = ratio(ink, on)
+                #expect(value >= 4.5, "\(mode): \(name) on \(onName) contrast \(value) < 4.5:1")
+            }
+        }
+        for (name, ink) in [("orangeText", palette.orangeText), ("lavenderText", palette.lavenderText)] {
+            let value = ratio(ink, palette.eveningPaper)
+            #expect(value >= 4.5, "\(mode): \(name) on eveningPaper \(value) < 4.5:1")
+        }
+    }
+
     @Test(arguments: modes)
     func ctaLabelClearsBodyContrastOnCTAFill(_ mode: String, _ palette: NoctisAppPalette) {
         let value = ratio(palette.ctaLabel, palette.ctaFill)
@@ -211,7 +234,7 @@ struct NoctisAppContrastTests {
         let light = NoctisAppPalette.light, dark = NoctisAppPalette.dark
         #expect([NoctisSection.home, .sleep, .recovery, .insights, .coach].map { $0.fillHex(light) } == ["F0B27F", "A9BC84", "A08CEB", "F2CE6B", "EBA79E"])
         #expect([NoctisSection.home, .sleep, .recovery, .insights, .coach].map { $0.fillHex(dark) } == ["D48A55", "8FA366", "8E7BDC", "E0B955", "C98580"])
-        #expect([NoctisSection.home, .sleep, .recovery, .insights, .coach].map { $0.inkHex(light) } == ["B4622A", "6B8A3E", "6B55C4", "8A6A1F", "A4524A"])
+        #expect([NoctisSection.home, .sleep, .recovery, .insights, .coach].map { $0.inkHex(light) } == ["9E5625", "587133", "6B55C4", "8A6A1F", "A4524A"])
         #expect(dark.sectionApricot == "D48A55")
     }
 

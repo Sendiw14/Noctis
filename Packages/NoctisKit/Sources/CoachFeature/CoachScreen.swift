@@ -51,7 +51,7 @@ public struct CoachScreen: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             CoachInputBar(
-                viewModel: viewModel, placeholder: viewModel.isLimited ? CoachQuota.usedUpTitle : "Ask about your sleep or recovery", identifier: "coach.hub", send: send
+                viewModel: viewModel, placeholder: viewModel.isLimited ? CoachQuota.usedUpPlaceholder : "Ask about your sleep or recovery", identifier: "coach.hub", send: send
             )
         }
         .task { await viewModel.onAppear() }

@@ -135,10 +135,13 @@ private struct WindDownHeader: View {
             Text(WindDownCopy.title)
                 .noctisFont(30, .bold, relativeTo: .largeTitle)
                 .foregroundStyle(NoctisNight.ivory)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
+            // The whole line ("A few quiet mi…" at AX5 was the sentence cut at its first word and a half).
             Text(line)
                 .noctisFont(17, relativeTo: .body)
                 .foregroundStyle(NoctisNight.ivory2)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
@@ -153,18 +156,27 @@ private struct WindDownPreStart: View {
     let dismiss: () -> Void
 
     var body: some View {
+        // A page that scrolls when it is taller than the screen, and fills it (the spacers still push Begin to the bottom) when it is not:
+        // at AX5 on an SE the unscrollable column ran off both ends, the title under the status bar and Begin below the screen.
+        GeometryReader { proxy in
+            ScrollView {
+                column
+                    .frame(minHeight: proxy.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+
+    private var column: some View {
         VStack(spacing: NoctisSpacing.lg) {
             WindDownHeader(line: WindDownCopy.preStartLine)
             Spacer(minLength: NoctisSpacing.xl)
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                 NightCaption("HOW LONG")
-                HStack(spacing: NoctisSpacing.xs) {
-                    ForEach(WindDownClock.options, id: \.self) { minutes in
-                        NightChip(title: "\(minutes) min", isSelected: viewModel.plannedMinutes == minutes, identifier: "windDown.chip.\(minutes)") {
-                            viewModel.choose(minutes: minutes)
-                            NoctisHaptics.selection()
-                        }
-                    }
+                // Three side by side when they fit; one under the other when large text cannot have them in a row ("10 / min" at AX3, "1…" at AX5).
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: NoctisSpacing.xs) { lengthChips }
+                    VStack(alignment: .leading, spacing: NoctisSpacing.xs) { lengthChips }
                 }
                 NightCaption("SOUND, IF YOU LIKE")
                     .padding(.top, NoctisSpacing.xs)
@@ -197,6 +209,18 @@ private struct WindDownPreStart: View {
             .padding(.bottom, NoctisSpacing.md)
         }
         .padding(.horizontal, NoctisSpacing.lg)
+    }
+}
+
+extension WindDownPreStart {
+    @ViewBuilder
+    fileprivate var lengthChips: some View {
+        ForEach(WindDownClock.options, id: \.self) { minutes in
+            NightChip(title: "\(minutes) min", isSelected: viewModel.plannedMinutes == minutes, identifier: "windDown.chip.\(minutes)") {
+                viewModel.choose(minutes: minutes)
+                NoctisHaptics.selection()
+            }
+        }
     }
 }
 
@@ -345,7 +369,7 @@ struct WindDownActivityHost<Content: View>: View {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
                 Button { dismiss() } label: {
                     HStack(spacing: 6) {
-                        Image(systemName: "chevron.left").font(.system(size: 15, weight: .semibold))
+                        Image(systemName: "chevron.backward").font(.system(size: 15, weight: .semibold))
                         Text(backTitle).noctisFont(17, .medium, relativeTo: .body)
                     }
                     .foregroundStyle(NoctisNight.ivory)

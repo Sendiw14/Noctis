@@ -64,6 +64,10 @@ def main():
     parser.add_argument("--only", default="")
     parser.add_argument("--tier1", action="store_true")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--rewalk", action="store_true",
+                        help="visit only the screens a walk found not to move (a __noscroll marker) and walk them again, from three heights")
+    parser.add_argument("--skip-states", default="", help="comma separated state names left out of the tabs (the core pass)")
+    parser.add_argument("--pages", action="store_true", help="photograph every page down the screen, not only its top and its bottom")
     parser.add_argument("--no-checks", action="store_true", help="skip the hierarchy checks (they cost a snapshot at each end of every page)")
     parser.add_argument("--derived", default=os.environ.get("QA_DERIVED", ""))
     args = parser.parse_args()
@@ -91,7 +95,10 @@ def main():
         "TEST_RUNNER_QA_ONLY": args.only,
         "TEST_RUNNER_QA_TIER1": "1" if args.tier1 else "0",
         "TEST_RUNNER_QA_RESUME": "1" if args.resume else "0",
+        "TEST_RUNNER_QA_REWALK": "1" if args.rewalk else "0",
         "TEST_RUNNER_QA_CHECKS": "0" if args.no_checks else "1",
+        "TEST_RUNNER_QA_PAGES": "1" if args.pages else "0",
+        "TEST_RUNNER_QA_SKIP_STATES": args.skip_states,
     })
     command = [
         "xcodebuild", "test-without-building", "-project", os.path.join(PROJECT_DIR, "Noctis.xcodeproj"), "-scheme", "Noctis",

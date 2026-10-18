@@ -45,6 +45,9 @@ public struct NoctisSegmentedControl<Value: Hashable>: View {
                 segmentButton(segment)
             }
         }
+        // Its labels stop growing at the largest of the standard sizes, as a system segmented control's do not go on filling a row: at AX5
+        // "Today 7D 30D 90D" ran together ("30D90D") on an SE. The page's own text keeps scaling.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .padding(2)
         .background(Capsule(style: .continuous).fill(trackFill))
         .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: selection)

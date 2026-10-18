@@ -172,6 +172,11 @@ struct PaywallScreen: View {
     private static let fadeHeight = NoctisSpacing.xl
     private static let benefitsCardPadding = NoctisSpacing.lg
 
+    /// The plan choice's actions are pinned under the content, except at accessibility sizes: there the button, the legal line, the free-plan
+    /// link and three footer links are most of the screen (about 75% of an SE at AX5) and leave the plans a strip of blank page. They are the
+    /// end of the page instead, and everything scrolls (QA part 3, QA-084).
+    private var pinsBottomStack: Bool { !dynamicTypeSize.isAccessibilitySize }
+
     private var bedtimeMinutes: Int { noctisBedtimeMinutes(wakeMinutes: wakeMinutes, needMinutes: needMinutes) }
     private var selectedProduct: Product? { store.products.first { $0.id == selectedProductID } }
     private var yearlyProduct: Product? { store.yearlyProduct }
@@ -219,11 +224,13 @@ struct PaywallScreen: View {
         // stack's top, where its fade is drawn — the default 8pt gap left
         // content visible below the viewport every fade calculation used.
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomStack
-                .padding(.horizontal, NoctisSpacing.xl)
-                .padding(.top, NoctisSpacing.lg + restBand)
-                .padding(.bottom, NoctisSpacing.sm)
-                .background(bottomFade(showsGradient: scrollMetrics.showsBottomFade))
+            if pinsBottomStack {
+                bottomStack
+                    .padding(.horizontal, NoctisSpacing.xl)
+                    .padding(.top, NoctisSpacing.lg + restBand)
+                    .padding(.bottom, NoctisSpacing.sm)
+                    .background(bottomFade(showsGradient: scrollMetrics.showsBottomFade))
+            }
         }
         .sheet(isPresented: $showCompareSheet) { PremiumComparisonSheet() }
         .alert(restoreAlertTitle, isPresented: restoreAlertBinding) {
@@ -279,6 +286,9 @@ struct PaywallScreen: View {
                 benefitsCard
                 compareLink.paywallBlock()
                 plansSection
+                if !pinsBottomStack {
+                    bottomStack.padding(.top, NoctisSpacing.sm)
+                }
             }
             .padding(.horizontal, NoctisSpacing.xl)
             .padding(.top, topInset + topRowClearance - restShift)
@@ -347,6 +357,13 @@ struct PaywallScreen: View {
     /// moving the fade up to the nearest clean gap. Never adjusts after the
     /// user has scrolled.
     private func settleRestingCut() {
+        guard pinsBottomStack else {
+            // Nothing is pinned, so there is no fade to keep off a line of text: the page just scrolls.
+            if restShift != 0 { restShift = 0 }
+            if restBand != 0 { restBand = 0 }
+            if endRunway != 0 { endRunway = 0 }
+            return
+        }
         guard scrollMetrics.visibleHeight > 0 else { return }
         settleEndRunway()
         guard !userHasScrolled else { return }
@@ -699,17 +716,17 @@ struct PaywallScreen: View {
         return "\(product.displayPrice) per \(period). Cancel anytime in Settings."
     }
 
-    /// A 12pt footer link with a 44pt-tall tap target that doesn't grow the
-    /// footer's layout: the label's hit area is padded out, then the padding
-    /// is taken back so the row keeps its compact height.
+    /// A 12pt footer link whose frame is a full 44pt tall, so the tap target and the accessibility frame (Switch Control, the audit) agree. The row
+    /// keeps its compact height because the container takes the padding back (`footer`), not each label: a label that gave the padding back itself
+    /// would report a 14pt frame.
     private func footerLabel(_ title: String) -> some View {
         Text(title)
-            .padding(.vertical, 15)
-            .padding(.horizontal, 8)
+            .padding(.vertical, Self.footerLinkPadding.height)
+            .padding(.horizontal, Self.footerLinkPadding.width)
             .contentShape(Rectangle())
-            .padding(.vertical, -15)
-            .padding(.horizontal, -8)
     }
+
+    private static let footerLinkPadding = CGSize(width: 8, height: 15)
 
     /// One row of links; stacked when large text can't fit them across.
     @ViewBuilder
@@ -720,10 +737,13 @@ struct PaywallScreen: View {
     }
 
     private var footer: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: NoctisSpacing.lg) { footerLinks }
-            VStack(spacing: NoctisSpacing.xs) { footerLinks }
+        let inset = Self.footerLinkPadding
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: NoctisSpacing.lg - 2 * inset.width) { footerLinks }
+            VStack(spacing: NoctisSpacing.xs - 2 * inset.height) { footerLinks }
         }
+        .padding(.vertical, -inset.height)
+        .padding(.horizontal, -inset.width)
         .noctisFont(12, relativeTo: .caption)
         .foregroundStyle(NoctisPaper.ink3)
         .padding(.top, NoctisSpacing.xs)

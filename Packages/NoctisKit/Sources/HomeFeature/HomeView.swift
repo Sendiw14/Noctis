@@ -342,7 +342,7 @@ struct HomeWindDownButton: View {
                 if locked {
                     LockGlyph(size: 13)
                 } else {
-                    Image(systemName: "arrow.right")
+                    Image(systemName: "arrow.forward")
                         .font(.system(size: 13, weight: .semibold))
                         .accessibilityHidden(true)
                 }

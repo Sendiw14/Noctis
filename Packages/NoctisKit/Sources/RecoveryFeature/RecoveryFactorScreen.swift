@@ -194,6 +194,9 @@ struct RecoveryFactorChartCard: View {
             }
         }
         .frame(width: axisWidth, height: Self.height)
+        // The ticks stop growing at a large standard size: the chart has a fixed height, and at AX3 "12 AM", "11:30 PM" and "11 PM" overprinted
+        // each other ("12 A / M:3 / 0 P"). The values are in the colour block and the tiles under the chart, at the full size.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .animation(morph, value: content.range)
     }
 
@@ -207,6 +210,7 @@ struct RecoveryFactorChartCard: View {
                     .noctisFraction(label.position)
             }
         }
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
     // MARK: Plot
@@ -274,15 +278,41 @@ struct RecoveryFactorTileView: View {
     let tile: RecoveryFactorTile
     @NoctisScaledLength(relativeTo: .body) private var minHeight: CGFloat = 96
 
+    /// A range ("10:25PM – 12:03AM") split at its dash, so it can sit on two lines when one is too narrow for it (QA_LEDGER.md: the iPhone SE
+    /// cut a clock range off at "12:0…").
+    private var splitRange: (low: NoctisMetricValue, high: NoctisMetricValue)? {
+        let parts = tile.value.parts
+        guard let dash = parts.firstIndex(of: .unit("–")), dash >= 2, dash + 2 < parts.count else { return nil }
+        let low = Array(parts[..<(dash - 1)])
+        let high = Array(parts[(dash + 2)...])
+        guard !low.isEmpty, !high.isEmpty else { return nil }
+        return (NoctisMetricValue(parts: low, spoken: ""), NoctisMetricValue(parts: [.unit("–"), .space] + high, spoken: ""))
+    }
+
+    @ViewBuilder
+    private var value: some View {
+        if let range = splitRange {
+            ViewThatFits(in: .horizontal) {
+                NoctisMetric(tile.value, size: 26).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                VStack(alignment: .leading, spacing: 0) {
+                    NoctisMetric(range.low, size: 22).lineLimit(1).minimumScaleFactor(0.6)
+                    NoctisMetric(range.high, size: 22).lineLimit(1).minimumScaleFactor(0.6)
+                }
+            }
+        } else {
+            NoctisMetric(tile.value, size: 26)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+        }
+    }
+
     var body: some View {
         NoctisAppCard {
             VStack(alignment: .leading, spacing: 2) {
                 Text(tile.title)
                     .noctisFont(13, .medium, relativeTo: .footnote)
                     .foregroundStyle(.noctisInk3)
-                NoctisMetric(tile.value, size: 26)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
+                value
                 if let note = tile.note {
                     Text(note)
                         .noctisFont(12, relativeTo: .caption)

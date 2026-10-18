@@ -150,7 +150,7 @@ struct CoachHistoryRowView: View {
                             .foregroundStyle(.noctisInk3)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    Image(systemName: "chevron.right")
+                    Image(systemName: "chevron.forward")
                         .noctisIcon(14, .semibold, relativeTo: .subheadline)
                         .foregroundStyle(.noctisInk3)
                         .accessibilityHidden(true)

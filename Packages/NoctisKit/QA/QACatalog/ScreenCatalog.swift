@@ -29,12 +29,17 @@ public struct CatalogScreen: Sendable, Hashable, Identifiable {
         case tapTab(String)
         /// A button (or any control) by its label.
         case tapLabel(String)
+        /// An element whose label begins with this (a row whose label carries its value: "Sleep need, 8h"). A container's identifier replaces its
+        /// descendants' on this OS, so a row inside a card is found by its label.
+        case tapLabelPrefix(String)
         /// Any element by its accessibility identifier.
         case tapIdentifier(String)
         /// Scrolls up until the top of the page.
         case scrollToTop
         /// Waits for an element by its accessibility identifier (a screen that arrives after a tap).
         case waitFor(String)
+        /// Waits for any element whose identifier begins with this (rows that have an id made at run time).
+        case waitForPrefix(String)
         /// The navigation bar's back button.
         case back
     }
@@ -106,7 +111,7 @@ public enum ScreenCatalog {
         public static let gap = State(name: "gap", scenario: "gap", extra: [])
         public static let stale = State(name: "stale", scenario: "stale", extra: [])
         /// Health's first answer is slow: the skeletons stay on screen.
-        public static let loading = State(name: "loading", scenario: "full", extra: ["-mockLatency", "20"])
+        public static let loading = State(name: "loading", scenario: "full", extra: ["-mockLatency", "240"])
         public static let error = State(name: "error", scenario: "full", extra: ["-noctisHealthQueryFails"])
 
         public static let all: [State] = [.full, .sleepOnly, .learning, .empty, .noPermission, .gap, .stale, .loading, .error]
@@ -225,12 +230,12 @@ public enum ScreenCatalog {
             CatalogScreen(
                 id: "coach.history", area: .coach, title: "Coach history", arguments: base() + ["-mockAI", "good", "-noctisInitialRoute", "coach"],
                 route: "coach",
-                steps: [.tapIdentifier("coach.question.recovery.lower"), .waitFor("coach.conversation"), .back, .tapIdentifier("coach.history")],
+                steps: [.tapIdentifier("coach.question.recovery.lower"), .waitFor("coach.conversation"), .back, .scrollToTop, .tapIdentifier("coach.history")],
                 ready: "coach.history.screen", surface: .pushed
             ),
             CatalogScreen(
                 id: "coach.privacy", area: .coach, title: "Coach privacy sheet", arguments: coachBase, route: "coach",
-                steps: [.tapLabel("How Coach uses your data")], ready: "coach.privacy.done", surface: .sheet, scrolls: false
+                steps: [.tapLabel("How Coach uses your data")], ready: "coach.privacy.done", surface: .sheet
             ),
             CatalogScreen(
                 id: "coach.quota", area: .coach, title: "Coach, free plan with the day's questions used",
@@ -276,16 +281,16 @@ public enum ScreenCatalog {
                 steps: [.tapLabel("Breathing")]
             ),
             pushed(
-                "night.meditation.prestart", "Meditation, before starting", route: "wind-down", extra: ["-mockMeditation", "prestart"], ready: "meditation.panel",
-                steps: [.tapLabel("Meditation")]
+                "night.meditation.prestart", "Meditation, before starting", route: "wind-down", extra: ["-mockWindDown", "running:0.2:meditation", "-mockMeditation", "prestart"],
+                ready: "meditation.panel"
             ),
             pushed(
-                "night.meditation.running", "Meditation, running", route: "wind-down", extra: ["-mockMeditation", "running:bodyScan:10:80"], ready: "meditation.panel",
-                steps: [.tapLabel("Meditation")]
+                "night.meditation.running", "Meditation, running", route: "wind-down", extra: ["-mockWindDown", "running:0.2:meditation", "-mockMeditation", "running:bodyScan:10:80"],
+                ready: "meditation.panel"
             ),
             pushed(
-                "night.meditation.finished", "Meditation, finished", route: "wind-down", extra: ["-mockMeditation", "finished"], ready: "meditation.panel",
-                steps: [.tapLabel("Meditation")]
+                "night.meditation.finished", "Meditation, finished", route: "wind-down", extra: ["-mockWindDown", "running:0.2:meditation", "-mockMeditation", "finished"],
+                ready: "meditation.panel"
             ),
             pushed(
                 "night.reflect.empty", "Reflect, empty", route: "tonight", extra: ["-mockJournal", "empty"], ready: "reflect.panel", steps: [.tapLabel("Reflect")]
@@ -294,13 +299,13 @@ public enum ScreenCatalog {
                 "night.reflect.draft", "Reflect, a draft", route: "tonight", extra: ["-mockJournal", "empty:draft"], ready: "reflect.panel", steps: [.tapLabel("Reflect")]
             ),
             pushed(
-                "night.journal.filled", "Journal with entries", route: "tonight", extra: ["-mockJournal", "filled:journal"], ready: "journal.list", steps: [.tapLabel("Reflect")]
+                "night.journal.filled", "Journal with entries", route: "tonight", extra: ["-mockJournal", "filled:journal"], steps: [.tapLabel("Reflect")]
             ),
             pushed(
-                "night.journal.empty", "Journal, empty", route: "tonight", extra: ["-mockJournal", "empty:journal"], ready: "journal.empty", steps: [.tapLabel("Reflect")]
+                "night.journal.empty", "Journal, empty", route: "tonight", extra: ["-mockJournal", "empty:journal"], steps: [.tapLabel("Reflect")]
             ),
             pushed(
-                "night.journal.unavailable", "Journal, unavailable", route: "tonight", extra: ["-mockJournal", "unavailable:journal"], ready: "journal.unavailable",
+                "night.journal.unavailable", "Journal, unavailable", route: "tonight", extra: ["-mockJournal", "unavailable:journal"],
                 steps: [.tapLabel("Reflect")]
             ),
         ]
@@ -312,19 +317,19 @@ public enum ScreenCatalog {
         let seeded = base() + ["-seedReviews"]
         var list: [CatalogScreen] = [
             CatalogScreen(
-                id: "reviews.list", area: .reviews, title: "Reviews", arguments: seeded + ["-noctisInitialRoute", "reviews"], route: "reviews", ready: "reviews.list",
-                surface: .pushed
+                id: "reviews.list", area: .reviews, title: "Reviews", arguments: seeded + ["-noctisInitialRoute", "reviews"], route: "reviews",
+                steps: [.waitForPrefix("reviews.row.")], ready: "reviews.list", surface: .pushed
             ),
             CatalogScreen(
                 id: "reviews.list.free", area: .reviews, title: "Reviews, free plan", arguments: seeded + ["-forceTier", "free", "-noctisInitialRoute", "reviews"],
-                route: "reviews", ready: "reviews.list", surface: .pushed
+                route: "reviews", steps: [.waitForPrefix("reviews.row.")], ready: "reviews.list", surface: .pushed
             ),
         ]
         for page in ["cover", "sleep", "consistency", "recovery", "changes", "insight", "focus"] {
             list.append(
                 CatalogScreen(
                     id: "reviews.weekly.\(page)", area: .reviews, title: "Weekly review: \(page)",
-                    arguments: seeded + ["-reviewPage", page, "-noctisInitialRoute", "review:weekly"], route: "review:weekly", surface: .fullScreen, scrolls: false
+                    arguments: seeded + ["-reviewPage", page, "-noctisInitialRoute", "review:weekly"], route: "review:weekly", surface: .fullScreen
                 )
             )
         }
@@ -332,14 +337,14 @@ public enum ScreenCatalog {
             list.append(
                 CatalogScreen(
                     id: "reviews.monthly.\(page)", area: .reviews, title: "Monthly review: \(page)",
-                    arguments: seeded + ["-reviewPage", page, "-noctisInitialRoute", "review:monthly"], route: "review:monthly", surface: .fullScreen, scrolls: false
+                    arguments: seeded + ["-reviewPage", page, "-noctisInitialRoute", "review:monthly"], route: "review:monthly", surface: .fullScreen
                 )
             )
         }
         list.append(
             CatalogScreen(
                 id: "reviews.monthly.locked", area: .reviews, title: "Monthly review, free plan",
-                arguments: seeded + ["-forceTier", "free", "-noctisInitialRoute", "review:monthly"], route: "review:monthly", surface: .fullScreen, scrolls: false
+                arguments: seeded + ["-forceTier", "free", "-noctisInitialRoute", "review:monthly"], route: "review:monthly", surface: .fullScreen
             )
         )
         return list
@@ -389,11 +394,11 @@ public enum ScreenCatalog {
         ),
         CatalogScreen(
             id: "profile.editor.need", area: .profile, title: "Profile: sleep need editor", arguments: base() + ["-noctisInitialRoute", "profile"], route: "profile",
-            steps: [.tapIdentifier("profile.need")], ready: "profile.editor.need", surface: .sheet, scrolls: false
+            steps: [.tapLabelPrefix("Sleep need")], ready: "profile.editor.need", surface: .sheet, scrolls: false
         ),
         CatalogScreen(
             id: "profile.editor.wake", area: .profile, title: "Profile: wake time editor", arguments: base() + ["-noctisInitialRoute", "profile"], route: "profile",
-            steps: [.tapIdentifier("profile.wake")], ready: "profile.editor.wake", surface: .sheet, scrolls: false
+            steps: [.tapLabelPrefix("Wake time")], ready: "profile.editor.wake", surface: .sheet, scrolls: false
         ),
         CatalogScreen(
             id: "profile.editor.name", area: .profile, title: "Profile: name editor", arguments: base() + ["-noctisInitialRoute", "profile"], route: "profile",
@@ -401,7 +406,7 @@ public enum ScreenCatalog {
         ),
         CatalogScreen(
             id: "profile.editor.goals", area: .profile, title: "Profile: goals editor", arguments: base() + ["-noctisInitialRoute", "profile"], route: "profile",
-            steps: [.tapIdentifier("profile.goals")], ready: "profile.editor.goals", surface: .sheet, scrolls: false
+            steps: [.tapLabelPrefix("Goals")], ready: "profile.editor.goals", surface: .sheet, scrolls: false
         ),
     ]
 
@@ -438,7 +443,7 @@ public enum ScreenCatalog {
         list.append(
             CatalogScreen(
                 id: "privacy.deleteAll", area: .privacy, title: "Delete all NOCTIS data, sheet", arguments: base() + ["-noctisInitialRoute", "settings:data-management"],
-                route: "settings:data-management", steps: [.tapIdentifier("data.deleteAll")], ready: "data.deleteAll.sheet", surface: .sheet, scrolls: false
+                route: "settings:data-management", steps: [.tapIdentifier("data.deleteAll")], ready: "data.deleteAll.sheet", surface: .sheet
             )
         )
         return list
@@ -471,14 +476,14 @@ public enum ScreenCatalog {
             list.append(
                 CatalogScreen(
                     id: "watch.page.\(page)", area: .watch, title: "Apple Watch: \(page)", arguments: ["-watchMockSnapshot", "full", "-watchPage", page], surface: .fullScreen,
-                    platform: .watch
+                    platform: .watch, scrolls: false
                 )
             )
         }
         for state in ["learning", "sleepOnly", "empty", "stale", "gap", "waiting", "noSnapshot"] {
             list.append(
                 CatalogScreen(
-                    id: "watch.state.\(state)", area: .watch, title: "Apple Watch, \(state)", arguments: ["-watchMockSnapshot", state], surface: .fullScreen, platform: .watch
+                    id: "watch.state.\(state)", area: .watch, title: "Apple Watch, \(state)", arguments: ["-watchMockSnapshot", state], surface: .fullScreen, platform: .watch, scrolls: false
                 )
             )
         }
@@ -486,14 +491,14 @@ public enum ScreenCatalog {
             list.append(
                 CatalogScreen(
                     id: "watch.breathing.\(script.split(separator: ":").first ?? "")", area: .watch, title: "Apple Watch breathing: \(script)",
-                    arguments: ["-watchMockSnapshot", "full", "-watchBreathing", script], surface: .fullScreen, platform: .watch
+                    arguments: ["-watchMockSnapshot", "full", "-watchBreathing", script], surface: .fullScreen, platform: .watch, scrolls: false
                 )
             )
         }
         for face in ["recovery", "sleep", "bedtime", "quality"] {
             list.append(
                 CatalogScreen(
-                    id: "watch.complication.\(face)", area: .watch, title: "Complications: \(face)", arguments: ["-complicationGallery", face], surface: .gallery, platform: .watch
+                    id: "watch.complication.\(face)", area: .watch, title: "Complications: \(face)", arguments: ["-complicationGallery", face], surface: .gallery, platform: .watch, scrolls: false
                 )
             )
         }

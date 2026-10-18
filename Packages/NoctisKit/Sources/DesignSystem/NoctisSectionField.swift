@@ -380,15 +380,21 @@ public struct NoctisSectionMotif: View {
         }
     }
 
+    /// Whether the motif sits in the field's top corner, where a trailing button also is: it is left out while the header has one (Insights'
+    /// three dots showed through the history button and read as a menu under it). The others sit along the bottom edge.
+    public static func sitsInTheCorner(_ section: NoctisSection) -> Bool {
+        section == .insights
+    }
+
     public var body: some View {
         switch section {
         case .home: NoctisHorizonMotif()
         case .sleep: NoctisHillsMotif()
         case .recovery: NoctisArcsMotif()
         case .insights: NoctisDotsMotif()
-        case .coach: NoctisCirclesMotif()
-        // A page with a gear in the corner and no motif: the sand is quiet on its own.
-        case .profile: EmptyView()
+        // A page with controls in the corner carries no motif: the sand is quiet on its own (Profile's gear), and Coach's field holds the history
+        // and info buttons where its two circles were. The circles sat behind the buttons and read as two more of them (QA part 3, QA-077).
+        case .coach, .profile: EmptyView()
         }
     }
 }
@@ -476,21 +482,6 @@ public struct NoctisDotsMotif: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
         .padding(.trailing, 32)
-        .padding(.top, 28)
-    }
-}
-
-/// Coach's: two small overlapping circles, at the top right.
-public struct NoctisCirclesMotif: View {
-    public init() {}
-
-    public var body: some View {
-        HStack(spacing: -14) {
-            Circle().strokeBorder(NoctisAppColor.blockInk.opacity(0.14), lineWidth: 3).frame(width: 30, height: 30)
-            Circle().strokeBorder(NoctisAppColor.blockInk.opacity(0.10), lineWidth: 3).frame(width: 30, height: 30)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-        .padding(.trailing, 28)
         .padding(.top, 28)
     }
 }

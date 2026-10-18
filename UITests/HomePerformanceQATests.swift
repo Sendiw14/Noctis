@@ -268,7 +268,8 @@ final class HomePerformanceQATests: XCTestCase {
     /// device.)
     func testNoMemoryGrowthAfterTabSwitchesAndZoomCycles() throws {
         // A sanitizer holds what was freed (Address Sanitizer's quarantine, Thread Sanitizer's history): growth under one is not a leak signal.
-        try XCTSkipIf(QA.environment["QA_SANITIZED"] == "1", "memory is not measured under a sanitizer (QA_LEDGER.md QA-050)")
+        let sanitized = QA.environment["QA_SANITIZED"] == "1"
+        try XCTSkipIf(sanitized, "memory is not measured under a sanitizer (QA_LEDGER.md QA-050)")
         let app = launchHome(extra: ["-noctisDebugProbe"])
         let hero = dayHero(app)
         XCTAssertTrue(hero.waitForExistence(timeout: 10))

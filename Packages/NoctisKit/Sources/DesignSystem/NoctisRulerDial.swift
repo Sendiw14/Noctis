@@ -78,7 +78,10 @@ public struct NoctisRulerDial: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// R4: hour labels scale on the caption curve; the label row (and so
     /// the dial) grows with them instead of clipping.
-    @ScaledMetric(relativeTo: .caption) private var labelSize: CGFloat = 12
+    @ScaledMetric(relativeTo: .caption) private var scaledLabelSize: CGFloat = 12
+    /// The label stops growing at 18pt (about the xxLarge caption): the hours are a fixed distance apart, and at AX5 on an SE "9h" and "10h" (or
+    /// "6 AM 7 AM 8 AM") printed into each other ("9h10h"). At that size the number is read from the large value above the ruler.
+    private var labelSize: CGFloat { min(scaledLabelSize, 18) }
     private var labelRowHeight: CGFloat { (labelSize * 14 / 12).rounded(.up) }
     @State private var frameWidth: CGFloat = 0
     /// The at-rest offset for the current `value` — recomputed whenever

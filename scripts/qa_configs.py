@@ -59,22 +59,34 @@ add(config("D-DoubleLength", launch="-NSDoubleLocalizedStrings YES"))
 add(config("D-Accented", launch="-NSAccentuateLocalizedStrings YES"))
 add(config("D-Bounded", launch="-NSSurroundLocalizedStrings YES"))
 add(config("D-RTL", launch="-AppleTextDirection YES -NSForceRightToLeftWritingDirection YES", expectations={"layoutDirection": "rtl"}))
+# Sinhala and Tamil words for the units and counts (DEBUG -pseudoScript, R68): the taller glyphs and the longer words, before there is a translation.
+add(config("D-PseudoSi", launch="-pseudoScript si", screens="tier1"))
+add(config("D-PseudoTa", launch="-pseudoScript ta", screens="tier1"))
+# The build has no Sinhala, Tamil or Arabic yet: asked for one, it must fall back to English cleanly (no keys, no blanks) and stay left to right.
+for code, locale in [("si", "si_LK"), ("ta", "ta_LK"), ("ar", "ar_SA")]:
+    add(config(f"E-lang-{code}", launch=f"-AppleLanguages ({code}) -AppleLocale {locale}", screens="tier1"))
 for locale in ["en_LK", "de_DE", "ar_SA", "si_LK", "ta_LK", "th_TH"]:
     add(config(f"E-{locale}", launch=f"-AppleLanguages (en) -AppleLocale {locale}", screens="tier1"))
 
 
 # The hierarchy checks run where layout is most at risk; elsewhere the screenshots are the evidence.
 WITH_CHECKS = {"A-light", "A-dark", "B-AX5-light", "D-RTL"}
+# Every page down the screen (not only its top and bottom) for the reference configuration.
+WITH_PAGES = {"A-light"}
 
 
 def run(device, names, out, derived, resume):
     code = 0
     for spec in names:
-        # "<name>@t1": the same configuration for the tier-one screens only.
+        # "<name>@t1": the same configuration for the tier-one screens only. "<name>@rewalk": only the screens whose walk did not move, again.
         name, _, suffix = spec.partition("@")
         c = dict(CONFIGS[name])
+        # "<name>@only:insights.history+night.": only the screens whose ids start with one of these ('+' between them).
+        if suffix.startswith("only:"):
+            c["only"] = suffix[len("only:"):].replace("+", ",")
         if suffix == "t1" and c["screens"] == "all":
             c["screens"] = "tier1"
+        skip = "gap,sleepOnly,noPermission,loading" if suffix == "core" else ""
         command = [sys.executable, os.path.join(HERE, "qa_matrix.py"), "--out", out, "--config", c["name"], "--device", device, "--appearance", c["appearance"],
                    "--text", c["text"], "--expect", c["expect"]]
         if c["contrast"]:
@@ -87,10 +99,16 @@ def run(device, names, out, derived, resume):
             command.append("--tier1")
         if name not in WITH_CHECKS:
             command.append("--no-checks")
+        if skip:
+            command += ["--skip-states", skip]
+        if name in WITH_PAGES and device.startswith("pro") and not os.environ.get("QA_NO_PAGES"):
+            command.append("--pages")
         if c["only"]:
             command += ["--only", c["only"]]
         if derived:
             command += ["--derived", derived]
+        if suffix == "rewalk":
+            command.append("--rewalk")
         if resume:
             command.append("--resume")
         print("running", spec, "on", device, flush=True)
@@ -107,7 +125,7 @@ if __name__ == "__main__":
     assert args[0] == "run"
     device = args[1]
     rest = args[2:]
-    out, derived, resume = "/tmp/qamx", "", False
+    out, derived, resume = os.environ.get("QA_OUT", os.path.expanduser("~/qa-work/qamx")), "", False
     names = []
     i = 0
     while i < len(rest):

@@ -114,6 +114,7 @@ public struct TabScreenScaffold<Content: View>: View {
     @Binding private var scrollPosition: ScrollPosition
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var fieldHeight: CGFloat = 0
     @State private var phase = NoctisScrollPhase()
 
@@ -266,6 +267,14 @@ public struct TabScreenScaffold<Content: View>: View {
             washes: fieldWashes
         ) {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
+                // At accessibility sizes the trailing buttons sit on a row of their own above the text: beside it they took 88pt of an SE's
+                // 335pt and the summary broke inside its word ("Understan / d your patterns.").
+                if dynamicTypeSize.isAccessibilitySize, let trailing = header.trailing {
+                    HStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        trailing
+                    }
+                }
                 HStack(alignment: .top, spacing: NoctisSpacing.sm) {
                     VStack(alignment: .leading, spacing: 6) {
                         NoctisCaption(header.dateCaption, style: .noctisFieldCaption)
@@ -288,7 +297,7 @@ public struct TabScreenScaffold<Content: View>: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    if let trailing = header.trailing {
+                    if !dynamicTypeSize.isAccessibilitySize, let trailing = header.trailing {
                         trailing
                     }
                 }
@@ -300,7 +309,11 @@ public struct TabScreenScaffold<Content: View>: View {
                 }
             }
         } motif: {
-            NoctisSectionMotif(section)
+            if header.trailing != nil, NoctisSectionMotif.sitsInTheCorner(section) {
+                EmptyView()
+            } else {
+                NoctisSectionMotif(section)
+            }
         }
     }
 

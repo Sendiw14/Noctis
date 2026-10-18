@@ -13,7 +13,8 @@ public enum NoctisPaper {
     public static let ink = noctisHexColor("2B1D14")
     public static let ink2 = noctisHexColor("6B5B4E")
     public static let ink3 = noctisHexColor("7A6B5E")
-    public static let orangeText = noctisHexColor("C2571A")
+    /// The orange of the title's accent and of small orange text: 4.8:1 on the paper (it was #C2571A, 4.1:1, which the paywall's small lines used: QA_LEDGER.md).
+    public static let orangeText = noctisHexColor("B14F18")
 
     // MARK: Fills
 

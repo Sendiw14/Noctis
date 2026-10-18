@@ -21,6 +21,7 @@ public struct ReviewStoryScreen: View {
     @Environment(\.featureGate) private var gate
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
+    @ScaledMetric(relativeTo: .body) private var scaledBottomInset: CGFloat = 68
     @State private var position: Int?
     @State private var width: CGFloat = 0
     @State private var safe = EdgeInsets()
@@ -86,8 +87,10 @@ public struct ReviewStoryScreen: View {
             // The chrome sits over the pages: progress and buttons on top, Back and Next below.
             VStack(spacing: 0) {
                 top(ink: ink, fill: tint.fill)
+                    .background(alignment: .bottom) { band(tint.fill, fadesAbove: false).ignoresSafeArea(edges: .top) }
                 Spacer(minLength: 0)
                 bottom(tint: tint)
+                    .background(alignment: .top) { band(tint.fill, fadesAbove: true).ignoresSafeArea(edges: .bottom) }
             }
         }
         .onGeometryChange(for: EdgeInsets.self) { $0.safeAreaInsets } action: { safe = $0 }
@@ -157,7 +160,7 @@ public struct ReviewStoryScreen: View {
             pageContent(page, style: style, revealed: revealed)
                 // Room for the progress and the buttons above, and Back and Next below.
                 .padding(.top, safe.top + Self.topInset)
-                .padding(.bottom, safe.bottom + Self.bottomInset)
+                .padding(.bottom, safe.bottom + bottomInset)
         }
     }
 
@@ -205,6 +208,25 @@ public struct ReviewStoryScreen: View {
     /// The progress segments (3pt, no timers), and under them Close and Share, 44pt each.
     static let topInset: CGFloat = 64
     static let bottomInset: CGFloat = 68
+
+    /// Back and Next grow with the text size, so the room under a page does: at AX5 a 58pt button sat on the page's last line (QA part 3,
+    /// QA-070). Capped, so a short page does not become all inset.
+    private var bottomInset: CGFloat { min(scaledBottomInset, Self.bottomInset * 1.7) }
+
+    /// The page's own colour behind the chrome, with a 24pt fade where the page's text arrives at it: a paragraph that runs on under Back and Next
+    /// (or up under the progress and Close) goes into a band instead of through the buttons (QA part 3, QA-070).
+    private func band(_ color: Color, fadesAbove: Bool) -> some View {
+        ZStack(alignment: fadesAbove ? .top : .bottom) {
+            color
+            LinearGradient(
+                colors: fadesAbove ? [color.opacity(0), color] : [color, color.opacity(0)], startPoint: .top, endPoint: .bottom
+            )
+            .frame(height: 24)
+            .offset(y: fadesAbove ? -24 : 24)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
 
     /// A button's flat circle: the page's own color with the ink at 12% over it, so a page scrolling under it never shows through.
     private func buttonBack(ink: Color, fill: Color) -> some View {
@@ -284,7 +306,7 @@ public struct ReviewStoryScreen: View {
                     model.goBack()
                 } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: "chevron.left").noctisIcon(14, .bold)
+                        Image(systemName: "chevron.backward").noctisIcon(14, .bold)
                         Text("Back").noctisFont(17, .semibold, relativeTo: .body)
                     }
                     .foregroundStyle(tint.ink)
@@ -303,7 +325,7 @@ public struct ReviewStoryScreen: View {
             } label: {
                 HStack(spacing: 4) {
                     Text(model.isLast ? "Done" : "Next").noctisFont(17, .semibold, relativeTo: .body)
-                    if !model.isLast { Image(systemName: "chevron.right").noctisIcon(14, .bold) }
+                    if !model.isLast { Image(systemName: "chevron.forward").noctisIcon(14, .bold) }
                 }
                 .foregroundStyle(tint.onInk)
                 .padding(.horizontal, NoctisSpacing.lg)

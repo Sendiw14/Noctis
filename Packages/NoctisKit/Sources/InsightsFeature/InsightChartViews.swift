@@ -66,6 +66,7 @@ public struct InsightChartView: View {
 struct InsightBarsView: View {
     let chart: InsightBarsChart
     let style: InsightChartStyle
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     private var palette: InsightChartPalette { .of(style) }
 
     var body: some View {
@@ -76,33 +77,57 @@ struct InsightBarsView: View {
         }
     }
 
-    /// Two or three bars: a row each, label, bar and value.
+    /// Two or three bars: a row each, label, bar and value. At accessibility sizes the label and value share a line and the bar sits under
+    /// them, full width: in one row a 96pt label column and a value column left the bar 40pt and cut both words ("Last ni…", "6h 4…" at AX3).
     private var rows: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
             ForEach(Array(chart.bars.enumerated()), id: \.offset) { _, bar in
-                HStack(spacing: NoctisSpacing.sm) {
-                    Text(bar.label)
-                        .noctisFont(13, .medium, relativeTo: .footnote)
-                        .foregroundStyle(palette.label)
-                        .frame(width: style == .featured ? 76 : 96, alignment: .leading)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                    GeometryReader { proxy in
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(bar.emphasized ? palette.primary : palette.secondary.opacity(0.6))
-                            .frame(width: max(proxy.size.width * bar.fraction, 6), height: style == .featured ? 14 : 22)
-                            .frame(maxHeight: .infinity, alignment: .center)
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline) {
+                            label(bar)
+                            Spacer(minLength: NoctisSpacing.xs)
+                            value(bar)
+                        }
+                        track(bar)
                     }
-                    .frame(height: style == .featured ? 18 : 26)
-                    Text(bar.valueText)
-                        .noctisFont(13, .semibold, relativeTo: .footnote)
-                        .foregroundStyle(palette.label)
-                        .monospacedDigit()
-                        .frame(minWidth: 52, alignment: .trailing)
-                        .lineLimit(1)
+                } else {
+                    HStack(spacing: NoctisSpacing.sm) {
+                        label(bar)
+                            .frame(width: style == .featured ? 76 : 96, alignment: .leading)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        track(bar)
+                        value(bar)
+                            .frame(minWidth: 52, alignment: .trailing)
+                            .lineLimit(1)
+                    }
                 }
             }
         }
+    }
+
+    private func label(_ bar: InsightChartBar) -> some View {
+        Text(bar.label)
+            .noctisFont(13, .medium, relativeTo: .footnote)
+            .foregroundStyle(palette.label)
+    }
+
+    private func value(_ bar: InsightChartBar) -> some View {
+        Text(bar.valueText)
+            .noctisFont(13, .semibold, relativeTo: .footnote)
+            .foregroundStyle(palette.label)
+            .monospacedDigit()
+    }
+
+    private func track(_ bar: InsightChartBar) -> some View {
+        GeometryReader { proxy in
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(bar.emphasized ? palette.primary : palette.secondary.opacity(0.6))
+                .frame(width: max(proxy.size.width * bar.fraction, 6), height: style == .featured ? 14 : 22)
+                .frame(maxHeight: .infinity, alignment: .center)
+        }
+        .frame(height: style == .featured ? 18 : 26)
     }
 
     /// A week of nights: a column each, with the need as a line across.

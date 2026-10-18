@@ -268,7 +268,7 @@ struct ExternalLinkRow: View {
             openURL(url)
         } label: {
             NoctisRow(systemImage: systemImage, fill: fill, title: title) {
-                Image(systemName: "arrow.up.right")
+                Image(systemName: "arrow.up.forward")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.noctisInk3)
                     .accessibilityHidden(true)

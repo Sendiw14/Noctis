@@ -24,20 +24,29 @@ struct CoachQuestionCardView: View {
     /// Today's free questions are used up: the card is off, and the locked card above it says why.
     var isLimited = false
     let ask: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: ask) {
             NoctisAppCard {
                 HStack(spacing: NoctisSpacing.md) {
-                    NoctisIconTile(systemImage: card.symbol, fill: card.tile.fill, foreground: NoctisAppColor.blockInk, size: 48)
+                    // At accessibility sizes the tile (scaled with the text) took half the row and left the question a column of about 190 pt
+                    // on an SE ("When / should / I / sleep?"): the tile is decoration, so the question gets the width.
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        NoctisIconTile(systemImage: card.symbol, fill: card.tile.fill, foreground: NoctisAppColor.blockInk, size: 48)
+                    }
                     Text(card.title)
                         .noctisFont(19, .semibold, relativeTo: .headline)
                         .foregroundStyle(NoctisAppColor.ink)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(3)
+                        // A question is the whole point of the card: it wraps to as many lines as it needs (at AX5 on an SE "What should I
+                        // focus on today?" was cut to "What should I foc…" at three lines), and a word wider than the row scales down to fit
+                        // before it is broken ("consis / tency?" at AX5, "consiste / ncy?" at AX3).
+                        .lineLimit(6)
+                        .minimumScaleFactor(0.6)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Image(systemName: "chevron.right")
+                    Image(systemName: "chevron.forward")
                         .noctisIcon(15, .semibold, relativeTo: .subheadline)
                         .foregroundStyle(.noctisInk3)
                         .accessibilityHidden(true)

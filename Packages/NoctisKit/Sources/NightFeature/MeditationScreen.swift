@@ -40,6 +40,14 @@ struct MeditationPanel: View {
 
 private struct MeditationSetup: View {
     let viewModel: MeditationViewModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// The two-column grid of kinds becomes one column at accessibility sizes: in half a column a name broke inside its word ("Slee / p",
+    /// "Bod / y sca…" on an SE at AX5).
+    private var columns: [GridItem] {
+        let count = dynamicTypeSize.isAccessibilitySize ? 1 : 2
+        return Array(repeating: GridItem(.flexible(), spacing: NoctisSpacing.xs), count: count)
+    }
 
     var body: some View {
         VStack(spacing: NoctisSpacing.md) {
@@ -51,7 +59,7 @@ private struct MeditationSetup: View {
                         .accessibilityIdentifier("meditation.line")
                     VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                         NightCaption(MeditationCopy.categoryCaption)
-                        LazyVGrid(columns: [GridItem(.flexible(), spacing: NoctisSpacing.xs), GridItem(.flexible(), spacing: NoctisSpacing.xs)], spacing: NoctisSpacing.xs) {
+                        LazyVGrid(columns: columns, spacing: NoctisSpacing.xs) {
                             ForEach(MeditationCategory.allCases) { category in
                                 MeditationCategoryTile(category: category, isSelected: viewModel.categoryID == category) {
                                     viewModel.choose(category: category)
@@ -62,17 +70,14 @@ private struct MeditationSetup: View {
                         Text(MeditationCopy.summary(viewModel.categoryID))
                             .noctisFont(15, relativeTo: .subheadline)
                             .foregroundStyle(NoctisNight.ivory2)
+                            .fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("meditation.summary")
                     }
                     VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                         NightCaption(MeditationCopy.durationCaption)
-                        HStack(spacing: NoctisSpacing.xs) {
-                            ForEach(MeditationSchedule.durations, id: \.self) { minutes in
-                                NightChip(title: "\(minutes) min", isSelected: viewModel.minutes == minutes, identifier: "meditation.minutes.\(minutes)") {
-                                    viewModel.choose(minutes: minutes)
-                                    NoctisHaptics.selection()
-                                }
-                            }
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: NoctisSpacing.xs) { durationChips }
+                            VStack(alignment: .leading, spacing: NoctisSpacing.xs) { durationChips }
                         }
                     }
                     if viewModel.canSpeak {
@@ -129,6 +134,18 @@ private struct MeditationSetup: View {
     }
 }
 
+extension MeditationSetup {
+    @ViewBuilder
+    fileprivate var durationChips: some View {
+        ForEach(MeditationSchedule.durations, id: \.self) { minutes in
+            NightChip(title: "\(minutes) min", isSelected: viewModel.minutes == minutes, identifier: "meditation.minutes.\(minutes)") {
+                viewModel.choose(minutes: minutes)
+                NoctisHaptics.selection()
+            }
+        }
+    }
+}
+
 /// A kind of meditation: a symbol and its name. 56pt, flat.
 private struct MeditationCategoryTile: View {
     let category: MeditationCategory
@@ -144,10 +161,13 @@ private struct MeditationCategoryTile: View {
                     .accessibilityHidden(true)
                 Text(MeditationCopy.title(category))
                     .noctisFont(15, .semibold, relativeTo: .subheadline)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }
             .foregroundStyle(isSelected ? NoctisNight.night : NoctisNight.ivory)
             .padding(.horizontal, NoctisSpacing.md)
+            .padding(.vertical, NoctisSpacing.xs)
             .frame(maxWidth: .infinity, minHeight: 56)
             .background(isSelected ? NoctisNight.ivory : NoctisNight.ivory.opacity(0.12), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -176,6 +196,8 @@ private struct MeditationSession: View {
                             .noctisFont(24, .semibold, relativeTo: .title2)
                             .foregroundStyle(NoctisNight.ivory)
                             .multilineTextAlignment(.center)
+                            // The whole sentence: "Feel your forehead a…" at AX5 on an SE was the instruction cut in half.
+                            .fixedSize(horizontal: false, vertical: true)
                             .id(key)
                             .transition(.opacity)
                             .accessibilityIdentifier("meditation.guidance")

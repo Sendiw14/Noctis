@@ -10,6 +10,8 @@ configuration and device are laid side by side, `--per-sheet` to a sheet, each u
 """
 import argparse
 import collections
+import hashlib
+import json
 import os
 import sys
 
@@ -49,6 +51,16 @@ def matches(screen, patterns):
     if not patterns:
         return True
     return any(screen == p or (p.endswith("*") and screen.startswith(p[:-1])) or screen.startswith(p + ".") for p in patterns)
+
+
+def digest(paths):
+    """Eight hex digits of the images' bytes: a sheet is named by what is on it, so a screen that is produced again is a sheet that was not viewed."""
+    h = hashlib.sha256()
+    for path in paths:
+        if path:
+            with open(path, "rb") as handle:
+                h.update(handle.read())
+    return h.hexdigest()[:8]
 
 
 def make_sheet(title, cells, cell_width, out_path):
@@ -113,6 +125,7 @@ def main():
     parser.add_argument("--cell", type=int, default=460)
     parser.add_argument("--pages", default="top,bottom")
     parser.add_argument("--configs", default="", help="only these configurations (comma separated)")
+    parser.add_argument("--devices", default="", help="only these devices (comma separated, as the folders are named: QASE,QA17Pro,QA17ProMax)")
     parser.add_argument("--mode", default="configs", choices=["configs", "screens", "pairs", "spairs"],
                         help="configs: one screen under several configurations per sheet; screens: several screens under one configuration per sheet; "
                              "pairs: one screen under several configurations, the top row and under it the bottom row (the default for coverage)")
@@ -121,7 +134,10 @@ def main():
     patterns = [p for p in args.screens.split(",") if p]
     pages = args.pages.split(",")
     configs = [c for c in args.configs.split(",") if c]
+    devices = [d for d in args.devices.split(",") if d]
     found = collect(args.matrix)
+    if devices:
+        found = {key: [i for i in items if i[1] in devices] for key, items in found.items()}
     rows = []
     if args.mode == "screens":
         grouped = collections.defaultdict(list)
@@ -156,9 +172,10 @@ def main():
         for (config, device), screens in sorted(grouped.items()):
             for number, start in enumerate(range(0, len(screens), args.per_sheet)):
                 chunk = screens[start:start + args.per_sheet]
-                name = f"{config}__{device}__{chunk[0][0]}__{number + 1}.png"
+                name = f"{config}__{device}__{chunk[0][0]}__{digest([p for _, t, b in chunk for p in (t, b)])}.png"
                 make_pair_sheet(f"{config} / {device}", [(screen, top, bottom) for screen, top, bottom in chunk], args.cell, os.path.join(args.output, name))
-                rows.append((name, ",".join(s for s, _, _ in chunk), "top,bottom", f"{config}/{device}"))
+                stamps = {f"{screen}|{config}/{device}": digest([top, bottom]) for screen, top, bottom in chunk}
+                rows.append((name, ",".join(s for s, _, _ in chunk), "top,bottom", f"{config}/{device}", json.dumps(stamps)))
         with open(os.path.join(args.output, "sheets.tsv"), "a") as handle:
             for row in rows:
                 handle.write("\t".join(row) + "\n")
@@ -173,15 +190,17 @@ def main():
                 if not configs or config in configs:
                     by_screen[screen].setdefault((config, device), {})[page] = path
         for screen, combos in sorted(by_screen.items()):
-            ordered = sorted(combos.items())
+            order = {c: n for n, c in enumerate(configs)}
+            ordered = sorted(combos.items(), key=lambda kv: (order.get(kv[0][0], 99), kv[0][1]))
             for number, start in enumerate(range(0, len(ordered), args.per_sheet)):
                 chunk = ordered[start:start + args.per_sheet]
                 cols = [(f"{c} / {d}", pages_["top"], pages_.get("bottom")) for (c, d), pages_ in chunk if "top" in pages_]
                 if not cols:
                     continue
-                name = f"{screen}__{number + 1}.png"
+                name = f"{screen}__{digest([p for _, t, b in cols for p in (t, b)])}.png"
                 make_pair_sheet(screen, cols, args.cell, os.path.join(args.output, name))
-                rows.append((name, screen, "top,bottom", "; ".join(f"{c}/{d}" for (c, d), _ in chunk)))
+                stamps = {f"{c}/{d}": digest([pages_.get("top"), pages_.get("bottom")]) for (c, d), pages_ in chunk}
+                rows.append((name, screen, "top,bottom", "; ".join(f"{c}/{d}" for (c, d), _ in chunk), json.dumps({f"{screen}|{k}": v for k, v in stamps.items()})))
         with open(os.path.join(args.output, "sheets.tsv"), "a") as handle:
             for row in rows:
                 handle.write("\t".join(row) + "\n")

@@ -180,7 +180,11 @@ struct HealthScreen: View {
     }
 
     private func signalRow(_ kind: HealthDataKind) -> some View {
-        HStack(spacing: NoctisSpacing.md) {
+        // The tile above the words at accessibility sizes: beside them the words had a 90 pt column and "Understand" broke into "Understa / nd" (AX5, SE).
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.xs))
+            : AnyLayout(HStackLayout(spacing: NoctisSpacing.md))
+        return layout {
             NoctisIconTile(systemImage: kind.systemImage, fill: signalFill(kind), size: compact ? 38 : 44)
             VStack(alignment: .leading, spacing: 2) {
                 Text(kind.rowTitle)
@@ -191,7 +195,7 @@ struct HealthScreen: View {
                     .foregroundStyle(NoctisPaper.ink2)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 0)
+            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(kind.rowTitle). \(kind.benefit)")

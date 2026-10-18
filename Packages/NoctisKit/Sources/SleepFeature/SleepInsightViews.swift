@@ -30,7 +30,7 @@ struct SleepInsightCard<Content: View>: View {
                         NoctisCaption(title, style: .noctisInk3)
                         Spacer(minLength: NoctisSpacing.xs)
                         if gate.isUnlocked(.sleepConsistencyBalanceTimingDetails) {
-                            Image(systemName: "chevron.right")
+                            Image(systemName: "chevron.forward")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(.noctisInk3)
                                 .accessibilityHidden(true)

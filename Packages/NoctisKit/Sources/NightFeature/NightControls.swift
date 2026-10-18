@@ -53,6 +53,8 @@ struct NightCaption: View {
             .noctisFont(13, .semibold, relativeTo: .footnote)
             .tracking(1)
             .foregroundStyle(NoctisNight.ivory2)
+            // The whole caption, on as many lines as it needs ("SOUND, IF YOU LI…" at AX5).
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -68,6 +70,8 @@ struct NightChip: View {
             Text(title)
                 .noctisFont(15, .semibold, relativeTo: .subheadline)
                 .foregroundStyle(isSelected ? NoctisNight.night : NoctisNight.ivory)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, NoctisSpacing.md)
                 .frame(minHeight: 44)
                 .background(isSelected ? NoctisNight.ivory : NoctisNight.ivory.opacity(0.12), in: Capsule())

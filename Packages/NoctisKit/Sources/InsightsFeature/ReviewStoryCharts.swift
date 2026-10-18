@@ -202,6 +202,8 @@ struct ReviewTimingChart: View {
                     Text(row.label)
                         .noctisFont(12, relativeTo: .caption)
                         .foregroundStyle(.noctisInk3)
+                        // Capped with the chart's other ticks: the 16pt column cut "M" to "N" and "W" to "V" at AX3 and AX5.
+                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                         .frame(width: 16)
                     ZStack {
                         NoctisSpanLayout(from: page.bedtimeBand.start, to: page.bedtimeBand.end, minimumWidth: 8) { band }
@@ -221,6 +223,9 @@ struct ReviewTimingChart: View {
                         Text(tick.label)
                             .noctisFont(12, relativeTo: .caption)
                             .foregroundStyle(.noctisInk3)
+                            // "12:00 AM", "4:00 AM" and "8:00 AM" overprinted at AX3 ("12:00 AM4:00 AM8:00 AM"): the three fixed positions
+                            // along a 280pt strip are the chart; the time is also in the sentence under it.
+                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                             .fixedSize()
                             .noctisFraction(tick.position)
                     }
@@ -250,6 +255,7 @@ struct ReviewTimingChart: View {
                     Text(tick.label)
                         .noctisFont(12, relativeTo: .caption)
                         .foregroundStyle(.noctisInk3)
+                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                         .fixedSize()
                         .noctisVerticalFraction(tick.position)
                 }
