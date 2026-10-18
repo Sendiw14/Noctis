@@ -28,6 +28,9 @@ public final class EntitlementManager {
     private let cache: EntitlementCache
     private let clock: @Sendable () -> Date
     private var listener: Task<Void, Never>?
+    /// Wakes the manager when the answer it just gave runs out (the plan's end, or the end of a grace period), because the store announces a renewal or
+    /// a refund but never an expiry: without it Premium would last until the next launch (QA_LEDGER.md).
+    private var dueRefresh: Task<Void, Never>?
     /// Told when the tier changes: the new tier and the old.
     @ObservationIgnored public var onTierChange: (@MainActor (_ new: Tier, _ old: Tier) -> Void)?
 
@@ -99,6 +102,23 @@ public final class EntitlementManager {
         willAutoRenew = renewal?.willAutoRenew ?? true
         isResolved = true
         set(resolved)
+        scheduleDueRefresh(resolved: resolved, expiration: expirationDate, graceEnd: renewal?.gracePeriodExpirationDate)
+    }
+
+    /// One task, replaced on every answer: asks again a second after the moment the Premium just reported ends.
+    private func scheduleDueRefresh(resolved: EntitlementState, expiration: Date?, graceEnd: Date?) {
+        dueRefresh?.cancel()
+        dueRefresh = nil
+        let now = clock()
+        let due = [resolved.tier == .premium ? expiration : nil, resolved == .premium(.grace) ? graceEnd : nil].compactMap { $0 }.filter { $0 > now }.min()
+        guard let due else { return }
+        // A week at most: a longer wait asks, finds nothing due, and waits again.
+        let delay = min(due.timeIntervalSince(now) + 1, 7 * 86_400)
+        dueRefresh = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled else { return }
+            await self?.refresh()
+        }
     }
 
     /// `remember`: write the tier for the next first frame (a DEBUG screenshot's fixed tier is not remembered).

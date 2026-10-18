@@ -37,6 +37,15 @@ fileGroups:
 # The unit suite under the time zone, region, clock and first-weekday configurations in NOCTIS.xctestplan (QA part 2, 2.9):
 #   xcodebuild test -scheme NOCTIS-Unit -testPlan NOCTIS -destination 'platform=iOS Simulator,id=...'
 schemes:
+  # The purchase tests (StoreTests/), hosted by the app.
+  NOCTIS-Store:
+    build:
+      targets:
+        Noctis: [test]
+        NoctisStoreTests: [test]
+    test:
+      targets:
+        - NoctisStoreTests
   NOCTIS-Unit:
     build:
       targets:
@@ -242,6 +251,38 @@ targets:
         PRODUCT_NAME: NOCTISWatchWidgets
         SKIP_INSTALL: YES
         TARGETED_DEVICE_FAMILY: "4"
+
+  # QA part 3, step 4: unit tests that need an app identity, hosted by Noctis. SKTestSession drives StoreKit's test server for the app's real Noctis.storekit;
+  # a SwiftPM (hostless) test process gets no products and StoreKitError.notEntitled. Run: xcodebuild test -scheme NOCTIS-Store -destination ...
+  NoctisStoreTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.1"
+    sources:
+      - path: StoreTests
+    dependencies:
+      - target: Noctis
+      - package: NoctisKit
+        product: NoctisCore
+      - package: NoctisKit
+        product: PremiumKit
+      - package: NoctisKit
+        product: NoctisWatchKit
+      - package: NoctisKit
+        product: NoctisIntentKit
+      - package: NoctisKit
+        product: NightKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.storetests
+        # The host is NOCTIS.app (PRODUCT_NAME), not the target's name.
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/NOCTIS.app/NOCTIS"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "6.0"
+        LM_SKIP_METADATA_EXTRACTION: YES
+        OTHER_SWIFT_FLAGS: "$(inherited) -Xcc -Wno-deprecated-declarations"
 
   NoctisUITests:
     type: bundle.ui-testing
