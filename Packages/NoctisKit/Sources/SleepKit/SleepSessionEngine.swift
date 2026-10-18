@@ -16,7 +16,8 @@ import HealthProviding
 ///    (`SleepNightKey`, local clock of the sample's own time zone).
 /// 4. Per night, every cluster with at least `mainSleepMinimum` asleep
 ///    joins the main sleep; everything else is a nap.
-/// 5. Keep complete sessions only: wake time at or before `now`.
+/// 5. Samples that start after `now` are ignored.
+/// 6. Keep complete sessions only: wake time at or before `now`.
 public enum SleepSessionEngine {
     /// Samples further apart than this start a new cluster.
     public static let joinGap: TimeInterval = 90 * 60
@@ -33,7 +34,8 @@ public enum SleepSessionEngine {
         timeZone: TimeZone = .current,
         priority: SourcePriority = .unranked
     ) -> SleepHistory {
-        let valid = samples.filter { $0.end > $0.start }
+        // Samples that start after `now` (a clock set wrong, a manual entry) are not sleep yet: they must not join last night's cluster.
+        let valid = samples.filter { $0.end > $0.start && $0.start <= now }
         let resolver = DefaultSourceResolver(priority: priority)
         let stages = resolver.resolveSleepSamples(valid.filter { $0.stage != .inBed })
         let inBed = resolver.resolveSleepSamples(valid.filter { $0.stage == .inBed })
