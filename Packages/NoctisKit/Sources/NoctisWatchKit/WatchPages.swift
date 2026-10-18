@@ -45,7 +45,7 @@ public nonisolated enum WatchCopy {
     public static let asked = "Asked your iPhone"
     public static let askFailed = "Couldn't ask your iPhone"
     public static let askButton = "Ask iPhone to update"
-    public static let about = "NOCTIS isn't a medical device and doesn't diagnose or treat any condition."
+    public static let about = NoctisMedicalNotice.statement
     public static let noAlarm = "No alarm set"
     public static let heartMissing = "No heart rate variability or resting heart rate was available for last night."
     public static let breathingTagline = "A slow breathing exercise."

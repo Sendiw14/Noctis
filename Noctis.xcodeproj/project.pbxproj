@@ -31,6 +31,7 @@
 		4CD8B6DBB5BDF8E0E2F03AF4 /* NoctisShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A10A8BEADCAC2F10DCF9B93 /* NoctisShortcuts.swift */; };
 		5719FF0C4B1AF25264084D24 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */; };
 		5791296039EB649DC5F07D28 /* ComplicationGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22187E6FC3F314EA69DE78A7 /* ComplicationGallery.swift */; };
+		5B90C13CEAE60BE07AB4CE35 /* NoRequestsQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB0515AC5C3E736CDC8B85A /* NoRequestsQATests.swift */; };
 		5C192DBF50D6E63AE11AFC71 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29446C26A811EB272C0D0A01 /* WatchRootView.swift */; };
 		5D47D15860502C898689BDAF /* ScreenCatalogQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */; };
 		5FB459DBC64292A168809508 /* NoctisIntentKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5A839DD9F8FF334F1E8C81D3 /* NoctisIntentKit */; };
@@ -197,6 +198,7 @@
 		935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWidgets.swift; sourceTree = "<group>"; };
 		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
 		9A10A8BEADCAC2F10DCF9B93 /* NoctisShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisShortcuts.swift; sourceTree = "<group>"; };
+		9CB0515AC5C3E736CDC8B85A /* NoRequestsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoRequestsQATests.swift; sourceTree = "<group>"; };
 		9F4381418BABCD30ED4F9689 /* WatchViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchViews.swift; sourceTree = "<group>"; };
 		A4BB76A5775516EE2CDC3DE0 /* NoctisWindDownActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWindDownActivity.swift; sourceTree = "<group>"; };
 		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
@@ -375,6 +377,7 @@
 				CE9541D19A4C980942925904 /* HomeV4QATests.swift */,
 				2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */,
 				77454765E4DB6994F359B0BA /* MemoryQATests.swift */,
+				9CB0515AC5C3E736CDC8B85A /* NoRequestsQATests.swift */,
 				A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */,
 				3F87EDE2708619AA61A6E0CB /* QAMatrixTests.swift */,
 				FE6D414566DC2646DBC6FE09 /* QASupport.swift */,
@@ -711,6 +714,7 @@
 				182F75BB96926890C7F1111B /* HomeV4QATests.swift in Sources */,
 				7C879FB1FC08C5D2BC6C11F2 /* InsightsQATests.swift in Sources */,
 				F16F81738ECDC6390853FAEC /* MemoryQATests.swift in Sources */,
+				5B90C13CEAE60BE07AB4CE35 /* NoRequestsQATests.swift in Sources */,
 				8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */,
 				7F68E1828CDC2E499F9E9DC6 /* QAMatrixTests.swift in Sources */,
 				7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */,

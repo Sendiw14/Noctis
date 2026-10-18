@@ -1,4 +1,5 @@
 import Foundation
+import NoctisText
 import HealthProviding
 import NightKit
 import NoctisCore
@@ -47,7 +48,7 @@ public nonisolated enum HelpCatalog {
 // MARK: - About
 
 public nonisolated enum AboutContent {
-    public static let medical = "NOCTIS isn't a medical device and doesn't diagnose or treat any condition."
+    public static let medical = NoctisMedicalNotice.statement
     public static let acknowledgements = "NOCTIS uses no third-party code, so there is nothing to acknowledge."
 
     /// "1.0 (42)".

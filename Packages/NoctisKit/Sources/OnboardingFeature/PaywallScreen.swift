@@ -286,6 +286,10 @@ struct PaywallScreen: View {
                 benefitsCard
                 compareLink.paywallBlock()
                 plansSection
+                Text(NoctisMedicalNotice.statement)
+                    .noctisFont(12, relativeTo: .caption)
+                    .foregroundStyle(NoctisPaper.ink3)
+                    .multilineTextAlignment(.center)
                 if !pinsBottomStack {
                     bottomStack.padding(.top, NoctisSpacing.sm)
                 }
@@ -711,9 +715,9 @@ struct PaywallScreen: View {
         guard let product = selectedProduct else { return nil }
         let period = selectedProductID == StoreProductID.yearly ? "year" : "month"
         if showTrialCTA, let trial = TrialLength(product) {
-            return "\(trial.phrase) free, then \(product.displayPrice) per \(period). Cancel anytime in Settings."
+            return "\(trial.phrase) free, then \(product.displayPrice) per \(period), renewing automatically. Cancel anytime in Settings."
         }
-        return "\(product.displayPrice) per \(period). Cancel anytime in Settings."
+        return "\(product.displayPrice) per \(period), renewing automatically. Cancel anytime in Settings."
     }
 
     /// A 12pt footer link whose frame is a full 44pt tall, so the tap target and the accessibility frame (Switch Control, the audit) agree. The row

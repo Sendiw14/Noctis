@@ -1,5 +1,6 @@
 import DesignSystem
 import NoctisCore
+import NoctisText
 import SwiftUI
 
 private struct ConstellationSpoke {
@@ -90,6 +91,11 @@ struct WelcomeScreen: View {
                         titleTaglineBlock
                             .noctisTextBlock()
                         infoCard
+                        Text(NoctisMedicalNotice.statement)
+                            .noctisFont(12, relativeTo: .caption)
+                            .foregroundStyle(NoctisPaper.ink3)
+                            .multilineTextAlignment(.center)
+                            .noctisTextBlock()
                     }
                     .background(
                         GeometryReader { geometry in

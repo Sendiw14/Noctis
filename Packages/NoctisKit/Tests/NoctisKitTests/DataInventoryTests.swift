@@ -359,7 +359,14 @@ struct DataInventoryNetworkTests {
     @Test func everyUseOfANetworkCapableAPIIsListedInTheInventory() {
         var usedBy: [String: Set<String>] = [:]
         // The inventory names these APIs as strings; that is not a use.
+        // A file that is wholly `#if DEBUG` never reaches a Release build; the one allowed here is the request recorder of the no-requests UI run
+        // (QA part 3, step 6), whose job is to COUNT URLSession traffic. scripts/qa_symbol_audit.sh proves the Release binaries carry none of it.
+        let debugOnly: Set<String> = ["HomeFeature/HomeDebug.swift"]
         for file in sources() where !relative(file.path).hasPrefix("NoctisCore/DataInventory") && !relative(file.path).hasPrefix("NoctisCore/Privacy") {
+            if debugOnly.contains(relative(file.path)) {
+                #expect(file.code.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("#if DEBUG") && file.code.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("#endif"), "\(relative(file.path)) must be wholly #if DEBUG")
+                continue
+            }
             for token in Self.tokens where file.code.contains(token) { usedBy[token, default: []].insert(relative(file.path)) }
         }
         for (token, files) in usedBy {

@@ -72,7 +72,7 @@ let package = Package(
         // What the Apple Watch app does with what the iPhone sends (APP_RULES.md R50, R51): the inbox that stores the snapshot and applies the data
         // epoch, and the pure builders of every page and state. It builds for watchOS and iOS (the tests run on iOS), depends on the widget kit
         // (the snapshot and its rules) and the design tokens through it, and on nothing that reads Health, SwiftData or Coach: the Watch runs no engines.
-        .target(name: "NoctisWatchKit", dependencies: ["NoctisWidgetKit", "DesignSystem", "BreathingKit"], swiftSettings: engineSwiftSettings),
+        .target(name: "NoctisWatchKit", dependencies: ["NoctisText", "NoctisWidgetKit", "DesignSystem", "BreathingKit"], swiftSettings: engineSwiftSettings),
         // Siri, Shortcuts, Control Center and the wind-down Live Activity's buttons (APP_RULES.md R47, R48, R49): the App Intents, their
         // entities, and what an intent asks of the running app. It depends on the widget kit (the snapshot and the spoken words) and the
         // sound list, and on nothing that reads Health, SwiftData or Coach, so the widget extension can link it for its controls.

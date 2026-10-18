@@ -48,6 +48,35 @@ public enum HomeBodyProbe {
     }
 }
 
+/// DEBUG only: counts every request the app's own code makes through `URLSession.shared` and sessions made from the default configurations, so a UI run
+/// can assert there were none (QA part 3, step 6). It records and declines to handle (`canInit` is false), so it changes nothing. StoreKit's own traffic is
+/// the system's and a custom `URLProtocol` list is not covered: the binary-symbol audit (scripts/qa_symbol_audit.sh) and the source audit
+/// (DataInventoryTests) hold those two.
+public nonisolated final class RequestRecorder: URLProtocol {
+    nonisolated(unsafe) private static var urls: [String] = []
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var installed = false
+
+    public static func installOnce() {
+        lock.withLock {
+            guard !installed else { return }
+            installed = true
+            URLProtocol.registerClass(RequestRecorder.self)
+        }
+    }
+
+    static var count: Int { lock.withLock { urls.count } }
+
+    public override class func canInit(with request: URLRequest) -> Bool {
+        lock.withLock { urls.append(request.url?.absoluteString ?? "?") }
+        return false
+    }
+
+    public override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    public override func startLoading() {}
+    public override func stopLoading() {}
+}
+
 /// An invisible element that reports the probe, refreshed twice a second
 /// on its own timeline, so reading it re-evaluates nothing else.
 struct HomeDebugProbeView: View {
@@ -59,7 +88,7 @@ struct HomeDebugProbeView: View {
                 .frame(width: 2, height: 2)
                 .accessibilityElement()
                 .accessibilityIdentifier("debug.probe")
-                .accessibilityLabel(HomeBodyProbe.summary + ";lowPower=\(lowPower ? 1 : 0)" + String(format: ";reusable=%.1f", HomeBodyProbe.reusableMegabytes))
+                .accessibilityLabel(HomeBodyProbe.summary + ";requests=\(RequestRecorder.count);lowPower=\(lowPower ? 1 : 0)" + String(format: ";reusable=%.1f", HomeBodyProbe.reusableMegabytes))
                 .accessibilityValue(String(format: "%.1f", HomeBodyProbe.footprintMegabytes))
         }
         .allowsHitTesting(false)
@@ -72,6 +101,7 @@ extension View {
     @ViewBuilder
     func homeDebugProbe(lowPower: Bool) -> some View {
         if ProcessInfo.processInfo.arguments.contains("-noctisDebugProbe") {
+            let _ = RequestRecorder.installOnce()
             overlay(alignment: .bottomTrailing) { HomeDebugProbeView(lowPower: lowPower) }
         } else {
             self
