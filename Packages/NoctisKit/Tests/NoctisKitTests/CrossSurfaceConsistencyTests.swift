@@ -1,7 +1,10 @@
 import Foundation
 import Testing
 
+@testable import CoachKit
 @testable import DesignSystem
+@testable import InsightsKit
+@testable import ReviewKit
 @testable import HealthProviding
 @testable import HomeFeature
 @testable import NoctisCore
@@ -27,8 +30,17 @@ struct SurfaceFacts: Equatable, CustomStringConvertible {
     var hrv: String?
     var restingHeartRate: String?
     var factorScores: [String: Int] = [:]
+    /// The same duration as it is spoken ("6 hours 42 minutes").
+    var spokenDuration: String?
+    /// The bedtime last night alone ("11:07 PM").
+    var bedtime: String?
+    /// Tonight's planned bedtime ("11:00 PM").
+    var plannedBedtime: String?
+    /// The seven-night average, "7h 44m", and as spoken.
+    var weekAverage: String?
+    var weekAverageSpoken: String?
 
-    var description: String { "\(surface): score \(score.map(String.init) ?? "-"), delta \(delta ?? "-"), duration \(duration ?? "-"), times \(times ?? "-"), quality \(quality.map(String.init) ?? "-"), hrv \(hrv ?? "-"), rhr \(restingHeartRate ?? "-"), factors \(factorScores.sorted { $0.key < $1.key })" }
+    var description: String { "\(surface): score \(score.map(String.init) ?? "-"), delta \(delta ?? "-"), duration \(duration ?? "-"), times \(times ?? "-"), quality \(quality.map(String.init) ?? "-"), hrv \(hrv ?? "-"), rhr \(restingHeartRate ?? "-"), factors \(factorScores.sorted { $0.key < $1.key }), spoken \(spokenDuration ?? "-"), bedtime \(bedtime ?? "-"), planned \(plannedBedtime ?? "-"), week \(weekAverage ?? "-")" }
 }
 
 private func plain(_ text: String) -> String {
@@ -66,7 +78,9 @@ struct CrossSurfaceConsistencyTests {
         }
         if let night = screen.lastNight {
             homeFacts.duration = plain(night.duration.plain)
+            homeFacts.spokenDuration = plain(night.duration.spoken)
             homeFacts.times = plain(night.timeRange)
+            homeFacts.bedtime = plain(night.timeRange).components(separatedBy: " - ").first
             homeFacts.quality = night.sleepQuality.flatMap { Int($0.plain) }
         }
         if let detail = screen.detail {
@@ -75,6 +89,9 @@ struct CrossSurfaceConsistencyTests {
                 if row.kind == .restingHeartRate { homeFacts.restingHeartRate = plain(row.value.plain) }
             }
         }
+        homeFacts.plannedBedtime = plain(screen.tonight.bedtime.spoken)
+        homeFacts.weekAverage = screen.week.flatMap { $0.average }.map { plain($0.plain) }
+        homeFacts.weekAverageSpoken = screen.week.flatMap { $0.average }.map { plain($0.spoken) }
         all.append(homeFacts)
 
         // Sleep Day.
@@ -136,6 +153,80 @@ struct CrossSurfaceConsistencyTests {
         }
         all.append(watchFacts)
 
+        // Siri: the sentences the intents speak, read back into facts.
+        var siri = SurfaceFacts(surface: "siri")
+        let recoveryLine = WidgetSpoken.recovery(snapshot, now: now, calendar: calendar, format: format)
+        let sleepLine = WidgetSpoken.sleep(snapshot, now: now, calendar: calendar, format: format)
+        let bedtimeLine = WidgetSpoken.bedtime(snapshot.with(tier: .free), format: format)
+        func capture(_ text: String, _ pattern: String) -> String? {
+            guard let range = text.range(of: pattern, options: .regularExpression) else { return nil }
+            return String(text[range])
+        }
+        siri.score = capture(recoveryLine, #"(?<=Your recovery is )\d+"#).flatMap(Int.init)
+        siri.spokenDuration = capture(sleepLine, #"(?<=You slept ).*?(?=\.)"#).map(plain)
+        siri.quality = capture(sleepLine, #"(?<=Sleep quality was )\d+"#).flatMap(Int.init)
+        siri.plannedBedtime = capture(bedtimeLine, #"(?<=Your bedtime tonight is ).*?(?=\.$)"#).map(plain)
+        all.append(siri)
+
+        // Coach: the facts its templates are written from, and the sentence they make.
+        let insights = await InsightsRepository(provider: provider(scenario), timeZone: Fixture.newYork, clock: { clock }).refresh(profile: profile)
+        let snapshots = CoachSnapshots(home: home, sleep: sleep, recovery: recovery, insights: insights)
+        let coachFormat = HomeFormat(calendar: calendar, locale: locale)
+        let context = CoachContextBuilder(format: coachFormat).build(intent: .recoveryChange, direction: nil, snapshots: snapshots, profile: profile)
+        func coach(_ id: String) -> CoachFact? { context.facts.first { $0.id == id } }
+        var coachFacts = SurfaceFacts(surface: "coach")
+        coachFacts.score = coach("recovery.score").map { Int($0.value.rounded()) }
+        coachFacts.duration = coach("sleep.duration").map { plain($0.display) }
+        coachFacts.spokenDuration = coach("sleep.duration").map { plain($0.spoken) }
+        coachFacts.quality = coach("sleep.quality").map { Int($0.value.rounded()) }
+        coachFacts.hrv = coach("hrv.today").map { plain($0.display) }
+        coachFacts.bedtime = coach("bedtime.last").map { plain($0.display) }
+        coachFacts.plannedBedtime = coach("bedtime.suggested").map { plain($0.display) }
+        all.append(coachFacts)
+        let template = TemplateCoachProvider(locale: locale)
+        if let draft = Optional(template.compose(intent: .recoveryChange, context: context)), let answer = CoachAnswerAssembler.assemble(draft, context: context, source: .fromYourData, locale: locale) {
+            let words = plain([answer.summary, answer.whatChanged, answer.whatToNotice].compactMap { $0 }.joined(separator: " "))
+            if let score = homeFacts.score { coachFacts.score = score; if !words.contains("\(score)") { Issue.record("\(scenario): Coach's answer never says today's score \(score): \(words)") } }
+        }
+
+        // The share card Home makes for the same night.
+        if let card = screen.share {
+            var share = SurfaceFacts(surface: "share")
+            share.score = card.recovery?.score
+            share.duration = card.lastNight.map { plain($0.plain) }
+            share.spokenDuration = card.lastNight.map { plain($0.spoken) }
+            if let details = card.details {
+                for part in details.components(separatedBy: " · ") {
+                    if part.hasPrefix("HRV ") { share.hrv = plain(String(part.dropFirst(4))) }
+                    if part.hasPrefix("Resting HR ") { share.restingHeartRate = plain(String(part.dropFirst(11))) }
+                }
+            }
+            all.append(share)
+        }
+
+        // Reviews: the week that ends this morning, from the same samples, and the share card made from it.
+        let start = now.addingTimeInterval(-40 * 86_400)
+        let sleepSamples = (try? await provider(scenario).fetchSleepSamples(from: start, to: now)) ?? []
+        let hrvSamples = (try? await provider(scenario).fetchHRVSamples(from: start, to: now)) ?? []
+        let restingSamples = (try? await provider(scenario).fetchRestingHeartRate(from: start, to: now)) ?? []
+        let nights = ReviewInputsBuilder.nights(sleep: sleepSamples, hrv: hrvSamples, restingHeartRate: restingSamples, needMinutes: Double(profile.needMinutes), now: now, timeZone: Fixture.newYork)
+        if let lastMorning = home.lastNight.map({ ReviewPeriod.morning(ofNight: $0.night) }) {
+            let period = ReviewPeriod.weekly(reviewDate: lastMorning.adding(days: 1))
+            if case .record(let record) = ReviewEngine.build(period: period, nights: nights, needMinutes: profile.needMinutes, now: now, calendar: calendar) {
+                var review = SurfaceFacts(surface: "review")
+                let story = ReviewStoryBuilder.build(record, format: ReviewFormat(locale: locale))
+                if let last = record.nights.last {
+                    review.score = last.recoveryScore
+                    review.duration = ReviewFormat.duration(Double(last.asleepMinutes))
+                }
+                if let cover = story.share(unlocked: true)?.cover {
+                    review.weekAverage = ReviewFormat.duration(Double(cover.averageMinutes))
+                    review.weekAverageSpoken = plain(cover.spokenAverage).replacingOccurrences(of: " on average", with: "")
+                }
+                all.append(review)
+            }
+        }
+
         return all
     }
 
@@ -156,8 +247,14 @@ struct CrossSurfaceConsistencyTests {
         agree("duration") { $0.duration }
         agree("bedtime and wake") { $0.times }
         agree("sleep quality") { $0.quality }
-        agree("HRV") { $0.hrv }
-        agree("resting heart rate") { $0.restingHeartRate }
+        agree("HRV") { $0.hrv.map { $0.replacingOccurrences(of: " ", with: "") } }
+        agree("resting heart rate") { $0.restingHeartRate.map { $0.replacingOccurrences(of: " ", with: "") } }
+        // Tonight's planned bedtime: the one bedtime (Premium's window around it is the Tonight tab's and Siri's own wording, listed in POST_LAUNCH.md).
+        agree("planned bedtime") { $0.plannedBedtime }
+        agree("duration, spoken") { $0.spokenDuration }
+        agree("bedtime last night") { $0.bedtime }
+        agree("seven-night average") { $0.weekAverage }
+        agree("seven-night average, spoken") { $0.weekAverageSpoken }
         // Factor scores: by name, wherever two surfaces both name the factor.
         var byName: [String: [(String, Int)]] = [:]
         for fact in all { for (name, score) in fact.factorScores { byName[name, default: []].append((fact.surface, score)) } }

@@ -1,3 +1,4 @@
+import DesignSystem
 import Foundation
 import HealthProviding
 import HomeFeature

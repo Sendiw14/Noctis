@@ -1,4 +1,5 @@
 import Testing
+@testable import DesignSystem
 @testable import NoctisCore
 
 struct SleepRhythmMathTests {
@@ -26,9 +27,13 @@ struct SleepRhythmMathTests {
         }
     }
 
-    @Test func formattedDurationPadsMinutesToTwoDigits() {
-        #expect(noctisFormattedDuration(minutes: 8 * 60) == "8h 00m")
-        #expect(noctisFormattedDuration(minutes: 9 * 60 + 5) == "9h 05m")
+    /// Onboarding used to pad ("8h 00m", "9h 05m") while every other surface wrote "8h" and "9h 5m": one fact, two spellings. It is the app's one duration now
+    /// (QA part 4, QA-118); the padded spellings are gone with their function body.
+    @Test func formattedDurationIsTheAppsOneDuration() {
+        #expect(noctisFormattedDuration(minutes: 8 * 60) == "8h")
+        #expect(noctisFormattedDuration(minutes: 9 * 60 + 5) == "9h 5m")
+        #expect(noctisFormattedDuration(minutes: 45) == "45m")
+        #expect(noctisFormattedDuration(minutes: 7 * 60 + 30) == NoctisFormat.compactDuration(7 * 60 + 30))
     }
 }
 

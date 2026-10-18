@@ -102,7 +102,7 @@ public nonisolated enum ReviewStoryBuilder {
         }
         return ReviewCoverPage(
             title: record.kind == .weekly ? "Your week" : "Your month", dateRange: ReviewScreenBuilder.dateRange(record.period, format), averageMinutes: average, deltaText: text, deltaArrow: arrow,
-            context: "\(record.nightsRecorded) of \(record.nightsInPeriod) nights were recorded.", spokenAverage: "\(ReviewFormat.duration(Double(average))) on average"
+            context: "\(record.nightsRecorded) of \(record.nightsInPeriod) nights were recorded.", spokenAverage: "\(ReviewFormat.spoken(Double(average))) on average"
         )
     }
 
@@ -127,7 +127,7 @@ public nonisolated enum ReviewStoryBuilder {
             let minutes = Double(night.asleepMinutes)
             return ReviewBar(
                 morning: morning, label: label(morning), minutes: minutes, fraction: minutes / top, stages: stageShares(night.stages), reachedNeed: minutes >= need,
-                spoken: "\(spokenDay(morning)): \(ReviewFormat.duration(minutes))"
+                spoken: "\(spokenDay(morning)): \(ReviewFormat.spoken(minutes))"
             )
         }
         return (built, top)
@@ -289,8 +289,8 @@ public nonisolated enum ReviewStoryBuilder {
         case .duration: ReviewFormat.duration(value)
         case .bedtimeVariation: ReviewFormat.minutes(value)
         case .recovery: ReviewFormat.whole(value)
-        case .hrv: "\(ReviewFormat.whole(value)) ms"
-        case .restingHeartRate: "\(ReviewFormat.whole(value)) bpm"
+        case .hrv: NoctisQuantityText.text(ReviewFormat.whole(value), .millisecond)
+        case .restingHeartRate: NoctisQuantityText.text(ReviewFormat.whole(value), .beatsPerMinute)
         }
     }
 
@@ -353,7 +353,7 @@ public nonisolated enum ReviewStoryBuilder {
         let longest = monthly.longestNight
         blocks.append(ReviewRecordBlock(
             kind: .longestNight, title: "Longest night", minutes: Int(longest.value.rounded()), score: nil, date: format.weekdayDay(longest.morning), tie: tie(longest),
-            spoken: "Longest night, \(ReviewFormat.duration(longest.value)), on \(format.weekdayDay(longest.morning))"
+            spoken: "Longest night, \(ReviewFormat.spoken(longest.value)), on \(format.weekdayDay(longest.morning))"
         ))
         if let best = monthly.highestRecovery {
             blocks.append(ReviewRecordBlock(
@@ -370,8 +370,8 @@ public nonisolated enum ReviewStoryBuilder {
     private static func details(_ record: ReviewRecord) -> String? {
         var parts: [String] = []
         if let recovery = record.recovery { parts.append("Recovery \(ReviewFormat.whole(recovery.average))") }
-        if let hrv = record.heart.hrvAverage { parts.append("HRV \(ReviewFormat.whole(hrv)) ms") }
-        if let rate = record.heart.restingHeartRateAverage { parts.append("Resting heart rate \(ReviewFormat.whole(rate)) bpm") }
+        if let hrv = record.heart.hrvAverage { parts.append("HRV \(NoctisQuantityText.text(ReviewFormat.whole(hrv), .millisecond))") }
+        if let rate = record.heart.restingHeartRateAverage { parts.append("Resting heart rate \(NoctisQuantityText.text(ReviewFormat.whole(rate), .beatsPerMinute))") }
         return parts.isEmpty ? nil : parts.joined(separator: " \u{00B7} ")
     }
 }

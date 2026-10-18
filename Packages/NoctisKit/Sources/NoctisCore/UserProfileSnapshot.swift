@@ -47,10 +47,6 @@ public nonisolated struct UserProfileSnapshot: Sendable, Equatable {
     }
 
     public var typicalWakeTimeDescription: String {
-        let hour24 = typicalWakeMinutes / 60
-        let minute = typicalWakeMinutes % 60
-        let hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12
-        let period = hour24 < 12 ? "AM" : "PM"
-        return String(format: "%d:%02d %@", hour12, minute, period)
+        noctisFormattedClock(minutesSinceMidnight: typicalWakeMinutes)
     }
 }

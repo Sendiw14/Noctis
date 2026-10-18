@@ -328,7 +328,7 @@ struct PlanScreen: View {
             planColumn(icon: "sun.max.fill", fill: NoctisPaper.butter, label: "Wake", number: wakeParts.number, suffix: wakeParts.suffix,
                        spoken: noctisFormattedClock(minutesSinceMidnight: wakeMinutes))
             planColumn(icon: "bed.double.fill", fill: NoctisPaper.sage, label: "Sleep need", number: needParts.number, suffix: needParts.suffix,
-                       spoken: spokenDuration(needMinutes))
+                       spoken: NoctisDurationText.spoken(needMinutes))
         }
     }
 
@@ -360,7 +360,7 @@ struct PlanScreen: View {
         .accessibilityChildren {
             Text("Bedtime, \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))")
             Text("Wake, \(noctisFormattedClock(minutesSinceMidnight: wakeMinutes))")
-            Text("Sleep need, \(spokenDuration(needMinutes))")
+            Text("Sleep need, \(NoctisDurationText.spoken(needMinutes))")
         }
     }
 
@@ -373,27 +373,12 @@ struct PlanScreen: View {
     private var needParts: (number: String, suffix: String) { needValueParts(needMinutes) }
 
     private func clockParts(minutesSinceMidnight: Int) -> (number: String, suffix: String) {
-        let normalized = ((minutesSinceMidnight % 1440) + 1440) % 1440
-        let hour24 = normalized / 60
-        let minute = normalized % 60
-        let hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12
-        let period = hour24 < 12 ? "AM" : "PM"
-        return (String(format: "%d:%02d", hour12, minute), period)
+        let split = NoctisFormat().splitClock(noctisFormattedClock(minutesSinceMidnight: minutesSinceMidnight))
+        return (split.time, split.period)
     }
 
     private func needValueParts(_ minutes: Int) -> (number: String, suffix: String) {
-        let hours = minutes / 60
-        let mins = minutes % 60
-        return mins == 0 ? ("\(hours)", "h") : ("\(hours)h \(mins)m", "")
-    }
-
-    /// "8 hours", "7 hours 30 minutes" — for VoiceOver, where "8h" reads
-    /// as "8 h".
-    private func spokenDuration(_ minutes: Int) -> String {
-        let hours = minutes / 60
-        let mins = minutes % 60
-        let hourText = NoctisCount.hours(hours)
-        return mins == 0 ? hourText : "\(hourText) \(mins) minutes"
+        minutes % 60 == 0 ? ("\(minutes / 60)", NoctisUnit.hour.symbol) : (NoctisDurationText.compact(minutes), "")
     }
 
     private func planLabel(_ text: String) -> some View {

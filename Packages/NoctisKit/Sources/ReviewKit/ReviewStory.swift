@@ -334,7 +334,7 @@ public nonisolated enum ReviewListBuilder {
             let average = ReviewFormat.duration(record.sleep.averageMinutes)
             return ReviewListRow(
                 id: stored.id, title: ReviewScreenBuilder.dateRange(record.period, format), headline: "\(average) a night", status: stored.state == .new ? .new : .opened,
-                spoken: "\(ReviewScreenBuilder.dateRange(record.period, format)), \(average) a night on average, \(stored.state == .new ? "not opened yet" : "opened")"
+                spoken: "\(ReviewScreenBuilder.dateRange(record.period, format)), \(ReviewFormat.spoken(record.sleep.averageMinutes)) a night on average, \(stored.state == .new ? "not opened yet" : "opened")"
             )
         }
         for period in candidates(now: now, weekday: weekday, calendar: calendar) where library[period.id] == nil && period.isComplete(at: now, calendar: calendar) {

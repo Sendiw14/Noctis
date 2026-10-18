@@ -1,3 +1,4 @@
+import DesignSystem
 import CoachKit
 import Foundation
 import HomeFeature

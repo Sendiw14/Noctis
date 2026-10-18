@@ -1,3 +1,4 @@
+import DesignSystem
 import AppIntents
 import Foundation
 import NoctisWidgetKit

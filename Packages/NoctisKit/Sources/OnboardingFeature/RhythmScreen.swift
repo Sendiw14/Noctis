@@ -1,5 +1,6 @@
 import DesignSystem
 import NoctisCore
+import NoctisText
 import SwiftUI
 
 private let wakeRange = 180...720 // 3:00 AM .. 12:00 PM
@@ -189,14 +190,9 @@ struct RhythmScreen: View {
         }
     }
 
-    private var wakeTimeNumeric: String {
-        let hour24 = wakeMinutes / 60
-        let minute = wakeMinutes % 60
-        let hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12
-        return String(format: "%d:%02d", hour12, minute)
-    }
-
-    private var wakeTimePeriod: String { (wakeMinutes / 60) < 12 ? "AM" : "PM" }
+    private var wakeTimeSplit: (time: String, period: String) { NoctisFormat().splitClock(noctisFormattedClock(minutesSinceMidnight: wakeMinutes)) }
+    private var wakeTimeNumeric: String { wakeTimeSplit.time }
+    private var wakeTimePeriod: String { wakeTimeSplit.period }
 
     /// "6 AM", "7 AM" — the wake ruler's hour ticks in locale format,
     /// distinct from `shortWakeHourLabel`'s old single-letter "6A"/"7P"

@@ -1,4 +1,5 @@
 import Foundation
+import NoctisText
 
 /// Bedtime as minutes-since-midnight (0..<1440), computed as `wake - need`
 /// and wrapped across midnight — pure and independently testable since
@@ -10,17 +11,15 @@ public nonisolated func noctisBedtimeMinutes(wakeMinutes: Int, needMinutes: Int)
     return raw < 0 ? raw + 1440 : raw
 }
 
-/// Formats minutes-since-midnight as a locale-aware clock time (12h or
-/// 24h, whichever the user's locale prefers) — e.g. "11:00 PM" or "23:00".
+/// Formats minutes-since-midnight as a locale-aware clock time (12h or 24h, whichever the user's locale prefers) — e.g. "11:00 PM" or "23:00". The one
+/// clock formatter (`NoctisClockText`) with the device's calendar and locale: onboarding, Profile and every other surface print the same time the same way.
 public nonisolated func noctisFormattedClock(minutesSinceMidnight: Int) -> String {
-    let normalized = ((minutesSinceMidnight % 1440) + 1440) % 1440
-    let date = Calendar.current.date(bySettingHour: normalized / 60, minute: normalized % 60, second: 0, of: .now) ?? .now
-    return date.formatted(date: .omitted, time: .shortened)
+    NoctisClockText.string(minutesSinceMidnight: minutesSinceMidnight, calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent)
 }
 
-/// Formats a duration in minutes as "8h 00m".
+/// A duration in minutes as the app writes it everywhere: "8h", "9h 5m", "45m" (`NoctisDurationText`).
 public nonisolated func noctisFormattedDuration(minutes: Int) -> String {
-    String(format: "%dh %02dm", minutes / 60, minutes % 60)
+    NoctisDurationText.compact(minutes)
 }
 
 /// Rhythm's night strip: by default an 18-hour window, 6:00 PM through

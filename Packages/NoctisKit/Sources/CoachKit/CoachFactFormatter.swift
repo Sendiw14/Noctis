@@ -1,4 +1,6 @@
+import DesignSystem
 import Foundation
+import NoctisText
 import HomeFeature
 
 /// Turns a number into a `CoachFact`, formatted the way the rest of the app
@@ -41,13 +43,13 @@ public struct CoachFactFormatter: Sendable {
             return (clock, clock)
         case .milliseconds:
             let n = number(value)
-            return ("\(n) ms", "\(n) milliseconds")
+            return (NoctisQuantityText.text(n, .millisecond), NoctisUnit.millisecond.spoken(Int(value.rounded())))
         case .beatsPerMinute:
             let n = number(value)
-            return ("\(n) bpm", "\(n) beats per minute")
+            return (NoctisQuantityText.text(n, .beatsPerMinute), NoctisUnit.beatsPerMinute.spoken(Int(value.rounded())))
         case .percent:
             let n = number(value)
-            return ("\(n)%", "\(n) percent")
+            return ("\(n)\(NoctisUnit.percent.symbol)", NoctisUnit.percent.spoken(Int(value.rounded())))
         }
     }
 

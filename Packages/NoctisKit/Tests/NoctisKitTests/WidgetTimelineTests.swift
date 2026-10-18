@@ -239,9 +239,9 @@ struct WidgetDisplayTests {
         let night = try #require(body.night)
         #expect(night.duration.label == "Last night" && night.duration.value.plain == "6h 42m" && sp(night.times) == "11:04 PM – 6:52 AM")
         #expect(night.stages == WidgetStages(deep: 74, core: 236, rem: 92) && night.quality?.value.plain == "81")
-        #expect(sp(body.tonight.bedtime) == "10:45\u{2009}–\u{2009}11:15 PM" && sp(body.tonight.wake) == "Wake 7:00 AM")
+        #expect(sp(body.tonight.bedtime) == "10:45 – 11:15 PM" && sp(body.tonight.wake) == "Wake 7:00 AM")
         #expect(presentation.link == .recovery && presentation.footer == nil && !presentation.isPreview)
-        #expect(sp(presentation.accessibilityLabel) == "Recovery 70, +6 on your usual. Slept 6 hours 42 minutes. Bedtime 10:45\u{2009}–\u{2009}11:15 PM")
+        #expect(sp(presentation.accessibilityLabel) == "Recovery 70, +6 on your usual. Slept 6 hours 42 minutes. Bedtime 10:45 – 11:15 PM")
     }
 
     @Test func rowsWithNoDataAreOmitted() throws {
@@ -314,7 +314,7 @@ struct WidgetDisplayTests {
         let upcoming = present(snapshot(), at: at(24, 21, 30))
         let body = try #require(evening(upcoming))
         #expect(body.bedtime == at(24, 23) && !body.hasPassed)
-        #expect(body.bedtimeText.plain == "11:00PM" && sp(body.windowText ?? "") == "10:45\u{2009}–\u{2009}11:15 PM")
+        #expect(body.bedtimeText.plain == "11:00PM" && sp(body.windowText ?? "") == "10:45 – 11:15 PM")
         #expect(body.wake.value.plain == "7:00AM" && sp(body.wakeText) == "7:00 AM" && body.need.value.plain == "8h")
         #expect(body.alarm?.value.plain == "7:00AM")
         #expect(upcoming.link == .tonight)
@@ -401,10 +401,10 @@ struct WidgetDisplayTests {
             #expect(format.clockMetric(minutesSinceMidnight: minutes) == home.clockMetric(home.clock(minutesSinceMidnight: minutes)))
         }
         #expect(WidgetFormat.quantityMetric(54, .millisecond) == HomeFormat.quantityMetric(54, .millisecond))
-        #expect(format.windowText(startMinutes: 22 * 60 + 45, endMinutes: 23 * 60 + 15) == "10:45\u{2009}–\u{2009}11:15 PM")
-        #expect(format.windowText(startMinutes: 23 * 60 + 45, endMinutes: 15) == "11:45 PM\u{2009}–\u{2009}12:15 AM", "across midnight, both periods")
+        #expect(format.windowText(startMinutes: 22 * 60 + 45, endMinutes: 23 * 60 + 15) == "10:45 – 11:15 PM")
+        #expect(format.windowText(startMinutes: 23 * 60 + 45, endMinutes: 15).replacingOccurrences(of: "\u{202F}", with: " ") == "11:45 PM – 12:15 AM", "across midnight, both periods")
         let h24 = WidgetFormat(calendar: calendar, locale: Locale(identifier: "de_DE"))
-        #expect(h24.clockMetric(minutesSinceMidnight: 23 * 60).plain == "23:00" && h24.windowText(startMinutes: 22 * 60 + 45, endMinutes: 23 * 60 + 15) == "22:45\u{2009}–\u{2009}23:15")
+        #expect(h24.clockMetric(minutesSinceMidnight: 23 * 60).plain == "23:00" && h24.windowText(startMinutes: 22 * 60 + 45, endMinutes: 23 * 60 + 15) == "22:45 – 23:15")
     }
 
     @Test func eachSurfaceOpensTheRightScreen() {

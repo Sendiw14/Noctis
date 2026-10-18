@@ -455,7 +455,7 @@ public nonisolated enum InsightScreenBuilder {
         default:
             title = "Your lowest resting heart rate in \(days) days"
             label = "resting heart rate"
-            value = { "\(Int($0.rounded())) bpm" }
+            value = { NoctisQuantityText.text(Int($0.rounded()), .beatsPerMinute) }
             spoken = { HomeFormat.quantityMetric(Int($0.rounded()), .beatsPerMinute) }
         }
         let higher = type == .recordLongestNight || type == .recordHighestRecovery

@@ -654,11 +654,7 @@ struct PaywallScreen: View {
         .background(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous).fill(NoctisPaper.surface))
     }
 
-    private func formattedNeed(_ minutes: Int) -> String {
-        let hours = minutes / 60
-        let mins = minutes % 60
-        return mins == 0 ? "\(hours)h" : "\(hours)h \(mins)m"
-    }
+    private func formattedNeed(_ minutes: Int) -> String { NoctisDurationText.compact(minutes) }
 
     // MARK: - Bottom stack
 

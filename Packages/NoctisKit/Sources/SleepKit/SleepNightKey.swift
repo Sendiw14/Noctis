@@ -46,7 +46,9 @@ public struct SleepNightKey: Hashable, Comparable, Sendable, Codable, CustomStri
     public func minutesAfterNoon(of date: Date, in timeZone: TimeZone) -> Double {
         let local = Self.gregorian(timeZone).dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
         let localDay = SleepNightKey(year: local.year ?? year, month: local.month ?? month, day: local.day ?? day)
-        let clock = Double(local.hour ?? 0) * 60 + Double(local.minute ?? 0) + Double(local.second ?? 0) / 60
+        // Whole minutes, the way a clock shows them: 11:15:40 PM is 11:15 PM. Seconds left in would round 11:15:40 up to 11:16 on any surface that rounds minutes,
+        // while the clock face (and Health) truncates: one bedtime, two readings (QA-118, found by the cross-surface test).
+        let clock = Double(local.hour ?? 0) * 60 + Double(local.minute ?? 0)
         return Double(localDay.days(from: self)) * 1440 + clock - 720
     }
 

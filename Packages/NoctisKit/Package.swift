@@ -54,7 +54,7 @@ let package = Package(
         // The units and counts NOCTIS prints and speaks (APP_RULES.md R68): "6h 42m", "1 night", "2 nights", each from the string catalog with the
         // language's plural variations. No dependency, nonisolated, so the engines, the widgets and the Watch can link it.
         .target(name: "NoctisText", resources: [.process("Resources")], swiftSettings: engineSwiftSettings),
-        .target(name: "DesignSystem", swiftSettings: noctisSwiftSettings),
+        .target(name: "DesignSystem", dependencies: ["NoctisText"], swiftSettings: noctisSwiftSettings),
         .target(name: "HealthProviding", swiftSettings: noctisSwiftSettings),
         .target(name: "SleepKit", dependencies: ["HealthProviding"], swiftSettings: engineSwiftSettings),
         .target(name: "RecoveryKit", dependencies: ["HealthProviding", "SleepKit"], swiftSettings: engineSwiftSettings),

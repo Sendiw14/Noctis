@@ -1,3 +1,4 @@
+import DesignSystem
 import Foundation
 import HomeFeature
 import InsightsKit
@@ -193,7 +194,7 @@ public nonisolated enum InsightChartBuilder {
             case .recordLongestNight: HomeFormat.compactDuration(Int(value.rounded()))
             case .recordBestConsistency: "\(Int(value.rounded())) min"
             case .recordHighestRecovery: "\(Int(value.rounded()))"
-            default: "\(Int(value.rounded())) bpm"
+            default: NoctisQuantityText.text(Int(value.rounded()), .beatsPerMinute)
             }
         }
         let top = max(e.value, e.previousBest, 1)

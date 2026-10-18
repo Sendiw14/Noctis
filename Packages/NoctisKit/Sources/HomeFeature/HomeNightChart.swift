@@ -1,5 +1,6 @@
 import DesignSystem
 import Foundation
+import NoctisText
 import HealthProviding
 import NoctisCore
 import SleepKit
@@ -69,8 +70,8 @@ public nonisolated struct NightChartContent: Sendable, Equatable {
         let length = Int(((span.end - span.start) * minutes).rounded())
         let time = clock.text(at: position)
         let bpm = heart?.bpm(at: position)
-        let text = [time, span.stage.name, HomeFormat.compactDuration(length, minutesWord: true)] + (bpm.map { ["\($0) bpm"] } ?? [])
-        let spoken = [time, span.stage.name, HomeFormat.spokenDuration(length)] + (bpm.map { ["\($0) beats per minute"] } ?? [])
+        let text = [time, span.stage.name, HomeFormat.compactDuration(length, minutesWord: true)] + (bpm.map { [NoctisQuantityText.text($0, .beatsPerMinute)] } ?? [])
+        let spoken = [time, span.stage.name, HomeFormat.spokenDuration(length)] + (bpm.map { [NoctisUnit.beatsPerMinute.spoken($0)] } ?? [])
         return NightReading(
             position: position,
             segment: index,
@@ -229,7 +230,7 @@ nonisolated extension HomeScreenBuilder {
             low: line.low,
             high: line.high,
             lowest: lowest,
-            lowestLabel: "min \(low) bpm",
+            lowestLabel: "min \(NoctisQuantityText.text(low, .beatsPerMinute))",
             accessibilityLabel: "Heart rate from \(low) to \(high) beats per minute.",
             series: series,
             line: line

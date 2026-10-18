@@ -105,7 +105,7 @@ struct WeeklyStoryTests {
         let story = ReviewStoryBuilder.build(handmade(average: 467, delta: 22), format: format)
         guard case .cover(let cover) = story.pages[0].content else { Issue.record("a cover"); return }
         #expect(cover.title == "Your week" && cover.averageMinutes == 467 && cover.deltaText == "+22 min vs the week before" && cover.deltaArrow == .up)
-        #expect(cover.context == "7 of 7 nights were recorded." && cover.spokenAverage == "7h 47m on average")
+        #expect(cover.context == "7 of 7 nights were recorded." && cover.spokenAverage == "7 hours 47 minutes on average")
         guard case .cover(let down) = ReviewStoryBuilder.build(handmade(delta: -14), format: format).pages[0].content else { return }
         #expect(down.deltaText == "\u{2212}14 min vs the week before" && down.deltaArrow == .down)
         guard case .cover(let same) = ReviewStoryBuilder.build(handmade(delta: 0.4), format: format).pages[0].content else { return }
@@ -534,7 +534,7 @@ struct ReviewListBuilderTests {
         #expect(list.weekly.map(\.id) == [week.id, older.id] && list.monthly.map(\.id) == [month.id])
         #expect(list.weekly.map(\.status) == [.new, .opened] && list.weekly.map(\.title) == ["Sep 20 \u{2013} 26", "Sep 13 \u{2013} 19"] && list.monthly.first?.title == "August 2026")
         #expect(list.weekly.map(\.headline) == ["7h 47m a night", "7h 30m a night"] && !list.isEmpty)
-        #expect(list.weekly[0].spoken == "Sep 20 \u{2013} 26, 7h 47m a night on average, not opened yet" && list.weekly[1].spoken.hasSuffix("opened"))
+        #expect(list.weekly[0].spoken == "Sep 20 \u{2013} 26, 7 hours 47 minutes a night on average, not opened yet" && list.weekly[1].spoken.hasSuffix("opened"))
     }
 
     @Test func aPastPeriodWithTooFewNightsIsItsOwnRowAndAnEmptyOrCompleteOneIsNot() {

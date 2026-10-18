@@ -150,8 +150,8 @@ nonisolated extension RecoveryScreenBuilder {
         switch kind {
         case .sleepDuration: HomeFormat.compactDuration(Int(value.rounded()))
         case .sleepConsistency: format.clock(minutesAfterNoon: value)
-        case .hrv: "\(Int(value.rounded())) ms"
-        case .restingHeartRate: "\(Int(value.rounded())) bpm"
+        case .hrv: NoctisQuantityText.text(Int(value.rounded()), .millisecond)
+        case .restingHeartRate: NoctisQuantityText.text(Int(value.rounded()), .beatsPerMinute)
         }
     }
 

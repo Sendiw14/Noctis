@@ -1,4 +1,5 @@
 import Foundation
+import NoctisText
 import SleepKit
 
 /// How a review writes a date, a clock time and a duration, in the person's own calendar and language. Dates are calendar dates (a `SleepNightKey`), so a time zone
@@ -55,27 +56,23 @@ public nonisolated struct ReviewFormat: Sendable {
         let wall = Int((minutes.rounded() + 720).truncatingRemainder(dividingBy: 1440) + 1440) % 1440
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = Self.utc
-        let moment = calendar.date(from: DateComponents(year: 2001, month: 1, day: 1, hour: wall / 60, minute: wall % 60)) ?? Date(timeIntervalSince1970: 0)
-        return moment.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: locale, calendar: calendar, timeZone: Self.utc))
+        return NoctisClockText.string(minutesSinceMidnight: wall, calendar: calendar, locale: locale)
     }
 
-    /// 6h 42m, 8h, 45m.
-    public static func duration(_ minutes: Double) -> String {
-        let total = max(Int(minutes.rounded()), 0)
-        let hours = total / 60
-        let rest = total % 60
-        if hours == 0 { return "\(rest)m" }
-        return rest == 0 ? "\(hours)h" : "\(hours)h \(rest)m"
-    }
+    /// 6h 42m, 8h, 45m: the app's one duration (`NoctisDurationText`).
+    public static func duration(_ minutes: Double) -> String { NoctisDurationText.compact(NoctisDurationText.wholeMinutes(minutes)) }
+
+    /// "6 hours 42 minutes": the same length as it is spoken (VoiceOver reads "6h 42m" as letters).
+    public static func spoken(_ minutes: Double) -> String { NoctisDurationText.spoken(NoctisDurationText.wholeMinutes(minutes)) }
 
     /// 14 min, 1h 5m: a difference, without a sign.
     public static func amount(_ minutes: Double) -> String {
         let total = Int(abs(minutes).rounded())
-        return total >= 60 ? duration(Double(total)) : "\(total) min"
+        return total >= 60 ? duration(Double(total)) : NoctisDurationText.minutesOnly(total)
     }
 
     /// Whole minutes: 24 min.
-    public static func minutes(_ value: Double) -> String { "\(Int(value.rounded())) min" }
+    public static func minutes(_ value: Double) -> String { NoctisDurationText.minutesOnly(Int(value.rounded())) }
 
     /// 54: a whole number (a recovery score, an HRV, a heart rate).
     public static func whole(_ value: Double) -> String { String(Int(value.rounded())) }
