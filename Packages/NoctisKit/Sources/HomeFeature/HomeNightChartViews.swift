@@ -261,12 +261,14 @@ struct NightChartView: View {
 
     static let heartHeight: CGFloat = 28
     static let heartGap: CGFloat = 8
+    /// Room under the strip for "min 46 bpm": the label sits under the line's lowest point, never on the line (QA part 5).
+    static let heartLabelRoom: CGFloat = 14
     /// Every lane label's tap area is at least this tall (R10 targets).
     static let minimumTarget: CGFloat = 44
 
     private var laneHeight: CGFloat { laneHeightOverride ?? scaledLaneHeight }
     private var plot: NightPlot { NightPlot(width: width, laneHeight: laneHeight) }
-    private var heartBlock: CGFloat { chart.heart == nil ? 0 : Self.heartGap + Self.heartHeight }
+    private var heartBlock: CGFloat { chart.heart == nil ? 0 : Self.heartGap + Self.heartHeight + Self.heartLabelRoom }
     private var pathsKey: NightPathsKey { NightPathsKey(plot: plot, heartHeight: Self.heartHeight, render: chart.render) }
     private var targetOutset: CGFloat { max(Self.minimumTarget - laneHeight, 0) / 2 }
 
@@ -322,7 +324,7 @@ struct NightChartView: View {
             if let heart = chart.heart, let paths {
                 NightHeartLayer(paths: paths, label: heart.lowestLabel)
                     .equatable()
-                    .frame(height: Self.heartHeight)
+                    .frame(height: Self.heartHeight + Self.heartLabelRoom)
                     .offset(y: plot.lanesHeight + Self.heartGap)
                     .opacity(details)
                     .animation(fade, value: details)
@@ -489,10 +491,9 @@ struct NightHeartLayer: View, Equatable {
                 Text(label).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(ink.opacity(0.8))
             )
             let labelSize = text.measure(in: CGSize(width: size.width, height: height))
-            // Beside the point, on whichever side has room.
-            let rightSide = lowest.x + 6 + labelSize.width <= size.width
-            let x = max(rightSide ? lowest.x + 6 : lowest.x - 6 - labelSize.width, 0)
-            let y = min(max(lowest.y - labelSize.height / 2, 0), height - labelSize.height)
+            // Under the point: the lowest point is the line's own minimum, so the strip below it is clear.
+            let x = min(max(lowest.x - labelSize.width / 2, 0), max(size.width - labelSize.width, 0))
+            let y = min(lowest.y + 4, height - labelSize.height)
             let rect = CGRect(x: x, y: y, width: labelSize.width, height: labelSize.height)
             // A halo in the panel's color, so the line steps aside for the
             // glyphs without a box cut out of it.

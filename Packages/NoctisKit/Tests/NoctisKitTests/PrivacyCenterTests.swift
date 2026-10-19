@@ -177,6 +177,20 @@ struct PrivacyCenterContentTests {
         #expect(PrivacyCenterBuilder.content(shared, dataManagement: true).deleteNote.contains("Data management"))
     }
 
+    @Test func categoriesInOneSharedStoreAreOneRowNotTheSameFigureTwice() throws {
+        let root = URL.temporaryDirectory.appending(path: "noctis-privacy-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try Data(count: 5000).write(to: root.appending(path: "default.store"))
+        let page = PrivacyCenterBuilder.content(shared, roots: DataRoots(directories: [.applicationSupport: root], defaults: NoctisUserDefaults.standard))
+        let shares = page.sizes.filter { $0.value?.hasSuffix("shared") == true }
+        let values = shares.compactMap(\.value)
+        #expect(Set(values).count == values.count || shares.isEmpty, "no two rows print the same shared size")
+        let row = try #require(page.sizes.first { $0.title.contains("wind-down history") }, "the shared store's row is there")
+        #expect(row.title.hasSuffix("wake alarm and wind-down history"), Comment(rawValue: row.title))
+        #expect(!page.sizes.contains { $0.title == "Wind-down history" || $0.title == "Wake alarm" }, "no row of its own for either")
+    }
+
     @Test func everyCategoryHasACompletePage() {
         for category in shared.categories {
             let page = PrivacyCategoryContent.make(category, in: shared)

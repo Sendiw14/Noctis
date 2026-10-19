@@ -170,15 +170,16 @@ struct RecoveryBuildCard: View {
     static let barHeight: CGFloat = 20
 
     var body: some View {
-        NoctisColorBlock(fill: NoctisAppColor.blockLavender) {
+        // A card surface, not the lavender field: the HRV segment is lavender and vanished into it (QA part 5).
+        NoctisAppCard {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-                NoctisCaption("HOW TODAY'S SCORE WAS BUILT", style: .noctisFieldInk2)
+                NoctisCaption("HOW TODAY'S SCORE WAS BUILT", style: .noctisInk2)
                 HStack(spacing: NoctisSpacing.sm) {
                     bar
                     Text(build.totalText)
                         .noctisFont(17, .semibold, relativeTo: .body)
                         .monospacedDigit()
-                        .foregroundStyle(.noctisFieldInk)
+                        .foregroundStyle(NoctisAppColor.ink)
                         .fixedSize()
                 }
                 VStack(spacing: NoctisSpacing.sm) {
@@ -189,7 +190,7 @@ struct RecoveryBuildCard: View {
                 if let note = build.capNote {
                     Text(note)
                         .noctisFont(15, .semibold, relativeTo: .subheadline)
-                        .foregroundStyle(.noctisFieldInk)
+                        .foregroundStyle(NoctisAppColor.ink)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(NoctisSpacing.sm)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -203,8 +204,8 @@ struct RecoveryBuildCard: View {
         .accessibilityIdentifier("recovery.build")
     }
 
-    /// The segments keep their ring colors; a 2pt cocoa outline keeps the
-    /// lavender one from vanishing into the block.
+    /// The segments keep their ring colors; a cocoa outline keeps each one crisp
+    /// on the card.
     private var bar: some View {
         ZStack {
             NoctisSpanLayout(to: 1) {
@@ -230,17 +231,17 @@ struct RecoveryBuildCard: View {
                 .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
             Text(row.name)
                 .noctisFont(15, .semibold, relativeTo: .subheadline)
-                .foregroundStyle(.noctisFieldInk)
+                .foregroundStyle(NoctisAppColor.ink)
             Spacer(minLength: NoctisSpacing.xs)
             if let usual = row.usualText {
                 Text(usual)
                     .noctisFont(13, relativeTo: .footnote)
-                    .foregroundStyle(.noctisFieldInk2)
+                    .foregroundStyle(.noctisInk2)
             }
             Text(row.pointsText)
                 .noctisFont(17, .semibold, relativeTo: .body)
                 .monospacedDigit()
-                .foregroundStyle(.noctisFieldInk)
+                .foregroundStyle(NoctisAppColor.ink)
                 .frame(minWidth: 40, alignment: .trailing)
         }
     }

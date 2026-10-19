@@ -47,12 +47,26 @@ public nonisolated enum PrivacyCenterBuilder {
         let byApple = inventory.flows.filter { $0.trigger == .byApple }.map(line(for:))
         let toWatch = inventory.flows.filter { $0.trigger == .toYourWatch }.map(line(for:))
         let ifYouSend = inventory.flows.filter { $0.trigger == .onlyWhenYouChoose }.map(line(for:))
-        let sizes = inventory.categories.compactMap { category -> PrivacyCenterContent.Line? in
+        // Categories kept in one shared store have one size between them: one row, named for all of them (QA part 5), never the same figure twice.
+        var sizes: [PrivacyCenterContent.Line] = []
+        var sharedRow: [Set<DataCategoryID>: Int] = [:]
+        for category in inventory.categories {
             let size = inventory.size(of: category, roots: roots)
-            guard size != .notStored else { return nil }
+            guard size != .notStored else { continue }
             // Nothing in a place that holds nothing the person wrote is not worth a line.
-            if size == .bytes(0), !category.holdsUserContent { return nil }
-            return PrivacyCenterContent.Line(id: category.id.rawValue, title: category.name, detail: nil, value: sizeText(size), category: category.id)
+            if size == .bytes(0), !category.holdsUserContent { continue }
+            if case .shared(_, let others) = size {
+                let group = Set(others + [category.id])
+                if let index = sharedRow[group] {
+                    let line = sizes[index]
+                    sizes[index] = PrivacyCenterContent.Line(
+                        id: line.id, title: joinedName(line.title, category.name), detail: nil, value: line.value, category: line.category
+                    )
+                    continue
+                }
+                sharedRow[group] = sizes.count
+            }
+            sizes.append(PrivacyCenterContent.Line(id: category.id.rawValue, title: category.name, detail: nil, value: sizeText(size), category: category.id))
         }
         let deletable = inventory.groups.map { group in
             PrivacyCenterContent.Line(id: group.id, title: group.title, detail: nil, value: group.verb.rawValue, category: group.categories.first)
@@ -82,6 +96,15 @@ public nonisolated enum PrivacyCenterBuilder {
             deletable: deletable,
             noAccount: PrivacyStatements.noAccount(inventory)?.text
         )
+    }
+
+    /// "Wake alarm" and "Wind-down history": "Wake alarm and wind-down history"; a third: "Your profile, wake alarm and wind-down history".
+    static func joinedName(_ first: String, _ second: String) -> String {
+        let tail = second.prefix(1).lowercased() + second.dropFirst()
+        if let range = first.range(of: " and ", options: .backwards) {
+            return first.replacingCharacters(in: range, with: ", ") + " and " + tail
+        }
+        return "\(first) and \(tail)"
     }
 
     static func line(for flow: DataFlow) -> PrivacyCenterContent.Line {
