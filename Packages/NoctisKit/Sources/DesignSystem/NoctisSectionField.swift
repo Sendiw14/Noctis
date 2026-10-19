@@ -73,9 +73,8 @@ public nonisolated enum NoctisSection: Sendable, CaseIterable {
     /// status-bar text (black in Light, white in Dark) has to clear 3:1
     /// over it. Otherwise the field starts below the safe area.
     public func extendsUnderStatusBar(dark: Bool) -> Bool {
-        let palette: NoctisAppPalette = dark ? .dark : .light
-        let text = dark ? "FFFFFF" : "000000"
-        return noctisContrastRatio(noctisHexColor(fillHex(palette)), noctisHexColor(text)) >= 3
+        // Every field runs under the status bar, as Recovery's always did (QA part 6): a field that started below it left a dark band with a blurred edge.
+        true
     }
 
     /// The opacity of cocoa ink for a quieter line on this field: `target`

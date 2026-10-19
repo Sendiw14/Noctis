@@ -257,21 +257,13 @@ struct NoctisAppContrastTests {
         #expect(NoctisSection.profile.quietOpacity(target: NoctisFieldInkStyle.captionOpacity, dark: false) == NoctisFieldInkStyle.captionOpacity)
     }
 
-    /// The field runs under the status bar only where the system's status-bar
-    /// text (black in Light, white in Dark) clears 3:1 over it; a field that
-    /// can't starts below the safe area.
-    @Test func theFieldRunsUnderTheStatusBarWhereItsTextStaysLegible() {
+    /// QA part 6 (the owner's call): every field runs under the status bar in both appearances, as Recovery's always did, so all five tabs look
+    /// the same. White status text on the dark sage and butter fields is below 3:1 (recorded, not hidden: QA_REPORT.md section 5).
+    @Test func everyFieldRunsUnderTheStatusBarInBothAppearances() {
         for section in NoctisSection.allCases {
             #expect(section.extendsUnderStatusBar(dark: false), "Light \(section)")
+            #expect(section.extendsUnderStatusBar(dark: true), "Dark \(section)")
         }
-        // White on the dark fields, from their luminance.
-        for section in NoctisSection.allCases {
-            let ratio = ratio("FFFFFF", section.fillHex(.dark))
-            #expect(section.extendsUnderStatusBar(dark: true) == (ratio >= 3), "Dark \(section) \(ratio)")
-        }
-        #expect(NoctisSection.recovery.extendsUnderStatusBar(dark: true), "white on the dark lavender is 3.5:1")
-        #expect(!NoctisSection.sleep.extendsUnderStatusBar(dark: true), "white on the dark sage fails 3:1")
-        #expect(!NoctisSection.insights.extendsUnderStatusBar(dark: true), "white on the dark butter fails 3:1")
     }
 
     /// The first card or hero below a field overlaps its bottom edge by 24pt;

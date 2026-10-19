@@ -87,11 +87,7 @@ struct RecoveryHeroView: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            if let caption = content.usualCaption {
-                Text(caption)
-                    .noctisFont(12, relativeTo: .caption)
-                    .foregroundStyle(.noctisInk3)
-            }
+            // The ring's 'usual' ticks and their caption are not drawn (the owner's call, QA part 6): the segments and the number say it.
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)
@@ -133,7 +129,7 @@ struct RecoveryHeroView: View {
             NoctisRecoveryRing(
                 segments: content.segments.map(\.ringSegment),
                 reveal: reveal.holdsStart ? 0 : 1,
-                showsUsual: content.usualCaption != nil,
+                showsUsual: false,
                 diameter: Self.ringDiameter,
                 lineWidth: Self.ringLineWidth
             )

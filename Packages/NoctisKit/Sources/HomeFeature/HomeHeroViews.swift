@@ -113,11 +113,7 @@ struct ScoredHeroView: View {
 
             FactorCapsulesView(factors: content.factors, open: focus)
 
-            if let caption = content.usualCaption {
-                Text(caption)
-                    .noctisFont(12, relativeTo: .caption)
-                    .foregroundStyle(.noctisInk3)
-            }
+            // The ring's 'usual' ticks and their caption are not drawn (the owner's call, QA part 6): the segments and the number say it.
         }
         // Cancelled with the view, so a skipped reveal never lands a haptic.
         .task(id: reveal) {
@@ -152,7 +148,7 @@ struct ScoredHeroView: View {
                     reveal: reveal.holdsStart ? 0 : 1,
                     highlight: focused.flatMap { kind in content.segments.firstIndex { $0.kind == kind } },
                     dim: focused == nil ? 0 : 1,
-                    showsUsual: content.usualCaption != nil,
+                    showsUsual: false,
                     diameter: Self.ringDiameter,
                     lineWidth: Self.ringLineWidth
                 )
