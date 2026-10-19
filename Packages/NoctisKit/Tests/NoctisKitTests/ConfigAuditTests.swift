@@ -159,7 +159,8 @@ struct ConfigAuditTests {
         #expect(app["com.apple.developer.healthkit"] as? Bool == true)
         #expect((app["com.apple.developer.healthkit.access"] as? [Any])?.isEmpty == true, "no clinical records")
         #expect(app["com.apple.developer.healthkit.background-delivery"] as? Bool == true, "R46: the morning wake")
-        #expect(Set(app.keys) == ["com.apple.developer.healthkit", "com.apple.developer.healthkit.access", "com.apple.developer.healthkit.background-delivery", "com.apple.security.application-groups"])
+        #expect(app["com.apple.developer.applesignin"] as? [String] == ["Default"], "R69: Sign in with Apple, optional and local")
+        #expect(Set(app.keys) == ["com.apple.developer.applesignin", "com.apple.developer.healthkit", "com.apple.developer.healthkit.access", "com.apple.developer.healthkit.background-delivery", "com.apple.security.application-groups"])
 
         let group = WidgetSnapshotStore.appGroupIdentifier
         #expect(app["com.apple.security.application-groups"] as? [String] == [group])

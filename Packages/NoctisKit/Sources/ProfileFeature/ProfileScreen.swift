@@ -1,3 +1,4 @@
+import AuthenticationServices
 import DesignSystem
 import HomeFeature
 import NoctisCore
@@ -96,13 +97,15 @@ private struct ProfileSections: View {
                 }
             }
             .noctisRise(index: 2)
+            ProfileAccountCard(viewModel: viewModel)
+                .noctisRise(index: 3)
             if let note = PrivacyStatements.nameStays(.shared) {
                 Text(note)
                     .noctisFont(13, relativeTo: .footnote)
                     .foregroundStyle(.noctisInk3)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, NoctisSpacing.xs)
-                    .noctisRise(index: 3)
+                    .noctisRise(index: 4)
             }
         }
     }
@@ -186,5 +189,70 @@ private struct ProfileSleepCard: View {
             }
         }
         .accessibilityIdentifier("profile.sleepCard")
+    }
+}
+
+
+/// Sign in with Apple, optional and local (APP_RULES.md R69): signed out, one button; signed in, a line and "Sign out". Nothing in the app is different
+/// either way.
+private struct ProfileAccountCard: View {
+    let viewModel: ProfileViewModel
+    @Environment(AccountStore.self) private var account
+    @State private var message: String?
+
+    var body: some View {
+        NoctisRowCard {
+            VStack(alignment: .leading, spacing: 0) {
+                NoctisInfoRow(
+                    systemImage: "apple.logo", fill: NoctisAppColor.fieldSand, title: "Account",
+                    value: account.state.isSignedIn ? "Signed in with Apple" : "Not signed in", identifier: "profile.account"
+                )
+                NoctisRowDivider()
+                if account.state.isSignedIn {
+                    Button {
+                        NoctisHaptics.softImpact()
+                        account.signOut()
+                    } label: {
+                        Text("Sign out")
+                            .noctisFont(17, .semibold, relativeTo: .body)
+                            .foregroundStyle(NoctisAppColor.ink)
+                            .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Signs out. Your data on this iPhone stays.")
+                    .accessibilityIdentifier("profile.signOut")
+                } else {
+                    SignInWithAppleButton(.signIn) { request in
+                        NoctisHaptics.softImpact()
+                        message = nil
+                        request.requestedScopes = [.fullName]
+                    } onCompletion: { result in
+                        let credential: Result<AppleSignInCredential, any Error> = result.flatMap { authorization in
+                            AppleSignInCredential(authorization).map { .success($0) } ?? .failure(ASAuthorizationError(.invalidResponse))
+                        }
+                        switch account.complete(credential, existingName: viewModel.currentName) {
+                        case .signedIn:
+                            if case .success(let value) = credential { viewModel.offerName(value.givenName) }
+                        case .cancelled: break
+                        case .failed: message = "Couldn't sign in. You can keep using NOCTIS without an account."
+                        }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 48)
+                    .clipShape(Capsule())
+                    .padding(.vertical, NoctisSpacing.sm)
+                    .accessibilityLabel("Sign in with Apple")
+                    .accessibilityIdentifier("profile.signIn")
+                    if let message {
+                        Text(message)
+                            .noctisFont(13, relativeTo: .footnote)
+                            .foregroundStyle(NoctisAppColor.destructive)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.bottom, NoctisSpacing.sm)
+                    }
+                }
+            }
+        }
     }
 }

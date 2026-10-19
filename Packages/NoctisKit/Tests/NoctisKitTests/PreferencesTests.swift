@@ -210,6 +210,9 @@ nonisolated struct AppearanceTests {
     }
 
     @Test func theMainAppFollowsTheChoiceAtOnce() {
+        #expect(AppAppearance.scheme(showingMain: false, onWelcome: true, appearance: .dark) == nil, "Welcome follows the system")
+        #expect(AppAppearance.scheme(showingMain: false, onWelcome: false, appearance: .dark) == .light, "the other onboarding steps stay light")
+        #expect(AppAppearance.scheme(showingMain: true, onWelcome: true, appearance: .dark) == .dark, "the app follows the choice")
         #expect(AppAppearance.scheme(showingMain: true, appearance: .system) == nil)
         #expect(AppAppearance.scheme(showingMain: true, appearance: .light) == .light)
         #expect(AppAppearance.scheme(showingMain: true, appearance: .dark) == .dark)

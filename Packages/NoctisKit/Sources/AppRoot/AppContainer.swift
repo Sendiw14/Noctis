@@ -63,6 +63,8 @@ public struct AppContainer {
     /// Opens Wind-down when the evening notification is tapped.
     private let notificationRouter: NotificationRouter
     public let storeManager: StoreManager
+    /// Sign in with Apple, optional and local (R69): never gates anything.
+    public let accountStore: AccountStore
     /// What is free and what is Premium (R57): every screen asks it, and it asks the one feature table.
     public let featureGate: FeatureGate
     public let modelContainer: ModelContainer
@@ -76,6 +78,16 @@ public struct AppContainer {
         NoctisSignpost.begin(.launchToPopulated)
         let store = StoreManager()
         self.storeManager = store
+        #if DEBUG
+        // `-mockAppleAccount signedIn`: the signed-in screens on a simulator with no Apple ID (an in-memory identifier, never the Keychain).
+        let launch = ProcessInfo.processInfo.arguments
+        let accountStore = launch.firstIndex(of: "-mockAppleAccount").map { launch.indices.contains($0 + 1) && launch[$0 + 1] == "signedIn" } == true
+            ? AccountStore(keychain: MemoryAccountKeychain(userID: "mock-user"), checker: FixedCredentialChecker())
+            : AccountStore()
+        #else
+        let accountStore = AccountStore()
+        #endif
+        self.accountStore = accountStore
         let gate = FeatureGate(entitlements: store.entitlementManager)
         self.featureGate = gate
         // Never synced: the profile, the alarm and the wind-down record stay on this device. A file that will not open is set aside and the app
@@ -536,6 +548,7 @@ public struct AppContainer {
                 breathing.end()
             },
             endWindDown: { windDown.end() },
+            signOutOfApple: { accountStore.deleteAccount() },
             silenceReminders: {
                 preferences.onChange = nil
                 model.onProfileChange = nil

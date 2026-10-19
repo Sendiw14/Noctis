@@ -49,6 +49,7 @@ struct NoctisApp: App {
                 .id(container.generation)
                 .environment(\.restartApp, RestartAction { container = AppContainer(restarted: true) })
                 .environment(container.model)
+                .environment(container.accountStore)
                 .environment(container.homeViewModel)
                 .environment(container.sleepViewModel)
                 .environment(container.recoveryViewModel)

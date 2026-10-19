@@ -4,6 +4,8 @@ import SwiftUI
 
 enum OnboardingStep: String, CaseIterable {
     case welcome
+    /// Only after signing in with Apple (R69).
+    case name
     case goal
     case rhythm
     case sample
@@ -16,7 +18,7 @@ enum OnboardingStep: String, CaseIterable {
     /// for `NoctisSegmentedProgress`). Welcome and Paywall have no bar.
     var progressIndex: Int? {
         switch self {
-        case .welcome: nil
+        case .welcome, .name: nil
         case .goal: 0
         case .rhythm: 1
         case .sample: 2
@@ -39,9 +41,12 @@ public struct OnboardingFlowView: View {
     @State private var planAlreadyBuilt: Bool
 
     private let onFinished: () -> Void
+    private let onWelcome: (Bool) -> Void
 
-    public init(onFinished: @escaping () -> Void) {
+    /// `onWelcome` says whether Welcome is the step on show (it alone follows the system's appearance).
+    public init(onWelcome: @escaping (Bool) -> Void = { _ in }, onFinished: @escaping () -> Void) {
         self.onFinished = onFinished
+        self.onWelcome = onWelcome
         let loaded = OnboardingDraftStore.load()
         self._step = State(initialValue: loaded.step)
         self._draft = State(initialValue: loaded.draft)
@@ -52,7 +57,18 @@ public struct OnboardingFlowView: View {
         ZStack {
             switch step {
             case .welcome:
-                WelcomeScreen(onBegin: { advance(to: .goal) })
+                WelcomeScreen(
+                    onContinue: { advance(to: .goal) },
+                    onSignedIn: { prefill in
+                        if let prefill { draft.name = prefill }
+                        advance(to: .name)
+                    },
+                    existingName: draft.name
+                )
+                .id(step)
+                .transition(.opacity)
+            case .name:
+                NameScreen(name: $draft.name, onNext: { advance(to: .goal) })
                     .id(step)
                     .transition(.opacity)
             case .goal:
@@ -120,6 +136,8 @@ public struct OnboardingFlowView: View {
             }
         }
         .animation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion), value: step)
+        .onAppear { onWelcome(step == .welcome) }
+        .onChange(of: step) { _, new in onWelcome(new == .welcome) }
         .onChange(of: draft) { _, newValue in
             OnboardingDraftStore.save(step: step, draft: newValue)
         }

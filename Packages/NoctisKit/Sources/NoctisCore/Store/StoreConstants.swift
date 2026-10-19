@@ -17,6 +17,8 @@ public nonisolated enum StoreProductID {
 public nonisolated enum StoreLegalLinks {
     public static let terms = URL(string: "https://noctis.app/terms")!
     public static let privacy = URL(string: "https://noctis.app/privacy")!
+    /// Apple's standard licensed-application agreement: the Terms the Welcome screen and the subscription refer to.
+    public static let appleStandardTerms = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") ?? terms
     /// Where "Contact support" writes to. Placeholder like the two links above: swap for the real inbox before
     /// shipping (ROADMAP.md).
     public static let supportEmail = "support@noctis.app"

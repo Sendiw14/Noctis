@@ -52,12 +52,14 @@ public struct DataWiringInputs {
     public var endLiveActivities: @MainActor () async -> Void
     /// Stops Apple Health from waking the app in the background (R46).
     public var stopBackgroundUpdates: @MainActor () async -> Void
+    /// Forgets the Sign in with Apple identifier (the Keychain item) and signs out; local data is deleted by the other steps.
+    public var signOutOfApple: @MainActor () -> Void
 
     public init(
         model: AppModel, preferences: AppPreferences, defaults: UserDefaults, profileStore: ProfileStore, alarmService: AlarmService,
         alarmStore: AlarmConfigurationStore, windDownStore: WindDownSessionStore, journal: any JournalStoring, coachHistory: CoachHistoryStore?,
         insightFile: InsightFileStore, snapshotStore: HomeSnapshotStore?, notifications: NotificationScheduler, roots: DataRoots = DataRoots(),
-        appVersion: @escaping () -> String = { "NOCTIS" }, stopAudio: @escaping @MainActor () -> Void = {}, endWindDown: @escaping @MainActor () -> Void = {},
+        appVersion: @escaping () -> String = { "NOCTIS" }, stopAudio: @escaping @MainActor () -> Void = {}, endWindDown: @escaping @MainActor () -> Void = {}, signOutOfApple: @escaping @MainActor () -> Void = {},
         silenceReminders: @escaping @MainActor () -> Void = {}, settleReminders: @escaping @MainActor () async -> Void = {},
         afterJournalDeleted: @escaping @MainActor () -> Void = {}, afterCoachDeleted: @escaping @MainActor () async -> Void = {},
         clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {},
@@ -97,6 +99,7 @@ public struct DataWiringInputs {
         self.reloadControls = reloadControls
         self.endLiveActivities = endLiveActivities
         self.stopBackgroundUpdates = stopBackgroundUpdates
+        self.signOutOfApple = signOutOfApple
     }
 }
 
@@ -163,6 +166,7 @@ public enum DataWiring {
                 i.forgetSoundChoices()
             },
             .appState: { remove(keys: inventory[.appState].defaultsKeys) },
+            .appleAccount: { i.signOutOfApple() },
             .alarm: { i.alarmStore.erase() },
             .windDownHistory: { i.windDownStore.eraseAll() },
             .reminders: {

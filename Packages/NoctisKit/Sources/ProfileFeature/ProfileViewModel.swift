@@ -134,6 +134,14 @@ public final class ProfileViewModel {
         sheet = nil
     }
 
+    /// Signed in with Apple from here: Apple's given name goes in the name field only if there is no name yet (APP_RULES.md R69).
+    public func offerName(_ given: String?) {
+        if let name = AccountStore.prefilledName(existing: profile().name, given: given) { edit(.name(name)) }
+    }
+
+    /// The profile's name today.
+    public var currentName: String { profile().name }
+
     /// Applies the open editor's draft to the profile and closes it. The change saves the profile; the app then
     /// moves the reminders to the new bedtime and wake time. An alarm that is on keeps its own time.
     public func save() {

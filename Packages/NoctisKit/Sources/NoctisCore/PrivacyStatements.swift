@@ -214,6 +214,23 @@ public nonisolated enum PrivacyStatements {
         return parts.joined(separator: " ")
     }
 
+    /// "NOCTIS has no account of its own. Your Apple sign-in is one identifier, kept in this iPhone's Keychain; it never leaves this iPhone." Only while the
+    /// inventory says the identifier is in the Keychain and goes nowhere.
+    public static func appleSignIn(_ inventory: DataInventory) -> PrivacyStatement? {
+        let category = inventory[.appleAccount]
+        guard category.destination == .never, category.locations.contains(where: { if case .keychain = $0 { true } else { false } }) else { return nil }
+        return PrivacyStatement(
+            id: "appleSignIn",
+            text: "NOCTIS has no account of its own. Your Apple sign-in is one identifier, kept in this iPhone's Keychain; it never leaves this iPhone.",
+            evidence: [.appleAccount]
+        )
+    }
+
+    /// Welcome's subtitle: "Sleep, recovery, readiness. Private by design." The last words only while the inventory backs them.
+    public static func welcomeSubtitle(_ inventory: DataInventory) -> String {
+        ["Sleep, recovery, readiness.", privateByDesign(inventory).map { $0 + "." }].compactMap { $0 }.joined(separator: " ")
+    }
+
     /// Onboarding's welcome tag: only while the app really keeps data on the iPhone, reads Health without writing, and shares nothing.
     public static func privateByDesign(_ inventory: DataInventory) -> String? {
         guard healthReadOnly(inventory) != nil, storedOnDevice(inventory) != nil, nothingSoldOrShared(inventory) != nil else { return nil }

@@ -71,6 +71,8 @@ nonisolated extension DataInventory {
                 total += data.count
             }
             return total
+        case .keychain:
+            return SystemAccountKeychain().byteCount
         case .system, .memory:
             return nil
         }

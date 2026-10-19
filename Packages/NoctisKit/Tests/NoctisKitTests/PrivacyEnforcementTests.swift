@@ -244,6 +244,9 @@ struct PrivacyEnforcementTests {
         let crypto = try Regex(#"import (CryptoKit|CommonCrypto|Security|CryptoTokenKit)\b|\bCCCrypt\b|\bSecKey[A-Z]|\bSymmetricKey\b|\bAES\.GCM\b|\bChaChaPoly\b|\bkSec[A-Z]"#)
         var hits: [String] = []
         for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NOCTISWatch", "NOCTISWatchWidgets", "NoctisWidgets", "NoctisAlarmWidget"]) {
+            // The one Keychain item (Sign in with Apple's identifier, R69) is the system's storage, not encryption NOCTIS performs: no key, cipher or
+            // certificate is made or handled.
+            if file.path.hasSuffix("NoctisCore/Account/AccountStore.swift") { continue }
             for line in file.text.split(separator: "\n") where !line.trimmingCharacters(in: .whitespaces).hasPrefix("//") {
                 if try crypto.firstMatch(in: String(line)) != nil { hits.append(file.path) }
             }

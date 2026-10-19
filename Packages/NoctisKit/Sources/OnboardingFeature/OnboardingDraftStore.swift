@@ -28,6 +28,11 @@ enum OnboardingDraftStore {
         if defaults.object(forKey: sleepHoursKey) != nil {
             draft.sleepGoalHours = defaults.double(forKey: sleepHoursKey)
         }
+        #if DEBUG
+        // `-noctisMockGivenName <name>`: the name Apple would hand over, for a screenshot of the name step (the simulator may have no Apple ID).
+        let launch = ProcessInfo.processInfo.arguments
+        if let flag = launch.firstIndex(of: "-noctisMockGivenName"), launch.indices.contains(flag + 1) { draft.name = launch[flag + 1] }
+        #endif
         let step: OnboardingStep
         if let stepRaw = defaults.string(forKey: stepKey), let saved = OnboardingStep(rawValue: stepRaw) {
             step = saved

@@ -167,6 +167,15 @@ nonisolated extension DataInventory {
                 owner: "NoctisCore/WindDownSession.swift", holdsUserContent: true, export: .included("windDownHistory")
             ),
             DataCategory(
+                .appleAccount, name: "Apple sign-in",
+                summary: "If you choose to sign in with Apple, the identifier Apple gives NOCTIS for you: a string of letters and numbers that means nothing outside the app. It is only used to check, on this iPhone, that you are still signed in. It never leaves this iPhone: NOCTIS has no server and does not send it anywhere. NOCTIS asks Apple for your name only, never your email, and keeps the name in your profile only if you had none. Signing in is optional and unlocks nothing.",
+                contents: ["The identifier Apple gives NOCTIS for you"],
+                locations: [.keychain(SystemAccountKeychain.service)],
+                inBackup: false, protection: .standard, deletion: .withEverything,
+                owner: "NoctisCore/Account/AccountStore.swift", holdsUserContent: false,
+                export: .notStored("It is an identifier for signing in, not something you made. It is not in the export.")
+            ),
+            DataCategory(
                 .journal, name: "Journal",
                 summary: "What you chose to note about a day: how you felt and what you wrote. It has a store of its own. Only the Journal's own screens read it, and \"Export my data\" when you ask for a copy.",
                 contents: ["Each entry's date", "Your energy, mood and focus ratings, if you gave them", "What you wrote"],
@@ -276,6 +285,13 @@ nonisolated extension DataInventory {
             ),
         ],
         networkUses: [
+            NetworkUse(
+                token: "import AuthenticationServices",
+                purpose: "Sign in with Apple, only if you choose it: Apple's own sheet, and one check with Apple at launch that you are still signed in. NOCTIS has no server; the identifier Apple gives it stays in this iPhone's Keychain.",
+                files: ["NoctisCore/Account/AccountStore.swift", "OnboardingFeature/WelcomeScreen.swift", "ProfileFeature/ProfileScreen.swift", "AppRoot/RootView.swift"],
+                // No category: the identifier is never sent through it; the API only asks Apple whether it is still valid.
+                categories: []
+            ),
             NetworkUse(
                 token: "import StoreKit", purpose: "Buying, restoring and managing Premium through Apple's App Store.",
                 files: [

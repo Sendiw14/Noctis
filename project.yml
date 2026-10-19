@@ -80,6 +80,9 @@ targets:
       path: App/Noctis.entitlements
       properties:
         com.apple.developer.healthkit: true
+        # Sign in with Apple, optional and local (APP_RULES.md R69): the iOS app only.
+        com.apple.developer.applesignin:
+          - Default
         com.apple.developer.healthkit.access: []
         # Apple Health wakes the app when new sleep data arrives, so the widgets are true in the morning (APP_RULES.md R46). Best-effort.
         com.apple.developer.healthkit.background-delivery: true

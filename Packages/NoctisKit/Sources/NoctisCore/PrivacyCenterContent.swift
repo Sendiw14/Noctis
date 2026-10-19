@@ -180,6 +180,7 @@ public nonisolated struct PrivacyCategoryContent: Sendable, Equatable {
         case .database(_, let path): "A database on this iPhone: \(path)"
         case .defaults(let keys): "Settings saved on this iPhone (\(NoctisCount.values(keys.count)))"
         case .system(let name): "Held by \(name), not by NOCTIS"
+        case .keychain: "In this iPhone's Keychain, which stays on this iPhone"
         case .memory: "Only in memory while the app is open"
         }
     }

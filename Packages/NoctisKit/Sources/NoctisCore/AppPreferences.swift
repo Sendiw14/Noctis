@@ -46,6 +46,12 @@ public nonisolated enum AppAppearance: String, CaseIterable, Sendable, Identifia
     public static func scheme(showingMain: Bool, appearance: AppAppearance) -> ColorScheme? {
         showingMain ? appearance.colorScheme : .light
     }
+
+    /// The same, except that Welcome (the first onboarding step) follows the system: its bands and buttons have a Dark look (QA part 6); every later
+    /// onboarding step is on ivory paper and stays light.
+    public static func scheme(showingMain: Bool, onWelcome: Bool, appearance: AppAppearance) -> ColorScheme? {
+        !showingMain && onWelcome ? nil : scheme(showingMain: showingMain, appearance: appearance)
+    }
 }
 
 /// The three repeating reminders and when each fires. Their words are generic and never carry a number from

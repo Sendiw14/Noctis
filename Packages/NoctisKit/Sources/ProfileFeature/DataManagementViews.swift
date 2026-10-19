@@ -24,6 +24,9 @@ struct DataManagementView: View {
     let viewModel: SettingsViewModel
     @State private var pending: DeletableGroup?
     @State private var showsDeleteAll = false
+    /// The same sheet, titled for deleting the account (Apple's rule 5.1.1(v)): shown only while signed in with Apple (APP_RULES.md R69).
+    @State private var deletesAccount = false
+    @Environment(AccountStore.self) private var account
     @State private var status: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -88,12 +91,36 @@ struct DataManagementView: View {
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("data.deleteAll")
                         .accessibilityHint("Asks you to confirm before deleting anything.")
+                        if account.state.isSignedIn {
+                            Text("You signed in with Apple. Deleting your account signs you out and deletes everything NOCTIS keeps, exactly as above.")
+                                .noctisFont(15, relativeTo: .subheadline)
+                                .foregroundStyle(.noctisInk2)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button(role: .destructive) {
+                                NoctisHaptics.selection()
+                                manager.resetDeleteAll()
+                                deletesAccount = true
+                                showsDeleteAll = true
+                            } label: {
+                                Text("Delete account and data")
+                                    .noctisFont(17, .semibold, relativeTo: .body)
+                                    .foregroundStyle(NoctisAppColor.destructive)
+                                    .frame(maxWidth: .infinity, minHeight: 52)
+                                    .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(NoctisAppColor.destructive, lineWidth: 2))
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("data.deleteAccount")
+                            .accessibilityHint("Asks you to confirm before deleting anything.")
+                        }
                     }
                 }
             }
             .noctisRise(index: 2)
-            if let account = viewModel.privacy.noAccount {
-                SettingsNote(account).accessibilityIdentifier("data.noAccount")
+            if account.state.isSignedIn, let note = PrivacyStatements.appleSignIn(viewModel.inventory) {
+                SettingsNote(note.text).accessibilityIdentifier("data.appleNote")
+            } else if let note = viewModel.privacy.noAccount {
+                SettingsNote(note).accessibilityIdentifier("data.noAccount")
             }
         }
         .task { viewModel.refreshPrivacy() }
@@ -106,7 +133,7 @@ struct DataManagementView: View {
         } message: { group in
             Text(DataManagementCopy.message(for: group))
         }
-        .sheet(isPresented: $showsDeleteAll) { DeleteAllSheet(viewModel: viewModel) }
+        .sheet(isPresented: $showsDeleteAll, onDismiss: { deletesAccount = false }) { DeleteAllSheet(viewModel: viewModel, forAccount: deletesAccount) }
     }
 
     private func row(_ group: DeletableGroup) -> some View {
@@ -156,6 +183,7 @@ struct DataManagementView: View {
 /// the app over at onboarding.
 struct DeleteAllSheet: View {
     let viewModel: SettingsViewModel
+    var forAccount = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.restartApp) private var restart
     @State private var started = false
@@ -180,7 +208,7 @@ struct DeleteAllSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(PaperBackground(adaptive: true).ignoresSafeArea())
-            .navigationTitle(finished ? "Deleted" : "Delete all")
+            .navigationTitle(finished ? "Deleted" : (forAccount ? "Delete account" : "Delete all"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if !started {
@@ -201,7 +229,7 @@ struct DeleteAllSheet: View {
     private var confirmation: some View {
         let removes = DataManagementCopy.deleteAllRemoves(viewModel.inventory)
         return VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-            Text(DataManagementCopy.deleteAllTitle)
+            Text(forAccount ? "Delete account and data" : DataManagementCopy.deleteAllTitle)
                 .noctisFont(28, .bold, relativeTo: .title)
                 .foregroundStyle(NoctisAppColor.ink)
                 .accessibilityAddTraits(.isHeader)

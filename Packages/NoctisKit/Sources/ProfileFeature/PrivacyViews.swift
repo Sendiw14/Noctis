@@ -18,6 +18,7 @@ extension DataCategoryID {
         case .appState: "flag"
         case .alarm: "alarm"
         case .windDownHistory: "moon.stars"
+        case .appleAccount: "apple.logo"
         case .journal: "book.closed"
         case .coachHistory: "sparkles"
         case .reminders: "bell"
@@ -37,7 +38,7 @@ extension DataCategoryID {
         case .appleHealth, .cachedSummaries, .widgetSnapshot, .watchSync, .sleepSoundsState, .memorySummaries, .systemFiles: NoctisAppColor.blockSage
         case .insightHistory, .reviews, .preferences, .soundSettings, .appState, .reminders: NoctisAppColor.blockButter
         case .journal, .coachHistory, .profile, .exportFile, .setAsideFiles: NoctisAppColor.blockLavender
-        case .alarm, .windDownHistory, .diagnosticLog, .purchases: NoctisAppColor.fieldSand
+        case .alarm, .windDownHistory, .diagnosticLog, .purchases, .appleAccount: NoctisAppColor.fieldSand
         }
     }
 }

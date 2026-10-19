@@ -136,12 +136,12 @@ public enum ScreenCatalog {
     // MARK: Onboarding
 
     static let onboarding: [CatalogScreen] = [
-        ("welcome", "Welcome"), ("goal", "Goal"), ("rhythm", "Rhythm"), ("sample", "Sample"), ("health", "Health"), ("notifications", "Notifications"),
+        ("welcome", "Welcome"), ("name", "Name, after signing in with Apple"), ("goal", "Goal"), ("rhythm", "Rhythm"), ("sample", "Sample"), ("health", "Health"), ("notifications", "Notifications"),
         ("plan", "Plan"), ("paywall", "Paywall step"),
     ].map { step, title in
         CatalogScreen(
             id: "onboarding.\(step)", area: .onboarding, title: "Onboarding: \(title)",
-            arguments: ["-useMockHealth", "-noctis.onboarding.step", step], surface: .fullScreen, tierOne: true, showsOnboarding: true, needsStore: step == "paywall"
+            arguments: ["-useMockHealth", "-noctis.onboarding.step", step] + (step == "name" ? ["-noctisMockGivenName", "Sendiw"] : []), surface: .fullScreen, tierOne: true, showsOnboarding: true, needsStore: step == "paywall"
         )
     }
 

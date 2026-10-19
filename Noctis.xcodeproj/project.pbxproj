@@ -52,6 +52,7 @@
 		8F16A7A5323FD3FD2BB32E0E /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = DA618A0CA216AACC91F1A575 /* DesignSystem */; };
 		9424EE31A8B69FDD17BA2F53 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 87A7E7E9AEB0901EF1908C44 /* PrivacyInfo.xcprivacy */; };
 		98B4052A9E1C5519A27C8213 /* NoctisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */; };
+		9AA7E5CA11EE1244D8912A20 /* WelcomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A44F626D12FA959CE07C4E /* WelcomeQATests.swift */; };
 		AA4706F3405C418059FEB622 /* NoctisWatchKit in Frameworks */ = {isa = PBXBuildFile; productRef = A4A4A23BA42DD4D7CD8C4DF9 /* NoctisWatchKit */; };
 		ABBF3099518F83448D80C549 /* NOCTISWatchWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D69C1891F567CBDEF5B1DF22 /* NOCTISWatchWidgets.swift */; };
 		B7E234837837FE54E9DAFA15 /* NoctisIntentKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5FDCD6D8575DAAB02C830D66 /* NoctisIntentKit */; };
@@ -211,6 +212,7 @@
 		C4CA26412CE79B13440FBA94 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CE9541D19A4C980942925904 /* HomeV4QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV4QATests.swift; sourceTree = "<group>"; };
 		D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		D1A44F626D12FA959CE07C4E /* WelcomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeQATests.swift; sourceTree = "<group>"; };
 		D231D5FD73E2A07D95198B5F /* NoctisControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisControls.swift; sourceTree = "<group>"; };
 		D69C1891F567CBDEF5B1DF22 /* NOCTISWatchWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NOCTISWatchWidgets.swift; sourceTree = "<group>"; };
 		DB60A36DFCAFAC9B3CD7BCFF /* AuditQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditQATests.swift; sourceTree = "<group>"; };
@@ -387,6 +389,7 @@
 				92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */,
 				BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */,
 				0FA5EAFB895C46A48C2FF089 /* VoiceOverTraversalQATests.swift */,
+				D1A44F626D12FA959CE07C4E /* WelcomeQATests.swift */,
 			);
 			path = UITests;
 			sourceTree = "<group>";
@@ -724,6 +727,7 @@
 				F44796F3FE12B39F7FCDC5C0 /* TabScaffoldQATests.swift in Sources */,
 				0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */,
 				8105DCF93222760938A076E0 /* VoiceOverTraversalQATests.swift in Sources */,
+				9AA7E5CA11EE1244D8912A20 /* WelcomeQATests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

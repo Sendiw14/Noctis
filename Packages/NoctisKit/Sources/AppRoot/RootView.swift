@@ -1,3 +1,4 @@
+import AuthenticationServices
 import CoachFeature
 import DesignSystem
 import HomeFeature
@@ -16,8 +17,11 @@ import SwiftUI
 public struct RootView: View {
     @Environment(AppModel.self) private var model
     @Environment(AppPreferences.self) private var preferences
+    @Environment(AccountStore.self) private var account
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showMain: Bool
+    /// Welcome follows the system's appearance; the other onboarding steps are light (`AppAppearance.scheme`).
+    @State private var onWelcome = true
 
     public init(initiallyOnboarded: Bool) {
         _showMain = State(initialValue: initiallyOnboarded)
@@ -29,7 +33,7 @@ public struct RootView: View {
                 RootTabView()
                     .transition(.opacity)
             } else {
-                OnboardingFlowView {
+                OnboardingFlowView(onWelcome: { onWelcome = $0 }) {
                     model.open(.home)
                     withAnimation(NoctisMotion.adaptive(NoctisMotion.reveal, reduceMotion: reduceMotion)) {
                         showMain = true
@@ -38,7 +42,11 @@ public struct RootView: View {
                 .transition(.opacity)
             }
         }
-        .preferredColorScheme(AppAppearance.scheme(showingMain: showMain, appearance: preferences.values.appearance))
+        // Sign in with Apple, optional (R69): at launch Apple says whether the identifier is still good, and a revocation signs out here. Neither
+        // ever blocks anything or shows a wall; the local data stays.
+        .task { await account.refresh() }
+        .onReceive(NotificationCenter.default.publisher(for: ASAuthorizationAppleIDProvider.credentialRevokedNotification)) { _ in account.credentialRevoked() }
+        .preferredColorScheme(AppAppearance.scheme(showingMain: showMain, onWelcome: onWelcome, appearance: preferences.values.appearance))
         // The paywall, over whatever opened it: a locked thing was tapped (R58). Closing it, or cancelling a purchase, changes nothing; a purchase unlocks the
         // screens in place (they read the feature gate).
         .sheet(item: Bindable(model).paywall) { context in

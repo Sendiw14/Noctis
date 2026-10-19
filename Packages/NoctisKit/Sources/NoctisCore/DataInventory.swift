@@ -40,6 +40,8 @@ public nonisolated enum DataLocation: Sendable, Equatable {
     case defaults([String])
     /// Held by an Apple service, not by NOCTIS: Apple Health, the notification centre, AlarmKit, the App Store.
     case system(String)
+    /// An item in this iPhone's Keychain, by its service name.
+    case keychain(String)
     /// Only while the app is running.
     case memory
 }
@@ -122,6 +124,8 @@ public nonisolated enum DataCategoryID: String, Sendable, CaseIterable, Hashable
     case appState
     case alarm
     case windDownHistory
+    /// The opaque identifier Sign in with Apple gave (APP_RULES.md R69): in the Keychain of this iPhone, nowhere else.
+    case appleAccount
     case journal
     case coachHistory
     case reminders
@@ -195,7 +199,7 @@ public nonisolated struct DataCategory: Sendable, Identifiable, Equatable {
     public var isOnDisk: Bool {
         locations.contains { location in
             switch location {
-            case .file, .folder, .database: true
+            case .file, .folder, .database, .keychain: true
             case .defaults: true
             case .system, .memory: false
             }

@@ -420,10 +420,17 @@ struct DataInventoryNetworkTests {
         #expect(!project.contains("NSHealthUpdateUsageDescription"), "no permission to write is asked for")
     }
 
-    @Test func thereIsNoAccountAndNoSignIn() {
+    /// R69: the only sign-in is Apple's, optional, asking for the name alone; nothing else signs anyone in, and no source asks for the email.
+    @Test func theOnlySignInIsAppleOptionalAndAsksForTheNameOnly() {
+        let allowed: Set<String> = ["NoctisCore/Account/AccountStore.swift", "OnboardingFeature/WelcomeScreen.swift", "ProfileFeature/ProfileScreen.swift", "AppRoot/RootView.swift"]
+        var users: Set<String> = []
         for file in sources() {
-            for token in ["ASAuthorization", "SignInWith", "Auth0", "import FirebaseAuth"] { #expect(!file.code.contains(token), Comment(rawValue: "\(file.path) has \(token)")) }
+            for token in ["Auth0", "import FirebaseAuth", "GIDSignIn", "FBSDKLogin"] { #expect(!file.code.contains(token), Comment(rawValue: "\(file.path) has \(token)")) }
+            if file.code.contains("ASAuthorization") || file.code.contains("SignInWithAppleButton") { users.insert(relative(file.path)) }
+            #expect(!file.code.contains("requestedScopes = [.email") && !file.code.contains(".email]") && !file.code.contains(".email,"), Comment(rawValue: "\(file.path) asks for the email"))
         }
+        #expect(users.isSubset(of: allowed), Comment(rawValue: "sign-in code outside \(allowed): \(users.subtracting(allowed))"))
+        #expect(!users.isEmpty)
     }
 
     @Test func theOnlyLogIsTheDevicesOwnAndHoldsNoHealthValue() {

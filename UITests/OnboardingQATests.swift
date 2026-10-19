@@ -196,7 +196,7 @@ final class OnboardingQATests: XCTestCase {
     func testBackKeepsAnswers() {
         let app = QA.launch()
         QA.pause(2)
-        QA.tap(QA.button(app, "Begin"), in: app)
+        QA.tap(QA.button(app, "Continue without an account"), in: app)
         XCTAssertTrue(QA.text(app, containing: "most to you").waitForExistence(timeout: 5))
         QA.tap(QA.element(app, labelBeginsWith: "Steady routine"), in: app)
         QA.tap(QA.element(app, labelBeginsWith: "Clearer focus"), in: app)
@@ -277,7 +277,7 @@ final class OnboardingQATests: XCTestCase {
             XCTAssertTrue(onStep, "resume on \(step)")
         }
         QA.pause(2)
-        QA.tap(QA.button(app, "Begin"), in: app)
+        QA.tap(QA.button(app, "Continue without an account"), in: app)
         check("most to you", "goal")
         QA.tap(QA.element(app, labelBeginsWith: "More energy"), in: app)
         QA.tap(QA.element(app, labelBeginsWith: "Clearer focus"), in: app)
@@ -366,7 +366,7 @@ final class OnboardingQATests: XCTestCase {
 
         app = QA.launch(reset: false)
         QA.pause(3)
-        let straightToApp = app.tabBars.firstMatch.waitForExistence(timeout: 8) && !QA.button(app, "Begin").exists
+        let straightToApp = app.tabBars.firstMatch.waitForExistence(timeout: 8) && !QA.button(app, "Continue without an account").exists
         log += "relaunch after finishing -> app: \(straightToApp)\n"
         QA.shot("flow-relaunch-after-finish")
         XCTAssertTrue(viaClose && viaLimited && straightToApp)
