@@ -11,7 +11,7 @@ private struct GoalItem {
 }
 
 private let goalItems: [GoalItem] = [
-    GoalItem(goal: .betterSleep, title: "Better sleep", subtitle: "Fall asleep easier, wake less", fill: NoctisPaper.lavender, glyph: "moon.stars.fill"),
+    GoalItem(goal: .betterSleep, title: "Better sleep", subtitle: "A calmer wind-down and a steadier routine", fill: NoctisPaper.lavender, glyph: "moon.stars.fill"),
     GoalItem(goal: .moreEnergy, title: "More energy", subtitle: "Feel sharper through the day", fill: NoctisPaper.orange, glyph: "bolt.fill"),
     GoalItem(goal: .betterRecovery, title: "Faster recovery", subtitle: "Bounce back after hard days", fill: NoctisPaper.sage, glyph: "heart.fill"),
     GoalItem(goal: .betterConsistency, title: "Steady routine", subtitle: "Keep a consistent schedule", fill: NoctisPaper.butter, glyph: "clock.arrow.2.circlepath"),

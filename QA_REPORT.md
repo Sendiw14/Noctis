@@ -74,7 +74,6 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 <!-- OPEN-LIST -->
 - **QA-004** (Release, major): The Terms of Use and Privacy Policy URLs (https://noctis.app/terms, /privacy) and the support address (support@noctis.app) are placeholders.
 - **QA-014** (Release, major): ROADMAP.md still lists 48 items;
-- **QA-016** (Info.plist, minor): ITSAppUsesNonExemptEncryption is not set, so App Store Connect asks the export-compliance question for every build.
 - **QA-071** (Layout, minor): Paywall resting cut (R14) on the 17 Pro:
 - **QA-078** (Data, minor): reviews.list and reviews.list.free show 'Nothing here yet':
 - **QA-081** (Localization, minor): Right-to-Left:

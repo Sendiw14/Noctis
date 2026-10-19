@@ -99,6 +99,9 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_CFBundleDisplayName: NOCTIS
+        # Export compliance (QA-016): NOCTIS has no encryption of its own, only the operating system's (exempt); no CryptoKit, CommonCrypto or Security symbol is
+        # linked and the app makes no request of its own (scripts/qa_symbol_audit.sh), so App Store Connect need not ask for every build.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
         # NSAlarmKitUsageDescription (AlarmKit refuses to schedule without it) has no build setting:
         # it is in App/Info.plist, which Xcode merges with the plist it generates.
@@ -216,6 +219,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.watchkitapp
         PRODUCT_NAME: NOCTISWatch
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SKIP_INSTALL: NO
         TARGETED_DEVICE_FAMILY: "4"

@@ -100,6 +100,8 @@ struct ConfigAuditTests {
             "INFOPLIST_KEY_CFBundleDisplayName", "INFOPLIST_KEY_UILaunchStoryboardName", "INFOPLIST_KEY_NSSupportsLiveActivities",
             "INFOPLIST_KEY_NSHealthShareUsageDescription", "INFOPLIST_KEY_UIApplicationSceneManifest_Generation", "INFOPLIST_KEY_UIStatusBarStyle",
             "INFOPLIST_KEY_UISupportedInterfaceOrientations",
+            // Export compliance (QA-016): no encryption of its own; PrivacyEnforcementTests holds the claim to the code.
+            "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption",
         ], Comment(rawValue: "\(keys.sorted())"))
         // Reads Health and says it never writes: there is no update description, because nothing is written.
         #expect(!yml.contains("NSHealthUpdateUsageDescription") && !yml.contains("NSHealthClinicalHealthRecords"))

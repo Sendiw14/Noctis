@@ -234,4 +234,40 @@ struct PrivacyEnforcementTests {
         // The trial's length is read from the product's own introductory offer.
         #expect(text.contains("TrialLength(") && text.contains("free, then"))
     }
+
+    /// Export compliance: the app and the Watch app declare that they use no encryption beyond the system's, and that is true: no source of NOCTIS names a cryptography
+    /// API (the Release binaries link none either, qa/privacy/symbols.txt), and it makes no network request of its own.
+    @Test func theAppsDeclareNoNonExemptEncryptionAndUseNone() throws {
+        // The key has a build setting (Export Compliance), so it is set there for the app and the Watch app, not in a plist (ConfigAuditTests).
+        let project = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("project.yml"), encoding: .utf8)
+        #expect(project.components(separatedBy: "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO").count - 1 == 2, "the app and the Watch app declare it")
+        let crypto = try Regex(#"import (CryptoKit|CommonCrypto|Security|CryptoTokenKit)\b|\bCCCrypt\b|\bSecKey[A-Z]|\bSymmetricKey\b|\bAES\.GCM\b|\bChaChaPoly\b|\bkSec[A-Z]"#)
+        var hits: [String] = []
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NOCTISWatch", "NOCTISWatchWidgets", "NoctisWidgets", "NoctisAlarmWidget"]) {
+            for line in file.text.split(separator: "\n") where !line.trimmingCharacters(in: .whitespaces).hasPrefix("//") {
+                if try crypto.firstMatch(in: String(line)) != nil { hits.append(file.path) }
+            }
+        }
+        #expect(hits.isEmpty, Comment(rawValue: "a cryptography API in \(hits)"))
+    }
+
+    /// An outcome promise is a sentence that says NOCTIS makes the person sleep or feel better. Goals the person picks may name what they want; nothing NOCTIS says
+    /// about itself may promise it (QA-141). The goal subtitle once read "Fall asleep easier, wake less"; it is now about the evening and the routine, which the app
+    /// does help with (the wind-down, the reminders), not about a result in the body.
+    @Test func noStringPromisesAnOutcomeOfUsingTheApp() throws {
+        let promise = try Regex(#"(?i)fall asleep (faster|easier|quicker)|asleep (faster|easier)|improve your (sleep|health|energy)|sleep (better|more soundly|deeper) with|wake less|will help you (sleep|relax|fall)|helps you (sleep|fall asleep)|guarantee|feel (rested|refreshed) (every|each)"#)
+        // File -> why: owner-visible copy that names a goal, not a promise.
+        let allowed: [String: String] = [:]
+        var hits: [String] = []
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources"]) where allowed[file.path] == nil {
+            for (number, line) in file.text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                guard !trimmed.hasPrefix("//"), trimmed.contains("\""), !file.path.contains("BannedLanguage") else { continue }
+                if try promise.firstMatch(in: String(line)) != nil { hits.append("\(file.path):\(number + 1)") }
+            }
+        }
+        #expect(hits.isEmpty, Comment(rawValue: "an outcome promise: \(hits.joined(separator: ", "))"))
+        let goals = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/GoalScreen.swift"), encoding: .utf8)
+        #expect(goals.contains("A calmer wind-down and a steadier routine"))
+    }
 }
