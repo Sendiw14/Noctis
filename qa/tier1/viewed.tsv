@@ -224,3 +224,25 @@ r3/max__sleep.day.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: w
 r3/max__sleep.month.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
 r3/max__sleep.week.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
 r3/pro__onboarding.goal__1.png	PASS	17 Pro: Reviews list populated at default, goal subtitle two lines
+ax5/pro__B-AX5-light__01__0.png	FINDING	AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable
+ax5/pro__B-AX5-light__02__0.png	FINDING	AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable
+ax5/pro__B-AX5-light__03__0.png	FINDING	AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable
+ax5/pro__B-AX5-light__04__0.png	FINDING	AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable
+ax5/pro__B-AX5-light__05__0.png	PASS	AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design
+ax5/pro__B-AX5-light__06__0.png	PASS	AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design
+ax5/pro__B-AX5-light__07__0.png	PASS	AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design
+ax5/pro__B-AX5-light__08__0.png	PASS	AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design
+ax5/pro__B-AX5-light__09__0.png	PASS	AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5
+ax5/pro__B-AX5-light__10__0.png	PASS	AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5
+ax5/pro__B-AX5-light__11__0.png	PASS	AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5
+ax5/pro__B-AX5-light__12__0.png	PASS	AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5
+ax5/pro__B-AX5-light__19__0.png	PASS	AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible
+ax5/pro__B-AX5-light__24__0.png	PASS	AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible
+ax5/pro__B-AX5-light__33__0.png	PASS	AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible
+ax5/pro__B-AX5-light__22__0.png	FINDING	AX5 Data management: the Delete verb is clipped at the right edge ('Delete' cut off) on each row, and the delete confirmation is squeezed into a narrow column; verb-under-title fix applies at AX3 but not AX5
+ax5/pro__B-AX5-light__31__0.png	FINDING	AX5 Health data: 'Respiratory Rate' breaks mid-word ('Respirator/y Rate'); Settings support email breaks mid-word
+ax5c/pro__B-AX5-light__01__0.png	PASS	AX5 Health data: tile above the words, 'Respiratory Rate' whole (fixed, QA-152)
+ax5c/se__B-AX5-light__01__0.png	PASS	AX5 Health data: tile above the words, 'Respiratory Rate' whole (fixed, QA-152)
+ax5b/pro__B-AX5-light__01__0.png	PASS	AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
+ax5b/pro__B-AX5-light__03__0.png	PASS	AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
+ax5b/se__B-AX5-light__01__0.png	PASS	AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message

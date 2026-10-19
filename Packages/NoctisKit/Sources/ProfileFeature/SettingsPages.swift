@@ -291,9 +291,12 @@ struct HealthDataSettingsView: View {
 /// One kind of Health data: its name, what was found, and what it is for.
 struct HealthKindRow: View {
     let status: HealthKindStatus
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .top, spacing: NoctisSpacing.sm) {
+        // At accessibility sizes the tile sits above the words: beside it "Respiratory Rate" had a 120 pt column and broke mid-word (QA part 4, AX5).
+        let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.xs)) : AnyLayout(HStackLayout(alignment: .top, spacing: NoctisSpacing.sm))
+        layout {
             NoctisIconTile(
                 systemImage: status.hasData ? "checkmark" : "minus", fill: status.hasData ? NoctisAppColor.blockSage : NoctisAppColor.track,
                 foreground: status.hasData ? NoctisAppColor.blockInk : NoctisAppColor.ink2, size: NoctisRow<EmptyView>.tile
@@ -310,7 +313,7 @@ struct HealthKindRow: View {
                     .foregroundStyle(.noctisInk3)
             }
             .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
+            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
         }
         .padding(.vertical, NoctisSpacing.xs)
         .frame(minHeight: 56)
