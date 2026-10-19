@@ -238,6 +238,9 @@ private struct BreathingLabel: View {
                 .contentTransition(.numericText(countsDown: true))
                 .animation(reduceMotion ? nil : NoctisMotion.settle, value: viewModel.countdown)
         }
+        // The words sit inside a circle that shrinks to a fixed size at the end of an exhale: they stop growing at xxxLarge (QA-148, SE AX3), and
+        // VoiceOver reads the phase and the count whatever the size.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(viewModel.state == .paused ? "Paused" : BreathingCopy.title)
         .accessibilityValue("\(viewModel.phaseName ?? ""), \(viewModel.countdown)")

@@ -85,6 +85,9 @@ public struct NoctisRow<Accessory: View>: View {
                     Text(detail)
                         .noctisFont(13, relativeTo: .footnote)
                         .foregroundStyle(.noctisInk3)
+                        // An address has no space to wrap at: it shrinks a little before it would break inside a word ("noctis.a / pp" at AX5).
+                        .lineLimit(detail.contains(" ") ? nil : 1)
+                        .minimumScaleFactor(detail.contains(" ") ? 1 : 0.6)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -120,6 +123,9 @@ public struct NoctisRow<Accessory: View>: View {
                     Text(detail)
                         .noctisFont(13, relativeTo: .footnote)
                         .foregroundStyle(.noctisInk3)
+                        // An address has no space to wrap at: it shrinks a little before it would break inside a word ("noctis.a / pp" at AX5).
+                        .lineLimit(detail.contains(" ") ? nil : 1)
+                        .minimumScaleFactor(detail.contains(" ") ? 1 : 0.6)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let value {

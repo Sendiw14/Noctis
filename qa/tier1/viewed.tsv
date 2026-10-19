@@ -250,3 +250,84 @@ ax5/pro__B-AX5-light__17__0.png	PASS	AX5 paywall/onboarding/settings: whole and 
 ax5/pro__B-AX5-light__20__0.png	PASS	AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks
 ax5/se__B-AX5-light__19__0.png	PASS	AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks
 ax5/se__B-AX5-light__33__0.png	PASS	AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks
+fin_d/se__home.day.empty__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)
+fin_d/se__home.day.full__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)
+fin_d/se__home.evening.full__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)
+fin_d/se__profile.screen__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)
+fin_d/se__home.day.error__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__home.day.gap__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__home.day.learning__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__home.day.loading__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__home.day.noPermission__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__home.day.sleepOnly__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__home.day.stale__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__home.evening.empty__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__profile.screen.learning__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1
+fin_d/se__recovery.today.full__1.png	PASS	Bold Text on the SE: whole, nothing clipped
+fin_d/se__home.evening.error__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages
+fin_d/se__home.evening.gap__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages
+fin_d/se__home.evening.learning__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages
+fin_d/se__home.evening.loading__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages
+fin_d/se__home.evening.noPermission__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages
+fin_d/se__home.evening.sleepOnly__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages
+fin_d/se__home.evening.stale__1.png	NOTE	Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages
+fin_ax3/se__B-AX3-light__01__0.png	PASS	SE AX3: whole and reachable, text wraps, no mid-word breaks
+fin_ax3/se__B-AX3-light__03__0.png	PASS	SE AX3: whole and reachable, text wraps, no mid-word breaks
+fin_ax3/se__B-AX3-light__04__0.png	PASS	SE AX3: whole and reachable, text wraps, no mid-word breaks
+fin_ax3/se__B-AX3-light__05__0.png	PASS	SE AX3: whole and reachable, text wraps, no mid-word breaks
+fin_ax3b/se__B-AX3-light__01__0.png	PASS	SE AX3 Data management: verb under title, whole
+fin_ax3/se__B-AX3-light__06__0.png	FINDING	SE AX3 Sleep: the day strip clips its first day at the left edge ('W 14' cut); Month: 'SLEEP QUALITY' label overlaps '30-night average' in the quality card
+fin_ax3/se__B-AX3-light__08__0.png	FINDING	SE AX3 Sleep: the day strip clips its first day at the left edge ('W 14' cut); Month: 'SLEEP QUALITY' label overlaps '30-night average' in the quality card
+fin_ax3/se__B-AX3-light__10__0.png	FINDING	SE AX3 Sleep: the day strip clips its first day at the left edge ('W 14' cut); Month: 'SLEEP QUALITY' label overlaps '30-night average' in the quality card
+fin_ax3/se__B-AX3-light__12__0.png	PASS	SE AX3 Sleep week: whole, reachable
+fin_ax3c/se__B-AX3-light__01__0.png	PASS	SE AX3 Sleep quality card after fix: caption, line and dots separate (QA-153)
+fin_ax3/se__B-AX3-light__07__0.png	PASS	SE AX3 Sleep: whole, reachable; day strip scrolls horizontally by design
+fin_ax3/se__B-AX3-light__13__0.png	PASS	SE AX3 Sleep: whole, reachable; day strip scrolls horizontally by design
+fin_ax3/se__B-AX3-light__14__0.png	PASS	SE AX3 Sleep: whole, reachable; day strip scrolls horizontally by design
+fin_ax3d/se__B-AX3-light__02__0.png	PASS	SE AX3 Sleep month after fix: quality card clean, whole
+fin_ax3d/se__B-AX3-light__03__0.png	PASS	SE AX3 Sleep month after fix: quality card clean, whole
+fin_a/pro__settings.privacy-center__1.png	PASS	17 Pro light+dark: whole, no clipping, confirmation dialogs readable
+fin_a/pro__settings.data-management__1.png	PASS	17 Pro light+dark: whole, no clipping, confirmation dialogs readable
+fin_a/pro__privacy.deleteAll__1.png	PASS	17 Pro light+dark: whole, no clipping, confirmation dialogs readable
+fin_a/pro__privacy.delete.journal__1.png	PASS	17 Pro light+dark: whole, no clipping, confirmation dialogs readable
+fin_a/pro__privacy.delete.cache__1.png	PASS	17 Pro light+dark: whole, no clipping, confirmation dialogs readable
+fin_a/pro__privacy.delete.setAside__1.png	PASS	17 Pro light+dark: whole, no clipping, confirmation dialogs readable
+fin_a/pro__privacy.delete.coach__1.png	PASS	17 Pro light+dark: confirmation dialog whole and readable
+fin_a/pro__privacy.delete.insights__1.png	PASS	17 Pro light+dark: confirmation dialog whole and readable
+fin_a/pro__privacy.delete.preferences__1.png	PASS	17 Pro light+dark: confirmation dialog whole and readable
+fin_a/pro__privacy.delete.reviews__1.png	PASS	17 Pro light+dark: confirmation dialog whole and readable
+fin_a/pro__privacy.delete.windDown__1.png	PASS	17 Pro light+dark: confirmation dialog whole and readable
+fin_a/se__privacy.delete.cache__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__privacy.delete.coach__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__privacy.delete.insights__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__privacy.delete.journal__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__privacy.delete.preferences__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__privacy.delete.reviews__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__privacy.delete.setAside__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__privacy.delete.windDown__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__privacy.deleteAll__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__settings.data-management__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_a/se__settings.privacy-center__1.png	PASS	SE light+dark: whole, dialogs readable, nothing clipped
+fin_ax5/pro__B-AX5-light__01__0.png	PASS	17 Pro AX5 paywall/onboarding/Delete all: whole, CTA and legal lines reachable
+fin_ax5/pro__B-AX5-light__02__0.png	PASS	17 Pro AX5 paywall/onboarding/Delete all: whole, CTA and legal lines reachable
+fin_ax5/pro__B-AX5-light__05__0.png	PASS	17 Pro AX5 paywall/onboarding/Delete all: whole, CTA and legal lines reachable
+fin_ax5/pro__B-AX5-light__03__0.png	NOTE	AX5 system confirmation dialog: iOS's own alert, hyphenates and scrolls its message at AX5 (de-/views); not app layout, buttons stay reachable
+fin_ax5/pro__B-AX5-light__04__0.png	NOTE	AX5 system confirmation dialog: iOS's own alert, hyphenates and scrolls its message at AX5 (de-/views); not app layout, buttons stay reachable
+fin_ax5e/pro__B-AX5-light__01__0.png	PASS	AX5 Data management (verb under title), Privacy Center, Settings: whole
+fin_ax5e/se__B-AX5-light__01__0.png	PASS	AX5 Data management (verb under title), Privacy Center, Settings: whole
+fin_ax5f/pro__B-AX5-light__01__0.png	PASS	AX5 Settings: support address fits on one line after fix (QA-154)
+fin_ax5/pro__B-AX5-light__06__0.png	PASS	17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)
+fin_ax5/pro__B-AX5-light__08__0.png	PASS	17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)
+fin_ax5/pro__B-AX5-light__10__0.png	PASS	17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)
+fin_ax5s/se__B-AX5-light__01__0.png	PASS	SE AX5 paywall/Delete all: whole, CTA and legal lines reachable
+fin_ax5s/se__B-AX5-light__03__0.png	PASS	SE AX5 paywall/Delete all: whole, CTA and legal lines reachable
+fin_ax5s/se__B-AX5-light__06__0.png	PASS	SE AX5 paywall/Delete all: whole, CTA and legal lines reachable
+fin_ax5s/se__B-AX5-light__05__0.png	NOTE	AX5 iOS system alert hyphenates/scrolls its own message; not app layout
+fin_ax5s/se__B-AX5-light__07__0.png	PASS	SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks
+fin_ax5s/se__B-AX5-light__09__0.png	PASS	SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks
+fin_ax5s/se__B-AX5-light__11__0.png	PASS	SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks
+fin_ax3e/se__B-AX3-light__01__0.png	PASS	SE AX3 Health data (Respiratory Rate whole) and Sleep month quality card clean
+fin_ax5s/se__B-AX5-light__02__0.png	PASS	SE AX5 paywall: whole, CTA and legal lines reachable
+fin_last/se__settings.privacy-center__1.png	PASS	SE AX5 Privacy Center whole
+fin_last2/se__night.breathing.running__1.png	FINDING QA-148	SE AX3 breathing: 'Exhale' is wider than the circle (reproduced)
+fin_last3/se__night.breathing.running__1.png	PASS	SE AX3 breathing after fix: word inside the circle (QA-148)

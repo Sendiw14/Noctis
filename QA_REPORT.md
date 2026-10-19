@@ -92,7 +92,6 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 - **QA-103** (Accessibility, minor): Onboarding at accessibility sizes:
 - **QA-115** (Accessibility, minor): Data management at AX3 and AX5 (SE):
 - **QA-116** (Accessibility, minor): Sleep month at AX3 and AX5 (SE):
-- **QA-148** (Accessibility, minor): Breathing running at AX3 on the 17 Pro:
 - **QA-150** (Process, major): QA part 4 steps 7 to 9 are NOT complete:
 <!-- /OPEN-LIST -->
 

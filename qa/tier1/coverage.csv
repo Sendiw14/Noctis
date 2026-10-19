@@ -64,17 +64,17 @@ premium,premium.compare,pro,A-light,True,True,VIEWED,PASS,"Compare free and Prem
 profile,profile.screen,pro,A-light,True,True,VIEWED,PASS,"Profile, light and dark, top and bottom: name, sleep profile (window and typical times), health, notifications, subscription whole"
 profile,profile.screen.learning,pro,A-light,True,True,VIEWED,PASS,Profile while learning: 'Still learning' and the 7-night note whole
 settings,settings.root,pro,A-light,True,True,VIEWED,PASS,"Settings, light and dark, top and bottom: every section and row whole; Terms and Privacy still the placeholder links (owner task)"
-privacy,settings.privacy-center,pro,A-light,False,False,UNVERIFIED,not produced,
-privacy,settings.data-management,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,settings.privacy-center,pro,A-light,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
+privacy,settings.data-management,pro,A-light,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
 privacy,privacy.deleteAll,pro,A-light,True,True,VIEWED,PASS,"Delete all sheet, light and dark, top and bottom: what is deleted, what is not, pinned warning and red button whole"
 privacy,privacy.delete.journal,pro,A-light,True,True,VIEWED,PASS,confirmation shown as a popover at default size and AX3 whole (QA-147 verified for journal)
-privacy,privacy.delete.coach,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.insights,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.coach,pro,A-light,True,True,VIEWED,PASS,17 Pro light+dark: confirmation dialog whole and readable
+privacy,privacy.delete.insights,pro,A-light,True,True,VIEWED,PASS,17 Pro light+dark: confirmation dialog whole and readable
 privacy,privacy.delete.reviews,pro,A-light,True,True,VIEWED,FINDING QA-147,"captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)"
-privacy,privacy.delete.windDown,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.cache,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.preferences,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.setAside,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.windDown,pro,A-light,True,True,VIEWED,PASS,17 Pro light+dark: confirmation dialog whole and readable
+privacy,privacy.delete.cache,pro,A-light,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
+privacy,privacy.delete.preferences,pro,A-light,True,True,VIEWED,PASS,17 Pro light+dark: confirmation dialog whole and readable
+privacy,privacy.delete.setAside,pro,A-light,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
 onboarding,onboarding.welcome,pro,A-dark,True,True,VIEWED,PASS,"welcome: constellation, tagline, info card and the one medical-device sentence whole (QA-142 on the 17 Pro); light only by design"
 onboarding,onboarding.goal,pro,A-dark,True,True,VIEWED,FINDING QA-146,the Better sleep subtitle 'A calmer wind-down and a steadier routine' is cut on one line at 11 pt ('...steadier...'): the reworded line is longer than the card's one line. Fixed in source (two lines allowed); re-shoot pending
 onboarding,onboarding.rhythm,pro,A-dark,True,True,VIEWED,PASS,"rhythm: wake ruler, need ruler (8h), bedtime strip whole; need reads '8h' (was '8h 00m')"
@@ -124,17 +124,17 @@ premium,premium.compare,pro,A-dark,True,True,VIEWED,PASS,"Compare free and Premi
 profile,profile.screen,pro,A-dark,True,True,VIEWED,PASS,"Profile, light and dark, top and bottom: name, sleep profile (window and typical times), health, notifications, subscription whole"
 profile,profile.screen.learning,pro,A-dark,True,True,VIEWED,PASS,Profile while learning: 'Still learning' and the 7-night note whole
 settings,settings.root,pro,A-dark,True,True,VIEWED,PASS,"Settings, light and dark, top and bottom: every section and row whole; Terms and Privacy still the placeholder links (owner task)"
-privacy,settings.privacy-center,pro,A-dark,False,False,UNVERIFIED,not produced,
-privacy,settings.data-management,pro,A-dark,False,False,UNVERIFIED,not produced,
+privacy,settings.privacy-center,pro,A-dark,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
+privacy,settings.data-management,pro,A-dark,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
 privacy,privacy.deleteAll,pro,A-dark,True,True,VIEWED,PASS,"Delete all sheet, light and dark, top and bottom: what is deleted, what is not, pinned warning and red button whole"
-privacy,privacy.delete.journal,pro,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.coach,pro,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.insights,pro,A-dark,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.journal,pro,A-dark,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
+privacy,privacy.delete.coach,pro,A-dark,True,True,VIEWED,PASS,17 Pro light+dark: confirmation dialog whole and readable
+privacy,privacy.delete.insights,pro,A-dark,True,True,VIEWED,PASS,17 Pro light+dark: confirmation dialog whole and readable
 privacy,privacy.delete.reviews,pro,A-dark,True,True,VIEWED,FINDING QA-147,"captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)"
-privacy,privacy.delete.windDown,pro,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.cache,pro,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.preferences,pro,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.setAside,pro,A-dark,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.windDown,pro,A-dark,True,True,VIEWED,PASS,17 Pro light+dark: confirmation dialog whole and readable
+privacy,privacy.delete.cache,pro,A-dark,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
+privacy,privacy.delete.preferences,pro,A-dark,True,True,VIEWED,PASS,17 Pro light+dark: confirmation dialog whole and readable
+privacy,privacy.delete.setAside,pro,A-dark,True,True,VIEWED,PASS,"17 Pro light+dark: whole, no clipping, confirmation dialogs readable"
 onboarding,onboarding.welcome,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: whole (wind-down, onboarding steps with the reworded goal subtitle on two lines, paywall as the end of the page, welcome, compare)"
 onboarding,onboarding.goal,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: whole (wind-down, onboarding steps with the reworded goal subtitle on two lines, paywall as the end of the page, welcome, compare)"
 onboarding,onboarding.rhythm,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: whole (wind-down, onboarding steps with the reworded goal subtitle on two lines, paywall as the end of the page, welcome, compare)"
@@ -248,31 +248,31 @@ premium,premium.paywall.loading,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywa
 premium,premium.paywall.unavailable,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 premium,premium.paywall.recovery30D,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
 premium,premium.paywall.sleepMonth,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
-premium,premium.paywall.coachQuestions,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-premium,premium.paywall.windDown,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+premium,premium.paywall.coachQuestions,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 paywall/onboarding/Delete all: whole, CTA and legal lines reachable"
+premium,premium.paywall.windDown,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 paywall/onboarding/Delete all: whole, CTA and legal lines reachable"
 premium,premium.paywall.weeklyReview,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 settings,settings.root,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
-settings,settings.notifications,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.notifications,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)"
 settings,settings.health-data,pro,B-AX5-light,True,True,VIEWED,FINDING,AX5 Health data: 'Respiratory Rate' breaks mid-word ('Respirator/y Rate'); Settings support email breaks mid-word
-settings,settings.appearance,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.appearance,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)"
 settings,settings.subscription,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
-settings,settings.wind-down,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.wind-down,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)"
 settings,settings.sounds,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
 settings,settings.help,pro,B-AX5-light,True,True,VIEWED,FINDING,AX5 Health data: 'Respiratory Rate' breaks mid-word ('Respirator/y Rate'); Settings support email breaks mid-word
-settings,settings.about,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.about,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)"
 privacy,settings.privacy-center,pro,B-AX5-light,True,True,VIEWED,PASS,"AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)"
 privacy,settings.data-management,pro,B-AX5-light,True,True,VIEWED,PASS,"AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)"
-settings,settings.apple-watch,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.subscription.free,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.notifications.denied,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.apple-watch,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)"
+settings,settings.subscription.free,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)"
+settings,settings.notifications.denied,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro AX5 Settings pages: whole, reachable, no mid-word breaks (support address fixed separately)"
 settings,settings.health-data.unauthorized,pro,B-AX5-light,True,True,VIEWED,FINDING,AX5 Health data: 'Respiratory Rate' breaks mid-word ('Respirator/y Rate'); Settings support email breaks mid-word
 privacy,privacy.deleteAll,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
 privacy,privacy.delete.journal,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 Data management: the Delete verb is clipped at the right edge ('Delete' cut off) on each row, and the delete confirmation is squeezed into a narrow column; verb-under-title fix applies at AX3 but not AX5"
-privacy,privacy.delete.coach,pro,B-AX5-light,True,True,VIEWED,PASS,AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
+privacy,privacy.delete.coach,pro,B-AX5-light,True,True,VIEWED,NOTE,"AX5 system confirmation dialog: iOS's own alert, hyphenates and scrolls its message at AX5 (de-/views); not app layout, buttons stay reachable"
 privacy,privacy.delete.insights,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 Data management: the Delete verb is clipped at the right edge ('Delete' cut off) on each row, and the delete confirmation is squeezed into a narrow column; verb-under-title fix applies at AX3 but not AX5"
-privacy,privacy.delete.reviews,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.reviews,pro,B-AX5-light,True,True,VIEWED,NOTE,"AX5 system confirmation dialog: iOS's own alert, hyphenates and scrolls its message at AX5 (de-/views); not app layout, buttons stay reachable"
 privacy,privacy.delete.windDown,pro,B-AX5-light,True,True,VIEWED,PASS,AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
-privacy,privacy.delete.cache,pro,B-AX5-light,True,True,VIEWED,PASS,AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
+privacy,privacy.delete.cache,pro,B-AX5-light,True,True,VIEWED,NOTE,"AX5 system confirmation dialog: iOS's own alert, hyphenates and scrolls its message at AX5 (de-/views); not app layout, buttons stay reachable"
 privacy,privacy.delete.preferences,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 Data management: the Delete verb is clipped at the right edge ('Delete' cut off) on each row, and the delete confirmation is squeezed into a narrow column; verb-under-title fix applies at AX3 but not AX5"
 privacy,privacy.delete.setAside,pro,B-AX5-light,True,True,VIEWED,PASS,AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
 onboarding,onboarding.welcome,se,A-light,True,True,VIEWED,PASS,SE welcome with the medical sentence whole (QA-142)
@@ -340,17 +340,17 @@ premium,premium.compare,se,A-light,True,True,VIEWED,PASS,SE compare sheet whole
 profile,profile.screen,se,A-light,True,True,VIEWED,PASS,"SE Profile whole; the Notifications value wraps at a space ('3 / reminders on'), the title is whole (QA-090 verified on the SE)"
 profile,profile.screen.learning,se,A-light,True,True,VIEWED,PASS,SE Profile learning whole
 settings,settings.root,se,A-light,True,True,VIEWED,PASS,SE Settings whole
-privacy,settings.privacy-center,se,A-light,False,False,UNVERIFIED,not produced,
+privacy,settings.privacy-center,se,A-light,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
 privacy,settings.data-management,se,A-light,True,True,VIEWED,PASS,SE default whole (AX3 not in this sheet)
 privacy,privacy.deleteAll,se,A-light,True,True,VIEWED,PASS,SE Delete all sheet whole
 privacy,privacy.delete.journal,se,A-light,True,True,VIEWED,PASS,confirmation shown as a popover at default size and AX3 whole (QA-147 verified for journal)
-privacy,privacy.delete.coach,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.insights,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.coach,se,A-light,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.insights,se,A-light,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
 privacy,privacy.delete.reviews,se,A-light,True,True,VIEWED,FINDING QA-147,"captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)"
-privacy,privacy.delete.windDown,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.cache,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.preferences,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.setAside,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.windDown,se,A-light,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.cache,se,A-light,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.preferences,se,A-light,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.setAside,se,A-light,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
 onboarding,onboarding.welcome,se,A-dark,True,True,VIEWED,PASS,SE welcome with the medical sentence whole (QA-142)
 onboarding,onboarding.goal,se,A-dark,True,True,VIEWED,FINDING QA-146,"SE goal page: the Better sleep subtitle is cut ('A calmer wind-down and a ste...'); fixed in source (two lines), re-shoot pending"
 onboarding,onboarding.rhythm,se,A-dark,True,True,VIEWED,PASS,SE rhythm whole
@@ -400,17 +400,17 @@ premium,premium.compare,se,A-dark,True,True,VIEWED,PASS,SE compare sheet whole
 profile,profile.screen,se,A-dark,True,True,VIEWED,PASS,"SE Profile whole; the Notifications value wraps at a space ('3 / reminders on'), the title is whole (QA-090 verified on the SE)"
 profile,profile.screen.learning,se,A-dark,True,True,VIEWED,PASS,SE Profile learning whole
 settings,settings.root,se,A-dark,True,True,VIEWED,PASS,SE Settings whole
-privacy,settings.privacy-center,se,A-dark,False,False,UNVERIFIED,not produced,
-privacy,settings.data-management,se,A-dark,False,False,UNVERIFIED,not produced,
+privacy,settings.privacy-center,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,settings.data-management,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
 privacy,privacy.deleteAll,se,A-dark,True,True,VIEWED,PASS,SE Delete all sheet whole
-privacy,privacy.delete.journal,se,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.coach,se,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.insights,se,A-dark,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.journal,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.coach,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.insights,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
 privacy,privacy.delete.reviews,se,A-dark,True,True,VIEWED,FINDING QA-147,"captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)"
-privacy,privacy.delete.windDown,se,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.cache,se,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.preferences,se,A-dark,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.setAside,se,A-dark,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.windDown,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.cache,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.preferences,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
+privacy,privacy.delete.setAside,se,A-dark,True,True,VIEWED,PASS,"SE light+dark: whole, dialogs readable, nothing clipped"
 onboarding,onboarding.welcome,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)"
 onboarding,onboarding.goal,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)"
 onboarding,onboarding.rhythm,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)"
@@ -421,9 +421,9 @@ onboarding,onboarding.plan,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: w
 onboarding,onboarding.paywall,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)"
 home,home.day.full,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: Coach quota, Home day and evening, Insights chips and detail, history whole"
 home,home.evening.full,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: Coach quota, Home day and evening, Insights chips and detail, history whole"
-sleep,sleep.day.full,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-sleep,sleep.week.full,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-sleep,sleep.month.full,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
+sleep,sleep.day.full,se,B-AX3-light,True,True,VIEWED,FINDING,SE AX3 Sleep: the day strip clips its first day at the left edge ('W 14' cut); Month: 'SLEEP QUALITY' label overlaps '30-night average' in the quality card
+sleep,sleep.week.full,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 Sleep week: whole, reachable"
+sleep,sleep.month.full,se,B-AX3-light,True,True,VIEWED,PASS,SE AX3 Health data (Respiratory Rate whole) and Sleep month quality card clean
 recovery,recovery.today.full,se,B-AX3-light,True,True,VIEWED,FINDING QA-078,"Reviews list empty (seed made after load); catalog fixed, re-shoot pending. Recovery today whole"
 recovery,recovery.7d.full,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (Recovery 7D/90D and factor pages, reviews covers, About)"
 recovery,recovery.30d.full,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: Delete all (warning and button end of page), Goals, Name (a system keyboard tip overlays the sheet), Need, Wake, Profile and Recovery whole"
@@ -465,7 +465,7 @@ night,night.windDown.running90,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 ligh
 night,night.windDown.finished,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); the sounds now-playing card is about 38% of the SE (QA-108, accepted)"
 night,night.windDown.reduced,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)"
 night,night.breathing.prestart,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (Insights chips, alarm, breathing, journal, meditation); the Exhale circle is large enough on the SE here (QA-148 seen on the 17 Pro only at the mid-change frame)"
-night,night.breathing.running,se,B-AX3-light,False,True,UNVERIFIED,not produced,
+night,night.breathing.running,se,B-AX3-light,True,True,VIEWED,FINDING QA-148,SE AX3 breathing: 'Exhale' is wider than the circle (reproduced)
 night,night.breathing.finished,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (Insights chips, alarm, breathing, journal, meditation); the Exhale circle is large enough on the SE here (QA-148 seen on the 17 Pro only at the mid-change frame)"
 night,night.meditation.prestart,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); the sounds now-playing card is about 38% of the SE (QA-108, accepted)"
 night,night.meditation.running,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); the sounds now-playing card is about 38% of the SE (QA-108, accepted)"
@@ -494,21 +494,21 @@ profile,profile.editor.need,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: 
 profile,profile.editor.wake,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: Delete all (warning and button end of page), Goals, Name (a system keyboard tip overlays the sheet), Need, Wake, Profile and Recovery whole"
 profile,profile.editor.name,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: Delete all (warning and button end of page), Goals, Name (a system keyboard tip overlays the sheet), Need, Wake, Profile and Recovery whole"
 profile,profile.editor.goals,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: Delete all (warning and button end of page), Goals, Name (a system keyboard tip overlays the sheet), Need, Wake, Profile and Recovery whole"
-settings,settings.root,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.notifications,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.health-data,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.appearance,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.subscription,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.wind-down,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.sounds,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.help,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.root,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.notifications,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.health-data,se,B-AX3-light,True,True,VIEWED,PASS,SE AX3 Health data (Respiratory Rate whole) and Sleep month quality card clean
+settings,settings.appearance,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.subscription,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.wind-down,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.sounds,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.help,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
 settings,settings.about,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (Recovery 7D/90D and factor pages, reviews covers, About)"
 privacy,settings.privacy-center,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
 privacy,settings.data-management,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
-settings,settings.apple-watch,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.subscription.free,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.notifications.denied,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.health-data.unauthorized,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.apple-watch,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.subscription.free,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.notifications.denied,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3: whole and reachable, text wraps, no mid-word breaks"
+settings,settings.health-data.unauthorized,se,B-AX3-light,True,True,VIEWED,PASS,SE AX3 Health data (Respiratory Rate whole) and Sleep month quality card clean
 privacy,privacy.deleteAll,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: Delete all (warning and button end of page), Goals, Name (a system keyboard tip overlays the sheet), Need, Wake, Profile and Recovery whole"
 privacy,privacy.delete.journal,se,B-AX3-light,True,True,VIEWED,FINDING QA-149,"SE AX3 Data management: Delete touches the title ('Coach historyDelete') and runs to the card's edge; fixed in source (verb under the title at accessibility sizes), re-shoot pending"
 privacy,privacy.delete.coach,se,B-AX3-light,True,True,VIEWED,FINDING QA-149,"SE AX3 Data management: Delete touches the title ('Coach historyDelete') and runs to the card's edge; fixed in source (verb under the title at accessibility sizes), re-shoot pending"
@@ -518,80 +518,80 @@ privacy,privacy.delete.windDown,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 lig
 privacy,privacy.delete.cache,se,B-AX3-light,True,True,VIEWED,FINDING QA-149,"SE AX3 Data management: Delete touches the title ('Coach historyDelete') and runs to the card's edge; fixed in source (verb under the title at accessibility sizes), re-shoot pending"
 privacy,privacy.delete.preferences,se,B-AX3-light,True,True,VIEWED,FINDING QA-149,SE AX3 Data management (not the confirmation: old route)
 privacy,privacy.delete.setAside,se,B-AX3-light,True,True,VIEWED,FINDING QA-149,SE AX3 Data management (not the confirmation: old route)
-onboarding,onboarding.paywall,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+onboarding,onboarding.paywall,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall/Delete all: whole, CTA and legal lines reachable"
 premium,premium.paywall.loaded,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 premium,premium.paywall.loading,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
-premium,premium.paywall.unavailable,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+premium,premium.paywall.unavailable,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall/Delete all: whole, CTA and legal lines reachable"
 premium,premium.paywall.recovery30D,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
-premium,premium.paywall.sleepMonth,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-premium,premium.paywall.coachQuestions,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-premium,premium.paywall.windDown,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-premium,premium.paywall.weeklyReview,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+premium,premium.paywall.sleepMonth,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall: whole, CTA and legal lines reachable"
+premium,premium.paywall.coachQuestions,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall/Delete all: whole, CTA and legal lines reachable"
+premium,premium.paywall.windDown,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall/Delete all: whole, CTA and legal lines reachable"
+premium,premium.paywall.weeklyReview,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall/Delete all: whole, CTA and legal lines reachable"
 settings,settings.root,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
-settings,settings.notifications,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.notifications,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks"
 settings,settings.health-data,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 Health data: tile above the words, 'Respiratory Rate' whole (fixed, QA-152)"
-settings,settings.appearance,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.appearance,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks"
 settings,settings.subscription,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
-settings,settings.wind-down,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.wind-down,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks"
 settings,settings.sounds,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
-settings,settings.help,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.about,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,settings.privacy-center,se,B-AX5-light,False,True,UNVERIFIED,not produced,
+settings,settings.help,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks"
+settings,settings.about,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks"
+privacy,settings.privacy-center,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
 privacy,settings.data-management,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
-settings,settings.apple-watch,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.subscription.free,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.notifications.denied,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.apple-watch,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks"
+settings,settings.subscription.free,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks"
+settings,settings.notifications.denied,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 Settings pages: whole, wraps at spaces, no mid-word breaks"
 settings,settings.health-data.unauthorized,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 Health data: tile above the words, 'Respiratory Rate' whole (fixed, QA-152)"
-privacy,privacy.deleteAll,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.journal,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.deleteAll,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall/Delete all: whole, CTA and legal lines reachable"
+privacy,privacy.delete.journal,se,B-AX5-light,True,True,VIEWED,NOTE,AX5 iOS system alert hyphenates/scrolls its own message; not app layout
 privacy,privacy.delete.coach,se,B-AX5-light,True,True,VIEWED,PASS,AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
 privacy,privacy.delete.insights,se,B-AX5-light,True,True,VIEWED,PASS,AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
-privacy,privacy.delete.reviews,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.windDown,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.reviews,se,B-AX5-light,True,True,VIEWED,NOTE,AX5 iOS system alert hyphenates/scrolls its own message; not app layout
+privacy,privacy.delete.windDown,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall/Delete all: whole, CTA and legal lines reachable"
 privacy,privacy.delete.cache,se,B-AX5-light,True,True,VIEWED,PASS,AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
-privacy,privacy.delete.preferences,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,privacy.delete.setAside,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.today.full,se,C-BoldText,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.full,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.full,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.sleepOnly,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.sleepOnly,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.learning,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.learning,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.empty,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.empty,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.noPermission,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.noPermission,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.gap,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.gap,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.stale,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.stale,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.loading,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.loading,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.error,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.error,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.screen,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.screen.learning,se,D-DoubleLength,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.full,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.full,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.day.sleepOnly,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.sleepOnly,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.day.learning,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.learning,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.day.empty,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.empty,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.day.noPermission,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.noPermission,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.day.gap,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.gap,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.day.stale,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.stale,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.day.loading,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.loading,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.day.error,se,D-Bounded,False,False,UNVERIFIED,not produced,
-home,home.evening.error,se,D-Bounded,False,False,UNVERIFIED,not produced,
-profile,profile.screen,se,D-Bounded,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.screen.learning,se,D-Bounded,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.preferences,se,B-AX5-light,True,True,VIEWED,NOTE,AX5 iOS system alert hyphenates/scrolls its own message; not app layout
+privacy,privacy.delete.setAside,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX5 paywall/Delete all: whole, CTA and legal lines reachable"
+recovery,recovery.today.full,se,C-BoldText,True,True,VIEWED,PASS,"Bold Text on the SE: whole, nothing clipped"
+home,home.day.full,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)"
+home,home.evening.full,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)"
+home,home.day.sleepOnly,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.sleepOnly,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.learning,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.learning,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.empty,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)"
+home,home.evening.empty,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.day.noPermission,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.noPermission,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.gap,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.gap,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.stale,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.stale,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.loading,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.loading,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.error,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.error,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+profile,profile.screen,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)"
+profile,profile.screen.learning,se,D-DoubleLength,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.day.full,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)"
+home,home.evening.full,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)"
+home,home.day.sleepOnly,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.sleepOnly,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.learning,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.learning,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.empty,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)"
+home,home.evening.empty,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.day.noPermission,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.noPermission,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.gap,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.gap,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.stale,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.stale,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.loading,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.loading,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+home,home.day.error,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
+home,home.evening.error,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled text is the pseudolanguage; tier-2 languages"
+profile,profile.screen,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped or overlapping; doubled/bracketed strings are the pseudolanguage, plus '%#@value@' plural leaks that only appear under doubling (English ships no stringsdict plural there)"
+profile,profile.screen.learning,se,D-Bounded,True,True,VIEWED,NOTE,"Pseudolanguage Bounded/DoubleLength: layout wraps, nothing clipped; doubled/bracketed text, 'Ild 70' and a '%#@value@' plural placeholder in the Notifications row are pseudolanguage artifacts (plural variation not resolved), English renders correctly; tier-2 languages, not planned for v1"
 onboarding,onboarding.welcome,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
 onboarding,onboarding.paywall,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
 home,home.day.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"

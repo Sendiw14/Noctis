@@ -146,7 +146,8 @@ struct SleepPillRow: View {
                 .transition(.opacity)
             }
         }
-        .frame(height: height, alignment: .bottom)
+        // The resting line is a text: at accessibility sizes it wraps and the row grows with it instead of printing over the caption above (QA part 4, SE AX3).
+        .frame(minHeight: height, maxHeight: text == nil && resting != nil ? nil : height, alignment: .bottom)
         .allowsHitTesting(false)
     }
 }

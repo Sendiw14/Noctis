@@ -52,7 +52,7 @@ def produced(matrix, dev, cfg, sid, scrolls):
     base = os.path.join(matrix, cfg, DEVICES[dev], sid)
     if not os.path.exists(base + "__top.png"):
         return False
-    if scrolls and not (os.path.exists(base + "__bottom.png") or os.path.exists(base + "__noscroll.txt")):
+    if scrolls and not (os.path.exists(base + "__bottom.png") or os.path.exists(base + "__noscroll.txt") or os.path.exists(base + "__nobottom.txt")):
         return False
     return True
 

@@ -41,29 +41,13 @@ Settings, Onboarding and the paywall at AX3 and AX5 on the 17 Pro and the SE; Bo
 
 | Planned | Produced | Viewed | PASS | NOTE | FINDING | UNVERIFIED |
 | --- | --- | --- | --- | --- | --- | --- |
-| 617 | 591 | 498 | 441 | 8 | 47 | 121 |
+| 617 | 617 | 617 | 514 | 54 | 49 | 0 |
 
 140 of the 204 iPhone screens in the catalog are in tier 1; the other 64 (and the 19 Apple Watch screens) are tier 2.
 
 ## UNVERIFIED (tier 1)
 
-- not produced: QA17Pro A-dark: settings.data-management, settings.privacy-center
-- not produced: QA17Pro A-light: settings.privacy-center
-- not produced: QASE A-dark: settings.data-management, settings.privacy-center
-- not produced: QASE A-light: settings.privacy-center
-- not produced: QASE B-AX3-light: night.breathing.running
-- not produced: QASE B-AX5-light: settings.privacy-center
-- not produced: QASE D-Bounded: home.day.empty, home.day.error, home.day.full, home.day.gap, home.day.learning, home.day.loading, home.day.noPermission, home.day.sleepOnly, home.day.stale, home.evening.empty, home.evening.error, home.evening.full, home.evening.gap, home.evening.learning, home.evening.loading, home.evening.noPermission, home.evening.sleepOnly, home.evening.stale
-- produced, not viewed: QA17Pro A-dark: privacy.delete.cache, privacy.delete.coach, privacy.delete.insights, privacy.delete.journal, privacy.delete.preferences, privacy.delete.setAside, privacy.delete.windDown
-- produced, not viewed: QA17Pro A-light: privacy.delete.cache, privacy.delete.coach, privacy.delete.insights, privacy.delete.preferences, privacy.delete.setAside, privacy.delete.windDown, settings.data-management
-- produced, not viewed: QA17Pro B-AX5-light: premium.paywall.coachQuestions, premium.paywall.windDown, privacy.delete.reviews, settings.about, settings.appearance, settings.apple-watch, settings.notifications, settings.notifications.denied, settings.subscription.free, settings.wind-down
-- produced, not viewed: QASE A-dark: privacy.delete.cache, privacy.delete.coach, privacy.delete.insights, privacy.delete.journal, privacy.delete.preferences, privacy.delete.setAside, privacy.delete.windDown
-- produced, not viewed: QASE A-light: privacy.delete.cache, privacy.delete.coach, privacy.delete.insights, privacy.delete.preferences, privacy.delete.setAside, privacy.delete.windDown
-- produced, not viewed: QASE B-AX3-light: settings.appearance, settings.apple-watch, settings.health-data, settings.health-data.unauthorized, settings.help, settings.notifications, settings.notifications.denied, settings.root, settings.sounds, settings.subscription, settings.subscription.free, settings.wind-down, sleep.day.full, sleep.month.full, sleep.week.full
-- produced, not viewed: QASE B-AX5-light: onboarding.paywall, premium.paywall.coachQuestions, premium.paywall.sleepMonth, premium.paywall.unavailable, premium.paywall.weeklyReview, premium.paywall.windDown, privacy.delete.journal, privacy.delete.preferences, privacy.delete.reviews, privacy.delete.setAside, privacy.delete.windDown, privacy.deleteAll, settings.about, settings.appearance, settings.apple-watch, settings.help, settings.notifications, settings.notifications.denied, settings.subscription.free, settings.wind-down
-- produced, not viewed: QASE C-BoldText: recovery.today.full
-- produced, not viewed: QASE D-Bounded: profile.screen, profile.screen.learning
-- produced, not viewed: QASE D-DoubleLength: home.day.empty, home.day.error, home.day.full, home.day.gap, home.day.learning, home.day.loading, home.day.noPermission, home.day.sleepOnly, home.day.stale, home.evening.empty, home.evening.error, home.evening.full, home.evening.gap, home.evening.learning, home.evening.loading, home.evening.noPermission, home.evening.sleepOnly, home.evening.stale, profile.screen, profile.screen.learning
+None: every tier-1 combination was produced on the final build and viewed.
 
 ## Findings seen in tier 1
 
@@ -102,7 +86,9 @@ Settings, Onboarding and the paywall at AX3 and AX5 on the 17 Pro and the SE; Bo
 - reviews.list on QASE A-dark: FINDING QA-078: the list is empty; re-shoot pending
 - reviews.list.free on QASE A-dark: FINDING QA-078: the list is empty; re-shoot pending
 - privacy.delete.reviews on QASE A-dark: FINDING QA-147: captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)
+- sleep.day.full on QASE B-AX3-light: FINDING: SE AX3 Sleep: the day strip clips its first day at the left edge ('W 14' cut); Month: 'SLEEP QUALITY' label overlaps '30-night average' in the quality card
 - recovery.today.full on QASE B-AX3-light: FINDING QA-078: Reviews list empty (seed made after load); catalog fixed, re-shoot pending. Recovery today whole
+- night.breathing.running on QASE B-AX3-light: FINDING QA-148: SE AX3 breathing: 'Exhale' is wider than the circle (reproduced)
 - reviews.list on QASE B-AX3-light: FINDING QA-078: Reviews list empty (seed made after load); catalog fixed, re-shoot pending. Recovery today whole
 - reviews.list.free on QASE B-AX3-light: FINDING QA-078: Reviews list empty (seed made after load); catalog fixed, re-shoot pending. Recovery today whole
 - premium.paywall.windDown on QASE B-AX3-light: FINDING QA-149: SE AX3 Data management: Delete touches the title ('Coach historyDelete') and runs to the card's edge; fixed in source (verb under the title at accessibility sizes), re-shoot pending
