@@ -446,6 +446,15 @@ public enum ScreenCatalog {
                 route: "settings:data-management", steps: [.tapIdentifier("data.deleteAll")], ready: "data.deleteAll.sheet", surface: .sheet
             )
         )
+        // Every confirmation Data management asks before it deletes or resets: one per row (QA part 4, tier 1).
+        for group in ["journal", "coach", "insights", "reviews", "windDown", "cache", "preferences", "setAside"] {
+            list.append(
+                CatalogScreen(
+                    id: "privacy.delete.\(group)", area: .privacy, title: "Data management: confirm \(group)", arguments: base() + ["-noctisInitialRoute", "settings:data-management"],
+                    route: "settings:data-management", steps: [.tapIdentifier("data.delete.\(group)")], ready: nil, surface: .sheet, scrolls: false
+                )
+            )
+        }
         return list
     }()
 

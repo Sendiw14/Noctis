@@ -40,6 +40,7 @@ def add(c):
 add(config("A-light"))
 add(config("A-dark", appearance="dark"))
 add(config("B-AX3-light", text="ax3"))
+add(config("B-AX3-dark", text="ax3", appearance="dark"))
 add(config("B-AX5-light", text="ax5"))
 add(config("B-AX5-dark", text="ax5", appearance="dark", screens="tabs", only=TABS))
 C = [

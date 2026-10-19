@@ -168,6 +168,16 @@ struct PaywallScreen: View {
     /// it (26 / 242, Sample's ring on iPhone 17 Pro).
     private static let ringDiameter: CGFloat = 140
     private static let ringLineWidth: CGFloat = 15
+    /// How far the resting cut may shrink the ring (140 down to 84pt, its stroke with it) to bring the benefits card's first rows above the fold, so the first
+    /// screen is filled to the CTA instead of leaving a blank band (QA-071). Zero wherever the content already fits or a clean cut is within reach without it.
+    private static let maxRingShrink: CGFloat = 56
+    @State private var ringShrink: CGFloat = 0
+    /// When no clean cut is in reach even with the ring shrunk, the space the first screen would leave blank above the CTA is spent on the hero instead: a share above the
+    /// ring and the rest between the ring and the title, so the first screen is filled to the CTA and the benefits card begins at the fold (QA-071). It is never a hole.
+    @State private var heroSpread: CGFloat = 0
+    private static let maxHeroSpread: CGFloat = 200
+    private var ringDiameterNow: CGFloat { Self.ringDiameter - ringShrink }
+    private var ringLineWidthNow: CGFloat { Self.ringLineWidth * ringDiameterNow / Self.ringDiameter }
     private static let contentBottomPadding = NoctisSpacing.md
     private static let fadeHeight = NoctisSpacing.xl
     private static let benefitsCardPadding = NoctisSpacing.lg
@@ -295,7 +305,7 @@ struct PaywallScreen: View {
                 }
             }
             .padding(.horizontal, NoctisSpacing.xl)
-            .padding(.top, topInset + topRowClearance - restShift)
+            .padding(.top, topInset + topRowClearance - restShift + heroSpread * 0.4)
             // R14: clears the CTA stack by 16pt when fully scrolled.
             .padding(.bottom, Self.contentBottomPadding)
             .padding(.bottom, endRunway)
@@ -322,7 +332,7 @@ struct PaywallScreen: View {
     /// Everything the resting-cut solver reads, so it reruns whenever any
     /// of it changes (phase swaps, CTA stack height, Dynamic Type).
     private var restingCutInputs: [CGFloat] {
-        [unbandedVisibleHeight, scrollMetrics.contentHeight, cardFrame.minY, cardFrame.height, restShift, restBand, endRunway, headerBandEnd]
+        [unbandedVisibleHeight, scrollMetrics.contentHeight, cardFrame.minY, cardFrame.height, restShift, ringShrink, heroSpread, restBand, endRunway, headerBandEnd]
             + (blockFrames + cardRowFrames).flatMap { [$0.minY, $0.maxY] }
     }
 
@@ -347,7 +357,7 @@ struct PaywallScreen: View {
     /// Text-bearing blocks in content coordinates as laid out with no rest
     /// shift applied.
     private var unshiftedBlockFrames: [CGRect] {
-        (blockFrames + cardRowFrames).map { $0.offsetBy(dx: 0, dy: restShift) }
+        (blockFrames + cardRowFrames).map { $0.offsetBy(dx: 0, dy: restShift + ringShrink - heroSpread) }
     }
 
     /// R14 at rest: when content extends below the fold the bottom fade is
@@ -364,6 +374,8 @@ struct PaywallScreen: View {
         guard pinsBottomStack else {
             // Nothing is pinned, so there is no fade to keep off a line of text: the page just scrolls.
             if restShift != 0 { restShift = 0 }
+            if ringShrink != 0 { ringShrink = 0 }
+            if heroSpread != 0 { heroSpread = 0 }
             if restBand != 0 { restBand = 0 }
             if endRunway != 0 { endRunway = 0 }
             return
@@ -374,8 +386,11 @@ struct PaywallScreen: View {
         let frames = unshiftedBlockFrames
         guard !frames.isEmpty else { return }
         let viewport = unbandedVisibleHeight
-        let contentBottom = scrollMetrics.contentHeight - endRunway + restShift - Self.contentBottomPadding
+        let contentBottom = scrollMetrics.contentHeight - endRunway + restShift + ringShrink - heroSpread - Self.contentBottomPadding
+        let maxLift = maxRestShift + Self.maxRingShrink
         var shift: CGFloat = 0
+        var shrink: CGFloat = 0
+        var spread: CGFloat = 0
         var band: CGFloat = 0
         if contentBottom > viewport + 0.5 {
             func isClean(_ zoneBottom: CGFloat) -> Bool {
@@ -387,15 +402,22 @@ struct PaywallScreen: View {
                 cuts.append(frame.minY - NoctisScrollEdges.hiddenMargin)
             }
             let clean = cuts.filter(isClean)
-            var upward = clean.filter { $0 >= viewport && $0 <= viewport + maxRestShift }
-            if contentBottom - viewport <= maxRestShift { upward.append(contentBottom) }
+            var upward = clean.filter { $0 >= viewport && $0 <= viewport + maxLift }
+            if contentBottom - viewport <= maxLift { upward.append(contentBottom) }
             if let cut = upward.min() {
-                shift = cut - viewport
+                // The empty band beside Close and Restore first (free), then the ring.
+                let lift = cut - viewport
+                shift = min(lift, maxRestShift)
+                shrink = lift - shift
             } else if let cut = clean.filter({ $0 < viewport && $0 >= viewport * 0.55 }).max() {
-                band = viewport - cut
+                // Spend the blank on the hero (see `heroSpread`); only what the hero cannot take is left as paper.
+                spread = min(viewport - cut, Self.maxHeroSpread)
+                band = viewport - cut - spread
             }
         }
         if abs(shift - restShift) > 0.5 { restShift = shift }
+        if abs(shrink - ringShrink) > 0.5 { ringShrink = shrink }
+        if abs(spread - heroSpread) > 0.5 { heroSpread = spread }
         if abs(band - restBand) > 0.5 { restBand = band }
     }
 
@@ -458,14 +480,15 @@ struct PaywallScreen: View {
             ZStack {
                 // The same segmented ring Sample draws (R2: solid arcs with
                 // real gaps, no blended joints), center number hidden.
-                NoctisStageRing(progress: ringProgress, diameter: Self.ringDiameter, lineWidth: Self.ringLineWidth)
+                NoctisStageRing(progress: ringProgress, diameter: ringDiameterNow, lineWidth: ringLineWidthNow)
                 if showCheckmark {
                     PaywallCheckmark()
                         .frame(width: 40, height: 40)
                 }
             }
-            .frame(height: Self.ringDiameter)
+            .frame(height: ringDiameterNow)
             .frame(maxWidth: .infinity)
+            .padding(.bottom, heroSpread * 0.6)
             .paywallBlock()
 
             if let context, context != .general {
