@@ -12,6 +12,7 @@ struct WatchMock {
 
     init?(arguments: [String]) {
         guard let flag = arguments.firstIndex(of: "-watchMockSnapshot") else { return nil }
+        WidgetSamples.usePhoneFixtures(arguments: arguments)
         let name = arguments.indices.contains(flag + 1) ? arguments[flag + 1] : "full"
         let calendar = Calendar.autoupdatingCurrent
         // 10:00 this morning, so a morning state is today's; "evening" pins 21:30.

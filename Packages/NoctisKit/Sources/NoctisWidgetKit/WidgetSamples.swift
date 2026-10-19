@@ -7,6 +7,17 @@ import PremiumKit
 public enum WidgetSamples {
     /// A snapshot in `state`, for the day of `now`. A sample is an unlocked one (Premium) unless the caller says otherwise: it shows what a surface can draw (R62).
     public static func snapshot(_ state: WidgetDataState, now: Date, calendar: Calendar, tier: Tier = .premium) -> WidgetSnapshot {
+        #if DEBUG
+        // QA part 5: with `-phoneFixtures <folder>` the numbers are the iPhone's own for the same scenario (the snapshot its WidgetSnapshotMaker wrote),
+        // so the Watch and the widget gallery show the same night as Home. Only the day, the moment, the state and the plan come from the caller.
+        if let folder = phoneFixtureFolder, var fixture = phoneFixture(for: state, in: folder) {
+            fixture.forDay = WidgetDay.today(at: now, calendar: calendar)
+            fixture.generatedAt = now
+            fixture.state = state
+            fixture.tier = tier
+            return fixture
+        }
+        #endif
         let plan = WidgetPlan(wakeMinutes: 7 * 60, needMinutes: 8 * 60, bedtimeMinutes: 23 * 60, windowStartMinutes: 22 * 60 + 45, windowEndMinutes: 23 * 60 + 15)
         let night = WidgetNight(asleepMinutes: 402, stages: WidgetStages(deep: 74, core: 236, rem: 92), bedtimeMinutes: 23 * 60 + 4, wakeMinutes: 6 * 60 + 52, quality: 81)
         let fullRing = [
@@ -51,4 +62,29 @@ public enum WidgetSamples {
         }
         return snapshot
     }
+
+    #if DEBUG
+    /// The folder `-phoneFixtures` named: one `<scenario>.json` per state, written by `scripts/qa_phone_fixtures.sh` from the iPhone's mock scenarios.
+    public nonisolated(unsafe) static var phoneFixtureFolder: URL?
+
+    /// Reads `-phoneFixtures <folder>` from a launch's arguments.
+    public static func usePhoneFixtures(arguments: [String]) {
+        guard let flag = arguments.firstIndex(of: "-phoneFixtures"), arguments.indices.contains(flag + 1) else { return }
+        phoneFixtureFolder = URL(fileURLWithPath: arguments[flag + 1], isDirectory: true)
+    }
+
+    static func phoneFixture(for state: WidgetDataState, in folder: URL) -> WidgetSnapshot? {
+        let name: String
+        switch state {
+        case .full: name = "full"
+        case .sleepOnly: name = "sleepOnly"
+        case .learning: name = "learning"
+        case .empty, .noPermission: name = "empty"
+        case .stale: name = "stale"
+        case .gap: name = "gap"
+        }
+        guard let data = try? Data(contentsOf: folder.appending(path: "\(name).json", directoryHint: .notDirectory)) else { return nil }
+        return WidgetSnapshot.decode(data)
+    }
+    #endif
 }

@@ -81,6 +81,7 @@ public struct WidgetGalleryRequest {
 
     public init?(arguments: [String]) {
         guard let flag = arguments.firstIndex(of: "-widgetGallery") else { return nil }
+        WidgetSamples.usePhoneFixtures(arguments: arguments)
         let value = arguments.indices.contains(flag + 1) && !arguments[flag + 1].hasPrefix("-") ? arguments[flag + 1] : "day"
         scenes = value == "all" ? WidgetGalleryScene.allCases : value.split(separator: ",").compactMap { WidgetGalleryScene(rawValue: String($0)) }
         let look = arguments.firstIndex(of: "-widgetGalleryAppearance").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
