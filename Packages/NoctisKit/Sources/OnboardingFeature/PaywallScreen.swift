@@ -187,6 +187,11 @@ struct PaywallScreen: View {
     /// end of the page instead, and everything scrolls (QA part 3, QA-084).
     private var pinsBottomStack: Bool { !dynamicTypeSize.isAccessibilitySize }
 
+    /// Opened from a lock (a sheet over the app, not onboarding's full page): the ring sits in the band beside Close and Restore, the title is one line, the benefits card and
+    /// both plans are tight, and only the button, its price line and "Continue with the free plan" are pinned, so the card and both plans are in view without scrolling (QA part 5).
+    private var compactLock: Bool { context != nil && !dynamicTypeSize.isAccessibilitySize }
+    private static let compactRingDiameter: CGFloat = 52
+
     private var bedtimeMinutes: Int { noctisBedtimeMinutes(wakeMinutes: wakeMinutes, needMinutes: needMinutes) }
     private var selectedProduct: Product? { store.products.first { $0.id == selectedProductID } }
     private var yearlyProduct: Product? { store.yearlyProduct }
@@ -215,6 +220,11 @@ struct PaywallScreen: View {
                 Color.clear.onChange(of: topInset + topRowClearance, initial: true) { _, newValue in headerBandEnd = newValue }
                 PaperBackground().ignoresSafeArea()
                 content(topInset: topInset)
+                if compactLock {
+                    compactRing
+                        .padding(.top, topInset + NoctisSpacing.sm + 22 - Self.compactRingDiameter / 2)
+                        .allowsHitTesting(false)
+                }
                 topRow
                     .padding(.horizontal, NoctisSpacing.xl)
                     .padding(.top, topInset + NoctisSpacing.sm)
@@ -291,21 +301,26 @@ struct PaywallScreen: View {
 
     private func content(topInset: CGFloat) -> some View {
         ScrollView {
-            VStack(spacing: NoctisSpacing.lg) {
-                hero
+            VStack(spacing: compactLock ? NoctisSpacing.sm : NoctisSpacing.lg) {
+                if compactLock { compactHero } else { hero }
                 benefitsCard
-                compareLink.paywallBlock()
+                if !compactLock { compareLink.paywallBlock() }
                 plansSection
+                if compactLock {
+                    if phase == .ready { NoctisTextButton("Continue with the free plan", action: dismissWithoutSubscribing) }
+                    compareLink
+                }
                 Text(NoctisMedicalNotice.statement)
                     .noctisFont(12, relativeTo: .caption)
                     .foregroundStyle(NoctisPaper.ink3)
                     .multilineTextAlignment(.center)
+                if compactLock { footer }
                 if !pinsBottomStack {
                     bottomStack.padding(.top, NoctisSpacing.sm)
                 }
             }
             .padding(.horizontal, NoctisSpacing.xl)
-            .padding(.top, topInset + topRowClearance - restShift + heroSpread * 0.4)
+            .padding(.top, topInset + topRowClearance - (compactLock ? NoctisSpacing.xl - NoctisSpacing.xs : restShift) + heroSpread * 0.4)
             // R14: clears the CTA stack by 16pt when fully scrolled.
             .padding(.bottom, Self.contentBottomPadding)
             .padding(.bottom, endRunway)
@@ -371,7 +386,7 @@ struct PaywallScreen: View {
     /// moving the fade up to the nearest clean gap. Never adjusts after the
     /// user has scrolled.
     private func settleRestingCut() {
-        guard pinsBottomStack else {
+        guard pinsBottomStack, !compactLock else {
             // Nothing is pinned, so there is no fade to keep off a line of text: the page just scrolls.
             if restShift != 0 { restShift = 0 }
             if ringShrink != 0 { ringShrink = 0 }
@@ -519,6 +534,33 @@ struct PaywallScreen: View {
         .onAppear { runHeroEntranceIfNeeded() }
     }
 
+    private var compactRing: some View {
+        ZStack {
+            NoctisStageRing(progress: ringProgress, diameter: Self.compactRingDiameter, lineWidth: Self.ringLineWidth * Self.compactRingDiameter / Self.ringDiameter)
+            if showCheckmark { PaywallCheckmark().frame(width: 28, height: 28) }
+        }
+        .frame(width: Self.compactRingDiameter, height: Self.compactRingDiameter)
+        .onAppear { runHeroEntranceIfNeeded() }
+    }
+
+    private var compactHero: some View {
+        VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+            if let context, context != .general {
+                Text(context.line)
+                    .noctisFont(15, .semibold, relativeTo: .subheadline)
+                    .foregroundStyle(NoctisPaper.orangeText)
+                    .multilineTextAlignment(.leading)
+                    .accessibilityIdentifier("paywall.context")
+            }
+            Text("\(Text("Sleep ").foregroundStyle(NoctisPaper.ink))\(Text("deeper.").foregroundStyle(NoctisPaper.orangeText))")
+                .noctisFont(30, .bold, relativeTo: .title)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .accessibilityAddTraits(.isHeader)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private var personalizedLine: String {
         "Built around your \(formattedNeed(needMinutes)) plan, bed by \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))."
     }
@@ -535,7 +577,7 @@ struct PaywallScreen: View {
     // MARK: - Benefits
 
     private var benefitsCard: some View {
-        NoctisPaperCard(padding: Self.benefitsCardPadding) {
+        NoctisPaperCard(padding: compactLock ? NoctisSpacing.sm : Self.benefitsCardPadding) {
             VStack(spacing: 0) {
                 ForEach(Array(benefitRows.enumerated()), id: \.element.id) { index, row in
                     HStack(spacing: NoctisSpacing.sm) {
@@ -550,7 +592,7 @@ struct PaywallScreen: View {
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                     }
-                    .padding(.vertical, NoctisScrollEdges.blockGap(12, dynamicTypeSize) / 2)
+                    .padding(.vertical, compactLock ? 3 : NoctisScrollEdges.blockGap(12, dynamicTypeSize) / 2)
                     .paywallCardRow(index)
                     if index < benefitRows.count - 1 {
                         Rectangle().fill(NoctisPaper.hairline).frame(height: 1)
@@ -644,7 +686,7 @@ struct PaywallScreen: View {
 
     private func planCard(_ option: PlanOption) -> some View {
         let isSelected = selectedProductID == option.id
-        return PlanCardView(option: option, isSelected: isSelected, reduceMotion: reduceMotion) {
+        return PlanCardView(option: option, isSelected: isSelected, reduceMotion: reduceMotion, compact: compactLock) {
             NoctisHaptics.selectionTick()
             withAnimation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion)) {
                 selectedProductID = option.id
@@ -718,8 +760,10 @@ struct PaywallScreen: View {
                             .foregroundStyle(NoctisPaper.ink3)
                             .multilineTextAlignment(.center)
                     }
-                    NoctisTextButton("Continue with the free plan", action: dismissWithoutSubscribing)
-                    footer
+                    if !compactLock {
+                        NoctisTextButton("Continue with the free plan", action: dismissWithoutSubscribing)
+                        footer
+                    }
                 }
             }
         }
@@ -914,6 +958,7 @@ private struct PlanCardView: View {
     let option: PlanOption
     let isSelected: Bool
     let reduceMotion: Bool
+    var compact = false
     let onSelect: () -> Void
 
     /// R4: the radio mark grows with the plan text beside it.
@@ -943,10 +988,10 @@ private struct PlanCardView: View {
                             badges
                         }
                     }
-                    Text(option.isYearly ? "\(option.displayPrice) / year" : "\(option.displayPrice) / month")
+                    Text(priceLine)
                         .noctisFont(13, relativeTo: .footnote)
                         .foregroundStyle(NoctisPaper.ink2)
-                    if let perMonthText = option.perMonthText {
+                    if let perMonthText = option.perMonthText, !compact {
                         Text(perMonthText)
                             .noctisFont(12, relativeTo: .caption)
                             .foregroundStyle(NoctisPaper.ink3)
@@ -954,7 +999,7 @@ private struct PlanCardView: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(NoctisSpacing.lg)
+            .padding(compact ? NoctisSpacing.md : NoctisSpacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous)
                     .fill(NoctisPaper.surface)
@@ -970,6 +1015,13 @@ private struct PlanCardView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .accessibilityLabel("\(option.isYearly ? "Yearly" : "Monthly") plan, \(option.displayPrice) per \(option.isYearly ? "year" : "month")")
+    }
+
+    /// "$39.99 / year", and in the compact card "$39.99 / year · $3.33 / mo" on the same line.
+    private var priceLine: String {
+        let base = option.isYearly ? "\(option.displayPrice) / year" : "\(option.displayPrice) / month"
+        if compact, let perMonthText = option.perMonthText { return "\(base) · \(perMonthText)" }
+        return base
     }
 
     private var planName: some View {
