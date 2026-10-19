@@ -245,6 +245,15 @@ public enum ScreenCatalog {
                 id: "coach.quota", area: .coach, title: "Coach, free plan with the day's questions used",
                 arguments: base() + ["-forceTier", "free", "-noctis.coach.quota", "2099-01-01|99", "-noctisInitialRoute", "coach"], route: "coach"
             ),
+            // Typed questions the scripted replies answer (the final gallery): a medical one and a crisis one.
+            CatalogScreen(
+                id: "coach.medical", area: .coach, title: "Coach, a medical question (scripted reply)", arguments: base() + ["-noctisInitialRoute", "coach"], route: "coach", opens: "coach",
+                steps: [.type("Do I have sleep apnea?"), .tapLabel("Send"), .wait(4)], ready: nil, surface: .pushed
+            ),
+            CatalogScreen(
+                id: "coach.crisis", area: .coach, title: "Coach, a crisis message (scripted reply)", arguments: base() + ["-noctisInitialRoute", "coach"], route: "coach", opens: "coach",
+                steps: [.type("I want to hurt myself"), .tapLabel("Send"), .wait(4)], ready: nil, surface: .pushed
+            ),
         ]
     }()
 

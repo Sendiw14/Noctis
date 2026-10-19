@@ -73,7 +73,7 @@ for locale in ["en_LK", "de_DE", "ar_SA", "si_LK", "ta_LK", "th_TH"]:
 # The hierarchy checks run where layout is most at risk; elsewhere the screenshots are the evidence.
 WITH_CHECKS = {"A-light", "A-dark", "B-AX5-light", "D-RTL"}
 # Every page down the screen (not only its top and bottom) for the reference configuration.
-WITH_PAGES = {"A-light"}
+WITH_PAGES = {"A-light", "A-dark"}
 
 
 def run(device, names, out, derived, resume):
