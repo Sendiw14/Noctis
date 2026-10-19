@@ -26,13 +26,15 @@ EX = ["reviews.", "insights.heart", "insights.consistency", "insights.timing", "
 LOADING = ["sleep.day.loading", "sleep.week.loading", "sleep.month.loading", "insights.all.loading"]
 MAX = ["home.day.full", "home.evening.full", "sleep.day.full", "sleep.week.full", "sleep.month.full", "recovery.today.full", "recovery.7d.full", "recovery.30d.full",
        "recovery.90d.full", "onboarding.paywall", "premium.paywall.loaded", "onboarding.welcome"]
+# AX5 is tier 1 only on Settings, Privacy Center, Data management and the paywall (the QA part 4 brief); everywhere else it is tier 2, not planned for v1.
+AX5 = ["settings.", "privacy.", "premium.paywall.", "onboarding.paywall"]
 # (device, configuration) -> the prefixes of the screens planned there.
 DEFINITION = {
-    ("pro", "A-light"): T1 + EX, ("pro", "A-dark"): T1 + LOADING, ("pro", "B-AX3-light"): T1 + AX, ("pro", "B-AX5-light"): AX,
-    ("se", "A-light"): T1 + EX, ("se", "A-dark"): T1 + LOADING, ("se", "B-AX3-light"): T1 + AX, ("se", "B-AX5-light"): AX,
+    ("pro", "A-light"): T1 + EX, ("pro", "A-dark"): T1 + LOADING, ("pro", "B-AX3-light"): T1 + AX, ("pro", "B-AX5-light"): AX5,
+    ("se", "A-light"): T1 + EX, ("se", "A-dark"): T1 + LOADING, ("se", "B-AX3-light"): T1 + AX, ("se", "B-AX5-light"): AX5,
     ("se", "C-BoldText"): ["recovery.today.full"],
     ("se", "D-DoubleLength"): ["home.day.", "home.evening.", "profile.screen"], ("se", "D-Bounded"): ["home.day.", "home.evening.", "profile.screen"],
-    ("max", "A-light"): MAX, ("max", "A-dark"): MAX, ("pro", "B-AX5-light"): AX + ["settings.data-management", "settings.privacy-center", "reviews.list"], ("se", "B-AX5-light"): AX + ["settings.data-management", "settings.privacy-center", "reviews.list"],
+    ("max", "A-light"): MAX, ("max", "A-dark"): MAX
 }
 
 def load_catalog():

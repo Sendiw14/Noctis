@@ -242,86 +242,15 @@ privacy,privacy.delete.windDown,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light
 privacy,privacy.delete.cache,pro,B-AX3-light,True,True,VIEWED,FINDING QA-149,Data management at AX3: the Delete button touches the end of long titles ('Insights historyDelete') and sits against the card's right edge; the confirmation (not captured: the build used the old route) is still to shoot. Fix: stack the verb under the title at accessibility sizes
 privacy,privacy.delete.preferences,pro,B-AX3-light,True,True,VIEWED,FINDING QA-149,"Data management at AX3 (same row issue, confirmation not reached: old route); fixed in source"
 privacy,privacy.delete.setAside,pro,B-AX3-light,True,True,VIEWED,FINDING QA-149,"Data management at AX3 (same row issue, confirmation not reached: old route); fixed in source"
-onboarding,onboarding.welcome,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.goal,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro: Reviews list populated at default, goal subtitle two lines"
-onboarding,onboarding.rhythm,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.sample,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.health,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.notifications,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.plan,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.paywall,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.full,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-home,home.evening.full,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-sleep,sleep.day.full,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-sleep,sleep.week.full,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-sleep,sleep.month.full,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.today.full,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.7d.full,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.30d.full,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.90d.full,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.factor.sleepDuration,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.factor.sleepConsistency,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.factor.hrv,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.factor.restingHeartRate,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.all.full,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-insights,insights.sleep,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-insights,insights.recovery,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-insights,insights.timing,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-insights,insights.consistency,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-insights,insights.heart,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-insights,insights.longTerm,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-insights,insights.detail,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-insights,insights.history,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-coach,coach.hub.full,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.hub.learning,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.hub.empty,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.hub.noPermission,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.answer,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.answer.misbehaving,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.answer.unavailable,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.history,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.privacy,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-coach,coach.quota,pro,B-AX5-light,True,True,VIEWED,FINDING,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall): text cut with an ellipsis: Coach composer placeholder 'Ask a follo...', History empty title 'No conversatio...', Home bedtime pill 'Bedtime 10:30 P...'; content otherwise whole and reachable"
-night,night.tonight,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.tonight.free,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.alarm,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-night,night.alarm.denied,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-night,night.sounds.silent,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.sounds.playing,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.sounds.timer,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.sounds.interrupted,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.windDown.prestart,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.running30,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.running90,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.finished,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.reduced,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.breathing.prestart,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.breathing.running,pro,B-AX5-light,False,True,UNVERIFIED,not produced,
-night,night.breathing.finished,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 outside Settings/Privacy/Data/Paywall, recorded as seen): whole and reachable, text wraps, filter chips scroll horizontally, floating tab bar overlays content by design"
-night,night.meditation.prestart,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.meditation.running,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.meditation.finished,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.reflect.empty,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.reflect.draft,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.journal.filled,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.journal.empty,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-night,night.journal.unavailable,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 (tier 2 here), seen: Night screens whole, buttons and pickers reachable; 'Bedtime 10:30 P...' pill clips at AX5"
-reviews,reviews.list,pro,B-AX5-light,True,True,VIEWED,PASS,"AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)"
-reviews,reviews.list.free,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+onboarding,onboarding.paywall,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 premium,premium.paywall.loaded,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
 premium,premium.paywall.loading,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
-premium,premium.paywall.unavailable,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+premium,premium.paywall.unavailable,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 premium,premium.paywall.recovery30D,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
-premium,premium.paywall.sleepMonth,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+premium,premium.paywall.sleepMonth,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 premium,premium.paywall.coachQuestions,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.windDown,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-premium,premium.paywall.weeklyReview,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.screen,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.screen.learning,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.editor.need,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.editor.wake,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.editor.name,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
-profile,profile.editor.goals,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
+premium,premium.paywall.weeklyReview,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 settings,settings.root,pro,B-AX5-light,True,True,VIEWED,PASS,"AX5 Paywall, Delete all, Settings root/sounds/subscription, Help: whole and reachable, CTA and legal lines visible"
 settings,settings.notifications,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.health-data,pro,B-AX5-light,True,True,VIEWED,FINDING,AX5 Health data: 'Respiratory Rate' breaks mid-word ('Respirator/y Rate'); Settings support email breaks mid-word
@@ -589,93 +518,22 @@ privacy,privacy.delete.windDown,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 lig
 privacy,privacy.delete.cache,se,B-AX3-light,True,True,VIEWED,FINDING QA-149,"SE AX3 Data management: Delete touches the title ('Coach historyDelete') and runs to the card's edge; fixed in source (verb under the title at accessibility sizes), re-shoot pending"
 privacy,privacy.delete.preferences,se,B-AX3-light,True,True,VIEWED,FINDING QA-149,SE AX3 Data management (not the confirmation: old route)
 privacy,privacy.delete.setAside,se,B-AX3-light,True,True,VIEWED,FINDING QA-149,SE AX3 Data management (not the confirmation: old route)
-onboarding,onboarding.welcome,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.goal,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.rhythm,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.sample,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.health,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.notifications,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.plan,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 onboarding,onboarding.paywall,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-home,home.day.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-home,home.evening.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-sleep,sleep.day.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-sleep,sleep.week.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-sleep,sleep.month.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.today.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.7d.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.30d.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.90d.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.factor.sleepDuration,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.factor.sleepConsistency,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.factor.hrv,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-recovery,recovery.factor.restingHeartRate,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.all.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.sleep,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.recovery,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.timing,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.consistency,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.heart,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.longTerm,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.detail,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-insights,insights.history,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.hub.full,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.hub.learning,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.hub.empty,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.hub.noPermission,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.answer,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.answer.misbehaving,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.answer.unavailable,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.history,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.privacy,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-coach,coach.quota,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.tonight,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.tonight.free,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.alarm,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.alarm.denied,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.sounds.silent,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.sounds.playing,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.sounds.timer,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.sounds.interrupted,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.prestart,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.running30,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.running90,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.finished,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.windDown.reduced,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.breathing.prestart,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.breathing.running,se,B-AX5-light,False,True,UNVERIFIED,not produced,
-night,night.breathing.finished,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.meditation.prestart,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.meditation.running,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.meditation.finished,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.reflect.empty,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.reflect.draft,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.journal.filled,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.journal.empty,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.journal.unavailable,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-reviews,reviews.list,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
-reviews,reviews.list.free,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-premium,premium.paywall.loaded,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-premium,premium.paywall.loading,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+premium,premium.paywall.loaded,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
+premium,premium.paywall.loading,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 premium,premium.paywall.unavailable,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-premium,premium.paywall.recovery30D,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+premium,premium.paywall.recovery30D,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 premium,premium.paywall.sleepMonth,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.coachQuestions,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.windDown,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.weeklyReview,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.screen,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.screen.learning,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.editor.need,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.editor.wake,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.editor.name,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-profile,profile.editor.goals,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.root,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.root,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 settings,settings.notifications,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.health-data,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 Health data: tile above the words, 'Respiratory Rate' whole (fixed, QA-152)"
 settings,settings.appearance,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.subscription,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.subscription,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 settings,settings.wind-down,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-settings,settings.sounds,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+settings,settings.sounds,se,B-AX5-light,True,True,VIEWED,PASS,"AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks"
 settings,settings.help,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.about,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 privacy,settings.privacy-center,se,B-AX5-light,False,True,UNVERIFIED,not produced,

@@ -246,3 +246,7 @@ ax5c/se__B-AX5-light__01__0.png	PASS	AX5 Health data: tile above the words, 'Res
 ax5b/pro__B-AX5-light__01__0.png	PASS	AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
 ax5b/pro__B-AX5-light__03__0.png	PASS	AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
 ax5b/se__B-AX5-light__01__0.png	PASS	AX5 Data management on current build: verb under title; system confirmation dialog scrolls its message
+ax5/pro__B-AX5-light__17__0.png	PASS	AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks
+ax5/pro__B-AX5-light__20__0.png	PASS	AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks
+ax5/se__B-AX5-light__19__0.png	PASS	AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks
+ax5/se__B-AX5-light__33__0.png	PASS	AX5 paywall/onboarding/settings: whole and reachable, CTA and legal lines visible, no mid-word breaks
