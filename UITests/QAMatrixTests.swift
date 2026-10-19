@@ -142,6 +142,11 @@ final class QAMatrixTests: XCTestCase {
                 if !match.waitForExistence(timeout: 20) { XCTFail("\(screen.id): nothing named \(prefix)… appeared") }
             case .back:
                 tap(app.navigationBars.buttons.firstMatch, in: app, what: "\(screen.id): the back button")
+            case .type(let text):
+                let field = app.textFields.firstMatch
+                if field.waitForExistence(timeout: 10) { field.tap(); field.typeText(text) } else { XCTFail("\(screen.id): no text field to type into") }
+            case .wait(let seconds):
+                QA.pause(seconds)
             }
         }
         if !screen.steps.isEmpty, let identifier = screen.ready { ready = element(app, identifier).waitForExistence(timeout: 20) } else if !screen.steps.isEmpty { QA.pause(2) }

@@ -77,6 +77,10 @@ final class AuditQATests: XCTestCase {
             case .waitForPrefix(let prefix):
                 _ = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix)).firstMatch.waitForExistence(timeout: 20)
             case .back: app.navigationBars.buttons.firstMatch.tap()
+            case .type(let text):
+                let field = app.textFields.firstMatch
+                if field.waitForExistence(timeout: 10) { field.tap(); field.typeText(text) }
+            case .wait(let seconds): QA.pause(seconds)
             }
             QA.pause(1.0)
         }

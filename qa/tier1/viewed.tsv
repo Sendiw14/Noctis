@@ -1,0 +1,200 @@
+g1/pro__coach.answer__1.png	PASS	answer, light and dark, top and bottom: no clipped text; follow-up chips cut at the edge by design (scrolling row)
+g1/pro__coach.answer.misbehaving__1.png	PASS	as the answer: the footer says answered from your data
+g1/pro__coach.answer.unavailable__1.png	PASS	as the answer
+g1/pro__coach.hub.full__1.png	PASS	hub, light and dark, top and bottom: header, banner, first-run card and question cards whole
+g1/pro__home.day.full__1.png	PASS	Home by day, light and dark, top and bottom: ring, chips, last night, week, review card and Tonight whole; nothing under the fades
+g1/pro__home.evening.full__1.png	NOTE	Home in the evening: whole. The compact bar and the tab accessory say 'Bedtime 10:30 PM' while the hero says 'Bedtime window 10:15-10:45 PM' (Premium): the known difference in POST_LAUNCH.md (the accessory shows wake less need)
+g1/pro__insights.all.full__1.png	PASS	Insights, light and dark: header, chips, featured card, Reviews row, Recent, records whole
+g1/pro__insights.all.loading__1.png	PASS	skeleton fits the row at the 17 Pro in light and dark (QA-089 on the 17 Pro)
+g1/pro__insights.consistency__1.png	PASS	the Consistency chip is selected and in view with its neighbours (QA-087 verified on the 17 Pro)
+g1/pro__insights.detail__1.png	PASS	an insight's page, light and dark, top and bottom: whole
+g1/pro__insights.heart__1.png	PASS	the Heart chip is selected and in view (QA-087 on the 17 Pro); empty state card and Reviews row whole
+g1/pro__insights.timing__1.png	PASS	the Timing chip is selected and in view; one insight and the Reviews row whole
+g1/pro__night.alarm__1.png	PASS	alarm sheet, light and dark: picker, repeat days, snooze and CTA whole
+g1/pro__night.alarm.denied__1.png	PASS	alarm sheet with alarms turned off: message and Open Settings whole, light and dark
+g1/pro__night.windDown.finished__1.png	PASS	Sleep well. screen: the wind-down is dark by design, the same in light and dark
+g1/pro__night.windDown.prestart__1.png	PASS	wind-down start: title, moon, length and sound chips (the sound row scrolls, cut at the edge by design), Begin and Not now; dark by design in both modes
+g1/pro__night.windDown.reduced__1.png	PASS	wind-down running with reduced motion: title, moon, countdown, controls whole; dark by design in both modes
+g1/pro__night.windDown.running30__1.png	PASS	wind-down running (14 min): whole
+g1/pro__night.windDown.running90__1.png	PASS	wind-down last minutes (2 min), the pause control gone as designed: whole
+g1/pro__onboarding.goal__1.png	FINDING QA-146	the Better sleep subtitle 'A calmer wind-down and a steadier routine' is cut on one line at 11 pt ('...steadier...'): the reworded line is longer than the card's one line. Fixed in source (two lines allowed); re-shoot pending
+g1/pro__onboarding.health__1.png	PASS	Connect your signals: whole, light only by design (onboarding is pinned to light)
+g1/pro__onboarding.notifications__1.png	PASS	Stay gently informed: example banners, toggles and CTA whole
+g1/pro__onboarding.plan__1.png	PASS	plan ready: bedtime 11:00 PM, wake 7:00 AM, need 8h and the first-two-weeks list whole; the durations and clocks come from the one formatter
+g1/pro__onboarding.rhythm__1.png	PASS	rhythm: wake ruler, need ruler (8h), bedtime strip whole; need reads '8h' (was '8h 00m')
+g1/pro__onboarding.sample__1.png	PASS	sample night: 8h 25m ring, stage totals and note whole
+g1/pro__onboarding.welcome__1.png	PASS	welcome: constellation, tagline, info card and the one medical-device sentence whole (QA-142 on the 17 Pro); light only by design
+g1/pro__premium.compare__1.png	PASS	Compare free and Premium sheet, light and dark, top and bottom: every row whole
+g1/pro__premium.paywall.loading__1.png	PASS	paywall with plans loading: hero, benefits card, skeleton plans, medical line, disabled CTA and free-plan link whole, light and dark
+g1/pro__privacy.deleteAll__1.png	PASS	Delete all sheet, light and dark, top and bottom: what is deleted, what is not, pinned warning and red button whole
+g1/pro__profile.screen__1.png	PASS	Profile, light and dark, top and bottom: name, sleep profile (window and typical times), health, notifications, subscription whole
+g1/pro__profile.screen.learning__1.png	PASS	Profile while learning: 'Still learning' and the 7-night note whole
+g1/pro__recovery.today.full__1.png	PASS	Recovery today, light and dark, top and bottom: ring, vs your usual, build bar, factor card, confidence and how-calculated whole
+g1/pro__recovery.7d.full__1.png	PASS	Recovery 7D: chart, stats tiles and factor cards whole
+g1/pro__recovery.30d.full__1.png	PASS	Recovery 30D: chart, stats, factor sparklines whole
+g1/pro__recovery.90d.full__1.png	PASS	Recovery 90D: chart with weekly average, stats and sparklines whole
+g1/pro__recovery.factor.hrv__1.png	PASS	HRV factor page, light and dark, top and bottom: today tile, range selector, chart, tiles, how it is scored whole
+g1/pro__recovery.factor.restingHeartRate__1.png	PASS	Resting HR factor page whole
+g1/pro__recovery.factor.sleepConsistency__1.png	PASS	Consistency factor page whole; times read '12:03 AM' as on every surface
+g1/pro__recovery.factor.sleepDuration__1.png	PASS	Sleep factor page whole
+g1/pro__reviews.list.free__1.png	FINDING QA-078	Reviews list shows 'Nothing here yet': the seeded reviews were not there when the list loaded (the route opens it at launch). Catalog changed to open the list from Insights after the seed; re-shoot pending
+g1/pro__reviews.weekly.cover__1.png	PASS	weekly cover, light and dark: whole; no bottom page (single screen)
+g1/pro__reviews.monthly.cover__1.png	PASS	monthly cover: whole
+g1/pro__settings.root__1.png	PASS	Settings, light and dark, top and bottom: every section and row whole; Terms and Privacy still the placeholder links (owner task)
+g1/pro__sleep.day.full__1.png	PASS	Sleep day, light and dark, top and bottom: picker, ring, night chart, details whole
+g1/pro__sleep.week.full__1.png	PASS	Sleep week: summary, bars, balance, timing, consistency whole
+g1/pro__sleep.month.full__1.png	PASS	Sleep month: bars, timing rhythm, sleep quality strip whole (caption row, QA-116, fits on the 17 Pro)
+g1/pro__reviews.weekly.sleep__1.png	PASS	weekly sleep page: chart, need line, averages whole
+g1/pro__reviews.weekly.consistency__1.png	PASS	weekly consistency page: the QA-070 screen, text clear above the pinned Back and Next
+g1/pro__reviews.monthly.timing__1.png	PASS	monthly timing page: the QA-070 screen, text clear above the pinned Back and Next
+g1/pro__reviews.monthly.locked__1.png	PASS	free plan monthly: one calm locked page with See Premium and Done
+g1/se__coach.answer__1.png	PASS	SE answer, light and dark, top and bottom: whole; follow-up chips cut at the edge by design
+g1/se__coach.hub.full__1.png	PASS	SE hub whole
+g1/se__home.day.full__1.png	PASS	SE Home by day whole
+g1/se__home.evening.full__1.png	PASS	SE Home evening whole (the bedtime accessory sits over the last-night card by design)
+g1/se__insights.all.full__1.png	PASS	SE Insights whole
+g1/se__insights.all.loading__1.png	PASS	SE skeleton: the four chip capsules fit the 335 pt row and no capsule is cut (QA-089 verified for Insights on the SE)
+g1/se__insights.consistency__1.png	PASS	SE chip selected and in view (QA-087 verified on the SE)
+g1/se__insights.heart__1.png	PASS	SE chip selected and in view
+g1/se__insights.timing__1.png	PASS	SE chip selected and in view
+g1/se__insights.detail__1.png	PASS	SE insight page whole
+g1/se__night.alarm__1.png	PASS	SE alarm sheet whole; the sheet scrolls under the pinned CTA
+g1/se__night.alarm.denied__1.png	PASS	SE alarm denied whole
+g1/se__night.windDown.prestart__1.png	PASS	SE wind-down start whole
+g1/se__night.windDown.running30__1.png	PASS	SE running whole
+g1/se__night.windDown.finished__1.png	PASS	SE Sleep well whole
+g1/se__night.windDown.running90__1.png	PASS	SE last minutes whole
+g1/se__night.windDown.reduced__1.png	PASS	SE reduced motion whole
+g1/se__onboarding.goal__1.png	FINDING QA-146	SE goal page: the Better sleep subtitle is cut ('A calmer wind-down and a ste...'); fixed in source (two lines), re-shoot pending
+g1/se__onboarding.health__1.png	PASS	SE Connect your signals: list scrolls under the CTA, bottom page shows the read-only note; whole
+g1/se__onboarding.notifications__1.png	PASS	SE notifications step whole
+g1/se__onboarding.paywall__1.png	NOTE	SE onboarding paywall, light and dark, top and bottom: the first screen is filled to the pinned CTA (hero spread, QA-071); the benefits card shows only a tip at the fold (the 24 pt fade), the plans, medical line, renewal wording, Restore, Terms and Privacy are on the bottom page; whole
+g1/se__onboarding.plan__1.png	PASS	SE plan whole
+g1/se__onboarding.rhythm__1.png	PASS	SE rhythm whole
+g1/se__onboarding.sample__1.png	PASS	SE sample whole
+g1/se__onboarding.welcome__1.png	PASS	SE welcome with the medical sentence whole (QA-142)
+g1/se__premium.compare__1.png	PASS	SE compare sheet whole
+g1/se__premium.paywall.loaded__1.png	NOTE	SE paywall sheet: the first screen is filled to the pinned CTA; the benefits card begins under the fade (a tip shows) and is read on the scrolled page; plans, medical line, renewal wording, Restore Purchases, Terms, Privacy whole
+g1/se__premium.paywall.loading__1.png	PASS	SE paywall loading whole
+g1/se__premium.paywall.unavailable__1.png	PASS	SE paywall unavailable: message, Try again and the free-plan link whole
+g1/se__privacy.deleteAll__1.png	PASS	SE Delete all sheet whole
+g1/se__profile.screen__1.png	PASS	SE Profile whole; the Notifications value wraps at a space ('3 / reminders on'), the title is whole (QA-090 verified on the SE)
+g1/se__profile.screen.learning__1.png	PASS	SE Profile learning whole
+g1/se__recovery.today.full__1.png	PASS	SE Recovery today whole
+g1/se__recovery.7d.full__1.png	PASS	SE Recovery 7D whole
+g1/se__recovery.30d.full__1.png	PASS	SE Recovery 30D whole
+g1/se__recovery.90d.full__1.png	PASS	SE Recovery 90D whole
+g1/se__recovery.factor.hrv__1.png	PASS	SE HRV factor whole
+g1/se__recovery.factor.restingHeartRate__1.png	PASS	SE Resting HR factor whole
+g1/se__recovery.factor.sleepConsistency__1.png	PASS	SE Consistency factor whole
+g1/se__recovery.factor.sleepDuration__1.png	PASS	SE Sleep factor whole
+g1/se__settings.root__1.png	PASS	SE Settings whole
+g1/se__sleep.day.full__1.png	PASS	SE Sleep day whole
+g1/se__sleep.week.full__1.png	PASS	SE Sleep week whole
+g1/se__sleep.month.full__1.png	PASS	SE Sleep month whole; the quality strip caption sits on its row (QA-116 verified at default size)
+g1/se__sleep.month.loading__1.png	PASS	SE skeleton: seven day capsules fit the row, no capsule cut (QA-089 verified on the SE)
+g1/se__reviews.weekly.cover__1.png	PASS	SE weekly cover whole
+g1/pro__onboarding.paywall__1.png	PASS	17 Pro onboarding paywall: ring shrunk, the benefits card whole above the pinned CTA, no blank band (QA-071 verified); plans, medical line, renewal wording, footer whole on the bottom page
+g1/pro__premium.paywall.loaded__1.png	NOTE	17 Pro paywall sheet: first screen filled to the CTA (hero spread), the card begins at the fold with its tip under the fade; plans and footer whole; no blank band
+g1/pro__premium.paywall.unavailable__1.png	PASS	17 Pro unavailable whole
+g1/pro__sleep.day.loading__1.png	PASS	skeleton whole
+g1/pro__sleep.week.loading__1.png	PASS	skeleton whole
+g1/pro__sleep.month.loading__1.png	PASS	skeleton whole
+g1/se__coach.answer.misbehaving__1.png	PASS	SE answered-from-your-data footer, whole
+g1/se__coach.answer.unavailable__1.png	PASS	SE answered-from-your-data footer, whole
+g1/se__sleep.day.loading__1.png	PASS	SE skeleton whole
+g1/se__sleep.week.loading__1.png	PASS	SE skeleton whole
+g1/se__reviews.monthly.cover__1.png	PASS	SE monthly cover whole
+g1/se__reviews.monthly.locked__1.png	PASS	SE locked month whole
+g1/pro__privacy.delete.reviews__1.png	FINDING QA-147	captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)
+g1/pro__reviews.monthly.insights__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.monthly.majorChanges__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.monthly.records__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.monthly.recoveryPattern__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.monthly.sleepPattern__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.weekly.changes__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.weekly.focus__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.weekly.insight__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.weekly.recovery__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__privacy.delete.reviews__1.png	FINDING QA-147	captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)
+g1/se__reviews.monthly.insights__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.monthly.majorChanges__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.monthly.records__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.monthly.recoveryPattern__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.monthly.sleepPattern__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.monthly.timing__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.weekly.changes__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.weekly.consistency__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.weekly.focus__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.weekly.insight__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.weekly.recovery__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/se__reviews.weekly.sleep__1.png	PASS	review page whole, text clear above the pinned Back and Next
+g1/pro__reviews.list__1.png	FINDING QA-078	the list is empty (seed not made in time); catalog changed, re-shoot pending
+g1/se__reviews.list__1.png	FINDING QA-078	the list is empty; re-shoot pending
+g1/se__reviews.list.free__1.png	FINDING QA-078	the list is empty; re-shoot pending
+ax3/pro__B-AX3-light__01__0.png	PASS	AX3 light: Coach answers (Helpful and Not helpful one per line, follow-ups in the page, QA-093), history, hub in every state, privacy sheet: all text whole; the question field's placeholder is one line with an ellipsis (QA-112, accepted)
+ax3/pro__B-AX3-light__02__0.png	PASS	AX3 light: Coach answers (Helpful and Not helpful one per line, follow-ups in the page, QA-093), history, hub in every state, privacy sheet: all text whole; the question field's placeholder is one line with an ellipsis (QA-112, accepted)
+ax3/pro__B-AX3-light__03__0.png	PASS	AX3 light: Coach answers (Helpful and Not helpful one per line, follow-ups in the page, QA-093), history, hub in every state, privacy sheet: all text whole; the question field's placeholder is one line with an ellipsis (QA-112, accepted)
+ax3/pro__B-AX3-light__04__0.png	PASS	AX3 light: whole; the placeholder and the evening compact bar end in an ellipsis (QA-112, QA-101 accepted); the records row scrolls sideways by design; Insights chip rows scroll with the selected chip in view
+ax3/pro__B-AX3-light__05__0.png	PASS	AX3 light: whole; the placeholder and the evening compact bar end in an ellipsis (QA-112, QA-101 accepted); the records row scrolls sideways by design; Insights chip rows scroll with the selected chip in view
+ax3/pro__B-AX3-light__06__0.png	PASS	AX3 light: whole; the placeholder and the evening compact bar end in an ellipsis (QA-112, QA-101 accepted); the records row scrolls sideways by design; Insights chip rows scroll with the selected chip in view
+ax3/pro__B-AX3-light__07__0.png	PASS	AX3 light: whole (Insights chips, alarm, breathing, journal, meditation)
+ax3/pro__B-AX3-light__08__0.png	PASS	AX3 light: whole (Insights chips, alarm, breathing, journal, meditation)
+ax3/pro__B-AX3-light__10__0.png	PASS	AX3 light: whole (Insights chips, alarm, breathing, journal, meditation)
+ax3/pro__B-AX3-light__09__0.png	FINDING QA-148	Breathing running at AX3, exhale end: the phase word 'Exhale' is wider than the small circle and overprints its edge, with the countdown digit blurred mid-change; the word should stay inside or the circle keep a minimum size at accessibility sizes
+ax3/pro__B-AX3-light__11__0.png	PASS	AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); sound tiles one per row; the timer digit mid-change is a capture of the ticking
+ax3/pro__B-AX3-light__12__0.png	PASS	AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); sound tiles one per row; the timer digit mid-change is a capture of the ticking
+ax3/pro__B-AX3-light__13__0.png	PASS	AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); sound tiles one per row; the timer digit mid-change is a capture of the ticking
+ax3/pro__B-AX3-light__14__0.png	PASS	AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); sound tiles one per row; the timer digit mid-change is a capture of the ticking
+ax3/pro__B-AX3-light__15__0.png	PASS	AX3 light: whole (wind-down, onboarding steps with the reworded goal subtitle on two lines, paywall as the end of the page, welcome, compare)
+ax3/pro__B-AX3-light__16__0.png	PASS	AX3 light: whole (wind-down, onboarding steps with the reworded goal subtitle on two lines, paywall as the end of the page, welcome, compare)
+ax3/pro__B-AX3-light__17__0.png	PASS	AX3 light: whole (wind-down, onboarding steps with the reworded goal subtitle on two lines, paywall as the end of the page, welcome, compare)
+ax3/pro__B-AX3-light__18__0.png	PASS	AX3 light: whole (wind-down, onboarding steps with the reworded goal subtitle on two lines, paywall as the end of the page, welcome, compare)
+ax3/pro__B-AX3-light__19__0.png	PASS	AX3 light: paywall sheets with each context line, loading, unavailable: whole; medical line, renewal wording and footer whole
+ax3/pro__B-AX3-light__20__0.png	PASS	AX3 light: paywall sheets with each context line, loading, unavailable: whole; medical line, renewal wording and footer whole
+ax3/pro__B-AX3-light__21__0.png	FINDING QA-149	Data management at AX3: the Delete button touches the end of long titles ('Insights historyDelete') and sits against the card's right edge; the confirmation (not captured: the build used the old route) is still to shoot. Fix: stack the verb under the title at accessibility sizes
+ax3/pro__B-AX3-light__22__0.png	FINDING QA-149	Data management at AX3: the Delete button touches the end of long titles ('Insights historyDelete') and sits against the card's right edge; the confirmation (not captured: the build used the old route) is still to shoot. Fix: stack the verb under the title at accessibility sizes
+ax3/pro__B-AX3-light__23__0.png	FINDING QA-149	Data management at AX3 (same row issue, confirmation not reached: old route); fixed in source
+ax3/pro__B-AX3-light__24__0.png	PASS	AX3 light: Delete all sheet whole (warning and button are the end of the page, QA-097), Goals, Name, Need, Wake editors whole
+ax3/pro__B-AX3-light__25__0.png	PASS	AX3 light: Delete all sheet whole (warning and button are the end of the page, QA-097), Goals, Name, Need, Wake editors whole
+ax3/pro__B-AX3-light__26__0.png	PASS	AX3 light: Profile, Recovery today/7D/30D/90D and factor pages whole; range control readable (QA-094), factor card title whole
+ax3/pro__B-AX3-light__27__0.png	PASS	AX3 light: Profile, Recovery today/7D/30D/90D and factor pages whole; range control readable (QA-094), factor card title whole
+ax3/pro__B-AX3-light__28__0.png	PASS	AX3 light: Profile, Recovery today/7D/30D/90D and factor pages whole; range control readable (QA-094), factor card title whole
+ax3/pro__B-AX3-light__29__0.png	PASS	AX3 light: Profile, Recovery today/7D/30D/90D and factor pages whole; range control readable (QA-094), factor card title whole
+ax3/pro__B-AX3-light__30__0.png	PASS	AX3 light: whole; Settings rows stack (QA-098), Delete all button on its own row
+ax3/pro__B-AX3-light__31__0.png	PASS	AX3 light: whole; Settings rows stack (QA-098), Delete all button on its own row
+ax3/pro__B-AX3-light__32__0.png	PASS	AX3 light: whole; Settings rows stack (QA-098), Delete all button on its own row
+ax3/pro__B-AX3-light__33__0.png	PASS	AX3 light: whole; Settings rows stack (QA-098), Delete all button on its own row
+ax3/pro__B-AX3-light__34__0.png	PASS	AX3 light: whole (settings pages, sleep day/week/month, quality caption on its own lines QA-116, range control readable)
+ax3/pro__B-AX3-light__35__0.png	PASS	AX3 light: whole (settings pages, sleep day/week/month, quality caption on its own lines QA-116, range control readable)
+ax3/pro__B-AX3-light__36__0.png	PASS	AX3 light: whole (settings pages, sleep day/week/month, quality caption on its own lines QA-116, range control readable)
+ax3/se__B-AX3-light__01__0.png	PASS	SE AX3 light: Coach answers, history, hub, privacy whole (QA-093 verified on the SE)
+ax3/se__B-AX3-light__02__0.png	PASS	SE AX3 light: Coach answers, history, hub, privacy whole (QA-093 verified on the SE)
+ax3/se__B-AX3-light__03__0.png	PASS	SE AX3 light: Coach answers, history, hub, privacy whole (QA-093 verified on the SE)
+ax3/se__B-AX3-light__04__0.png	PASS	SE AX3 light: Coach quota, Home day and evening, Insights chips and detail, history whole
+ax3/se__B-AX3-light__05__0.png	PASS	SE AX3 light: Coach quota, Home day and evening, Insights chips and detail, history whole
+ax3/se__B-AX3-light__06__0.png	PASS	SE AX3 light: Coach quota, Home day and evening, Insights chips and detail, history whole
+ax3/se__B-AX3-light__07__0.png	PASS	SE AX3 light: whole (Insights chips, alarm, breathing, journal, meditation); the Exhale circle is large enough on the SE here (QA-148 seen on the 17 Pro only at the mid-change frame)
+ax3/se__B-AX3-light__08__0.png	PASS	SE AX3 light: whole (Insights chips, alarm, breathing, journal, meditation); the Exhale circle is large enough on the SE here (QA-148 seen on the 17 Pro only at the mid-change frame)
+ax3/se__B-AX3-light__09__0.png	PASS	SE AX3 light: whole (Insights chips, alarm, breathing, journal, meditation); the Exhale circle is large enough on the SE here (QA-148 seen on the 17 Pro only at the mid-change frame)
+ax3/se__B-AX3-light__10__0.png	PASS	SE AX3 light: whole (Insights chips, alarm, breathing, journal, meditation); the Exhale circle is large enough on the SE here (QA-148 seen on the 17 Pro only at the mid-change frame)
+ax3/se__B-AX3-light__11__0.png	PASS	SE AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); the sounds now-playing card is about 38% of the SE (QA-108, accepted)
+ax3/se__B-AX3-light__12__0.png	PASS	SE AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); the sounds now-playing card is about 38% of the SE (QA-108, accepted)
+ax3/se__B-AX3-light__13__0.png	PASS	SE AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); the sounds now-playing card is about 38% of the SE (QA-108, accepted)
+ax3/se__B-AX3-light__14__0.png	PASS	SE AX3 light: whole (meditation, reflect, sounds, tonight, wind-down); the sounds now-playing card is about 38% of the SE (QA-108, accepted)
+ax3/se__B-AX3-light__15__0.png	PASS	SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)
+ax3/se__B-AX3-light__16__0.png	PASS	SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)
+ax3/se__B-AX3-light__17__0.png	PASS	SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)
+ax3/se__B-AX3-light__18__0.png	PASS	SE AX3 light: whole (wind-down, onboarding steps: the goal subtitle wraps to three lines and is whole at AX3 after the two-line change; paywall, welcome, compare)
+ax3/se__B-AX3-light__19__0.png	PASS	SE AX3 light: paywall sheets whole with every context line
+ax3/se__B-AX3-light__20__0.png	PASS	SE AX3 light: paywall sheets whole with every context line
+ax3/se__B-AX3-light__21__0.png	FINDING QA-149	SE AX3 Data management: Delete touches the title ('Coach historyDelete') and runs to the card's edge; fixed in source (verb under the title at accessibility sizes), re-shoot pending
+ax3/se__B-AX3-light__22__0.png	FINDING QA-149	SE AX3 Data management: Delete touches the title ('Coach historyDelete') and runs to the card's edge; fixed in source (verb under the title at accessibility sizes), re-shoot pending
+ax3/se__B-AX3-light__23__0.png	FINDING QA-149	SE AX3 Data management (not the confirmation: old route)
+ax3/se__B-AX3-light__24__0.png	PASS	SE AX3 light: Delete all (warning and button end of page), Goals, Name (a system keyboard tip overlays the sheet), Need, Wake, Profile and Recovery whole
+ax3/se__B-AX3-light__25__0.png	PASS	SE AX3 light: Delete all (warning and button end of page), Goals, Name (a system keyboard tip overlays the sheet), Need, Wake, Profile and Recovery whole
+ax3/se__B-AX3-light__26__0.png	PASS	SE AX3 light: Delete all (warning and button end of page), Goals, Name (a system keyboard tip overlays the sheet), Need, Wake, Profile and Recovery whole
+ax3/se__B-AX3-light__27__0.png	PASS	SE AX3 light: whole (Recovery 7D/90D and factor pages, reviews covers, About)
+ax3/se__B-AX3-light__28__0.png	PASS	SE AX3 light: whole (Recovery 7D/90D and factor pages, reviews covers, About)
+ax3/se__B-AX3-light__30__0.png	PASS	SE AX3 light: whole (Recovery 7D/90D and factor pages, reviews covers, About)
+ax3/se__B-AX3-light__29__0.png	FINDING QA-078	Reviews list empty (seed made after load); catalog fixed, re-shoot pending. Recovery today whole

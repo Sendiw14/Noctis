@@ -98,6 +98,8 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 - **QA-113** (Harness, minor): coach.history at AX3 and AX5 shows the Coach hub, not History (the route taps coach.history after going back from the answer and the history button is off screen at those sizes).
 - **QA-115** (Accessibility, minor): Data management at AX3 and AX5 (SE):
 - **QA-116** (Accessibility, minor): Sleep month at AX3 and AX5 (SE):
+- **QA-148** (Accessibility, minor): Breathing running at AX3 on the 17 Pro:
+- **QA-150** (Process, major): QA part 4 steps 7 to 9 are NOT complete:
 <!-- /OPEN-LIST -->
 
 Why they are open: **QA-004** and **QA-014** need the owner (real Terms, Privacy and support addresses; the roadmap items are unbuilt features by design). QA-016 needs the owner's

@@ -20,6 +20,7 @@ struct DataExportItem: Transferable {
 
 /// Delete what NOCTIS keeps, one kind at a time or all of it, or take a copy. Reads `DataManager` (APP_RULES.md R41, R42).
 struct DataManagementView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let viewModel: SettingsViewModel
     @State private var pending: DeletableGroup?
     @State private var showsDeleteAll = false
@@ -110,22 +111,31 @@ struct DataManagementView: View {
 
     private func row(_ group: DeletableGroup) -> some View {
         let first = group.categories[0]
-        return NoctisRow(systemImage: first.symbol, fill: first.fill, title: group.title, detail: manager.sizeText(for: group)) {
-            Button(group.verb.rawValue) {
-                NoctisHaptics.selection()
-                pending = group
+        let button = Button(group.verb.rawValue) {
+            NoctisHaptics.selection()
+            pending = group
+        }
+        .buttonStyle(.plain)
+        .noctisFont(15, .semibold, relativeTo: .subheadline)
+        .foregroundStyle(NoctisAppColor.destructive)
+        // One line, its own width: in a stacked row at AX3 and AX5 "Delete" was given a 40pt column and broke into "De / let / e".
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
+        .accessibilityLabel("\(group.verb.rawValue) \(group.title)")
+        .accessibilityHint("Asks you to confirm.")
+        .accessibilityIdentifier("data.delete.\(group.id)")
+        return Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                // At accessibility sizes the verb goes under the title: beside a long title ("Insights history") it touched the word and the card's edge (QA-149).
+                VStack(alignment: .leading, spacing: 0) {
+                    NoctisRow(systemImage: first.symbol, fill: first.fill, title: group.title, detail: manager.sizeText(for: group))
+                    button
+                }
+            } else {
+                NoctisRow(systemImage: first.symbol, fill: first.fill, title: group.title, detail: manager.sizeText(for: group)) { button }
             }
-            .buttonStyle(.plain)
-            .noctisFont(15, .semibold, relativeTo: .subheadline)
-            .foregroundStyle(NoctisAppColor.destructive)
-            // One line, its own width: in a stacked row at AX3 and AX5 "Delete" was given a 40pt column and broke into "De / let / e".
-            .lineLimit(1)
-            .fixedSize(horizontal: true, vertical: false)
-            .frame(minWidth: 44, minHeight: 44)
-            .contentShape(Rectangle())
-            .accessibilityLabel("\(group.verb.rawValue) \(group.title)")
-            .accessibilityHint("Asks you to confirm.")
-            .accessibilityIdentifier("data.delete.\(group.id)")
         }
         .accessibilityIdentifier("data.row.\(group.id)")
     }

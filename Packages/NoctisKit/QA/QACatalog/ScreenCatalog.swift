@@ -42,6 +42,10 @@ public struct CatalogScreen: Sendable, Hashable, Identifiable {
         case waitForPrefix(String)
         /// The navigation bar's back button.
         case back
+        /// Types this text into the first text field on screen (Coach's question field).
+        case type(String)
+        /// Pauses this many seconds (an answer that takes a moment to arrive, a banner, a ringing alarm).
+        case wait(Double)
     }
 
     public let id: String
@@ -317,12 +321,13 @@ public enum ScreenCatalog {
         let seeded = base() + ["-seedReviews"]
         var list: [CatalogScreen] = [
             CatalogScreen(
-                id: "reviews.list", area: .reviews, title: "Reviews", arguments: seeded + ["-noctisInitialRoute", "reviews"], route: "reviews",
-                steps: [.waitForPrefix("reviews.row.")], ready: "reviews.list", surface: .pushed
+                id: "reviews.list", area: .reviews, title: "Reviews", arguments: seeded + ["-noctisInitialRoute", "insights"], route: "insights", opens: "reviews",
+                // The seeded reviews are made at launch, after the list could have loaded: open the list from Insights once they exist.
+                steps: [.wait(10), .tapLabelPrefix("Reviews"), .waitFor("reviews.list")], ready: "reviews.list", surface: .pushed
             ),
             CatalogScreen(
-                id: "reviews.list.free", area: .reviews, title: "Reviews, free plan", arguments: seeded + ["-forceTier", "free", "-noctisInitialRoute", "reviews"],
-                route: "reviews", steps: [.waitForPrefix("reviews.row.")], ready: "reviews.list", surface: .pushed
+                id: "reviews.list.free", area: .reviews, title: "Reviews, free plan", arguments: seeded + ["-forceTier", "free", "-noctisInitialRoute", "insights"],
+                route: "insights", opens: "reviews", steps: [.wait(10), .tapLabelPrefix("Reviews"), .waitFor("reviews.list")], ready: "reviews.list", surface: .pushed
             ),
         ]
         for page in ["cover", "sleep", "consistency", "recovery", "changes", "insight", "focus"] {
@@ -447,11 +452,16 @@ public enum ScreenCatalog {
             )
         )
         // Every confirmation Data management asks before it deletes or resets: one per row (QA part 4, tier 1).
-        for group in ["journal", "coach", "insights", "reviews", "windDown", "cache", "preferences", "setAside"] {
+        // A row's own identifier hides its button's, so the button is found by its label: the verb and the title.
+        let groups: [(String, String)] = [
+            ("journal", "Delete Journal"), ("coach", "Delete Coach history"), ("insights", "Delete Insights history"), ("reviews", "Delete Reviews"),
+            ("windDown", "Delete Wind-down history"), ("cache", "Delete Cached summaries"), ("preferences", "Reset Preferences and goals"), ("setAside", "Delete Files set aside"),
+        ]
+        for (group, label) in groups {
             list.append(
                 CatalogScreen(
                     id: "privacy.delete.\(group)", area: .privacy, title: "Data management: confirm \(group)", arguments: base() + ["-noctisInitialRoute", "settings:data-management"],
-                    route: "settings:data-management", steps: [.tapIdentifier("data.delete.\(group)")], ready: nil, surface: .sheet, scrolls: false
+                    route: "settings:data-management", steps: [.tapLabel(label), .wait(1.5)], ready: nil, surface: .sheet, scrolls: false
                 )
             )
         }

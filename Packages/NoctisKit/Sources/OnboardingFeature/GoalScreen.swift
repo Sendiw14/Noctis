@@ -131,13 +131,13 @@ struct GoalScreen: View {
                 .noctisFont(17, .semibold, relativeTo: .body)
                 .foregroundStyle(NoctisPaper.ink)
                 .fixedSize(horizontal: false, vertical: true)
-            // One line at the default size (as designed); above it the
-            // subtitle wraps instead of shrinking away.
+            // Up to two lines at the default size, and as many as it needs above it: the subtitle wraps instead of shrinking away or being cut
+            // (QA part 4: 'A calmer wind-down and a steadier routine' was cut at 11 pt on one line).
             Text(item.subtitle)
                 .noctisFont(15, relativeTo: .subheadline)
                 .foregroundStyle(NoctisPaper.ink2)
-                .lineLimit(dynamicTypeSize > .large ? nil : 1)
-                .minimumScaleFactor(dynamicTypeSize > .large ? 1 : 0.7)
+                .lineLimit(dynamicTypeSize > .large ? nil : 2)
+                .minimumScaleFactor(1)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
