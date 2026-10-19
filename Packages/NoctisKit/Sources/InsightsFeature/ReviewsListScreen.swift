@@ -139,10 +139,44 @@ struct ReviewListRowView: View {
     /// A monthly review on the free plan: a lock glyph, and the row opens the story's one calm locked page.
     let locked: Bool
     let open: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: open) {
             NoctisAppCard {
+                if dynamicTypeSize.isAccessibilitySize { stacked } else { inline }
+            }
+        }
+        .buttonStyle(NoctisCardButtonStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(locked ? "\(row.spoken), Premium" : row.spoken)
+        .accessibilityHint(locked ? "Opens what Premium includes." : "Opens this review.")
+        .accessibilityIdentifier("reviews.row.\(row.id.description)")
+    }
+
+    /// At accessibility sizes the tile goes and the status sits under the headline, so the title and "Opened" are never broken inside a word (QA-151).
+    private var stacked: some View {
+        HStack(alignment: .top, spacing: NoctisSpacing.xs) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(row.title).noctisFont(17, .semibold, relativeTo: .body).foregroundStyle(NoctisAppColor.ink).fixedSize(horizontal: false, vertical: true)
+                Text(row.headline).noctisFont(15, relativeTo: .subheadline).foregroundStyle(.noctisInk2).fixedSize(horizontal: false, vertical: true)
+                statusText
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if locked { LockGlyph(size: 14).foregroundStyle(.noctisInk3) } else { NoctisRowChevron() }
+        }
+    }
+
+    @ViewBuilder
+    private var statusText: some View {
+        switch row.status {
+        case .new: Text("New").noctisFont(13, relativeTo: .footnote).foregroundStyle(.noctisInk3)
+        case .opened: Text("Opened").noctisFont(13, relativeTo: .footnote).foregroundStyle(.noctisInk3)
+        case .notEnough: Text("Not enough nights").noctisFont(13, relativeTo: .footnote).foregroundStyle(.noctisInk3)
+        }
+    }
+
+    private var inline: some View {
                 HStack(spacing: NoctisSpacing.sm) {
                     NoctisIconTile(systemImage: "calendar", fill: row.kind == .weekly ? NoctisAppColor.blockLavender : NoctisAppColor.blockSage, foreground: NoctisAppColor.blockInk, size: 40)
                     VStack(alignment: .leading, spacing: 2) {
@@ -158,13 +192,6 @@ struct ReviewListRowView: View {
                     Spacer(minLength: NoctisSpacing.xs)
                     trailing
                 }
-            }
-        }
-        .buttonStyle(NoctisCardButtonStyle())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(locked ? "\(row.spoken), Premium" : row.spoken)
-        .accessibilityHint(locked ? "Opens what Premium includes." : "Opens this review.")
-        .accessibilityIdentifier("reviews.row.\(row.id.description)")
     }
 
     @ViewBuilder

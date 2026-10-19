@@ -198,3 +198,29 @@ ax3/se__B-AX3-light__27__0.png	PASS	SE AX3 light: whole (Recovery 7D/90D and fac
 ax3/se__B-AX3-light__28__0.png	PASS	SE AX3 light: whole (Recovery 7D/90D and factor pages, reviews covers, About)
 ax3/se__B-AX3-light__30__0.png	PASS	SE AX3 light: whole (Recovery 7D/90D and factor pages, reviews covers, About)
 ax3/se__B-AX3-light__29__0.png	FINDING QA-078	Reviews list empty (seed made after load); catalog fixed, re-shoot pending. Recovery today whole
+r2/pro__onboarding.goal__1.png	PASS	goal subtitle on two lines at default and AX3, whole (QA-146 verified on the 17 Pro)
+r2/pro__privacy.delete.journal__1.png	PASS	confirmation shown as a popover at default size and AX3 whole (QA-147 verified for journal)
+r2/pro__reviews.list__1.png	FINDING QA-151	list populated (QA-078 verified); at AX3 'Septembe/r 2026' and 'Opene/d' break inside words
+r2/se__privacy.delete.journal__1.png	PASS	confirmation shown as a popover at default size and AX3 whole (QA-147 verified for journal)
+r2/se__settings.data-management__1.png	PASS	SE default whole (AX3 not in this sheet)
+r3/pro__reviews.list__1.png	PASS	AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)
+r3/pro__settings.data-management__1.png	PASS	AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)
+r3/pro__night.breathing.running__1.png	PASS	AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)
+r3/pro__settings.privacy-center__1.png	PASS	AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)
+r3/se__reviews.list__1.png	PASS	SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes
+r3/se__settings.data-management__1.png	PASS	SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes
+r3/se__settings.privacy-center__1.png	PASS	SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes
+r3/se__night.breathing.running__1.png	PASS	SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes
+r3/max__home.day.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__home.evening.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__onboarding.paywall__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__onboarding.welcome__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__premium.paywall.loaded__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__recovery.30d.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__recovery.7d.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__recovery.90d.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__recovery.today.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__sleep.day.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__sleep.month.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/max__sleep.week.full__1.png	PASS	17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)
+r3/pro__onboarding.goal__1.png	PASS	17 Pro: Reviews list populated at default, goal subtitle two lines

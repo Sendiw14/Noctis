@@ -65,9 +65,9 @@ profile,profile.screen,pro,A-light,True,True,VIEWED,PASS,"Profile, light and dar
 profile,profile.screen.learning,pro,A-light,True,True,VIEWED,PASS,Profile while learning: 'Still learning' and the 7-night note whole
 settings,settings.root,pro,A-light,True,True,VIEWED,PASS,"Settings, light and dark, top and bottom: every section and row whole; Terms and Privacy still the placeholder links (owner task)"
 privacy,settings.privacy-center,pro,A-light,False,False,UNVERIFIED,not produced,
-privacy,settings.data-management,pro,A-light,False,False,UNVERIFIED,not produced,
+privacy,settings.data-management,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
 privacy,privacy.deleteAll,pro,A-light,True,True,VIEWED,PASS,"Delete all sheet, light and dark, top and bottom: what is deleted, what is not, pinned warning and red button whole"
-privacy,privacy.delete.journal,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.journal,pro,A-light,True,True,VIEWED,PASS,confirmation shown as a popover at default size and AX3 whole (QA-147 verified for journal)
 privacy,privacy.delete.coach,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
 privacy,privacy.delete.insights,pro,A-light,True,False,UNVERIFIED,"produced, not viewed",
 privacy,privacy.delete.reviews,pro,A-light,True,True,VIEWED,FINDING QA-147,"captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)"
@@ -199,7 +199,7 @@ night,night.reflect.draft,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: whol
 night,night.journal.filled,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: whole (Insights chips, alarm, breathing, journal, meditation)"
 night,night.journal.empty,pro,B-AX3-light,True,True,VIEWED,FINDING QA-148,"Breathing running at AX3, exhale end: the phase word 'Exhale' is wider than the small circle and overprints its edge, with the countdown digit blurred mid-change; the word should stay inside or the circle keep a minimum size at accessibility sizes"
 night,night.journal.unavailable,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: whole (Insights chips, alarm, breathing, journal, meditation)"
-reviews,reviews.list,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: Profile, Recovery today/7D/30D/90D and factor pages whole; range control readable (QA-094), factor card title whole"
+reviews,reviews.list,pro,B-AX3-light,True,True,VIEWED,FINDING QA-151,list populated (QA-078 verified); at AX3 'Septembe/r 2026' and 'Opene/d' break inside words
 reviews,reviews.list.free,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: Profile, Recovery today/7D/30D/90D and factor pages whole; range control readable (QA-094), factor card title whole"
 reviews,reviews.weekly.cover,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: whole; Settings rows stack (QA-098), Delete all button on its own row"
 reviews,reviews.monthly.cover,pro,B-AX3-light,True,True,VIEWED,PASS,"AX3 light: whole; Settings rows stack (QA-098), Delete all button on its own row"
@@ -243,7 +243,7 @@ privacy,privacy.delete.cache,pro,B-AX3-light,True,True,VIEWED,FINDING QA-149,Dat
 privacy,privacy.delete.preferences,pro,B-AX3-light,True,True,VIEWED,FINDING QA-149,"Data management at AX3 (same row issue, confirmation not reached: old route); fixed in source"
 privacy,privacy.delete.setAside,pro,B-AX3-light,True,True,VIEWED,FINDING QA-149,"Data management at AX3 (same row issue, confirmation not reached: old route); fixed in source"
 onboarding,onboarding.welcome,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-onboarding,onboarding.goal,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+onboarding,onboarding.goal,pro,B-AX5-light,True,True,VIEWED,PASS,"17 Pro: Reviews list populated at default, goal subtitle two lines"
 onboarding,onboarding.rhythm,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 onboarding,onboarding.sample,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 onboarding,onboarding.health,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
@@ -296,7 +296,7 @@ night,night.windDown.running90,pro,B-AX5-light,True,False,UNVERIFIED,"produced, 
 night,night.windDown.finished,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.windDown.reduced,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.breathing.prestart,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.breathing.running,pro,B-AX5-light,False,False,UNVERIFIED,not produced,
+night,night.breathing.running,pro,B-AX5-light,False,True,UNVERIFIED,not produced,
 night,night.breathing.finished,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.meditation.prestart,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.meditation.running,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
@@ -306,6 +306,8 @@ night,night.reflect.draft,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not v
 night,night.journal.filled,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.journal.empty,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.journal.unavailable,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+reviews,reviews.list,pro,B-AX5-light,True,True,VIEWED,PASS,"AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)"
+reviews,reviews.list.free,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.loaded,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.loading,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.unavailable,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
@@ -329,8 +331,8 @@ settings,settings.wind-down,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not
 settings,settings.sounds,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.help,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.about,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,settings.privacy-center,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,settings.data-management,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,settings.privacy-center,pro,B-AX5-light,True,True,VIEWED,PASS,"AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)"
+privacy,settings.data-management,pro,B-AX5-light,True,True,VIEWED,PASS,"AX3 and AX5 on the 17 Pro: whole; Reviews rows stack with the status under the headline (QA-151 verified), Data management verb under its title (QA-149 verified), Privacy Center and Breathing (circle holds its word at both sizes; QA-148 not reproduced in this frame)"
 settings,settings.apple-watch,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.subscription.free,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.notifications.denied,pro,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
@@ -410,9 +412,9 @@ profile,profile.screen,se,A-light,True,True,VIEWED,PASS,"SE Profile whole; the N
 profile,profile.screen.learning,se,A-light,True,True,VIEWED,PASS,SE Profile learning whole
 settings,settings.root,se,A-light,True,True,VIEWED,PASS,SE Settings whole
 privacy,settings.privacy-center,se,A-light,False,False,UNVERIFIED,not produced,
-privacy,settings.data-management,se,A-light,False,False,UNVERIFIED,not produced,
+privacy,settings.data-management,se,A-light,True,True,VIEWED,PASS,SE default whole (AX3 not in this sheet)
 privacy,privacy.deleteAll,se,A-light,True,True,VIEWED,PASS,SE Delete all sheet whole
-privacy,privacy.delete.journal,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,privacy.delete.journal,se,A-light,True,True,VIEWED,PASS,confirmation shown as a popover at default size and AX3 whole (QA-147 verified for journal)
 privacy,privacy.delete.coach,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
 privacy,privacy.delete.insights,se,A-light,True,False,UNVERIFIED,"produced, not viewed",
 privacy,privacy.delete.reviews,se,A-light,True,True,VIEWED,FINDING QA-147,"captured Data management, not the confirmation (the row's button is found by label in the re-shoot; catalog fixed)"
@@ -572,8 +574,8 @@ settings,settings.wind-down,se,B-AX3-light,True,False,UNVERIFIED,"produced, not 
 settings,settings.sounds,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.help,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.about,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 light: whole (Recovery 7D/90D and factor pages, reviews covers, About)"
-privacy,settings.privacy-center,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,settings.data-management,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,settings.privacy-center,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
+privacy,settings.data-management,se,B-AX3-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
 settings,settings.apple-watch,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.subscription.free,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.notifications.denied,se,B-AX3-light,True,False,UNVERIFIED,"produced, not viewed",
@@ -641,7 +643,7 @@ night,night.windDown.running90,se,B-AX5-light,True,False,UNVERIFIED,"produced, n
 night,night.windDown.finished,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.windDown.reduced,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.breathing.prestart,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-night,night.breathing.running,se,B-AX5-light,False,False,UNVERIFIED,not produced,
+night,night.breathing.running,se,B-AX5-light,False,True,UNVERIFIED,not produced,
 night,night.breathing.finished,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.meditation.prestart,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.meditation.running,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
@@ -651,6 +653,8 @@ night,night.reflect.draft,se,B-AX5-light,True,False,UNVERIFIED,"produced, not vi
 night,night.journal.filled,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.journal.empty,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 night,night.journal.unavailable,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+reviews,reviews.list,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
+reviews,reviews.list.free,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.loaded,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.loading,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 premium,premium.paywall.unavailable,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
@@ -674,8 +678,8 @@ settings,settings.wind-down,se,B-AX5-light,True,False,UNVERIFIED,"produced, not 
 settings,settings.sounds,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.help,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.about,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
-privacy,settings.privacy-center,se,B-AX5-light,False,False,UNVERIFIED,not produced,
-privacy,settings.data-management,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
+privacy,settings.privacy-center,se,B-AX5-light,False,True,UNVERIFIED,not produced,
+privacy,settings.data-management,se,B-AX5-light,True,True,VIEWED,PASS,"SE AX3 and AX5: Reviews rows stacked whole, Data management whole, Privacy Center whole, Breathing circle holds Inhale at both sizes"
 settings,settings.apple-watch,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.subscription.free,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
 settings,settings.notifications.denied,se,B-AX5-light,True,False,UNVERIFIED,"produced, not viewed",
@@ -728,29 +732,29 @@ home,home.day.loading,se,D-Bounded,False,False,UNVERIFIED,not produced,
 home,home.evening.loading,se,D-Bounded,False,False,UNVERIFIED,not produced,
 home,home.day.error,se,D-Bounded,False,False,UNVERIFIED,not produced,
 home,home.evening.error,se,D-Bounded,False,False,UNVERIFIED,not produced,
-profile,profile.screen,se,D-Bounded,False,False,UNVERIFIED,not produced,
-profile,profile.screen.learning,se,D-Bounded,False,False,UNVERIFIED,not produced,
-onboarding,onboarding.welcome,max,A-light,False,False,UNVERIFIED,not produced,
-onboarding,onboarding.paywall,max,A-light,False,False,UNVERIFIED,not produced,
-home,home.day.full,max,A-light,False,False,UNVERIFIED,not produced,
-home,home.evening.full,max,A-light,False,False,UNVERIFIED,not produced,
-sleep,sleep.day.full,max,A-light,False,False,UNVERIFIED,not produced,
-sleep,sleep.week.full,max,A-light,False,False,UNVERIFIED,not produced,
-sleep,sleep.month.full,max,A-light,False,False,UNVERIFIED,not produced,
-recovery,recovery.today.full,max,A-light,False,False,UNVERIFIED,not produced,
-recovery,recovery.7d.full,max,A-light,False,False,UNVERIFIED,not produced,
-recovery,recovery.30d.full,max,A-light,False,False,UNVERIFIED,not produced,
-recovery,recovery.90d.full,max,A-light,False,False,UNVERIFIED,not produced,
-premium,premium.paywall.loaded,max,A-light,False,False,UNVERIFIED,not produced,
-onboarding,onboarding.welcome,max,A-dark,False,False,UNVERIFIED,not produced,
-onboarding,onboarding.paywall,max,A-dark,False,False,UNVERIFIED,not produced,
-home,home.day.full,max,A-dark,False,False,UNVERIFIED,not produced,
-home,home.evening.full,max,A-dark,False,False,UNVERIFIED,not produced,
-sleep,sleep.day.full,max,A-dark,False,False,UNVERIFIED,not produced,
-sleep,sleep.week.full,max,A-dark,False,False,UNVERIFIED,not produced,
-sleep,sleep.month.full,max,A-dark,False,False,UNVERIFIED,not produced,
-recovery,recovery.today.full,max,A-dark,False,False,UNVERIFIED,not produced,
-recovery,recovery.7d.full,max,A-dark,False,False,UNVERIFIED,not produced,
-recovery,recovery.30d.full,max,A-dark,False,False,UNVERIFIED,not produced,
-recovery,recovery.90d.full,max,A-dark,False,False,UNVERIFIED,not produced,
-premium,premium.paywall.loaded,max,A-dark,False,False,UNVERIFIED,not produced,
+profile,profile.screen,se,D-Bounded,True,False,UNVERIFIED,"produced, not viewed",
+profile,profile.screen.learning,se,D-Bounded,True,False,UNVERIFIED,"produced, not viewed",
+onboarding,onboarding.welcome,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+onboarding,onboarding.paywall,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+home,home.day.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+home,home.evening.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+sleep,sleep.day.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+sleep,sleep.week.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+sleep,sleep.month.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+recovery,recovery.today.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+recovery,recovery.7d.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+recovery,recovery.30d.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+recovery,recovery.90d.full,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+premium,premium.paywall.loaded,max,A-light,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+onboarding,onboarding.welcome,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+onboarding,onboarding.paywall,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+home,home.day.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+home,home.evening.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+sleep,sleep.day.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+sleep,sleep.week.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+sleep,sleep.month.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+recovery,recovery.today.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+recovery,recovery.7d.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+recovery,recovery.30d.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+recovery,recovery.90d.full,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"
+premium,premium.paywall.loaded,max,A-dark,True,True,VIEWED,PASS,"17 Pro Max, light and dark, top and bottom: whole; paywall filled to the CTA with no blank band; the status bar clock on these captures is not normalized (gallery only)"

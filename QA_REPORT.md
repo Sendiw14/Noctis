@@ -30,7 +30,7 @@ Found and fixed in this part (QA part 3):
 
 | What | Result |
 | --- | --- |
-| Package unit suite (`xcodebuild test -scheme NoctisKit-Package`, from Packages/NoctisKit, `SWIFT_EMIT_LOC_STRINGS=NO`) | **2531 tests in 338 suites, all pass** (618 s), on the final tree. An earlier full run had one failure: DataInventoryNetworkTests flagged the new DEBUG-only request recorder; the test now allows a wholly `#if DEBUG` file (the Release symbol audit is the proof) and the full suite was run again. The purchase tests (NOCTIS-Store, 23) and the UI no-requests test are separate runs. |
+| Package unit suite (`xcodebuild test -scheme NoctisKit-Package`, from Packages/NoctisKit, `SWIFT_EMIT_LOC_STRINGS=NO`) | **2542 tests in 342 suites, all pass** (658 s), on the final tree of QA part 4. An earlier full run had one failure: DataInventoryNetworkTests flagged the new DEBUG-only request recorder; the test now allows a wholly `#if DEBUG` file (the Release symbol audit is the proof) and the full suite was run again. The purchase tests (NOCTIS-Store, 23) and the UI no-requests test are separate runs. |
 | Cross-surface consistency (Home, Sleep Day, Recovery Today, widget, Watch pages; 10 mock scenarios) | pass (QA-117). Not covered: Siri answers, Coach template, Reviews, share cards (QA-118). |
 | Engine fuzz: session, quality, recovery, bedtime engines | 1500 timelines per run on the fixed seed 20260924, and 20000 on each of the seeds 1, 777 and 424242: pass (QA-120). One bug found and fixed (QA-119). |
 | Health changing under the app; 730 nights | pass (QA-121); Home refresh 0.23 s, Sleep 0.18 s, Recovery 0.21 s, Sleep Month 0.014 s, Recovery 90D 0.004 s, 24 monthly reviews 0.13 s, memory +19 MB. Simulator, debug build, **not device numbers** (QA-122). |
@@ -74,12 +74,10 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 <!-- OPEN-LIST -->
 - **QA-004** (Release, major): The Terms of Use and Privacy Policy URLs (https://noctis.app/terms, /privacy) and the support address (support@noctis.app) are placeholders.
 - **QA-014** (Release, major): ROADMAP.md still lists 48 items;
-- **QA-078** (Data, minor): reviews.list and reviews.list.free show 'Nothing here yet':
 - **QA-081** (Localization, minor): Right-to-Left:
 - **QA-082** (Layout, minor): Pseudolanguages:
 - **QA-083** (Localization, minor): Right-to-Left:
 - **QA-084** (Localization, info): Under DoubleLength and Bounded String every unit token is doubled or bracketed, and a bare figure is buried or cut:
-- **QA-085** (Localization, minor): Right-to-Left mirrors every time axis:
 - **QA-086** (Layout, minor): Right-to-Left:
 - **QA-087** (Layout, minor): Insights opened on a category (Heart, Recovery, Timing, Consistency):
 - **QA-089** (Layout, minor): Loading skeletons wider than the SE's content:
@@ -91,11 +89,7 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 - **QA-096** (Accessibility, minor): Accessibility sizes, Night:
 - **QA-097** (Accessibility, minor): Accessibility sizes, sheets and editors:
 - **QA-098** (Accessibility, minor): Accessibility sizes, shared parts:
-- **QA-099** (Harness, minor): Under D-DoubleLength and D-Bounded the Coach conversation does not reach the answer (the question route is chosen by label, which the pseudolanguage changes:
-- **QA-101** (Accessibility, minor): Accessibility sizes (AX5), the evening bedtime accessory (a tab bar accessory, system-sized) and the compact bar on Home evening are one line and are cut with an ellipsis ('Bedtime 10:30...', 'Bedtime ...
 - **QA-103** (Accessibility, minor): Onboarding at accessibility sizes:
-- **QA-108** (Accessibility, minor): Sleep sounds at AX3 and AX5 on an SE:
-- **QA-113** (Harness, minor): coach.history at AX3 and AX5 shows the Coach hub, not History (the route taps coach.history after going back from the answer and the history button is off screen at those sizes).
 - **QA-115** (Accessibility, minor): Data management at AX3 and AX5 (SE):
 - **QA-116** (Accessibility, minor): Sleep month at AX3 and AX5 (SE):
 - **QA-148** (Accessibility, minor): Breathing running at AX3 on the 17 Pro:

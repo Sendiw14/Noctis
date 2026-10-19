@@ -32,7 +32,7 @@ DEFINITION = {
     ("se", "A-light"): T1 + EX, ("se", "A-dark"): T1 + LOADING, ("se", "B-AX3-light"): T1 + AX, ("se", "B-AX5-light"): AX,
     ("se", "C-BoldText"): ["recovery.today.full"],
     ("se", "D-DoubleLength"): ["home.day.", "home.evening.", "profile.screen"], ("se", "D-Bounded"): ["home.day.", "home.evening.", "profile.screen"],
-    ("max", "A-light"): MAX, ("max", "A-dark"): MAX,
+    ("max", "A-light"): MAX, ("max", "A-dark"): MAX, ("pro", "B-AX5-light"): AX + ["settings.data-management", "settings.privacy-center", "reviews.list"], ("se", "B-AX5-light"): AX + ["settings.data-management", "settings.privacy-center", "reviews.list"],
 }
 
 def load_catalog():
