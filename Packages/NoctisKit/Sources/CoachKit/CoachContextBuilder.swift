@@ -79,7 +79,8 @@ public struct CoachContextBuilder: Sendable {
             dataState: state,
             goalIDs: Self.goalIDs(profile),
             sleepNeedMinutes: profile.needMinutes,
-            confidenceCeiling: Self.ceiling(state: state, result: snapshots.recovery?.result ?? Self.result(snapshots.home), nights: nights)
+            confidenceCeiling: Self.ceiling(state: state, result: snapshots.recovery?.result ?? Self.result(snapshots.home), nights: nights),
+            baselineNights: (snapshots.recovery?.result ?? Self.result(snapshots.home))?.baselineNights
         )
     }
 
@@ -178,7 +179,7 @@ public struct CoachContextBuilder: Sendable {
 
             add("bedtime.last", "Bedtime last night", metrics.bedtimeMinutes, .clock, "SleepMetricsEngine")
             if let typical = s.sleep?.timing?.typicalBedtime {
-                add("bedtime.deltaVsUsual", "Bedtime against usual", metrics.bedtimeMinutes - typical, .duration, "SleepTimingEngine", magnitude: true)
+                add("bedtime.deltaVsUsual", "Bedtime against usual", metrics.bedtimeMinutes - typical, .duration, "BaselineEngine", magnitude: true)
             }
 
             if let shares = metrics.stages?.asleepShares {
@@ -199,9 +200,10 @@ public struct CoachContextBuilder: Sendable {
         }
 
         // Your usual bedtime doesn't wait for last night.
-        add("bedtime.usual", "Usual bedtime", s.sleep?.timing?.typicalBedtime, .clock, "SleepTimingEngine")
+        add("bedtime.usual", "Usual bedtime", s.sleep?.timing?.typicalBedtime, .clock, "BaselineEngine")
+        add("wake.usual", "Usual wake time", s.sleep?.timing?.typicalWake, .clock, "BaselineEngine")
         add("sleep.need", "Your sleep need", Double(profile.needMinutes), .duration, "Profile")
-        add("wake.typical", "Your usual wake time", CoachFactFormatter.afterNoon(sinceMidnight: profile.typicalWakeMinutes), .clock, "Profile")
+        add("wake.typical", "Your wake time", CoachFactFormatter.afterNoon(sinceMidnight: profile.typicalWakeMinutes), .clock, "Profile")
         let plan = s.home?.tonight ?? TonightPlan(profile: profile)
         add("bedtime.suggested", "Bedtime that fits your sleep need", CoachFactFormatter.afterNoon(sinceMidnight: plan.bedtimeMinutes), .clock, "Profile")
         if let balance = s.sleep?.balance?.minutes {

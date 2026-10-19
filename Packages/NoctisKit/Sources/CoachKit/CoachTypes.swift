@@ -186,6 +186,8 @@ public struct CoachContext: Sendable, Equatable, Codable {
     public let availableFactors: [String]
     public let missingFactors: [CoachMissingFactor]
     public let nightsOfHistory: Int
+    /// The nights today's baseline is built from: the number Recovery's "Based on 14 nights" and the confidence line both print.
+    public let baselineNights: Int
     public let dataState: CoachDataState
     /// `PrimaryGoal` raw values ("betterSleep"), never a name.
     public let goalIDs: [String]
@@ -200,7 +202,7 @@ public struct CoachContext: Sendable, Equatable, Codable {
     public init(
         intent: CoachIntent, direction: CoachDirection?, facts: [CoachFact], insights: [CoachInsightBrief], availableFactors: [String],
         missingFactors: [CoachMissingFactor], nightsOfHistory: Int, dataState: CoachDataState, goalIDs: [String], sleepNeedMinutes: Int,
-        confidenceCeiling: CoachConfidence, recentTurns: [CoachTurnSummary] = []
+        confidenceCeiling: CoachConfidence, recentTurns: [CoachTurnSummary] = [], baselineNights: Int? = nil
     ) {
         self.intent = intent
         self.direction = direction
@@ -209,6 +211,7 @@ public struct CoachContext: Sendable, Equatable, Codable {
         self.availableFactors = availableFactors
         self.missingFactors = missingFactors
         self.nightsOfHistory = nightsOfHistory
+        self.baselineNights = baselineNights ?? min(nightsOfHistory, 14)
         self.dataState = dataState
         self.goalIDs = goalIDs
         self.sleepNeedMinutes = sleepNeedMinutes

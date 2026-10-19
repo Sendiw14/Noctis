@@ -34,7 +34,7 @@ struct CoachContextTests {
         let context = await CoachFixture.context(.recoveryChange)
         let object = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(context)) as? [String: Any])
         let allowed: Set<String> = [
-            "intent", "direction", "facts", "insights", "availableFactors", "missingFactors", "nightsOfHistory", "dataState", "goalIDs",
+            "intent", "direction", "facts", "insights", "availableFactors", "missingFactors", "nightsOfHistory", "baselineNights", "dataState", "goalIDs",
             "sleepNeedMinutes", "confidenceCeiling", "recentTurns",
         ]
         #expect(Set(object.keys).isSubset(of: allowed), Comment(rawValue: "\(Set(object.keys).subtracting(allowed))"))

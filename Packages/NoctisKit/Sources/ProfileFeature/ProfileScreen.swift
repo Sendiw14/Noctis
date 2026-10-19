@@ -155,12 +155,12 @@ private struct ProfileSleepCard: View {
                     ) { viewModel.open(.wake) }
                     NoctisRowDivider()
                     NoctisInfoRow(
-                        systemImage: "bed.double", fill: NoctisAppColor.blockLavender, title: "Typical bedtime", value: content.typicalBedtime,
+                        systemImage: "bed.double", fill: NoctisAppColor.blockLavender, title: "Usual bedtime", value: content.typicalBedtime,
                         identifier: "profile.typicalBedtime"
                     )
                     NoctisRowDivider()
                     NoctisInfoRow(
-                        systemImage: "alarm", fill: NoctisAppColor.blockButter, title: "Typical wake", value: content.typicalWake,
+                        systemImage: "alarm", fill: NoctisAppColor.blockButter, title: "Usual wake", value: content.typicalWake,
                         identifier: "profile.typicalWake"
                     )
                     NoctisRowDivider()

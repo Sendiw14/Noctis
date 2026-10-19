@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import InsightsKit
+import RecoveryKit
 import SleepKit
 import NoctisText
 
@@ -234,12 +235,12 @@ public nonisolated enum InsightScreenBuilder {
         let points = Int(abs(e.difference).rounded())
         return Words(
             title: earlier ? "Earlier bedtimes, higher sleep scores" : "Later bedtimes, higher sleep scores",
-            row: "Nights \(step)+ min earlier than \(median) averaged \(early); later ones averaged \(late).",
+            row: "Nights \(step)+ min earlier than the middle of your bedtimes (\(median)) averaged \(early); later ones averaged \(late).",
             evidence: [
                 "Earlier nights · \(e.earlyNights) nights, average \(early)", "Later nights · \(e.lateNights) nights, average \(late)",
-                "Difference · \(points) points", "Your usual bedtime · \(median)",
+                "Difference · \(points) points", "Middle bedtime in this window · \(median)",
             ],
-            context: "Compared with your recent baseline bedtime of \(median), your \(e.earlyNights) earlier nights averaged \(early) and your \(e.lateNights) later nights averaged \(late) on sleep continuity, stage balance and HRV over the last \(e.windowNights) nights.",
+            context: "Compared with your recent baseline, the middle bedtime of \(median) over this window, your \(e.earlyNights) earlier nights averaged \(early) and your \(e.lateNights) later nights averaged \(late) on sleep continuity, stage balance and HRV over the last \(e.windowNights) nights.",
             interpretation: "This has coincided with \(earlier ? "higher" : "lower") scores on the nights you went to bed earlier.",
             notice: "Notice how you feel after earlier and later nights.",
             attempt: "",
@@ -330,7 +331,8 @@ public nonisolated enum InsightScreenBuilder {
         let steadier = e.delta < 0
         let recent = Int(e.recentSD.rounded())
         let previous = Int(e.previousSD.rounded())
-        let usualBedtime = InsightStats.median(e.bedtimes.suffix(InsightModelV2.consistencyWindowNights).compactMap { $0 }) ?? 0
+        // The same "usual" as every surface: the BaselineEngine's mean of the 14 nights before the last one.
+        let usualBedtime = BaselineEngine.baseline(e.bedtimes.dropLast().suffix(InsightModelV2.consistencyWindowNights).compactMap { $0 })?.value ?? 0
         return Words(
             title: steadier ? "Bedtimes are steadier" : "Bedtimes are less steady",
             row: "Bedtime varied by \(recent) min over the last 14 nights, \(steadier ? "down" : "up") from \(previous) min.",

@@ -78,10 +78,11 @@ public enum SleepTimingEngine {
             return mains.filter { $0.night >= first && $0.night <= last }.map(SleepMetricsEngine.metrics(for:))
         }
 
-        let typical = metrics(typicalWindowNights - 1, 0)
-        let enough = typical.count >= minimumNights
-        let bedtime = enough ? median(typical.map(\.bedtimeMinutes)) : nil
-        let wake = enough ? median(typical.map(\.wakeMinutes)) : nil
+        // "Usual" is the BaselineEngine's: the mean of the 14 nights before `end`, never the night itself, so every surface that says "your usual
+        // bedtime" (Home, Sleep, Coach, Insights, Profile, Reviews) prints the same time.
+        let typical = metrics(typicalWindowNights, 1)
+        let bedtime = BaselineEngine.baseline(typical.map(\.bedtimeMinutes))?.value
+        let wake = BaselineEngine.baseline(typical.map(\.wakeMinutes))?.value
 
         var shift: SleepTimingShift?
         let recent = metrics(recentNights - 1, 0)

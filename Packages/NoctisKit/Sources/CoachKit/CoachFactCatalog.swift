@@ -9,7 +9,7 @@ public enum CoachFactCatalog {
         "hrv.today", "hrv.baseline", "rhr.today", "rhr.baseline",
         "sleep.duration", "sleep.baseline", "sleep.deltaVsBaseline", "sleep.quality", "sleep.qualityUsual", "sleep.need", "sleep.balance",
         "deep.share", "deep.usual", "rem.share", "rem.usual",
-        "bedtime.last", "bedtime.usual", "bedtime.deltaVsUsual", "bedtime.suggested", "wake.typical",
+        "bedtime.last", "bedtime.usual", "bedtime.deltaVsUsual", "bedtime.suggested", "wake.typical", "wake.usual",
         "week.avgSleep", "week.avgSleepDelta", "week.avgRecovery", "week.recoveryTrend",
         "consistency.bedtimeVarMin", "consistency.toleranceMin",
         "history.nights",

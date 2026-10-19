@@ -70,7 +70,7 @@ public enum CoachAnswerAssembler {
             pattern: pattern,
             patternNote: pattern == nil ? nil : copy("coach.pattern.note"),
             confidence: confidence,
-            confidenceLine: confidenceLine(confidence, nights: context.nightsOfHistory, locale: locale, copy: copy),
+            confidenceLine: confidenceLine(confidence, nights: context.baselineNights, locale: locale, copy: copy),
             caution: caution,
             destinations: draft.destinations.compactMap { AppRoute.coachDestination(named: $0) },
             footer: copy("coach.footer")

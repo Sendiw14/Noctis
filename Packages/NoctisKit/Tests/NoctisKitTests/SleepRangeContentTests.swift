@@ -172,14 +172,15 @@ struct SleepConsistencyWordingTests {
 // MARK: - Timing
 
 struct SleepTimingWordingTests {
-    @Test func typicalTimesAndTheMidpointAreTheMediansOfTheLastFourteenNights() throws {
+    @Test func usualTimesAndTheMidpointAreTheBaselineOfTheFourteenNightsBeforeLastNight() throws {
         let timing = try #require(screen(snapshot(count: 14), range: .week).insights?.timing)
         #expect(timing.isAvailable)
         #expect(timing.typicalBedtime?.spoken == format.clock(minutesSinceMidnight: 23 * 60))
         // 450 minutes after 11:00 PM.
         #expect(timing.typicalWake?.spoken == format.clock(minutesSinceMidnight: 6 * 60 + 30))
         #expect(timing.midpoint?.spoken == format.clock(minutesSinceMidnight: 2 * 60 + 45))
-        #expect(timing.nightsLine == "Medians of your last 14 nights · 14 recorded")
+        // A history of 14 nights leaves 13 before the last one.
+        #expect(timing.nightsLine == "Averaged over the 14 nights before last night · 13 recorded")
     }
 
     @Test func aRecentShiftIsWordedAgainstTheFourteenNightsBefore() throws {
@@ -206,14 +207,14 @@ struct SleepTimingWordingTests {
     @Test func underFiveNightsSaysWhatItNeeds() throws {
         let timing = try #require(screen(snapshot(count: 3), range: .week).insights?.timing)
         #expect(!timing.isAvailable)
-        #expect(timing.nightsLine == "Typical times need 5 recorded nights in the last 14.")
+        #expect(timing.nightsLine == "Usual times need 5 recorded nights in the last 14.")
         #expect(timing.typicalBedtime == nil && timing.chart == nil)
     }
 
     @Test func theSheetsExplainTheCalculationAndCloseKindly() throws {
         let timing = try #require(screen(snapshot(count: 14), range: .week).insights?.timing)
         let text = timing.calculation.joined(separator: " ")
-        #expect(text.contains("medians of your last 14 nights"))
+        #expect(text.contains("averages of the 14 nights before last night"))
         #expect(text.contains("it isn't a target"))
         #expect(SleepInsightsContent.noFear == "Patterns matter more than perfect nights.")
     }

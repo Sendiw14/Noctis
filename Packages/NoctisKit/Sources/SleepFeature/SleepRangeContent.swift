@@ -128,7 +128,7 @@ public nonisolated struct SleepTimingContent: Sendable, Equatable {
     public let typicalBedtime: NoctisMetricValue?
     public let typicalWake: NoctisMetricValue?
     public let midpoint: NoctisMetricValue?
-    /// "Medians of your last 14 nights · 9 recorded", or what's missing.
+    /// "Averaged over the 14 nights before last night · 9 recorded", or what's missing.
     public let nightsLine: String
     /// "Over the last 7 nights: bedtime 18 min later, wake time about the same, compared with the 14 nights before."
     public let shift: String?
@@ -538,12 +538,12 @@ nonisolated extension SleepScreenBuilder {
 
     static func timingContent(_ model: SleepRenderModel, format: HomeFormat) -> SleepTimingContent {
         let calculation = [
-            "Your typical bedtime and wake time are the medians of your last \(SleepTimingEngine.typicalWindowNights) nights, once \(SleepTimingEngine.minimumNights) are recorded. The midpoint is halfway between them.",
+            "Your usual bedtime and wake time are the averages of the \(SleepTimingEngine.typicalWindowNights) nights before last night, once \(SleepTimingEngine.minimumNights) are recorded: the same usual times Home, Coach and Insights compare last night with. The midpoint is halfway between them.",
             "The recent shift compares the last \(SleepTimingEngine.recentNights) nights with the \(SleepTimingEngine.priorNights) nights before them.",
             "Once \(SleepTimingEngine.suggestionMinimumNights) of the last \(SleepTimingEngine.suggestionWindowNights) nights are recorded, the range is the middle half of your own bedtimes and wake times, never narrower than \(Int(SleepTimingEngine.minimumRangeWidth)) minutes. It describes your pattern; it isn't a target.",
         ]
         guard let timing = model.timing, let bedtime = timing.typicalBedtime, let wake = timing.typicalWake, let midpoint = timing.typicalMidpoint else {
-            let line = "Typical times need \(SleepTimingEngine.minimumNights) recorded nights in the last \(SleepTimingEngine.typicalWindowNights)."
+            let line = "Usual times need \(SleepTimingEngine.minimumNights) recorded nights in the last \(SleepTimingEngine.typicalWindowNights)."
             return SleepTimingContent(
                 typicalBedtime: nil, typicalWake: nil, midpoint: nil, nightsLine: line, shift: nil, suggested: nil,
                 chart: nil, ticks: [], isAvailable: false, calculation: calculation, accessibilityLabel: "Timing. \(line)"
@@ -557,13 +557,13 @@ nonisolated extension SleepScreenBuilder {
         if let range = timing.suggested {
             suggested = "Bedtime \(clockRange(range.bedtime, format: format)) · Wake \(clockRange(range.wake, format: format)). This is the middle half of your own nights: it describes your pattern, it isn't a target."
         }
-        var label = "Timing. Typical bedtime \(bedText). Typical wake time \(wakeText). Midpoint \(midText)."
+        var label = "Timing. Usual bedtime \(bedText). Usual wake time \(wakeText). Midpoint \(midText)."
         if let shift { label += " " + shift }
         return SleepTimingContent(
             typicalBedtime: format.clockMetric(bedText),
             typicalWake: format.clockMetric(wakeText),
             midpoint: format.clockMetric(midText),
-            nightsLine: "Medians of your last \(SleepTimingEngine.typicalWindowNights) nights · \(timing.nights) recorded",
+            nightsLine: "Averaged over the \(SleepTimingEngine.typicalWindowNights) nights before last night · \(timing.nights) recorded",
             shift: shift,
             suggested: suggested,
             chart: model.timingRender,

@@ -310,12 +310,12 @@ struct SleepTimingSummary: View {
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: NoctisSpacing.md) {
-                        stat("Typical bedtime", bedtime)
-                        stat("Typical wake time", wake)
+                        stat("Usual bedtime", bedtime)
+                        stat("Usual wake time", wake)
                     }
                     VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
-                        stat("Typical bedtime", bedtime)
-                        stat("Typical wake time", wake)
+                        stat("Usual bedtime", bedtime)
+                        stat("Usual wake time", wake)
                     }
                 }
                 if let midpoint = content.midpoint {

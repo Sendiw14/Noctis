@@ -194,7 +194,8 @@ struct CoachTemplateTests {
 
     @Test func theConfidenceLineIsTheAppsAndSaysHowManyNights() async throws {
         let full = try #require(await answer(.recoveryChange, nil, .full)).0
-        #expect(full.confidenceLine == "High confidence · based on 111 nights")
+        // The nights Recovery says it used ("Based on 14 nights"), not the nights on record.
+        #expect(full.confidenceLine == "High confidence · based on 14 nights")
         let learning = try #require(await answer(.recoveryChange, nil, .learning)).0
         #expect(learning.confidenceLine == "Low confidence · based on 3 nights")
         #expect(CoachAnswerAssembler.confidenceLine(.moderate, nights: 1, locale: CoachFixture.locale) == "Moderate confidence · based on 1 night")
@@ -239,7 +240,15 @@ struct CoachTemplateGoldenTests {
         let context = await CoachFixture.context(intent, direction, scenario: scenario)
         let draft = template.compose(intent: intent, context: context)
         let answer = try #require(CoachAnswerAssembler.assemble(draft, context: context, source: .fromYourData, locale: CoachFixture.locale))
-        return CoachGolden.render(answer)
+        let line = CoachGolden.render(answer)
+        // A regeneration aid, never a pass: with COACH_GOLDEN_OUT=<file> (as TEST_RUNNER_COACH_GOLDEN_OUT) the actual lines are written for review.
+        if let out = ProcessInfo.processInfo.environment["COACH_GOLDEN_OUT"] {
+            let key = [scenario.rawValue, intent.rawValue, direction?.rawValue].compactMap { $0 }.joined(separator: "/")
+            if let handle = FileHandle(forWritingAtPath: out) ?? (FileManager.default.createFile(atPath: out, contents: nil) ? FileHandle(forWritingAtPath: out) : nil) {
+                handle.seekToEndOfFile(); handle.write(Data("\(key)\t\(line)\n".utf8)); try? handle.close()
+            }
+        }
+        return line
     }
 
     @Test func everyIntentInEveryScenarioIsWordForWordWhatWasReviewed() async throws {

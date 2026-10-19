@@ -543,12 +543,13 @@ struct SleepTimingEngineTests {
         #expect(SleepTimingEngine.median([]) == nil)
     }
 
-    @Test func typicalBedtimeAndWakeAreMediansOverFourteenNightsWithFiveNeeded() throws {
+    @Test func usualBedtimeAndWakeAreTheBaselineOfTheFourteenNightsBeforeLastNightWithFiveNeeded() throws {
         let bedtimes: [Double] = [23, 23, 23.5, 0.5 + 24, 23, 23, 22.5]
         let history = SleepFixture.history(count: 7, bedtime: { bedtimes[$0] })
         let timing = try #require(SleepTimingEngine.timing(history: history))
-        #expect(timing.typicalBedtime == 660, "the median ignores the one late night")
-        #expect(timing.nights == 7)
+        // The mean of the six nights before the last one (the late night, 12:30 AM, is among them): 11:20 PM.
+        #expect(abs(try #require(timing.typicalBedtime) - 680) < 0.001, "the baseline, never the last night itself")
+        #expect(timing.nights == 6)
         #expect(SleepTimingEngine.timing(history: SleepFixture.history(count: 4))?.typicalBedtime == nil)
     }
 
