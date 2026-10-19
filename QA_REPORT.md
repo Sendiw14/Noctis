@@ -92,7 +92,7 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 - **QA-103** (Accessibility, minor): Onboarding at accessibility sizes:
 - **QA-115** (Accessibility, minor): Data management at AX3 and AX5 (SE):
 - **QA-116** (Accessibility, minor): Sleep month at AX3 and AX5 (SE):
-- **QA-150** (Process, major): QA part 4 steps 7 to 9 are NOT complete:
+- **QA-150** (Process, minor): QA part 4:
 <!-- /OPEN-LIST -->
 
 Why they are open: **QA-004** and **QA-014** need the owner (real Terms, Privacy and support addresses; the roadmap items are unbuilt features by design). QA-016 needs the owner's
