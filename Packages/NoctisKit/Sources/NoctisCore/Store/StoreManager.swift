@@ -75,7 +75,12 @@ public final class StoreManager {
     /// not per-product), so the yearly plan's "7 days free" badge and the
     /// monthly plan agree with each other.
     public func isEligibleForIntroOffer() async -> Bool {
-        await Product.SubscriptionInfo.isEligibleForIntroOffer(for: StoreProductID.subscriptionGroupID)
+        #if DEBUG
+        // QA part 6: `-introEligible yes|no` shows the paywall in each state on any device (StoreKit's answer is per simulator, from its own purchase history).
+        let arguments = ProcessInfo.processInfo.arguments
+        if let flag = arguments.firstIndex(of: "-introEligible"), arguments.indices.contains(flag + 1) { return arguments[flag + 1] == "yes" }
+        #endif
+        return await Product.SubscriptionInfo.isEligibleForIntroOffer(for: StoreProductID.subscriptionGroupID)
     }
 
     public func purchase(_ product: Product) async {

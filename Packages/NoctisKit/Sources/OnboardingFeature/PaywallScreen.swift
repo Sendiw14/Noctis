@@ -319,10 +319,13 @@ struct PaywallScreen: View {
                     // On a short screen the link sits under the fold, past the notice, so the bottom fade never lands across it.
                     if !shortScreen { compareLink }
                 }
-                Text(NoctisMedicalNotice.statement)
-                    .noctisFont(12, relativeTo: .caption)
-                    .foregroundStyle(NoctisPaper.ink3)
-                    .multilineTextAlignment(.center)
+                // On a short screen the notice is pinned with the button (see `bottomStack`), so it is whole at rest and never under the fade.
+                if !(compactLock && shortScreen) {
+                    Text(NoctisMedicalNotice.statement)
+                        .noctisFont(12, relativeTo: .caption)
+                        .foregroundStyle(NoctisPaper.ink3)
+                        .multilineTextAlignment(.center)
+                }
                 if compactLock && shortScreen { compareLink }
                 if compactLock { footer }
                 if !pinsBottomStack {
@@ -770,6 +773,13 @@ struct PaywallScreen: View {
                             .foregroundStyle(NoctisPaper.ink3)
                             .multilineTextAlignment(.center)
                     }
+                    if compactLock && shortScreen {
+                        Text(NoctisMedicalNotice.statement)
+                            .noctisFont(11, relativeTo: .caption2)
+                            .foregroundStyle(NoctisPaper.ink3)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     if !compactLock {
                         NoctisTextButton("Continue with the free plan", action: dismissWithoutSubscribing)
                         footer
@@ -1010,7 +1020,7 @@ private struct PlanCardView: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(compact ? (short ? NoctisSpacing.sm : NoctisSpacing.md) : NoctisSpacing.lg)
+            .padding(compact ? (short ? 6 : NoctisSpacing.md) : NoctisSpacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous)
                     .fill(NoctisPaper.surface)

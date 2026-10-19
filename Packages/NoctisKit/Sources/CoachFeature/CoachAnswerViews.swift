@@ -383,7 +383,7 @@ struct CoachFeedbackRow: View {
 struct CoachPlainCard: View {
     let answer: CoachAnswer
     let viewModel: CoachViewModel
-    @Environment(\.openURL) private var openURL
+    @State private var showsHelp = false
 
     var body: some View {
         NoctisAppCard {
@@ -393,8 +393,9 @@ struct CoachPlainCard: View {
                     .foregroundStyle(NoctisAppColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 if let link = answer.helpLink {
-                    CoachPillButton(title: link.title, identifier: "coach.findHelp", symbol: "arrow.up.forward") { openURL(link.url) }
-                        .accessibilityHint("Opens findahelpline.com in your browser.")
+                    // The built-in list for the person's region, which needs no network; findahelpline.com is one tap further inside it.
+                    CoachPillButton(title: link.title, identifier: "coach.findHelp", symbol: "phone.fill") { showsHelp = true }
+                        .accessibilityHint("Opens phone numbers for your region.")
                 }
                 if !answer.suggestions.isEmpty {
                     VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
@@ -405,6 +406,7 @@ struct CoachPlainCard: View {
                 }
             }
         }
+        .sheet(isPresented: $showsHelp) { CoachHelpSheet() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("coach.plain")
     }

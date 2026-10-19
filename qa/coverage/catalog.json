@@ -1200,6 +1200,46 @@
     "title" : "Coach, free plan with the day's questions used"
   },
   {
+    "area" : "coach",
+    "id" : "coach.medical",
+    "platform" : "iPhone",
+    "route" : "coach",
+    "scrolls" : true,
+    "surface" : "pushed",
+    "tierOne" : false,
+    "title" : "Coach, a medical question (scripted reply)"
+  },
+  {
+    "area" : "coach",
+    "id" : "coach.crisis",
+    "platform" : "iPhone",
+    "route" : "coach",
+    "scrolls" : true,
+    "surface" : "pushed",
+    "tierOne" : false,
+    "title" : "Coach, a crisis message (scripted reply)"
+  },
+  {
+    "area" : "coach",
+    "id" : "coach.help.lk",
+    "platform" : "iPhone",
+    "route" : "coach",
+    "scrolls" : true,
+    "surface" : "sheet",
+    "tierOne" : false,
+    "title" : "Coach, Find help sheet on a Sri Lanka device (region en_LK)"
+  },
+  {
+    "area" : "coach",
+    "id" : "coach.help",
+    "platform" : "iPhone",
+    "route" : "coach",
+    "scrolls" : true,
+    "surface" : "sheet",
+    "tierOne" : false,
+    "title" : "Coach, Find help sheet (built-in list for the region)"
+  },
+  {
     "area" : "night",
     "id" : "night.tonight",
     "platform" : "iPhone",
@@ -1443,7 +1483,7 @@
     "area" : "reviews",
     "id" : "reviews.list",
     "platform" : "iPhone",
-    "route" : "reviews",
+    "route" : "insights",
     "scrolls" : true,
     "surface" : "pushed",
     "tierOne" : false,
@@ -1453,7 +1493,7 @@
     "area" : "reviews",
     "id" : "reviews.list.free",
     "platform" : "iPhone",
-    "route" : "reviews",
+    "route" : "insights",
     "scrolls" : true,
     "surface" : "pushed",
     "tierOne" : false,
@@ -1608,6 +1648,46 @@
     "surface" : "fullScreen",
     "tierOne" : false,
     "title" : "Monthly review, free plan"
+  },
+  {
+    "area" : "premium",
+    "id" : "premium.paywall.trialEligible",
+    "platform" : "iPhone",
+    "route" : "",
+    "scrolls" : true,
+    "surface" : "sheet",
+    "tierOne" : false,
+    "title" : "Paywall from a lock, a first-time user (intro offer eligible)"
+  },
+  {
+    "area" : "premium",
+    "id" : "premium.paywall.trialNotEligible",
+    "platform" : "iPhone",
+    "route" : "",
+    "scrolls" : true,
+    "surface" : "sheet",
+    "tierOne" : false,
+    "title" : "Paywall from a lock, not eligible for the intro offer"
+  },
+  {
+    "area" : "onboarding",
+    "id" : "onboarding.paywall.trialEligible",
+    "platform" : "iPhone",
+    "route" : "",
+    "scrolls" : true,
+    "surface" : "fullScreen",
+    "tierOne" : false,
+    "title" : "Onboarding paywall, a first-time user (intro offer eligible)"
+  },
+  {
+    "area" : "onboarding",
+    "id" : "onboarding.paywall.trialNotEligible",
+    "platform" : "iPhone",
+    "route" : "",
+    "scrolls" : true,
+    "surface" : "fullScreen",
+    "tierOne" : false,
+    "title" : "Onboarding paywall, not eligible for the intro offer"
   },
   {
     "area" : "premium",

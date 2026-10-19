@@ -254,6 +254,15 @@ public enum ScreenCatalog {
                 id: "coach.crisis", area: .coach, title: "Coach, a crisis message (scripted reply)", arguments: base() + ["-noctisInitialRoute", "coach"], route: "coach", opens: "coach",
                 steps: [.type("I want to hurt myself"), .tapLabel("Send"), .wait(4)], ready: nil, surface: .pushed
             ),
+            CatalogScreen(
+                id: "coach.help.lk", area: .coach, title: "Coach, Find help sheet on a Sri Lanka device (region en_LK)",
+                arguments: base() + ["-noctisInitialRoute", "coach", "-AppleLocale", "en_LK"], route: "coach", opens: "coach",
+                steps: [.type("I want to hurt myself"), .tapLabel("Send"), .wait(4), .tapIdentifier("coach.findHelp"), .wait(1.5)], ready: nil, surface: .sheet
+            ),
+            CatalogScreen(
+                id: "coach.help", area: .coach, title: "Coach, Find help sheet (built-in list for the region)", arguments: base() + ["-noctisInitialRoute", "coach"], route: "coach", opens: "coach",
+                steps: [.type("I want to hurt myself"), .tapLabel("Send"), .wait(4), .tapIdentifier("coach.findHelp"), .wait(1.5)], ready: nil, surface: .sheet
+            ),
         ]
     }()
 
@@ -368,6 +377,22 @@ public enum ScreenCatalog {
 
     static let premium: [CatalogScreen] = {
         var list: [CatalogScreen] = [
+            CatalogScreen(
+                id: "premium.paywall.trialEligible", area: .premium, title: "Paywall from a lock, a first-time user (intro offer eligible)",
+                arguments: base() + ["-forceTier", "free", "-paywallContext", "general", "-introEligible", "yes"], surface: .sheet, needsStore: true
+            ),
+            CatalogScreen(
+                id: "premium.paywall.trialNotEligible", area: .premium, title: "Paywall from a lock, not eligible for the intro offer",
+                arguments: base() + ["-forceTier", "free", "-paywallContext", "general", "-introEligible", "no"], surface: .sheet, needsStore: true
+            ),
+            CatalogScreen(
+                id: "onboarding.paywall.trialEligible", area: .onboarding, title: "Onboarding paywall, a first-time user (intro offer eligible)",
+                arguments: ["-useMockHealth", "-noctis.onboarding.step", "paywall", "-introEligible", "yes"], surface: .fullScreen, showsOnboarding: true, needsStore: true
+            ),
+            CatalogScreen(
+                id: "onboarding.paywall.trialNotEligible", area: .onboarding, title: "Onboarding paywall, not eligible for the intro offer",
+                arguments: ["-useMockHealth", "-noctis.onboarding.step", "paywall", "-introEligible", "no"], surface: .fullScreen, showsOnboarding: true, needsStore: true
+            ),
             CatalogScreen(
                 id: "premium.paywall.loaded", area: .premium, title: "Paywall, with the plans loaded",
                 arguments: base() + ["-forceTier", "free", "-paywallContext", "general"], surface: .sheet,

@@ -99,7 +99,8 @@ struct ScreenCatalogTests {
         }
         for (flag, screens) in flags.sorted(by: { $0.key < $1.key }) {
             // A flag is read by name ("-mockScenario") or, for the defaults' argument domain, by its key ("noctis.coach.quota").
-            let known = sources.contains("\"\(flag)\"") || sources.contains("\"\(flag.dropFirst())\"")
+            // `-AppleLocale` is iOS's own argument (it sets the region the system reports), read by the system, not by the app: the one exception.
+            let known = flag == "-AppleLocale" || sources.contains("\"\(flag)\"") || sources.contains("\"\(flag.dropFirst())\"")
             #expect(known, "no source reads the launch flag \(flag) (\(screens.first ?? ""))")
         }
     }
