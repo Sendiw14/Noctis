@@ -309,7 +309,8 @@ public struct TabScreenScaffold<Content: View>: View {
                 }
             }
         } motif: {
-            if header.trailing != nil, NoctisSectionMotif.sitsInTheCorner(section) {
+            // A motif in the corner reads as a menu, with or without a button under it (QA part 5): left out whenever it would sit there.
+            if NoctisSectionMotif.sitsInTheCorner(section) {
                 EmptyView()
             } else {
                 NoctisSectionMotif(section)

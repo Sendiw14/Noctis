@@ -189,8 +189,15 @@ struct PaywallScreen: View {
 
     /// Opened from a lock (a sheet over the app, not onboarding's full page): the ring sits in the band beside Close and Restore, the title is one line, the benefits card and
     /// both plans are tight, and only the button, its price line and "Continue with the free plan" are pinned, so the card and both plans are in view without scrolling (QA part 5).
+    private func updateShort(_ height: CGFloat) {
+        let short = height < 700
+        if short != shortScreen { DispatchQueue.main.async { shortScreen = short } }
+    }
+
     private var compactLock: Bool { context != nil && !dynamicTypeSize.isAccessibilitySize }
     private static let compactRingDiameter: CGFloat = 52
+    /// An SE-sized screen (under 700 pt tall): the compact layout gives a little more back so the second plan is whole above the button.
+    @State private var shortScreen = false
 
     private var bedtimeMinutes: Int { noctisBedtimeMinutes(wakeMinutes: wakeMinutes, needMinutes: needMinutes) }
     private var selectedProduct: Product? { store.products.first { $0.id == selectedProductID } }
@@ -216,6 +223,7 @@ struct PaywallScreen: View {
     var body: some View {
         GeometryReader { geometry in
             let topInset = max(geometry.safeAreaInsets.top, 20)
+            let _ = updateShort(geometry.size.height)
             ZStack(alignment: .top) {
                 Color.clear.onChange(of: topInset + topRowClearance, initial: true) { _, newValue in headerBandEnd = newValue }
                 PaperBackground().ignoresSafeArea()
@@ -301,19 +309,21 @@ struct PaywallScreen: View {
 
     private func content(topInset: CGFloat) -> some View {
         ScrollView {
-            VStack(spacing: compactLock ? NoctisSpacing.sm : NoctisSpacing.lg) {
+            VStack(spacing: compactLock ? (shortScreen ? 6 : NoctisSpacing.sm) : NoctisSpacing.lg) {
                 if compactLock { compactHero } else { hero }
                 benefitsCard
                 if !compactLock { compareLink.paywallBlock() }
                 plansSection
                 if compactLock {
                     if phase == .ready { NoctisTextButton("Continue with the free plan", action: dismissWithoutSubscribing) }
-                    compareLink
+                    // On a short screen the link sits under the fold, past the notice, so the bottom fade never lands across it.
+                    if !shortScreen { compareLink }
                 }
                 Text(NoctisMedicalNotice.statement)
                     .noctisFont(12, relativeTo: .caption)
                     .foregroundStyle(NoctisPaper.ink3)
                     .multilineTextAlignment(.center)
+                if compactLock && shortScreen { compareLink }
                 if compactLock { footer }
                 if !pinsBottomStack {
                     bottomStack.padding(.top, NoctisSpacing.sm)
@@ -577,7 +587,7 @@ struct PaywallScreen: View {
     // MARK: - Benefits
 
     private var benefitsCard: some View {
-        NoctisPaperCard(padding: compactLock ? NoctisSpacing.sm : Self.benefitsCardPadding) {
+        NoctisPaperCard(padding: compactLock ? (shortScreen ? 6 : NoctisSpacing.sm) : Self.benefitsCardPadding) {
             VStack(spacing: 0) {
                 ForEach(Array(benefitRows.enumerated()), id: \.element.id) { index, row in
                     HStack(spacing: NoctisSpacing.sm) {
@@ -592,7 +602,7 @@ struct PaywallScreen: View {
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                     }
-                    .padding(.vertical, compactLock ? 3 : NoctisScrollEdges.blockGap(12, dynamicTypeSize) / 2)
+                    .padding(.vertical, compactLock ? (shortScreen ? 1 : 3) : NoctisScrollEdges.blockGap(12, dynamicTypeSize) / 2)
                     .paywallCardRow(index)
                     if index < benefitRows.count - 1 {
                         Rectangle().fill(NoctisPaper.hairline).frame(height: 1)
@@ -686,7 +696,7 @@ struct PaywallScreen: View {
 
     private func planCard(_ option: PlanOption) -> some View {
         let isSelected = selectedProductID == option.id
-        return PlanCardView(option: option, isSelected: isSelected, reduceMotion: reduceMotion, compact: compactLock) {
+        return PlanCardView(option: option, isSelected: isSelected, reduceMotion: reduceMotion, compact: compactLock, short: shortScreen) {
             NoctisHaptics.selectionTick()
             withAnimation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion)) {
                 selectedProductID = option.id
@@ -959,6 +969,7 @@ private struct PlanCardView: View {
     let isSelected: Bool
     let reduceMotion: Bool
     var compact = false
+    var short = false
     let onSelect: () -> Void
 
     /// R4: the radio mark grows with the plan text beside it.
@@ -999,7 +1010,7 @@ private struct PlanCardView: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(compact ? NoctisSpacing.md : NoctisSpacing.lg)
+            .padding(compact ? (short ? NoctisSpacing.sm : NoctisSpacing.md) : NoctisSpacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous)
                     .fill(NoctisPaper.surface)

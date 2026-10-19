@@ -112,3 +112,4 @@ and the two duplicated formatters (QA-118).
 8. **Accessibility by a person**: VoiceOver and Switch Control by someone who uses them, Reduce Motion and Smart Invert looked at on the device.
 9. **Language and wording**: a native reader for the right-to-left pass and the pseudolanguage findings; the copy by the owner (the welcome tagline and the Better sleep goal subtitle, QA-141).
 10. **Release**: the real Terms, Privacy and support addresses on the paywall and in About; a signed archive validated by App Store Connect; the export-compliance answer.
+11. **System surfaces, dropped from the gallery (QA part 5)**: widgets on a real Home Screen and Lock Screen (the in-app widget gallery stands in, drawn from the iPhone's own snapshot), the wind-down Live Activity and its Dynamic Island, Control Center controls, Siri answers, and delivered notification banners per category (unless captured in a later round).

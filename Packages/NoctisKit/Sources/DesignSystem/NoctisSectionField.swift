@@ -380,8 +380,8 @@ public struct NoctisSectionMotif: View {
         }
     }
 
-    /// Whether the motif sits in the field's top corner, where a trailing button also is: it is left out while the header has one (Insights'
-    /// three dots showed through the history button and read as a menu under it). The others sit along the bottom edge.
+    /// Whether the motif sits in the field's top corner, where a trailing button also is: it is left out (Insights' three dots read as a
+    /// menu, with the history button over them or, in the learning state, with nothing there). The others sit along the bottom edge.
     public static func sitsInTheCorner(_ section: NoctisSection) -> Bool {
         section == .insights
     }
