@@ -318,7 +318,17 @@ public struct AppContainer {
         #else
         let coachModel: (any AIProvider)? = Self.systemModel()
         #endif
-        let coachData = RepositoryCoachDataSource(home: homeRepository, sleep: sleepRepository, recovery: recoveryRepository, insights: insightsRepository)
+        // "When should I sleep?" names the bedtime Tonight shows for the person's plan (the free plan's single time, Premium's window centre).
+        let coachData = RepositoryCoachDataSource(
+            home: homeRepository, sleep: sleepRepository, recovery: recoveryRepository, insights: insightsRepository,
+            suggestedBedtime: { current, snapshot in
+                let personalized = await MainActor.run { gate.isUnlocked(.tonightPersonalizedWindow) }
+                return BedtimeInputsBuilder.recommendation(
+                    wakeMinutes: current.typicalWakeMinutes, needMinutes: current.needMinutes, timing: snapshot.timing, balance: snapshot.balance,
+                    consistency: snapshot.consistency, now: appClock(), timeZone: .autoupdatingCurrent, personalized: personalized
+                ).centerMinutes
+            }
+        )
         let coachService = AIService(
             format: HomeFormat(calendar: .autoupdatingCurrent, locale: .autoupdatingCurrent),
             dataSource: coachData,

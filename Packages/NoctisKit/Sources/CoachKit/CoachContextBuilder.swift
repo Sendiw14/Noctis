@@ -14,12 +14,18 @@ public struct CoachSnapshots: Sendable {
     public var sleep: SleepSnapshot?
     public var recovery: RecoverySnapshot?
     public var insights: InsightsSnapshot?
+    /// The bedtime Tonight shows for the person's plan, as minutes since midnight. Nil falls back to the wake time less the sleep need.
+    public var suggestedBedtimeMinutes: Int?
 
-    public init(home: HomeSnapshot? = nil, sleep: SleepSnapshot? = nil, recovery: RecoverySnapshot? = nil, insights: InsightsSnapshot? = nil) {
+    public init(
+        home: HomeSnapshot? = nil, sleep: SleepSnapshot? = nil, recovery: RecoverySnapshot? = nil, insights: InsightsSnapshot? = nil,
+        suggestedBedtimeMinutes: Int? = nil
+    ) {
         self.home = home
         self.sleep = sleep
         self.recovery = recovery
         self.insights = insights
+        self.suggestedBedtimeMinutes = suggestedBedtimeMinutes
     }
 }
 
@@ -205,7 +211,7 @@ public struct CoachContextBuilder: Sendable {
         add("sleep.need", "Your sleep need", Double(profile.needMinutes), .duration, "Profile")
         add("wake.typical", "Your wake time", CoachFactFormatter.afterNoon(sinceMidnight: profile.typicalWakeMinutes), .clock, "Profile")
         let plan = s.home?.tonight ?? TonightPlan(profile: profile)
-        add("bedtime.suggested", "Bedtime that fits your sleep need", CoachFactFormatter.afterNoon(sinceMidnight: plan.bedtimeMinutes), .clock, "Profile")
+        add("bedtime.suggested", "Bedtime that fits your sleep need", CoachFactFormatter.afterNoon(sinceMidnight: s.suggestedBedtimeMinutes ?? plan.bedtimeMinutes), .clock, "Profile")
         if let balance = s.sleep?.balance?.minutes {
             add("sleep.balance", "Sleep against your need, past week", balance, .duration, "SleepBalanceEngine", magnitude: true)
         }

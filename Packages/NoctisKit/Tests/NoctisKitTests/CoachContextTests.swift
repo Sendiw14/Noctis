@@ -272,6 +272,19 @@ struct CoachContextTests {
         #expect(fact("wake.typical", "de_DE") == "7:00")
     }
 
+    @Test func theSuggestedBedtimeIsTheOneTonightShows() async {
+        var snapshots = await CoachFixture.snapshots(.full)
+        func suggested() -> String? {
+            builder(Locale(identifier: "en_US")).build(intent: .bedtimeAdvice, direction: nil, snapshots: snapshots, profile: CoachFixture.profile)
+                .fact("bedtime.suggested")?.display.plain
+        }
+        // Without Tonight's time, the wake time less the sleep need.
+        #expect(suggested() == "11:00 PM")
+        // With it, Coach names that time: 10:30 PM is 1350 minutes after midnight.
+        snapshots.suggestedBedtimeMinutes = 22 * 60 + 30
+        #expect(suggested() == "10:30 PM")
+    }
+
     @Test func aFactFormatsEachUnit() {
         let f = CoachFactFormatter(format: CoachFixture.format)
         #expect(f.fact("a", "A", 72.4, .points, source: "E").display == "72")

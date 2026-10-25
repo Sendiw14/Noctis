@@ -16,10 +16,13 @@ public struct RepositoryCoachDataSource: CoachDataSource {
     public let insights: InsightsRepository
     public let maxAge: TimeInterval
     private let clock: @Sendable () -> Date
+    private let suggestedBedtime: @Sendable (UserProfileSnapshot, SleepSnapshot) async -> Int?
 
+    /// `suggestedBedtime`: the bedtime Tonight shows for this plan, so Coach names the same time (nil keeps the wake time less the sleep need).
     public init(
         home: HomeRepository, sleep: SleepRepository, recovery: RecoveryRepository, insights: InsightsRepository,
-        maxAge: TimeInterval = 600, clock: @escaping @Sendable () -> Date = { Date() }
+        maxAge: TimeInterval = 600, clock: @escaping @Sendable () -> Date = { Date() },
+        suggestedBedtime: @escaping @Sendable (UserProfileSnapshot, SleepSnapshot) async -> Int? = { _, _ in nil }
     ) {
         self.home = home
         self.sleep = sleep
@@ -27,6 +30,7 @@ public struct RepositoryCoachDataSource: CoachDataSource {
         self.insights = insights
         self.maxAge = maxAge
         self.clock = clock
+        self.suggestedBedtime = suggestedBedtime
     }
 
     public func snapshots(profile: UserProfileSnapshot) async -> CoachSnapshots {
@@ -48,7 +52,11 @@ public struct RepositoryCoachDataSource: CoachDataSource {
             if let cached = await insights.cachedSnapshot, fresh(cached.lastUpdated) { return cached }
             return await insights.refresh(profile: profile)
         }()
-        return await CoachSnapshots(home: homeSnapshot, sleep: sleepSnapshot, recovery: recoverySnapshot, insights: insightsSnapshot)
+        let sleepResult = await sleepSnapshot
+        return await CoachSnapshots(
+            home: homeSnapshot, sleep: sleepResult, recovery: recoverySnapshot, insights: insightsSnapshot,
+            suggestedBedtimeMinutes: suggestedBedtime(profile, sleepResult)
+        )
     }
 }
 
