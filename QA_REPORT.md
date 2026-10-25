@@ -73,7 +73,6 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 
 <!-- OPEN-LIST -->
 - **QA-004** (Release, major): The Terms of Use and Privacy Policy URLs (https://noctis.app/terms, /privacy) and the support address (support@noctis.app) are placeholders.
-- **QA-014** (Release, major): ROADMAP.md still lists 48 items;
 - **QA-081** (Localization, minor): Right-to-Left:
 - **QA-082** (Layout, minor): Pseudolanguages:
 - **QA-083** (Localization, minor): Right-to-Left:
@@ -95,7 +94,7 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 - **QA-150** (Process, minor): QA part 4:
 <!-- /OPEN-LIST -->
 
-Why they are open: **QA-004** and **QA-014** need the owner (real Terms, Privacy and support addresses; the roadmap items are unbuilt features by design). QA-016 needs the owner's
+Why they are open: **QA-004** needs the owner (real Terms, Privacy and support addresses). QA-014 (the roadmap) was closed in QA part 4: the deferred features are in POST_LAUNCH.md. QA-016 needs the owner's
 export-compliance answer. The rest are layout and localization items from QA part 2 whose fix is in source and not photographed again (QA-082 to QA-116), harness gaps (QA-099, QA-113), or owner
 calls: right-to-left charts mirroring (QA-085), the evening bedtime accessory at the largest text size (QA-101), the paywall's resting blank band on the 17 Pro (QA-071), the Sleep sounds card height at the largest sizes (QA-108),
 and the two duplicated formatters (QA-118).

@@ -15,7 +15,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     ENABLE_USER_SCRIPT_SANDBOXING: NO
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
     # QA part 1 (QA_LEDGER.md): complete strict concurrency checking everywhere, including the UI tests (Swift 5 language mode).
     SWIFT_STRICT_CONCURRENCY: complete
