@@ -21,10 +21,12 @@ public struct NoctisRulerDial: View {
     public enum Tone: Sendable {
         case paper
         case app
+        /// On a colour card (onboarding's band style): ink ticks, ink labels, in Light and Dark alike.
+        case band
 
-        var ink: Color { self == .paper ? NoctisPaper.ink : NoctisAppColor.ink }
-        var ink3: Color { self == .paper ? NoctisPaper.ink3 : NoctisAppColor.ink3 }
-        var cocoa: Color { self == .paper ? NoctisPaper.cocoa : NoctisAppColor.cocoa }
+        var ink: Color { switch self { case .paper, .band: NoctisPaper.ink; case .app: NoctisAppColor.ink } }
+        var ink3: Color { switch self { case .paper: NoctisPaper.ink3; case .band: NoctisPaper.ink.opacity(0.85); case .app: NoctisAppColor.ink3 } }
+        var cocoa: Color { switch self { case .paper: NoctisPaper.cocoa; case .band: NoctisPaper.ink; case .app: NoctisAppColor.cocoa } }
     }
 
     let range: ClosedRange<Int>
@@ -48,6 +50,9 @@ public struct NoctisRulerDial: View {
     /// the visible frame instead of one.
     var pxPerMinute: CGFloat? = nil
     var tone: Tone = .paper
+    /// What one VoiceOver swipe up or down moves the value by, in the ruler's own units (15 for a time; 30 for the sleep need).
+    var accessibilityStep: Int = 15
+    var identifier: String?
 
     public init(
         range: ClosedRange<Int>,
@@ -60,7 +65,9 @@ public struct NoctisRulerDial: View {
         compact: Bool = false,
         minorTickMinutes: Int? = nil,
         pxPerMinute: CGFloat? = nil,
-        tone: Tone = .paper
+        tone: Tone = .paper,
+        accessibilityStep: Int = 15,
+        identifier: String? = nil
     ) {
         self.range = range
         self.step = step
@@ -73,6 +80,8 @@ public struct NoctisRulerDial: View {
         self.minorTickMinutes = minorTickMinutes
         self.pxPerMinute = pxPerMinute
         self.tone = tone
+        self.accessibilityStep = accessibilityStep
+        self.identifier = identifier
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -195,15 +204,21 @@ public struct NoctisRulerDial: View {
             Slider(
                 value: Binding(
                     get: { Double(value) },
-                    set: { setValue(min(max(Int(($0 / 15).rounded()) * 15, range.lowerBound), range.upperBound)) }
+                    set: { setValue(Self.accessibilitySnap($0, step: accessibilityStep, range: range)) }
                 ),
                 in: Double(range.lowerBound)...Double(range.upperBound),
-                step: 15
+                step: Double(accessibilityStep)
             ) {
                 Text(accessibilityName)
             }
             .accessibilityValue(accessibilityValue(value))
+            .accessibilityIdentifier(identifier ?? "ruler")
         }
+    }
+
+    /// Where a VoiceOver adjustment lands: the nearest multiple of `step`, kept inside `range`.
+    public static func accessibilitySnap(_ raw: Double, step: Int, range: ClosedRange<Int>) -> Int {
+        min(max(Int((raw / Double(step)).rounded()) * step, range.lowerBound), range.upperBound)
     }
 
     private var dragGesture: some Gesture {

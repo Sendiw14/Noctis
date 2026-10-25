@@ -14,6 +14,9 @@ enum OnboardingStep: String, CaseIterable {
     case plan
     case paywall
 
+    /// Every step is in the band style and follows the system's Light or Dark (the closure to the app is kept: a step that must stay on paper can say so).
+    var followsSystem: Bool { true }
+
     /// R7's progress bar covers goal...plan as steps 1...6 (0-indexed here
     /// for `NoctisSegmentedProgress`). Welcome and Paywall have no bar.
     var progressIndex: Int? {
@@ -41,12 +44,12 @@ public struct OnboardingFlowView: View {
     @State private var planAlreadyBuilt: Bool
 
     private let onFinished: () -> Void
-    private let onWelcome: (Bool) -> Void
+    private let onFollowsSystem: (Bool) -> Void
 
-    /// `onWelcome` says whether Welcome is the step on show (it alone follows the system's appearance).
-    public init(onWelcome: @escaping (Bool) -> Void = { _ in }, onFinished: @escaping () -> Void) {
+    /// `onFollowsSystem` says whether the step on show follows the system's Light or Dark: the steps in the band style do (`OnboardingStep.followsSystem`).
+    public init(onFollowsSystem: @escaping (Bool) -> Void = { _ in }, onFinished: @escaping () -> Void) {
         self.onFinished = onFinished
-        self.onWelcome = onWelcome
+        self.onFollowsSystem = onFollowsSystem
         let loaded = OnboardingDraftStore.load()
         self._step = State(initialValue: loaded.step)
         self._draft = State(initialValue: loaded.draft)
@@ -68,7 +71,7 @@ public struct OnboardingFlowView: View {
                 .id(step)
                 .transition(.opacity)
             case .name:
-                NameScreen(name: $draft.name, onNext: { advance(to: .goal) })
+                NameScreen(name: $draft.name, onNext: { advance(to: .goal) }, onBack: { advance(to: .welcome) })
                     .id(step)
                     .transition(.opacity)
             case .goal:
@@ -114,6 +117,7 @@ public struct OnboardingFlowView: View {
             case .plan:
                 PlanScreen(
                     goals: draft.selectedGoals.isEmpty ? [.betterSleep] : draft.selectedGoals,
+                    shownGoals: draft.selectedGoals,
                     wakeMinutes: draft.typicalWakeMinutes,
                     needMinutes: draft.needMinutes,
                     startBuilt: planAlreadyBuilt,
@@ -136,8 +140,8 @@ public struct OnboardingFlowView: View {
             }
         }
         .animation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion), value: step)
-        .onAppear { onWelcome(step == .welcome) }
-        .onChange(of: step) { _, new in onWelcome(new == .welcome) }
+        .onAppear { onFollowsSystem(step.followsSystem) }
+        .onChange(of: step) { _, new in onFollowsSystem(new.followsSystem) }
         .onChange(of: draft) { _, newValue in
             OnboardingDraftStore.save(step: step, draft: newValue)
         }

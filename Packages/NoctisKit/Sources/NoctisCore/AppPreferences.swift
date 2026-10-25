@@ -47,10 +47,10 @@ public nonisolated enum AppAppearance: String, CaseIterable, Sendable, Identifia
         showingMain ? appearance.colorScheme : .light
     }
 
-    /// The same, except that Welcome (the first onboarding step) follows the system: its bands and buttons have a Dark look (QA part 6); every later
-    /// onboarding step is on ivory paper and stays light.
-    public static func scheme(showingMain: Bool, onWelcome: Bool, appearance: AppAppearance) -> ColorScheme? {
-        !showingMain && onWelcome ? nil : scheme(showingMain: showingMain, appearance: appearance)
+    /// The same, except that an onboarding step in the band style (Welcome, the name, goal and notifications steps) follows the system: it has a Dark look;
+    /// the steps still on ivory paper stay light.
+    public static func scheme(showingMain: Bool, followsSystem: Bool, appearance: AppAppearance) -> ColorScheme? {
+        !showingMain && followsSystem ? nil : scheme(showingMain: showingMain, appearance: appearance)
     }
 }
 

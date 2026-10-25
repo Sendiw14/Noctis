@@ -62,8 +62,10 @@ final class OnboardingQATests: XCTestCase {
         QA.tap(recovery, in: app)
         QA.pause(0.6)
         QA.shot("state-goal-3rd-tap")
-        XCTAssertFalse(sleep.isSelected, "third tap replaces the oldest")
-        XCTAssertTrue(energy.isSelected && recovery.isSelected, "third tap keeps the newer and adds the new one")
+        // The Goal step's rule (R6): up to two; a third tap changes nothing and says so ("Pick up to two."), a chosen tile is tapped again to let it go.
+        XCTAssertTrue(sleep.isSelected && energy.isSelected, "third tap leaves the two chosen")
+        XCTAssertFalse(recovery.isSelected, "third tap does not add a third")
+        XCTAssertTrue(app.staticTexts["Pick up to two."].exists || app.otherElements["Pick up to two."].exists, "and says so")
         QA.write("afterThird sleep=\(sleep.isSelected) energy=\(energy.isSelected) recovery=\(recovery.isSelected) continueEnabled=\(next.isEnabled)", to: "state-goal-3rd-tap.txt")
     }
 
@@ -216,14 +218,12 @@ final class OnboardingQATests: XCTestCase {
         QA.tap(QA.button(app, "Continue"), in: app)
 
         XCTAssertTrue(QA.text(app, containing: "mornings").waitForExistence(timeout: 5))
-        // VoiceOver adjusts the ring through its slider representation;
-        // XCTest can't send VoiceOver's increment on iOS 26, so check the
-        // exposure: an adjustable slider whose value names a segment.
-        let ring = QA.element(app, labelBeginsWith: "Sample night")
-        let ringValue = ring.value as? String ?? "?"
-        log += "ring type=\(ring.elementType == .slider ? "slider" : "\(ring.elementType.rawValue)") value=\(ringValue)\n"
-        XCTAssertEqual(ring.elementType, .slider, "sample ring is adjustable")
-        XCTAssertNotNil(ringValue.range(of: #"^(Deep|Core|REM|Awake), \d+h \d{2}m$"#, options: .regularExpression), "ring value names a segment")
+        // The ring reads as one sentence about the sample night, and each stage is a button on a tile (a stage is highlighted with a tile, or a tap on the ring:
+        // the old scrubbing slider is gone, the tiles are its accessible form).
+        let ring = app.descendants(matching: .any)["sample.ring"]
+        log += "ring label=\(ring.label)\n"
+        XCTAssertTrue(ring.label.hasPrefix("Sample night: "), "the ring says it is a sample, in one sentence")
+        for stage in ["deep", "core", "rem", "awake"] { XCTAssertTrue(app.buttons["sample.tile.\(stage)"].exists, "a tile for \(stage)") }
 
         QA.tap(QA.button(app, "Back"), in: app)
         XCTAssertTrue(QA.text(app, containing: "rhythm").waitForExistence(timeout: 5))

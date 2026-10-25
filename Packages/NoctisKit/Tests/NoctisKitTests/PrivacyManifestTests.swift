@@ -91,7 +91,7 @@ struct PrivacyManifestTests {
         #expect(!inventory.facts.hasAccount)
         if leaves.isEmpty && !inventory.facts.coachUsesRemoteModel { #expect(collected.isEmpty) }
         // No code of NOCTIS's own reaches a network: the only network-capable APIs are the listed system ones.
-        for use in inventory.networkUses { #expect(["import StoreKit", "import MessageUI", "import WatchConnectivity"].contains(use.token), Comment(rawValue: "\(use.token) needs a decision in PRIVACY_REPORT.md")) }
+        for use in inventory.networkUses { #expect(["import StoreKit", "import MessageUI", "import WatchConnectivity", "import AuthenticationServices"].contains(use.token), Comment(rawValue: "\(use.token) needs a decision in PRIVACY_REPORT.md")) }
     }
 
     @Test func everyRequiredReasonAPIInTheCodeIsDeclaredAndNothingElseIs() throws {

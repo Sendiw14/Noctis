@@ -223,16 +223,22 @@ struct PrivacyEnforcementTests {
     /// The paywall against the subscription rules: the price and period come from the product StoreKit returns (no price typed into the source), the
     /// words say it renews automatically and how to cancel, Restore, Terms and Privacy are on the screen, and closing is always possible.
     @Test func thePaywallStatesPriceTermAndRenewalFromStoreKitAndCanAlwaysBeLeft() throws {
-        let text = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift"), encoding: .utf8)
-        #expect(text.contains("product.displayPrice") && text.contains("renewing automatically. Cancel anytime in Settings."))
+        let screen = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift"), encoding: .utf8)
+        // The words that depend on a choice are in PaywallFacts (unit-tested); the screen maps the product and draws them.
+        let facts = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/PaywallFacts.swift"), encoding: .utf8)
+        let text = screen + facts
+        #expect(screen.contains("product.displayPrice") && text.contains("renewing automatically. Cancel anytime in Settings."))
         let typedPrice = try Regex(#"[$€£¥]\s?\d+[.,]\d\d"#)
-        let shipped = text.components(separatedBy: "#Preview").first ?? text   // previews carry sample prices; they are not in the app
+        // Previews and the mock plans (DEBUG) carry sample prices; they are not in the shipped app. Comments say "$39.99" as an example.
+        let shipped = [screen, facts].map { $0.components(separatedBy: "#if DEBUG").first ?? $0 }.joined(separator: "\n")
+            .split(separator: "\n", omittingEmptySubsequences: false).filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }.joined(separator: "\n")
         #expect(try typedPrice.firstMatch(in: shipped) == nil, "a price typed into the paywall instead of read from the product")
         #expect(text.contains("StoreLegalLinks.terms") && text.contains("StoreLegalLinks.privacy") && text.contains("Restore Purchases"))
-        // 'Continue with the free plan' is the way out in every phase: loading, unavailable and ready.
-        #expect(text.components(separatedBy: "Continue with the free plan").count - 1 >= 3)
+        // 'Continue with the free plan' is the way out in every phase (loading, unavailable, ready): one link outside any phase switch, so it is always on the screen
+        // (the UI test PaywallQATests checks it in each phase).
+        #expect(screen.contains("Continue with the free plan") && screen.contains("freePlanLink"))
         // The trial's length is read from the product's own introductory offer.
-        #expect(text.contains("TrialLength(") && text.contains("free, then"))
+        #expect(screen.contains("TrialLength(") && text.contains("free, then"))
     }
 
     /// Export compliance: the app and the Watch app declare that they use no encryption beyond the system's, and that is true: no source of NOCTIS names a cryptography
@@ -271,6 +277,6 @@ struct PrivacyEnforcementTests {
         }
         #expect(hits.isEmpty, Comment(rawValue: "an outcome promise: \(hits.joined(separator: ", "))"))
         let goals = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/GoalScreen.swift"), encoding: .utf8)
-        #expect(goals.contains("A calmer wind-down and a steadier routine"))
+        #expect(goals.contains("Calmer wind-down"), "the goal about sleep names the evening, which the app does help with, not a result in the body")
     }
 }

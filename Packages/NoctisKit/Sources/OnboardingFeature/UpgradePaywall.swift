@@ -3,7 +3,7 @@ import NoctisCore
 import SwiftUI
 
 /// The paywall, for someone already in the app (Settings' "Upgrade"): the same screen onboarding ends with, over the
-/// page that opened it. It is the light paper like the rest of onboarding. `onFinished` is called when it closes,
+/// page that opened it. It follows the app's Light or Dark. `onFinished` is called when it closes,
 /// subscribed or not.
 public struct UpgradePaywall: View {
     private let wakeMinutes: Int
@@ -21,6 +21,5 @@ public struct UpgradePaywall: View {
 
     public var body: some View {
         PaywallScreen(wakeMinutes: wakeMinutes, needMinutes: needMinutes, onFinished: onFinished, context: context)
-            .preferredColorScheme(.light)
     }
 }

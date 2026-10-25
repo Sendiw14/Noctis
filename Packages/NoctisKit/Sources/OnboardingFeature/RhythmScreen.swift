@@ -3,15 +3,16 @@ import NoctisCore
 import NoctisText
 import SwiftUI
 
-private let wakeRange = 180...720 // 3:00 AM .. 12:00 PM
-private let wakeStep = 5
-private let needRange = 300...600 // 5h .. 10h
-private let needStep = 15
+/// The rulers' bounds and grain (what is saved is unchanged): wake 3:00 AM to 12:00 PM in 5-minute steps, sleep need 5 h to 10 h in 15-minute steps.
+enum RhythmBounds {
+    static let wake = 180...720
+    static let wakeStep = 5
+    static let need = 300...600
+    static let needStep = 15
+}
 
-/// Step 2/6 — replaces the old separate wake-time and sleep-need screens;
-/// R rules say never ask for either again, so this one screen carries
-/// both. Two ruler-dial cards plus a derived bedtime + night-strip result
-/// (no card) directly beneath them.
+/// Step 2/6, in the band style (APP_RULES.md R6, R69): a sage band, two colour cards with rulers (the wake time on butter, the sleep need on lavender),
+/// and the bedtime they give on a cocoa card with the night's timeline. R rules say never ask for either again, so this one screen carries both.
 struct RhythmScreen: View {
     @Binding var wakeMinutes: Int
     @Binding var needMinutes: Int
@@ -20,183 +21,157 @@ struct RhythmScreen: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    /// The scaffold's own single `ScrollView` now always bounds the hero to
-    /// a measured, finite height (never the unbounded height that used to
-    /// blow up a direct `GeometryReader` wrap here and swallow the AX
-    /// scroll gesture — see `OnboardingScaffold`). This probe just reads
-    /// that bounded size via a background, for the `compact`/`heroSize`
-    /// decisions below; it's not providing scrolling itself. Defaults
-    /// describe a normal (non-SE, non-AX) screen so the very first frame
-    /// renders sensibly before the probe reports in.
-    @State private var heroWidth: CGFloat = 400
-    @State private var heroHeight: CGFloat = 900
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.onboardingScale) private var scale
+    @State private var appeared = false
 
     private var bedtimeMinutes: Int {
         noctisBedtimeMinutes(wakeMinutes: wakeMinutes, needMinutes: needMinutes)
     }
 
     var body: some View {
-        OnboardingScaffold(
-            step: 1,
-            title: "Set your",
-            emphasis: "rhythm.",
-            onBack: onBack
+        OnboardingStepScaffold(
+            section: .sleep, step: 1, title: ["Set your", "rhythm."], bandHeight: 244, bandSymbol: "clock", onBack: onBack
         ) {
-            // R11: must fit iPhone SE without scrolling. Width alone (the
-            // existing 390pt hero-size check) isn't the binding constraint
-            // here — SE and 17 Pro are close in width but SE is 207pt
-            // shorter — so a second, height-driven "compact" mode tightens
-            // spacing/padding/ruler height whenever the available height
-            // is SE-sized or smaller. At AX sizes `heroHeight` reflects
-            // this content's own natural (large) height, so compact is
-            // simply false there — correct, since R10's AX scroll already
-            // handles that case.
-            let heroSize: CGFloat = heroWidth < 390 ? 42 : 64
-            let compact = heroHeight < 700
-            // R6: top-aligned, starting exactly 24pt under the title (the
-            // scaffold's gap) — leftover space collects above the CTA.
-            VStack(spacing: 0) {
-                // R15: cards are always 20pt padded, 12pt apart.
-                VStack(spacing: NoctisSpacing.sm) {
-                    wakeCard(heroSize: heroSize, compact: compact)
-                        .noctisScrollRow()
-                        .noctisRise(index: 0)
-                    needCard(heroSize: heroSize, compact: compact)
-                        .noctisScrollRow()
-                        .noctisRise(index: 1)
-                }
-                resultSection(compact: compact)
-                    .noctisRise(index: 2)
-                    .padding(.top, NoctisSpacing.xl)
-            }
-            .background(
-                GeometryReader { geometry in
-                    Color.clear
-                        .onAppear {
-                            heroWidth = geometry.size.width
-                            heroHeight = geometry.size.height
-                        }
-                        .onChange(of: geometry.size) { _, newSize in
-                            heroWidth = newSize.width
-                            heroHeight = newSize.height
-                        }
-                }
+            RhythmCards(
+                wakeMinutes: $wakeMinutes, needMinutes: $needMinutes, bedtimeMinutes: bedtimeMinutes, dark: colorScheme == .dark,
+                appeared: appeared || reduceMotion, reduceMotion: reduceMotion
             )
-        } bottomStack: {
-            NoctisCTA("Continue", action: onNext)
+        } actions: {
+            OnboardingPrimaryButton("Continue", identifier: "rhythm.continue", action: onNext)
+        }
+        .onAppear {
+            guard !appeared else { return }
+            appeared = true
+        }
+    }
+}
+
+private struct RhythmCards: View {
+    @Binding var wakeMinutes: Int
+    @Binding var needMinutes: Int
+    let bedtimeMinutes: Int
+    let dark: Bool
+    let appeared: Bool
+    let reduceMotion: Bool
+
+    @Environment(\.onboardingScale) private var scale
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var s: CGFloat { min(max(scale, 0.72), 1) }
+    private var compact: Bool { scale < 0.85 }
+    /// The result card: the ink colour in Light, cocoa in Dark.
+    private var resultFill: Color { dark ? NoctisPaper.cocoa : NoctisPaper.ink }
+
+    var body: some View {
+        VStack(spacing: 10 * s) {
+            wakeCard.slideUp(index: 0, appeared: appeared, reduceMotion: reduceMotion, stagger: 0.06)
+            needCard.slideUp(index: 1, appeared: appeared, reduceMotion: reduceMotion, stagger: 0.06)
+            resultCard.slideUp(index: 2, appeared: appeared, reduceMotion: reduceMotion, stagger: 0.06)
+            Text("A starting point. NOCTIS adapts as it learns your nights.")
+                .noctisFont(12, relativeTo: .caption)
+                .foregroundStyle(dark ? NoctisPaper.ivory.opacity(0.65) : NoctisPaper.ink.opacity(0.65))
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+                .slideUp(index: 3, appeared: appeared, reduceMotion: reduceMotion, stagger: 0.06)
         }
     }
 
-    private func wakeCard(heroSize: CGFloat, compact: Bool) -> some View {
-        NoctisPaperCard(padding: NoctisSpacing.lg) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("I usually wake at")
-                    .noctisFont(compact ? 13 : 14, .medium, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisPaper.ink2)
-                    .noctisTextBlock()
-                HStack(alignment: .lastTextBaseline, spacing: 6) {
-                    Text(wakeTimeNumeric)
-                        .noctisNumeral(heroSize)
-                        .foregroundStyle(NoctisPaper.ink)
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                    Text(wakeTimePeriod)
-                        .noctisNumeral(24, .semibold)
-                        .foregroundStyle(NoctisPaper.ink2)
-                }
-                .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.15), reduceMotion: reduceMotion), value: wakeMinutes)
-                .accessibilityElement(children: .combine)
-                .noctisTextBlock()
+    // MARK: Cards
 
-                NoctisRulerDial(
-                    range: wakeRange,
-                    step: wakeStep,
-                    value: $wakeMinutes,
-                    hourLabel: localizedHourLabel,
-                    accessibilityName: "Wake time",
-                    accessibilityValue: { noctisFormattedClock(minutesSinceMidnight: $0) },
-                    height: compact ? 32 : 52,
-                    compact: compact,
-                    minorTickMinutes: 15,
-                    pxPerMinute: 1.7,
-                    tone: .paper
-                )
-                .padding(.top, compact ? 2 : NoctisSpacing.xs)
-                .noctisTextBlock()
-            }
-        }
+    private func card<Content: View>(_ fill: Color, minHeight: CGFloat, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 0, content: content)
+            .padding(.horizontal, 20)
+            .padding(.vertical, compact ? 12 : 16)
+            .frame(maxWidth: .infinity, minHeight: minHeight * s, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: 30, style: .continuous).fill(fill))
     }
 
-    private func needCard(heroSize: CGFloat, compact: Bool) -> some View {
-        NoctisPaperCard(padding: NoctisSpacing.lg) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("I feel best with")
-                    .noctisFont(compact ? 13 : 14, .medium, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisPaper.ink2)
-                    .noctisTextBlock()
-                Text(noctisFormattedDuration(minutes: needMinutes))
-                    .noctisNumeral(heroSize)
+    private var wakeCard: some View {
+        card(NoctisPaper.butter, minHeight: 152) {
+            Text("I usually wake at")
+                .noctisFont(14, .semibold, relativeTo: .subheadline)
+                .foregroundStyle(NoctisPaper.ink.opacity(0.7))
+            HStack(alignment: .lastTextBaseline, spacing: 6) {
+                Text(wakeTimeSplit.time)
+                    .noctisNumeral(54 * s, .heavy)
                     .foregroundStyle(NoctisPaper.ink)
                     .monospacedDigit()
                     .contentTransition(.numericText())
-                    .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.15), reduceMotion: reduceMotion), value: needMinutes)
-                    .noctisTextBlock()
-
-                NoctisRulerDial(
-                    range: needRange,
-                    step: needStep,
-                    value: $needMinutes,
-                    hourLabel: { "\($0 / 60)h" },
-                    accessibilityName: "Sleep need",
-                    // Minutes included: the ruler steps by 15, and "8 hours"
-                    // for 8h 15m made VoiceOver's increment sound like a no-op.
-                    accessibilityValue: { minutes in
-                        let hours = minutes / 60, rest = minutes % 60
-                        return rest == 0 ? "\(hours) hours" : "\(hours) hours \(rest) minutes"
-                    },
-                    height: compact ? 32 : 52,
-                    compact: compact,
-                    tone: .paper
-                )
-                .padding(.top, compact ? 2 : NoctisSpacing.xs)
-                .noctisTextBlock()
+                Text(wakeTimeSplit.period)
+                    .noctisFont(22 * s, .heavy, relativeTo: .title3)
+                    .foregroundStyle(NoctisPaper.ink.opacity(0.7))
             }
+            .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.15), reduceMotion: reduceMotion), value: wakeMinutes)
+            .accessibilityElement(children: .ignore)
+            .accessibilityHidden(true)
+            Spacer(minLength: 4)
+            NoctisRulerDial(
+                range: RhythmBounds.wake, step: RhythmBounds.wakeStep, value: $wakeMinutes, hourLabel: localizedHourLabel,
+                accessibilityName: "Wake time", accessibilityValue: { noctisFormattedClock(minutesSinceMidnight: $0) },
+                height: compact ? 32 : 46, compact: compact, minorTickMinutes: 15, pxPerMinute: 1.5, tone: .band,
+                accessibilityStep: 15, identifier: "rhythm.wake"
+            )
         }
     }
 
-    private func resultSection(compact: Bool) -> some View {
-        VStack(spacing: NoctisScrollEdges.blockGap(compact ? 2 : NoctisSpacing.xs, dynamicTypeSize)) {
-            Text("Bedtime around \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))")
-                .noctisFont(compact ? 17 : 22, .semibold, relativeTo: .title3)
-                .multilineTextAlignment(.center)
+    private var needCard: some View {
+        card(NoctisPaper.lavender, minHeight: 142) {
+            Text("I feel best with")
+                .noctisFont(14, .semibold, relativeTo: .subheadline)
+                .foregroundStyle(NoctisPaper.ink.opacity(0.7))
+            Text(noctisFormattedDuration(minutes: needMinutes))
+                .noctisNumeral(50 * s, .heavy)
                 .foregroundStyle(NoctisPaper.ink)
+                .monospacedDigit()
                 .contentTransition(.numericText())
-                .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.2), reduceMotion: reduceMotion), value: bedtimeMinutes)
-                .noctisTextBlock()
-
-            VStack(spacing: NoctisScrollEdges.blockGap(NoctisSpacing.sm, dynamicTypeSize)) {
-                NightStrip(bedtimeMinutes: bedtimeMinutes, wakeMinutes: wakeMinutes, compact: compact)
-                    .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: bedtimeMinutes)
-                    .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: wakeMinutes)
-                    .noctisTextBlock()
-
-                Text("A starting point. NOCTIS adapts as it learns your nights.")
-                    .noctisFont(12, relativeTo: .caption)
-                    .foregroundStyle(NoctisPaper.ink3)
-                    .multilineTextAlignment(.center)
-                    .noctisTextBlock()
-            }
-            .padding(.top, 2)
+                .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.15), reduceMotion: reduceMotion), value: needMinutes)
+                .accessibilityHidden(true)
+            Spacer(minLength: 4)
+            NoctisRulerDial(
+                range: RhythmBounds.need, step: RhythmBounds.needStep, value: $needMinutes, hourLabel: { "\($0 / 60)h" },
+                accessibilityName: "Sleep need",
+                // Minutes included: the ruler steps by 15 under a finger, and "8 hours" for 8h 15m made VoiceOver's increment sound like a no-op.
+                accessibilityValue: { minutes in
+                    let hours = minutes / 60, rest = minutes % 60
+                    return rest == 0 ? "\(hours) hours" : "\(hours) hours \(rest) minutes"
+                },
+                height: compact ? 32 : 46, compact: compact, minorTickMinutes: 30, pxPerMinute: 1.34, tone: .band, accessibilityStep: 30, identifier: "rhythm.need"
+            )
         }
+    }
+
+    private var resultCard: some View {
+        VStack(alignment: .leading, spacing: 8 * s) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("BEDTIME AROUND")
+                    .noctisFont(11, .heavy, relativeTo: .caption2)
+                    .tracking(1)
+                    .foregroundStyle(NoctisPaper.butter)
+                Spacer(minLength: 8)
+                Text(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))
+                    .noctisFont(26 * s, .heavy, relativeTo: .title2)
+                    .foregroundStyle(NoctisPaper.ivory)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.2), reduceMotion: reduceMotion), value: bedtimeMinutes)
+            }
+            NightStrip(bedtimeMinutes: bedtimeMinutes, wakeMinutes: wakeMinutes, compact: compact)
+                .animation(reduceMotion ? nil : .spring(response: 0.45, dampingFraction: 0.82), value: bedtimeMinutes)
+                .animation(reduceMotion ? nil : .spring(response: 0.45, dampingFraction: 0.82), value: wakeMinutes)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, compact ? 12 : 16)
+        .frame(maxWidth: .infinity, minHeight: 100 * s, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 30, style: .continuous).fill(resultFill))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Bedtime around \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes))")
+        .accessibilityIdentifier("rhythm.bedtime")
     }
 
     private var wakeTimeSplit: (time: String, period: String) { NoctisFormat().splitClock(noctisFormattedClock(minutesSinceMidnight: wakeMinutes)) }
-    private var wakeTimeNumeric: String { wakeTimeSplit.time }
-    private var wakeTimePeriod: String { wakeTimeSplit.period }
-
-    /// "6 AM", "7 AM" — the wake ruler's hour ticks in locale format,
-    /// distinct from `shortWakeHourLabel`'s old single-letter "6A"/"7P"
-    /// (too easy to mistake for truncation at the ruler's edge fade).
+    /// "6 AM", "7 AM": the wake ruler's hour ticks in the locale's format.
     private func localizedHourLabel(_ minutes: Int) -> String {
         let hour24 = (minutes / 60) % 24
         guard let date = Calendar.current.date(bySettingHour: hour24, minute: 0, second: 0, of: .now) else {
@@ -268,7 +243,7 @@ private struct NightStrip: View, Animatable {
         Canvas { context, size in
             let resolvedLabels = Self.labels.map { label in
                 (label, context.resolve(
-                    Text(label.text).font(.system(size: labelSize, design: .rounded)).foregroundStyle(NoctisPaper.ink3)
+                    Text(label.text).font(.system(size: labelSize, design: .rounded)).foregroundStyle(NoctisPaper.ivory.opacity(0.65))
                 ))
             }
             // The track stays flush with the cards above unless the labels
@@ -284,20 +259,17 @@ private struct NightStrip: View, Animatable {
             let midY = rowHeight / 2
 
             let track = CGRect(x: trackMinX, y: midY - trackHeight / 2, width: trackWidth, height: trackHeight)
-            context.fill(Capsule().path(in: track), with: .color(NoctisPaper.track))
+            context.fill(Capsule().path(in: track), with: .color(NoctisPaper.ivory.opacity(0.16)))
 
             let bedX = x(bedtime)
             let wakeX = x(wake)
             let bar = CGRect(x: bedX, y: track.minY, width: max(wakeX - bedX, 4), height: trackHeight)
             context.fill(Capsule().path(in: bar), with: .color(NoctisPaper.lavender))
 
-            for (centerX, symbol) in [(bedX, "moon.fill"), (wakeX, "sun.max.fill")] {
+            // Bedtime: an ivory dot; wake: a butter one.
+            for (centerX, color) in [(bedX, NoctisPaper.ivory), (wakeX, NoctisPaper.butter)] {
                 let dot = CGRect(x: centerX - dotSize / 2, y: midY - dotSize / 2, width: dotSize, height: dotSize)
-                context.fill(Circle().path(in: dot), with: .color(NoctisPaper.cocoa))
-                let glyph = context.resolve(
-                    Text(Image(systemName: symbol)).font(.system(size: compact ? 7 : 8)).foregroundStyle(NoctisPaper.bg)
-                )
-                context.draw(glyph, at: CGPoint(x: centerX, y: midY), anchor: .center)
+                context.fill(Circle().path(in: dot), with: .color(color))
             }
 
             for (label, text) in resolvedLabels {

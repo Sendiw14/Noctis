@@ -105,7 +105,7 @@ struct WelcomeBands: View {
 
 // MARK: - Icons
 
-private nonisolated struct CrescentShape: Shape {
+nonisolated struct CrescentShape: Shape {
     func path(in rect: CGRect) -> Path {
         let outer = Path(ellipseIn: rect)
         let bite = Path(ellipseIn: CGRect(x: rect.minX + rect.width * 0.26, y: rect.minY - rect.height * 0.04, width: rect.width * 0.86, height: rect.height * 0.86))
@@ -113,7 +113,7 @@ private nonisolated struct CrescentShape: Shape {
     }
 }
 
-private nonisolated struct SparkleShape: Shape {
+nonisolated struct SparkleShape: Shape {
     func path(in rect: CGRect) -> Path {
         let c = CGPoint(x: rect.midX, y: rect.midY)
         let pinch = rect.width * 0.09

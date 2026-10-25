@@ -3,16 +3,16 @@ import NoctisCore
 import SwiftUI
 import UserNotifications
 
-private enum NotificationKind: Int, CaseIterable, Identifiable {
+/// The three reminders the step offers, in the order shown. The example text is the notification's own words (R13: generic only, no streak counts, no
+/// scores, no biometric values); the row's colour and glyph are the step's.
+enum NotificationKind: Int, CaseIterable, Identifiable {
     case morningSummary
     case windDown
     case weeklyReview
 
     var id: Int { rawValue }
 
-    /// Doubles as the scheduled notification's body — one source of truth
-    /// so the example card can never drift from what actually gets sent.
-    /// Generic only (R13): no streak counts, no scores, no biometric values.
+    /// Doubles as the scheduled notification's body: one source of truth so the example can never drift from what actually gets sent.
     var previewBody: String {
         switch self {
         case .morningSummary: "Your morning summary is ready."
@@ -29,8 +29,28 @@ private enum NotificationKind: Int, CaseIterable, Identifiable {
         }
     }
 
-    var toggleSubtitle: String? {
-        self == .windDown ? "20 minutes before your bedtime" : nil
+    var toggleSubtitle: String {
+        switch self {
+        case .morningSummary: "Your night and recovery, ready when you wake"
+        case .windDown: "20 minutes before your bedtime"
+        case .weeklyReview: "A calm look back, once a week"
+        }
+    }
+
+    var glyph: String {
+        switch self {
+        case .morningSummary: "sun.max"
+        case .windDown: "moon.fill"
+        case .weeklyReview: "calendar"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .morningSummary: NoctisSection.home.fill
+        case .windDown: NoctisPaper.lavender
+        case .weeklyReview: NoctisPaper.sage
+        }
     }
 
     var identifier: String {
@@ -40,6 +60,18 @@ private enum NotificationKind: Int, CaseIterable, Identifiable {
         case .weeklyReview: NoctisNotification.weeklyReview
         }
     }
+
+    /// What VoiceOver reads for the stack: "Example notification: your morning summary is ready".
+    var spokenExample: String {
+        let body = previewBody.hasSuffix(".") ? String(previewBody.dropLast()) : previewBody
+        return "Example notification: \(body.prefix(1).lowercased() + body.dropFirst())"
+    }
+
+    /// The example after this one, wrapping round.
+    var next: NotificationKind { NotificationKind(rawValue: (rawValue + 1) % NotificationKind.allCases.count) ?? .morningSummary }
+
+    /// "Morning summary. Your night and recovery, ready when you wake": the switch's label for VoiceOver.
+    var spokenSwitch: String { "\(toggleTitle). \(toggleSubtitle)" }
 }
 
 private enum PermissionOutcome: Equatable {
@@ -49,12 +81,10 @@ private enum PermissionOutcome: Equatable {
     case denied
 }
 
-/// Step 5/6 — three static example notifications, a toggle for each, and a
-/// real `UNUserNotificationCenter` permission request that schedules only
-/// what's still enabled. iOS never lets an app re-show its own system
-/// prompt after the first answer, so `.denied` here reads "the user just
-/// said no" (or authorization otherwise failed) and is handled with a
-/// plain reassurance, never a nag or a retry button (R13).
+/// Step 5/6, in the band style (APP_RULES.md R6, R69): a stack of one example notification (tap for the next), a switch for each of the three reminders,
+/// and a real `UNUserNotificationCenter` permission request that schedules only what is still on. iOS never lets an app re-show its own system prompt after
+/// the first answer, so `.denied` here reads "the user just said no" (or authorization otherwise failed) and is handled with a plain reassurance, never a
+/// nag or a retry button (R13).
 struct NotificationsScreen: View {
     let wakeMinutes: Int
     let needMinutes: Int
@@ -62,180 +92,55 @@ struct NotificationsScreen: View {
     let onBack: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Where the choices are kept, and what keeps the reminders matching them (R38). Nil in a preview.
     @Environment(\.appPreferences) private var preferences
     @Environment(\.notificationCoordinator) private var coordinator
 
     @State private var enabledStates: [Bool] = NotificationKind.allCases.map { _ in true }
-    @State private var cardsAppeared = false
+    @State private var shown: NotificationKind = .morningSummary
+    @State private var appeared = false
     @State private var cardsSettling = false
     @State private var checkmarkDrawn = false
     @State private var dismissing = false
     @State private var outcome: PermissionOutcome = .idle
-    @State private var heroHeight: CGFloat = 700
-
-    private var compact: Bool { heroHeight < 700 }
 
     var body: some View {
-        OnboardingScaffold(
+        OnboardingStepScaffold(
+            section: .insights,
             step: 4,
-            title: "Stay",
-            emphasis: "gently informed.",
-            caption: outcome == .denied ? "You can turn this on in Settings anytime." : nil,
+            title: ["Stay", "gently informed."],
+            subtitle: outcome == .denied ? "You can turn this on in Settings anytime." : nil,
+            topTrailingSymbol: "bell.fill",
+            titleSize: 42,
+            titleLeading: -7,
             onBack: onBack
         ) {
-            VStack(spacing: NoctisSpacing.sm) {
-                previewStack(compact: compact)
-                toggleCard(compact: compact)
-            }
+            NotificationsContent(
+                enabled: enabledStates, shown: shown, appeared: appeared || reduceMotion, settling: cardsSettling, checkmarkDrawn: checkmarkDrawn,
+                cycle: cycle, set: set
+            )
             .opacity(dismissing ? 0 : 1)
             .offset(y: dismissing ? -40 : 0)
-            .padding(.bottom, NoctisSpacing.xs)
-            .background(
-                GeometryReader { geometry in
-                    Color.clear
-                        .onAppear { heroHeight = geometry.size.height }
-                        .onChange(of: geometry.size.height) { _, newHeight in heroHeight = newHeight }
-                }
-            )
-        } bottomStack: {
+        } actions: {
             bottomStack
         }
-        .onAppear { runEntranceIfNeeded() }
-    }
-
-    // MARK: - Preview cards (the one hero animation)
-
-    /// R15's compact cards, so the screen fits iPhone 17 Pro unscrolled (R16).
-    private func previewStack(compact: Bool) -> some View {
-        VStack(spacing: NoctisCardDensity.compact.stackSpacing) {
-            ForEach(NotificationKind.allCases) { kind in
-                previewCard(kind, compact: compact)
-                    .noctisScrollRow()
-                    .noctisDropIn(index: kind.rawValue, appeared: cardsAppeared, reduceMotion: reduceMotion)
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Examples of NOCTIS notifications")
-    }
-
-    private func previewCard(_ kind: NotificationKind, compact: Bool) -> some View {
-        let isEnabled = enabledStates[kind.rawValue]
-        return NoctisPaperCard(density: .compact) {
-            HStack(alignment: .top, spacing: NoctisSpacing.sm) {
-                NotificationAppTile(showCheckmark: checkmarkDrawn)
-                VStack(alignment: .leading, spacing: 3) {
-                    // One header row; at accessibility sizes the "Example"
-                    // badge drops to its own line.
-                    if dynamicTypeSize.isAccessibilitySize {
-                        VStack(alignment: .leading, spacing: 4) {
-                            previewSender
-                            exampleBadge
-                        }
-                    } else {
-                        HStack(spacing: 6) {
-                            previewSender
-                            Spacer(minLength: 0)
-                            exampleBadge
-                        }
-                    }
-                    Text(kind.previewBody)
-                        .noctisFont(14, relativeTo: .subheadline)
-                        .foregroundStyle(NoctisPaper.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .noctisTextBlock()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .opacity(isEnabled ? 1 : 0.4)
-        .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: isEnabled)
-        .scaleEffect((isEnabled ? 1.0 : 0.97) * (cardsSettling ? 1.03 : 1.0))
-        .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: isEnabled)
-        .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: cardsSettling)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isStaticText)
-    }
-
-    private var previewSender: some View {
-        HStack(spacing: 6) {
-            Text("NOCTIS")
-                .noctisFont(13, .semibold, relativeTo: .footnote)
-                .foregroundStyle(NoctisPaper.ink)
-            Text("now")
-                .noctisFont(13, relativeTo: .footnote)
-                .foregroundStyle(NoctisPaper.ink3)
+        .onAppear {
+            guard !appeared else { return }
+            appeared = true
         }
     }
 
-    private var exampleBadge: some View {
-        Text("Example")
-            .noctisFont(12, .medium, relativeTo: .caption)
-            .foregroundStyle(NoctisPaper.cocoa)
-            .padding(.horizontal, NoctisSpacing.xs)
-            .padding(.vertical, 3)
-            .background(Capsule(style: .continuous).fill(NoctisPaper.butter))
-            .fixedSize()
+    /// A tap on the example: the next of the three, with a soft crossfade.
+    private func cycle() {
+        NoctisHaptics.selectionTick()
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.22)) { shown = shown.next }
     }
 
-    private func runEntranceIfNeeded() {
-        guard !cardsAppeared else { return }
-        cardsAppeared = true
-    }
-
-    // MARK: - Toggle card
-
-    private func toggleCard(compact: Bool) -> some View {
-        NoctisPaperCard(padding: NoctisSpacing.lg) {
-            VStack(spacing: 0) {
-                ForEach(NotificationKind.allCases) { kind in
-                    toggleRow(kind)
-                        .noctisTextBlock()
-                    if kind != NotificationKind.allCases.last {
-                        Rectangle()
-                            .fill(NoctisPaper.hairline)
-                            .frame(height: 1)
-                            .padding(.vertical, NoctisScrollEdges.blockGap(compact ? NoctisSpacing.xs : NoctisSpacing.sm, dynamicTypeSize) / 2)
-                    }
-                }
-            }
-        }
-        .noctisScrollRow()
-        .noctisRise(index: NotificationKind.allCases.count)
-    }
-
-    private func toggleRow(_ kind: NotificationKind) -> some View {
-        HStack(alignment: .center, spacing: NoctisSpacing.md) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(kind.toggleTitle)
-                    .noctisFont(17, .semibold, relativeTo: .body)
-                    .foregroundStyle(NoctisPaper.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let subtitle = kind.toggleSubtitle {
-                    Text(subtitle)
-                        .noctisFont(13, relativeTo: .footnote)
-                        .foregroundStyle(NoctisPaper.ink2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            Spacer(minLength: 0)
-            Toggle(kind.toggleTitle, isOn: binding(for: kind))
-                .labelsHidden()
-                .tint(NoctisPaper.cocoa)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(kind.toggleSubtitle.map { "\(kind.toggleTitle). \($0)" } ?? kind.toggleTitle)
-    }
-
-    private func binding(for kind: NotificationKind) -> Binding<Bool> {
-        Binding(
-            get: { enabledStates[kind.rawValue] },
-            set: { newValue in
-                NoctisHaptics.softImpact()
-                enabledStates[kind.rawValue] = newValue
-            }
-        )
+    /// A switch changed: kept, and the example turns to that reminder so the change is seen where it is made.
+    private func set(_ kind: NotificationKind, _ isOn: Bool) {
+        NoctisHaptics.softImpact()
+        enabledStates[kind.rawValue] = isOn
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.22)) { shown = kind }
     }
 
     // MARK: - Bottom stack
@@ -243,9 +148,9 @@ struct NotificationsScreen: View {
     @ViewBuilder
     private var bottomStack: some View {
         if outcome != .denied {
-            VStack(spacing: NoctisSpacing.sm) {
-                NoctisCTA("Allow Notifications", isLoading: outcome == .requesting, action: requestPermission)
-                NoctisTextButton("Not now", action: dismissWithoutAsking)
+            VStack(spacing: 4) {
+                OnboardingPrimaryButton("Allow Notifications", isEnabled: outcome != .requesting, identifier: "notifications.allow", action: requestPermission)
+                OnboardingSecondaryButton("Not now", identifier: "notifications.notNow", action: dismissWithoutAsking)
             }
         }
     }
@@ -253,7 +158,6 @@ struct NotificationsScreen: View {
     // MARK: - Permission + scheduling
 
     private func requestPermission() {
-        NoctisHaptics.softImpact()
         outcome = .requesting
         rememberChoices()
         Task {
@@ -309,32 +213,198 @@ struct NotificationsScreen: View {
     }
 }
 
+// MARK: - The content
+
+private let notificationCardDark = noctisHexColor("3A271C")
+
+/// The example stack (with its caption) and the settings card. Reads the scaffold's scale, so on a short screen (an SE) the cards give a little height back.
+private struct NotificationsContent: View {
+    let enabled: [Bool]
+    let shown: NotificationKind
+    let appeared: Bool
+    let settling: Bool
+    let checkmarkDrawn: Bool
+    let cycle: () -> Void
+    let set: (NotificationKind, Bool) -> Void
+
+    @Environment(\.onboardingScale) private var scale
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var dark: Bool { colorScheme == .dark }
+    private var compact: Bool { scale < 0.85 }
+    private var ink: Color { dark ? NoctisPaper.ivory : NoctisPaper.ink }
+    private var cardFill: Color { dark ? notificationCardDark : NoctisPaper.surface }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("EXAMPLE")
+                .noctisFont(11, .bold, relativeTo: .caption2, maxScale: 1.3)
+                .tracking(1.3)
+                .foregroundStyle(ink.opacity(0.65))
+                .padding(.leading, 8)
+                .padding(.bottom, 8)
+                .accessibilityHidden(true)
+            ExampleStack(kind: shown, isOn: enabled[shown.rawValue], fanned: appeared, settling: settling, checkmarkDrawn: checkmarkDrawn, compact: compact, tap: cycle)
+                .padding(.bottom, compact ? 20 : 26)
+            settingsCard
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var settingsCard: some View {
+        VStack(spacing: 0) {
+            ForEach(NotificationKind.allCases) { kind in
+                row(kind)
+                    .slideUp(index: kind.rawValue, appeared: appeared, reduceMotion: reduceMotion, stagger: 0.06)
+                if kind != NotificationKind.allCases.last {
+                    Rectangle().fill(ink.opacity(0.10)).frame(height: 1)
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, compact ? 2 : 6)
+        .background(RoundedRectangle(cornerRadius: 30, style: .continuous).fill(cardFill))
+        .shadow(color: dark ? .clear : NoctisPaper.ink.opacity(0.10), radius: 12, x: 0, y: 5)
+    }
+
+    private func row(_ kind: NotificationKind) -> some View {
+        let isOn = Binding(get: { enabled[kind.rawValue] }, set: { set(kind, $0) })
+        return HStack(alignment: .center, spacing: 12) {
+            ZStack {
+                Circle().fill(kind.color)
+                Image(systemName: kind.glyph).font(.system(size: 17, weight: .semibold)).foregroundStyle(NoctisPaper.ink)
+            }
+            .frame(width: compact ? 34 : 40, height: compact ? 34 : 40)
+            .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(kind.toggleTitle)
+                    .noctisFont(compact ? 16 : 17, .bold, relativeTo: .body, maxScale: 1.25)
+                    .foregroundStyle(ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(kind.toggleSubtitle)
+                    .noctisFont(compact ? 12 : 13, relativeTo: .footnote, maxScale: 1.25)
+                    .foregroundStyle(ink.opacity(0.65))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 4)
+            Toggle(kind.toggleTitle, isOn: isOn)
+                .labelsHidden()
+                .tint(kind.color)
+        }
+        .padding(.vertical, compact ? 7 : 13)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(kind.spokenSwitch)
+        .accessibilityIdentifier("notifications.toggle.\(kind.rawValue)")
+    }
+}
+
+// MARK: - The example stack
+
+/// One notification in front and two behind it, fanned 14 pt apart and scaled .94 and .88 with less opacity. Tapping it shows the next example.
+private struct ExampleStack: View {
+    let kind: NotificationKind
+    let isOn: Bool
+    let fanned: Bool
+    let settling: Bool
+    let checkmarkDrawn: Bool
+    let compact: Bool
+    let tap: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var dark: Bool { colorScheme == .dark }
+    private var ink: Color { dark ? NoctisPaper.ivory : NoctisPaper.ink }
+    private var fill: Color { dark ? notificationCardDark : NoctisPaper.surface }
+
+    var body: some View {
+        let step: CGFloat = compact ? 12 : 14
+        front
+            .background(alignment: .top) {
+                ZStack(alignment: .top) {
+                    backCard(scale: 0.88, depth: 2, opacity: 0.5, step: step)
+                    backCard(scale: 0.94, depth: 1, opacity: 0.75, step: step)
+                }
+            }
+            .opacity(isOn ? 1 : 0.4)
+            .scaleEffect((isOn ? 1 : 0.97) * (settling ? 1.03 : 1), anchor: .top)
+            .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: isOn)
+            .animation(NoctisMotion.adaptive(NoctisMotion.settle, reduceMotion: reduceMotion), value: settling)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: tap)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(kind.spokenExample)
+            .accessibilityHint("Shows the next example")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction(.default, tap)
+            .accessibilityIdentifier("notifications.example")
+    }
+
+    private var front: some View {
+        HStack(alignment: .center, spacing: 12) {
+            NotificationAppTile(showCheckmark: checkmarkDrawn, compact: compact, dark: dark)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text("NOCTIS").noctisFont(13, .bold, relativeTo: .footnote, maxScale: 1.25).foregroundStyle(ink)
+                    Text("now").noctisFont(13, relativeTo: .footnote, maxScale: 1.25).foregroundStyle(dark ? NoctisPaper.ivory.opacity(0.6) : NoctisPaper.ink3)
+                }
+                Text(kind.previewBody)
+                    .noctisFont(14, relativeTo: .subheadline, maxScale: 1.25)
+                    .foregroundStyle(ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .id(kind)
+                    .transition(.opacity)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, minHeight: compact ? 66 : 74, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 26, style: .continuous).fill(fill))
+        .shadow(color: dark ? .black.opacity(0.25) : NoctisPaper.ink.opacity(0.12), radius: 10, x: 0, y: 4)
+    }
+
+    private func backCard(scale: CGFloat, depth: CGFloat, opacity: Double, step: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: 26, style: .continuous)
+            .fill(fill.opacity(opacity))
+            .shadow(color: dark ? .clear : NoctisPaper.ink.opacity(0.08), radius: 6, x: 0, y: 2)
+            .scaleEffect(fanned ? scale : 1, anchor: .top)
+            .offset(y: fanned ? step * depth : 0)
+            .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.75).delay(0.15 * Double(depth)), value: fanned)
+    }
+}
+
 // MARK: - App tile
 
-/// The 38pt cocoa app-icon stand-in shown on each example card. Owns its
-/// own checkmark-draw progress so all three tiles animate identically off
-/// one shared `showCheckmark` flip from the parent.
+/// The app-icon stand-in on the example: cocoa with an ivory crescent in Light, ivory with a cocoa one in Dark. On a grant the crescent becomes a drawn
+/// check (one flip from the parent).
 private struct NotificationAppTile: View {
     let showCheckmark: Bool
+    let compact: Bool
+    let dark: Bool
 
     @State private var checkmarkProgress: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// R4: grows with the preview text beside it.
-    @NoctisScaledLength(relativeTo: .subheadline) private var size: CGFloat = 38
+    /// R4: grows with the text beside it.
+    @NoctisScaledLength(relativeTo: .subheadline) private var base: CGFloat = 46
+
+    private var size: CGFloat { compact ? base * 0.84 : base }
+    private var glyph: Color { dark ? NoctisPaper.cocoa : NoctisPaper.ivory }
 
     var body: some View {
         RoundedRectangle(cornerRadius: NoctisRadius.sm, style: .continuous)
-            .fill(NoctisPaper.cocoa)
+            .fill(dark ? NoctisPaper.ivory : NoctisPaper.cocoa)
             .frame(width: size, height: size)
             .overlay {
                 Image(systemName: "moon.fill")
                     .font(.system(size: size * 0.42, weight: .semibold))
-                    .foregroundStyle(NoctisPaper.ivory)
+                    .foregroundStyle(glyph)
                     .opacity(showCheckmark ? 0 : 1)
                 NoctisCheckmarkShape()
                     .trim(from: 0, to: checkmarkProgress)
-                    .stroke(NoctisPaper.ivory, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                    .stroke(glyph, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
                     .frame(width: size * 0.44, height: size * 0.44)
             }
             .accessibilityHidden(true)
@@ -356,36 +426,5 @@ private struct NoctisCheckmarkShape: Shape {
         path.addLine(to: CGPoint(x: rect.minX + rect.width * 0.38, y: rect.maxY))
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
         return path
-    }
-}
-
-// MARK: - Hero drop-in
-
-/// The screen's one hero animation (R9): cards drop from y -80 with a
-/// -2 degree rotation, spring(response: .5, dampingFraction: .75),
-/// staggered 0.25s per card. Reduce Motion collapses this to the cards
-/// already in their stacked resting position with a plain 0.2s fade.
-private struct NoctisDropInModifier: ViewModifier {
-    let index: Int
-    let appeared: Bool
-    let reduceMotion: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .opacity(appeared ? 1 : 0)
-            .offset(y: appeared || reduceMotion ? 0 : -80)
-            .rotationEffect(.degrees(appeared || reduceMotion ? 0 : -2))
-            .animation(
-                reduceMotion
-                    ? .easeInOut(duration: 0.2)
-                    : .spring(response: 0.5, dampingFraction: 0.75).delay(Double(index) * 0.25),
-                value: appeared
-            )
-    }
-}
-
-private extension View {
-    func noctisDropIn(index: Int, appeared: Bool, reduceMotion: Bool) -> some View {
-        modifier(NoctisDropInModifier(index: index, appeared: appeared, reduceMotion: reduceMotion))
     }
 }

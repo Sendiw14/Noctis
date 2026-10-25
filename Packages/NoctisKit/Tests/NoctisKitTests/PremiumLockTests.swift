@@ -42,7 +42,7 @@ struct PremiumLockTests {
     }
 
     @Test func thePaywallsAndTheComparisonCopyIsHeldToTheSameWords() throws {
-        for path in ["Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift", "Packages/NoctisKit/Sources/OnboardingFeature/PremiumComparisonSheet.swift"] {
+        for path in ["Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift", "Packages/NoctisKit/Sources/OnboardingFeature/PaywallFacts.swift", "Packages/NoctisKit/Sources/OnboardingFeature/PremiumComparisonSheet.swift"] {
             let code = RawDefaultsTests.code(try read(path))
             let strings = code.components(separatedBy: "\"").enumerated().filter { $0.offset % 2 == 1 }.map(\.element)
             for text in strings where !LockedCopy.pressure(in: text).isEmpty {

@@ -20,8 +20,8 @@ public struct RootView: View {
     @Environment(AccountStore.self) private var account
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showMain: Bool
-    /// Welcome follows the system's appearance; the other onboarding steps are light (`AppAppearance.scheme`).
-    @State private var onWelcome = true
+    /// The onboarding steps in the band style follow the system's appearance; the others are light (`AppAppearance.scheme`).
+    @State private var followsSystem = true
 
     public init(initiallyOnboarded: Bool) {
         _showMain = State(initialValue: initiallyOnboarded)
@@ -33,7 +33,7 @@ public struct RootView: View {
                 RootTabView()
                     .transition(.opacity)
             } else {
-                OnboardingFlowView(onWelcome: { onWelcome = $0 }) {
+                OnboardingFlowView(onFollowsSystem: { followsSystem = $0 }) {
                     model.open(.home)
                     withAnimation(NoctisMotion.adaptive(NoctisMotion.reveal, reduceMotion: reduceMotion)) {
                         showMain = true
@@ -46,7 +46,7 @@ public struct RootView: View {
         // ever blocks anything or shows a wall; the local data stays.
         .task { await account.refresh() }
         .onReceive(NotificationCenter.default.publisher(for: ASAuthorizationAppleIDProvider.credentialRevokedNotification)) { _ in account.credentialRevoked() }
-        .preferredColorScheme(AppAppearance.scheme(showingMain: showMain, onWelcome: onWelcome, appearance: preferences.values.appearance))
+        .preferredColorScheme(AppAppearance.scheme(showingMain: showMain, followsSystem: followsSystem, appearance: preferences.values.appearance))
         // The paywall, over whatever opened it: a locked thing was tapped (R58). Closing it, or cancelling a purchase, changes nothing; a purchase unlocks the
         // screens in place (they read the feature gate).
         .sheet(item: Bindable(model).paywall) { context in

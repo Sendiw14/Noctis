@@ -8,38 +8,34 @@ import SwiftUI
 struct NameScreen: View {
     @Binding var name: String
     let onNext: () -> Void
+    let onBack: () -> Void
 
     @FocusState private var focused: Bool
 
     var body: some View {
-        OnboardingScaffold(
-            step: nil,
-            title: "What should we",
-            emphasis: "call you?"
-        ) {
+        OnboardingStepScaffold(section: .home, step: nil, title: ["What should we", "call you?"], subtitle: nil, onBack: onBack) {
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                 Text("Optional. It is used on Home and in Profile, and you can change it any time.")
                     .noctisFont(15, relativeTo: .subheadline)
-                    .foregroundStyle(NoctisPaper.ink2)
+                    .foregroundStyle(NoctisAppColor.ink2)
                     .fixedSize(horizontal: false, vertical: true)
-                    .noctisTextBlock()
                 TextField("Your name", text: $name)
                     .noctisFont(17, relativeTo: .body)
-                    .foregroundStyle(NoctisPaper.ink)
+                    .foregroundStyle(NoctisAppColor.ink)
                     .textContentType(.givenName)
                     .submitLabel(.done)
                     .focused($focused)
                     .onSubmit(onNext)
                     .padding(.horizontal, NoctisSpacing.lg)
                     .frame(minHeight: 56)
-                    .background(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous).fill(NoctisPaper.surface))
-                    .overlay(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous).stroke(NoctisPaper.hairline, lineWidth: 1))
+                    .background(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous).fill(NoctisAppColor.surface))
+                    .overlay(RoundedRectangle(cornerRadius: NoctisRadius.lg, style: .continuous).stroke(NoctisAppColor.hairline, lineWidth: 1))
                     .accessibilityIdentifier("onboarding.name")
             }
-        } bottomStack: {
-            VStack(spacing: NoctisSpacing.sm) {
-                NoctisCTA("Continue", action: onNext)
-                NoctisTextButton("Skip for now") {
+        } actions: {
+            VStack(spacing: 4) {
+                OnboardingPrimaryButton("Continue", identifier: "name.continue", action: onNext)
+                OnboardingSecondaryButton("Skip for now", identifier: "name.skip") {
                     name = ""
                     onNext()
                 }

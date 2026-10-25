@@ -87,8 +87,16 @@ public struct NoctisStageRing: View, Animatable {
     private let diameter: CGFloat
     private let lineWidth: CGFloat
     private let highlightedStage: SampleSleepStage?
+    private let trackColor: Color
+    /// An outline for the Deep segments only (1 pt): Deep is cocoa, which needs an edge on a cocoa background (Dark).
+    private let deepOutline: Color?
 
-    public init(progress: Double = 1, diameter: CGFloat, lineWidth: CGFloat, highlightedStage: SampleSleepStage? = nil) {
+    public init(
+        progress: Double = 1, diameter: CGFloat, lineWidth: CGFloat, highlightedStage: SampleSleepStage? = nil,
+        trackColor: Color = NoctisPaper.track, deepOutline: Color? = nil
+    ) {
+        self.trackColor = trackColor
+        self.deepOutline = deepOutline
         self.progress = progress
         self.diameter = diameter
         self.lineWidth = lineWidth
@@ -114,7 +122,7 @@ public struct NoctisStageRing: View, Animatable {
 
         var trackPath = Path()
         trackPath.addArc(center: center, radius: radius, startAngle: .degrees(0), endAngle: .degrees(360), clockwise: false)
-        context.stroke(trackPath, with: .color(NoctisPaper.track), style: StrokeStyle(lineWidth: lineWidth))
+        context.stroke(trackPath, with: .color(trackColor), style: StrokeStyle(lineWidth: lineWidth))
 
         let revealedDegrees = min(max(progress, 0), 1) * 360
 
@@ -156,12 +164,18 @@ public struct NoctisStageRing: View, Animatable {
             // Never a stubby capsule: under 8° after inset draws as a dot.
             if insetEnd - insetStart >= 8 {
                 let path = arcPath(from: insetStart, to: insetEnd, center: center, radius: radius)
+                if let deepOutline, span.stage == .deep {
+                    context.stroke(path, with: .color(deepOutline.opacity(dimmed ? 0.25 : 1)), style: StrokeStyle(lineWidth: lineWidth + 2, lineCap: .round))
+                }
                 context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
             } else {
                 let mid = (span.start + span.end) / 2
                 let dotPoint = NoctisStageRingLayout.point(at: mid, center: center, radius: radius)
                 let dotRadius = lineWidth / 2
                 let dotPath = Path(ellipseIn: CGRect(x: dotPoint.x - dotRadius, y: dotPoint.y - dotRadius, width: lineWidth, height: lineWidth))
+                if let deepOutline, span.stage == .deep {
+                    context.fill(Path(ellipseIn: dotPath.boundingRect.insetBy(dx: -1, dy: -1)), with: .color(deepOutline.opacity(dimmed ? 0.25 : 1)))
+                }
                 context.fill(dotPath, with: .color(color))
             }
         }
