@@ -113,7 +113,7 @@ struct PremiumLockTests {
         #expect(code.contains("minHeight: 44"), "See Premium is at least 44pt")
         #expect(code.contains("noctisFont(12, .semibold") && code.contains("Text(\"Premium\")"), "the badge says Premium at 12pt")
         for size in code.components(separatedBy: "noctisFont(").dropFirst().compactMap({ Int($0.prefix { $0.isNumber }) }) { #expect(size >= 12) }
-        #expect(code.contains("accessibilityLabel(\"\\(title), Premium\")"), "a locked row says it is Premium")
+        #expect(code.contains("accessibilityLabel(\"Premium\")") && code.contains("accessibilityHint(\"Opens what Premium includes.\")"), "a lock says it is Premium")
         #expect(!code.contains("blur") && !code.contains(".redacted"), "no blurred fake data over a locked area")
     }
 

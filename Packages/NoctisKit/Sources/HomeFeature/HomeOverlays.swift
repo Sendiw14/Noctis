@@ -110,11 +110,6 @@ struct HomeCollapsedBar: View {
     }
 }
 
-/// Matches `NoctisStatusBarScrim`'s fade.
-enum NoctisStatusBarScrimMetrics {
-    static let fadeHeight: CGFloat = 16
-}
-
 /// Slides down under the top for two seconds when a Health change brings
 /// a new night; VoiceOver hears it too.
 struct NewNightPill: View {

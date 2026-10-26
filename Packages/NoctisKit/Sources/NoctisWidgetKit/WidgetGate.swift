@@ -19,14 +19,6 @@ public nonisolated enum WidgetSurface: String, Sendable, CaseIterable, Equatable
         }
     }
 
-    /// The Home Screen widget ("NOCTIS Today") as opposed to the Lock Screen one ("NOCTIS Lock Screen").
-    public var isHomeScreen: Bool {
-        switch self {
-        case .small, .medium, .large: true
-        case .lockCircular, .lockRectangular, .lockInline: false
-        }
-    }
-
     public func isLocked(in tier: Tier) -> Bool {
         !FeatureTable.isIncluded(feature, in: tier)
     }

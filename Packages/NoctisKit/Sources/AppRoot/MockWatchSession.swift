@@ -22,9 +22,6 @@ nonisolated final class MockWatchSession: WatchSessionDriving, @unchecked Sendab
     var activation: WatchActivation { mode == "connecting" ? .notActivated : .activated }
     var remainingComplicationTransfers: Int { 50 }
 
-    /// How many contexts the app queued, for a test or a log.
-    var queuedCount: Int { lock.withLock { queued } }
-
     func activate() {}
 
     func updateApplicationContext(_ context: [String: Any]) throws {

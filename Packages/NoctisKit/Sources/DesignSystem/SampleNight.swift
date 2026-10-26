@@ -29,7 +29,6 @@ public enum SampleSleepStage: CaseIterable, Sendable {
 /// 505 minutes starting 11:00 PM: deep sleep front-loaded, REM back-loaded,
 /// the conventional shape of a real night.
 public enum SampleNight {
-    public static let startHour: Double = 23 // 11:00 PM
 
     public static let segments: [(stage: SampleSleepStage, minutes: Int)] = [
         (.awake, 6),

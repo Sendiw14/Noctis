@@ -96,7 +96,6 @@ public final class AppModel {
     public func dismissPaywall() { paywall = nil }
 
     public var isOnboarded: Bool { profile.onboardingComplete }
-    public var healthSourceName: String { healthProvider.sourceName }
     public var isHealthDataAvailable: Bool { healthProvider.isHealthDataAvailable }
 
     public func requestHealthAuthorization(for kinds: [HealthDataKind] = HealthDataKind.allCases) async {

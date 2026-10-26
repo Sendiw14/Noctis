@@ -52,13 +52,10 @@ public struct NoctisSecondaryButtonStyle: ButtonStyle {
 }
 
 extension ButtonStyle where Self == NoctisPrimaryButtonStyle {
-    public static var noctisPrimary: NoctisPrimaryButtonStyle { NoctisPrimaryButtonStyle() }
 }
 
 extension ButtonStyle where Self == NoctisSecondaryButtonStyle {
-    public static var noctisSecondary: NoctisSecondaryButtonStyle { NoctisSecondaryButtonStyle() }
 }
 
 extension ButtonStyle where Self == NoctisPressStyle {
-    public static var noctisPress: NoctisPressStyle { NoctisPressStyle() }
 }

@@ -34,7 +34,6 @@ public enum NoctisColor {
     // MARK: Text
 
     public static let textPrimary = dynamic(light: (0.114, 0.098, 0.086), dark: (0.965, 0.957, 0.941))
-    public static let textSecondary = dynamic(light: (0.361, 0.337, 0.314), dark: (0.729, 0.714, 0.706))
     public static let textTertiary = dynamic(light: (0.588, 0.565, 0.541), dark: (0.500, 0.494, 0.494))
     /// The inverse of `textPrimary` — for text sitting on a surface filled
     /// with `textPrimary`, such as the primary button.
@@ -42,7 +41,6 @@ public enum NoctisColor {
 
     // MARK: Accents
 
-    public static let accentPrimary = dynamic(light: (0.831, 0.678, 0.596), dark: (0.851, 0.706, 0.667))
     public static let sage = dynamic(light: (0.541, 0.612, 0.514), dark: (0.616, 0.686, 0.588))
     public static let violet = dynamic(light: (0.616, 0.588, 0.741), dark: (0.678, 0.647, 0.816))
     public static let amber = dynamic(light: (0.831, 0.635, 0.365), dark: (0.878, 0.686, 0.420))
@@ -56,16 +54,6 @@ public enum NoctisColor {
     // adaptive surface.
 
     public static let midnight = dynamic(light: (0.055, 0.055, 0.086), dark: (0.024, 0.024, 0.043))
-    /// A dark neutral between `midnight` and `indigo` — the third stop in
-    /// the midnight mesh gradient, kept out of the violet family so that
-    /// gradient reads as atmosphere rather than a flat color ramp.
-    public static let graphite = dynamic(light: (0.129, 0.125, 0.145), dark: (0.098, 0.094, 0.114))
-    public static let indigo = dynamic(light: (0.376, 0.353, 0.702), dark: (0.478, 0.451, 0.831))
-    public static let auroraBlue = dynamic(light: (0.318, 0.588, 0.827), dark: (0.412, 0.671, 0.914))
-    public static let cyanAccent = dynamic(light: (0.275, 0.667, 0.678), dark: (0.376, 0.780, 0.788))
-    public static let coral = dynamic(light: (0.914, 0.478, 0.427), dark: (0.945, 0.573, 0.514))
-    public static let peach = dynamic(light: (0.949, 0.706, 0.573), dark: (0.949, 0.745, 0.635))
-    public static let lavenderSoft = dynamic(light: (0.784, 0.749, 0.902), dark: (0.706, 0.667, 0.859))
     /// The warm off-white a screen resolves to when night becomes morning
     /// (Welcome's "Begin" mask expansion) — fixed in both appearances like
     /// `midnight`, since it represents a specific light, not a surface.
@@ -86,20 +74,4 @@ public enum NoctisColor {
     public static let stageREM = amber
     public static let stageCore = sage
     public static let stageDeep = dynamic(light: (0.310, 0.271, 0.239), dark: (0.322, 0.361, 0.435))
-
-    // MARK: Semantic — recovery factors
-
-    public static let factorSleep = sage
-    public static let factorHRV = violet
-    public static let factorRestingHR = terracotta
-    public static let factorConsistency = amber
-    public static let factorLoad = textSecondary
-
-    public static func recoveryTint(for score: Int) -> Color {
-        switch score {
-        case 75...100: sage
-        case 50..<75: amber
-        default: terracotta
-        }
-    }
 }

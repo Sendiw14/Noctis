@@ -46,7 +46,4 @@ public nonisolated struct UserProfileSnapshot: Sendable, Equatable {
         self.healthAuthorizationRequested = healthAuthorizationRequested
     }
 
-    public var typicalWakeTimeDescription: String {
-        noctisFormattedClock(minutesSinceMidnight: typicalWakeMinutes)
-    }
 }

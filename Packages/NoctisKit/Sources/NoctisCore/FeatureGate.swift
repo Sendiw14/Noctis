@@ -86,8 +86,6 @@ public final class FeatureGate {
         quotaStore.write(quota)
     }
 
-    /// Reads the stored count again (after "Delete all NOCTIS data").
-    public func reloadQuota() { quota = quotaStore.read() }
 }
 
 // MARK: - Where the views find it

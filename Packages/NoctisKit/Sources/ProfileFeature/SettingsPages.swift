@@ -418,7 +418,6 @@ struct AppearanceSettingsView: View {
 
 struct SubscriptionSettingsView: View {
     let viewModel: SettingsViewModel
-    @State private var scrollTick = 0
     @State private var showsComparison = false
 
     var body: some View {

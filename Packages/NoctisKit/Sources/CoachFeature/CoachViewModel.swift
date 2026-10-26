@@ -228,8 +228,6 @@ public final class CoachViewModel {
         startConversation(asking: CoachQuestionText.text(question))
     }
 
-
-
     /// A question from the hub's text field, or a chip: a new conversation.
     @discardableResult
     public func startConversation(asking text: String) -> Bool {
@@ -258,9 +256,6 @@ public final class CoachViewModel {
         turns.remove(at: index)
         _ = ask(question, continuing: true)
     }
-
-    /// Whether the conversation's last answer has come (a follow-up can be sent).
-    public var lastTurn: CoachTurn? { turns.last }
 
     /// The questions offered above the input: what usually comes next after the latest answer (at most three), once it has come.
     public var followUpQuestions: [CoachQuestion] {

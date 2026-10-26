@@ -11,11 +11,6 @@ public enum NoctisSound {
     /// should default this `true` and let Settings flip it.
     public static var isEnabled = true
 
-    /// A glass tick — the moon/sun crossing a progress segment.
-    public static func glassTick() {
-        engine?.playTone(frequencies: [880], duration: 0.06, volume: 0.14)
-    }
-
     /// A slightly lower, firmer tick — an interactive snap (drag settling
     /// onto a value, a page-dot tap).
     public static func snap() {

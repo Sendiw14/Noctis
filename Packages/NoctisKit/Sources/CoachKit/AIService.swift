@@ -126,10 +126,6 @@ public actor AIService {
         self.flags = flags
     }
 
-    public func setFlags(_ flags: CoachFeatureFlags) {
-        self.flags = flags
-    }
-
     /// The questions to suggest.
     public nonisolated var suggestedQuestions: [String] { router.suggestedQuestions }
 

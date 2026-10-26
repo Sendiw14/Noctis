@@ -17,20 +17,6 @@ enum OnboardingStep: String, CaseIterable {
     /// Every step is in the band style and follows the system's Light or Dark (the closure to the app is kept: a step that must stay on paper can say so).
     var followsSystem: Bool { true }
 
-    /// R7's progress bar covers goal...plan as steps 1...6 (0-indexed here
-    /// for `NoctisSegmentedProgress`). Welcome and Paywall have no bar.
-    var progressIndex: Int? {
-        switch self {
-        case .welcome, .name: nil
-        case .goal: 0
-        case .rhythm: 1
-        case .sample: 2
-        case .health: 3
-        case .notifications: 4
-        case .plan: 5
-        case .paywall: nil
-        }
-    }
 }
 
 public struct OnboardingFlowView: View {

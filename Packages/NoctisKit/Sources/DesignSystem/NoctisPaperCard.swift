@@ -16,13 +16,6 @@ public enum NoctisCardDensity: Sendable {
         }
     }
 
-    /// Spacing between cards stacked in a column.
-    public var stackSpacing: CGFloat {
-        switch self {
-        case .standard: NoctisSpacing.sm
-        case .compact: NoctisSpacing.xs
-        }
-    }
 }
 
 /// A flat floating surface (R2's one allowed shadow: cocoa .06, blur 24,

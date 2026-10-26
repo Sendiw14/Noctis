@@ -24,9 +24,6 @@ public nonisolated enum WatchSendOutcome: Sendable, Equatable {
     case nothingToSend
     case failed(String)
 
-    public var wasSent: Bool {
-        if case .sent = self { true } else { false }
-    }
 }
 
 /// The state of the link, as far as the iPhone can tell.

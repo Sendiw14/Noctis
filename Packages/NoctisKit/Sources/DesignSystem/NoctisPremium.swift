@@ -91,45 +91,6 @@ public struct LockedCard: View {
     }
 }
 
-/// A list row whose destination is Premium: the row as it would be, a lock glyph and the badge in place of the chevron, and a tap that opens the paywall.
-public struct LockedRow: View {
-    private let systemImage: String
-    private let fill: Color
-    private let title: String
-    private let detail: String?
-    private let identifier: String
-    private let action: () -> Void
-
-    public init(systemImage: String, fill: Color, title: String, detail: String? = nil, identifier: String = "locked.row", action: @escaping () -> Void) {
-        self.systemImage = systemImage
-        self.fill = fill
-        self.title = title
-        self.detail = detail
-        self.identifier = identifier
-        self.action = action
-    }
-
-    public var body: some View {
-        Button {
-            NoctisHaptics.selection()
-            action()
-        } label: {
-            NoctisRow(systemImage: systemImage, fill: fill, title: title, detail: detail) {
-                HStack(spacing: NoctisSpacing.xs) {
-                    LockGlyph(size: 13).foregroundStyle(.noctisInk3)
-                    PremiumBadge()
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(title), Premium")
-        .accessibilityHint("Opens what Premium includes.")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityIdentifier(identifier)
-    }
-}
-
 /// A segment's label: its title, with a small lock glyph before it while it is Premium. A segmented control has no room for a badge, so the glyph is the
 /// mark; the control's own handler opens the paywall and leaves the selection where it was.
 public func lockedSegmentLabel(_ title: String, locked: Bool) -> Text {

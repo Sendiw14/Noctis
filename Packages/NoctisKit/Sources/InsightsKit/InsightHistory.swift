@@ -109,8 +109,4 @@ public struct InsightHistory: Sendable, Equatable, Codable {
         hiddenTypes.insert(type)
     }
 
-    /// Undoes a hide.
-    public mutating func unhide(_ type: InsightType) {
-        hiddenTypes.remove(type)
-    }
 }

@@ -114,10 +114,6 @@ public final class IntentRuntime {
         for (_, continuation) in waiting { continuation.resume(returning: host) }
     }
 
-    public func uninstall() {
-        host = nil
-    }
-
     /// The host, waiting for the app to finish starting if an intent came first (a background launch), up to `seconds`.
     public func host(waiting seconds: Double? = nil) async -> (any IntentHost)? {
         if let host { return host }

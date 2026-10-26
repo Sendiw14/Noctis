@@ -283,8 +283,6 @@ public nonisolated struct RingArc: Sendable, Equatable, Codable {
     /// The "usual" tick's angle; nil without a baseline.
     public let tickDegrees: Double?
 
-    /// The angle the fill reaches.
-    public var fillEndDegrees: Double { startDegrees + (endDegrees - startDegrees) * min(max(fraction, 0), 1) }
 }
 
 public nonisolated enum RingRenderBuilder {

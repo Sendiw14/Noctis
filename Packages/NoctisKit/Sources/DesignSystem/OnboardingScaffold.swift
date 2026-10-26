@@ -416,16 +416,6 @@ extension View {
 public enum NoctisScrollEdges {
     public static let fadeHeight = NoctisSpacing.xl
 
-    /// At accessibility sizes, the least space between two stacked text
-    /// blocks: more than a fade is tall, so a resting fade (top or bottom)
-    /// can always fall in a gap instead of across a line of text.
-    public static let accessibleBlockGap: CGFloat = fadeHeight + 4
-
-    /// `base` at standard sizes; at least `accessibleBlockGap` at
-    /// accessibility sizes.
-    public static func blockGap(_ base: CGFloat, _ size: DynamicTypeSize) -> CGFloat {
-        size.isAccessibilitySize ? max(base, accessibleBlockGap) : base
-    }
     /// How far past a fade's opaque edge hidden text must sit, so pixel
     /// rounding and glyph antialiasing never leave a ghost of its top.
     public static let hiddenMargin: CGFloat = 2

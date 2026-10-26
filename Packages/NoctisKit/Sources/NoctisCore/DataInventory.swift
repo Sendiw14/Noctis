@@ -337,16 +337,6 @@ public nonisolated struct DataInventory: Sendable {
     public var notificationIdentifiers: [String] { categories.flatMap(\.notificationIdentifiers) }
     public func categories(in group: DeletableGroup) -> [DataCategory] { group.categories.map { self[$0] } }
 
-    /// Whether anything is said to leave the device by itself (not only if the person sends it).
-    public var anythingLeavesByItself: Bool {
-        categories.contains { category in
-            switch category.destination {
-            case .apple, .thirdParty, .pairedWatch: true
-            case .never, .onlyIfYouSend: false
-            }
-        }
-    }
-
     /// The categories Coach can see something of, in the inventory's order.
     public var coachCategories: [DataCategory] { categories.filter { !$0.coach.lines.isEmpty } }
     public var coachSees: [String] { coachCategories.flatMap { $0.coach.lines } }

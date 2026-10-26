@@ -16,14 +16,12 @@ public nonisolated enum DataManagementCopy {
         let flow = inventory.flows.first { $0.id == "exportFile" }?.detail ?? ""
         return "\(DataExport.about) \(flow)"
     }
-    public static let exportFailed = "NOCTIS couldn't make the file just now. Try again in a moment."
 
     // MARK: Delete all
 
     public static let deleteAllTitle = "Delete all NOCTIS data?"
     public static let deleteAllButton = "Delete all NOCTIS data"
     public static let deleteAllConfirm = "Delete everything"
-    public static let deleteAllCardTitle = "Delete everything"
     public static let deleteAllCardText = "Deletes everything NOCTIS stores on this iPhone and starts the app over, as if it were new."
 
     /// "Everything NOCTIS stores on this iPhone:", and each kind of data by name.

@@ -146,14 +146,6 @@ func scaledSize(_ style: NoctisTextStyle, _ dynamicTypeSize: DynamicTypeSize) ->
     return style.baseSize * eased
 }
 
-/// The same Dynamic-Type-scaled point size `NoctisText` uses internally,
-/// exposed for callers outside this module that need to hand-build a
-/// `Text` (e.g. to drive `.tracking`/`.blur` from an external animation
-/// timeline) rather than use `NoctisText` itself.
-public func noctisScaledSize(_ style: NoctisTextStyle, _ dynamicTypeSize: DynamicTypeSize) -> CGFloat {
-    scaledSize(style, dynamicTypeSize)
-}
-
 public struct NoctisText: View {
     private let content: String
     private let style: NoctisTextStyle
