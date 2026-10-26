@@ -224,7 +224,7 @@ targets:
         PRODUCT_NAME: NOCTISWatch
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        SKIP_INSTALL: NO
+        SKIP_INSTALL: YES  # embedded in the iPhone app; installed on its own it makes the archive two apps and Organizer offers no "Distribute App"
         TARGETED_DEVICE_FAMILY: "4"
 
   # The Watch's complications (built in part 2): they will read the Watch's copy of the summary and draw it. The target is empty for now.
