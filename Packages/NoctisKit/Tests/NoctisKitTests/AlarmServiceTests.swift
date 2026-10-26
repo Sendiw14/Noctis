@@ -85,12 +85,14 @@ struct AlarmServiceTests {
         let afterEnable = store.saveCount
         let updates = await service.updates()
         var iterator = updates.makeAsyncIterator()
-        _ = await iterator.next()   // how it is now
+        _ = await iterator.next()  // how it is now
         for _ in 0..<25 { _ = await service.status() }
         #expect(store.saveCount == afterEnable, "25 asks, no write")
         _ = await service.disable()
         let next = await iterator.next()
-        #expect(next?.state == .off || next?.state == .dismissed || next?.state == .cancelled, "the next thing said is the change, not an echo: \(String(describing: next?.state))")
+        #expect(
+            next?.state == .off || next?.state == .dismissed || next?.state == .cancelled,
+            "the next thing said is the change, not an echo: \(String(describing: next?.state))")
     }
 
     @Test func peekReadsWithoutAskingTheSystem() async {
@@ -362,7 +364,10 @@ struct AlarmServiceTests {
 struct AlarmKitBackendTests {
     @Test func aOneShotAlarmIsAtItsTimeAndNeverRepeats() throws {
         let schedule = AlarmKitBackend.schedule(for: AlarmSettings(minutesSinceMidnight: 7 * 60 + 5))
-        guard case .relative(let relative) = schedule else { Issue.record("not a relative schedule"); return }
+        guard case .relative(let relative) = schedule else {
+            Issue.record("not a relative schedule")
+            return
+        }
         #expect(relative.time.hour == 7)
         #expect(relative.time.minute == 5)
         #expect(relative.repeats == .never)
@@ -370,7 +375,10 @@ struct AlarmKitBackendTests {
 
     @Test func aRepeatingAlarmRepeatsWeeklyOnItsDays() throws {
         let schedule = AlarmKitBackend.schedule(for: AlarmSettings(minutesSinceMidnight: 6 * 60, repeatDays: [.monday, .wednesday, .sunday]))
-        guard case .relative(let relative) = schedule, case .weekly(let days) = relative.repeats else { Issue.record("not weekly"); return }
+        guard case .relative(let relative) = schedule, case .weekly(let days) = relative.repeats else {
+            Issue.record("not weekly")
+            return
+        }
         #expect(Set(days) == [.monday, .wednesday, .sunday])
         #expect(relative.time.hour == 6)
     }

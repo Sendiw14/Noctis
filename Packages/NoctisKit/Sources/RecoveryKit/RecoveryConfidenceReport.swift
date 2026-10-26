@@ -77,11 +77,12 @@ public enum RecoveryConfidenceReportBuilder {
         let forming = missing.filter { $0.reason == .buildingBaseline }
         if !forming.isEmpty {
             let needed = forming.map { entry -> Int in
-                let have: Int = switch entry.kind {
-                case .hrv: result.baselines.hrvNights
-                case .restingHeartRate: result.baselines.restingHeartRateNights
-                case .sleepDuration, .sleepConsistency: result.baselineNights
-                }
+                let have: Int =
+                    switch entry.kind {
+                    case .hrv: result.baselines.hrvNights
+                    case .restingHeartRate: result.baselines.restingHeartRateNights
+                    case .sleepDuration, .sleepConsistency: result.baselineNights
+                    }
                 return max(BaselineEngine.minimumNights - have, 1)
             }
             return .keepTracking(nightsNeeded: needed.max() ?? 1)

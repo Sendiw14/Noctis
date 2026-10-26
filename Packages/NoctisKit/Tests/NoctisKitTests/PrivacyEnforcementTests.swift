@@ -10,8 +10,8 @@ import Testing
 @testable import NoctisCore
 @testable import NoctisText
 @testable import NoctisWatchKit
-@testable import ProfileFeature
 @testable import NoctisWidgetKit
+@testable import ProfileFeature
 @testable import ReviewKit
 @testable import SleepKit
 
@@ -38,11 +38,14 @@ struct PrivacyEnforcementTests {
         let support = root.appending(path: "Noctis", directoryHint: .isDirectory)
 
         let snapshot = HomeSnapshotStore(directory: support)
-        let home = HomeSnapshotBuilder.placeholder(.permissionRequired, profile: UserProfileSnapshot(), now: Date(timeIntervalSince1970: 1_790_000_000), timeZone: .gmt)
+        let home = HomeSnapshotBuilder.placeholder(
+            .permissionRequired, profile: UserProfileSnapshot(), now: Date(timeIntervalSince1970: 1_790_000_000), timeZone: .gmt)
         _ = home
         // A snapshot that is persistable needs data: build one from the mock.
-        let provider = MockHealthKitProvider(scenario: .full, referenceDate: Date(timeIntervalSince1970: 1_790_000_000), calendar: Calendar(identifier: .gregorian), startAuthorized: true)
-        let built = await HomeRepository(provider: provider, timeZone: .gmt, clock: { Date(timeIntervalSince1970: 1_790_000_000) }).refresh(profile: UserProfileSnapshot())
+        let provider = MockHealthKitProvider(
+            scenario: .full, referenceDate: Date(timeIntervalSince1970: 1_790_000_000), calendar: Calendar(identifier: .gregorian), startAuthorized: true)
+        let built = await HomeRepository(provider: provider, timeZone: .gmt, clock: { Date(timeIntervalSince1970: 1_790_000_000) }).refresh(
+            profile: UserProfileSnapshot())
         snapshot.save(built)
         made.append((.cachedSummaries, [snapshot.fileURL]))
 
@@ -89,7 +92,9 @@ struct PrivacyEnforcementTests {
             let category = inventory[id]
             #expect(!urls.isEmpty, "\(id) made nothing")
             for url in urls {
-                if !category.inBackup { #expect(excluded(url), Comment(rawValue: "\(id): \(url.lastPathComponent) is in backups but the inventory says it is not")) }
+                if !category.inBackup {
+                    #expect(excluded(url), Comment(rawValue: "\(id): \(url.lastPathComponent) is in backups but the inventory says it is not"))
+                }
                 switch category.protection {
                 case .completeWhileLocked:
                     // The simulator reports no protection class for any file or folder (nil everywhere, even where the code sets one), so a class that
@@ -117,7 +122,9 @@ struct PrivacyEnforcementTests {
     /// category's files asks for complete protection, and the App Group's two files ask for the until-first-unlock class and nothing stricter (a widget
     /// must be able to read them with the phone locked after the first unlock).
     @Test func theCodeAsksForTheProtectionTheInventoryClaims() throws {
-        func source(_ path: String) throws -> String { try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/" + path), encoding: .utf8) }
+        func source(_ path: String) throws -> String {
+            try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/" + path), encoding: .utf8)
+        }
         for path in ["NoctisCore/HomeSnapshotStore.swift", "NoctisCore/InsightStore.swift", "NoctisCore/ReviewStore.swift"] {
             let text = try source(path)
             #expect(text.contains(".completeFileProtection]") || text.contains(".completeFileProtection)"), Comment(rawValue: path))
@@ -130,7 +137,8 @@ struct PrivacyEnforcementTests {
         }
         for path in ["NoctisWidgetKit/WidgetSnapshotStore.swift", "NoctisWidgetKit/SleepSoundsState.swift"] {
             let text = try source(path)
-            #expect(text.contains("completeFileProtectionUntilFirstUserAuthentication") && text.contains("isExcludedFromBackup = true"), Comment(rawValue: path))
+            #expect(
+                text.contains("completeFileProtectionUntilFirstUserAuthentication") && text.contains("isExcludedFromBackup = true"), Comment(rawValue: path))
         }
     }
 
@@ -159,7 +167,9 @@ struct PrivacyEnforcementTests {
     /// Words that would make NOCTIS sound like a medical device or promise a health result, in any string a person can read. Every place one appears
     /// is listed with why it is allowed: a denial ("doesn't diagnose"), the banned-language list itself, a scripted refusal, or a data word.
     @Test func noStringClaimsToDiagnoseTreatCureOrPromiseAHealthResult() throws {
-        let claim = try Regex(#"(?i)(diagnos|\btreat|\bcure\b|prevent|clinical|medical.grade|improves? your sleep|therap|disease|disorder|insomnia|apnea|symptom|\bheal(s|ing)?\b|prescri|clinically|guarantee|proven)"#)
+        let claim = try Regex(
+            #"(?i)(diagnos|\btreat|\bcure\b|prevent|clinical|medical.grade|improves? your sleep|therap|disease|disorder|insomnia|apnea|symptom|\bheal(s|ing)?\b|prescri|clinically|guarantee|proven)"#
+        )
         // File -> why every hit in it is fine.
         let justified: [String: String] = [
             "CoachKit/CoachPrompt.swift": "the instruction to the model: never diagnose, never give medical advice",
@@ -200,7 +210,10 @@ struct PrivacyEnforcementTests {
             let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
             let strings = json["strings"] as? [String: Any] ?? [:]
             for (key, entry) in strings {
-                let values = ((entry as? [String: Any])?["localizations"] as? [String: Any])?.values.compactMap { (($0 as? [String: Any])?["stringUnit"] as? [String: Any])?["value"] as? String } ?? []
+                let values =
+                    ((entry as? [String: Any])?["localizations"] as? [String: Any])?.values.compactMap {
+                        (($0 as? [String: Any])?["stringUnit"] as? [String: Any])?["value"] as? String
+                    } ?? []
                 for value in values + [key] where (try? claim.firstMatch(in: value)) != nil { unexplained.append("\(path): \(value.prefix(100))") }
             }
         }
@@ -216,22 +229,26 @@ struct PrivacyEnforcementTests {
         #expect(AboutContent.medical == NoctisMedicalNotice.statement)
         #expect(WatchCopy.about == NoctisMedicalNotice.statement)
         // Coach's footer says the matching thing about advice, in the string catalog.
-        let coach = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/CoachKit/Resources/Coach.xcstrings"), encoding: .utf8)
+        let coach = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/CoachKit/Resources/Coach.xcstrings"), encoding: .utf8)
         #expect(coach.contains("Coach shares patterns from your data. It isn't medical advice."))
     }
 
     /// The paywall against the subscription rules: the price and period come from the product StoreKit returns (no price typed into the source), the
     /// words say it renews automatically and how to cancel, Restore, Terms and Privacy are on the screen, and closing is always possible.
     @Test func thePaywallStatesPriceTermAndRenewalFromStoreKitAndCanAlwaysBeLeft() throws {
-        let screen = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift"), encoding: .utf8)
+        let screen = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift"), encoding: .utf8)
         // The words that depend on a choice are in PaywallFacts (unit-tested); the screen maps the product and draws them.
-        let facts = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/PaywallFacts.swift"), encoding: .utf8)
+        let facts = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/PaywallFacts.swift"), encoding: .utf8)
         let text = screen + facts
         #expect(screen.contains("product.displayPrice") && text.contains("renewing automatically. Cancel anytime in Settings."))
         let typedPrice = try Regex(#"[$€£¥]\s?\d+[.,]\d\d"#)
         // Previews and the mock plans (DEBUG) carry sample prices; they are not in the shipped app. Comments say "$39.99" as an example.
         let shipped = [screen, facts].map { $0.components(separatedBy: "#if DEBUG").first ?? $0 }.joined(separator: "\n")
-            .split(separator: "\n", omittingEmptySubsequences: false).filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }.joined(separator: "\n")
+            .split(separator: "\n", omittingEmptySubsequences: false).filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }.joined(
+                separator: "\n")
         #expect(try typedPrice.firstMatch(in: shipped) == nil, "a price typed into the paywall instead of read from the product")
         #expect(text.contains("StoreLegalLinks.terms") && text.contains("StoreLegalLinks.privacy") && text.contains("Restore Purchases"))
         // 'Continue with the free plan' is the way out in every phase (loading, unavailable, ready): one link outside any phase switch, so it is always on the screen
@@ -247,7 +264,8 @@ struct PrivacyEnforcementTests {
         // The key has a build setting (Export Compliance), so it is set there for the app and the Watch app, not in a plist (ConfigAuditTests).
         let project = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("project.yml"), encoding: .utf8)
         #expect(project.components(separatedBy: "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO").count - 1 == 2, "the app and the Watch app declare it")
-        let crypto = try Regex(#"import (CryptoKit|CommonCrypto|Security|CryptoTokenKit)\b|\bCCCrypt\b|\bSecKey[A-Z]|\bSymmetricKey\b|\bAES\.GCM\b|\bChaChaPoly\b|\bkSec[A-Z]"#)
+        let crypto = try Regex(
+            #"import (CryptoKit|CommonCrypto|Security|CryptoTokenKit)\b|\bCCCrypt\b|\bSecKey[A-Z]|\bSymmetricKey\b|\bAES\.GCM\b|\bChaChaPoly\b|\bkSec[A-Z]"#)
         var hits: [String] = []
         for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Watch/App", "Watch/Widgets", "Widgets/Home", "Widgets/Alarm"]) {
             // The one Keychain item (Sign in with Apple's identifier, R69) is the system's storage, not encryption NOCTIS performs: no key, cipher or
@@ -264,7 +282,9 @@ struct PrivacyEnforcementTests {
     /// about itself may promise it (QA-141). The goal subtitle once read "Fall asleep easier, wake less"; it is now about the evening and the routine, which the app
     /// does help with (the wind-down, the reminders), not about a result in the body.
     @Test func noStringPromisesAnOutcomeOfUsingTheApp() throws {
-        let promise = try Regex(#"(?i)fall asleep (faster|easier|quicker)|asleep (faster|easier)|improve your (sleep|health|energy)|sleep (better|more soundly|deeper) with|wake less|will help you (sleep|relax|fall)|helps you (sleep|fall asleep)|guarantee|feel (rested|refreshed) (every|each)"#)
+        let promise = try Regex(
+            #"(?i)fall asleep (faster|easier|quicker)|asleep (faster|easier)|improve your (sleep|health|energy)|sleep (better|more soundly|deeper) with|wake less|will help you (sleep|relax|fall)|helps you (sleep|fall asleep)|guarantee|feel (rested|refreshed) (every|each)"#
+        )
         // File -> why: owner-visible copy that names a goal, not a promise.
         let allowed: [String: String] = [:]
         var hits: [String] = []
@@ -276,7 +296,8 @@ struct PrivacyEnforcementTests {
             }
         }
         #expect(hits.isEmpty, Comment(rawValue: "an outcome promise: \(hits.joined(separator: ", "))"))
-        let goals = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/GoalScreen.swift"), encoding: .utf8)
+        let goals = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/GoalScreen.swift"), encoding: .utf8)
         #expect(goals.contains("Calmer wind-down"), "the goal about sleep names the evening, which the app does help with, not a result in the body")
     }
 }

@@ -32,22 +32,42 @@ nonisolated enum SwiftCodeScanner {
             switch stack[stack.count - 1] {
             case .code(let depth):
                 if c == "/", at(i + 1) == "/" {
-                    while i < count, chars[i] != "\n", chars[i] != "\r\n" { out.append(" "); i += 1 }
+                    while i < count, chars[i] != "\n", chars[i] != "\r\n" {
+                        out.append(" ")
+                        i += 1
+                    }
                     continue
                 }
                 if c == "/", at(i + 1) == "*" {
                     var nesting = 0
                     while i < count {
-                        if chars[i] == "/", at(i + 1) == "*" { nesting += 1; out.append(" "); out.append(" "); i += 2; continue }
-                        if chars[i] == "*", at(i + 1) == "/" { nesting -= 1; out.append(" "); out.append(" "); i += 2; if nesting == 0 { break }; continue }
-                        out.append(blank(chars[i])); i += 1
+                        if chars[i] == "/", at(i + 1) == "*" {
+                            nesting += 1
+                            out.append(" ")
+                            out.append(" ")
+                            i += 2
+                            continue
+                        }
+                        if chars[i] == "*", at(i + 1) == "/" {
+                            nesting -= 1
+                            out.append(" ")
+                            out.append(" ")
+                            i += 2
+                            if nesting == 0 { break }
+                            continue
+                        }
+                        out.append(blank(chars[i]))
+                        i += 1
                     }
                     continue
                 }
                 if c == "#" || c == "\"" {
                     var j = i
                     var pounds = 0
-                    while at(j) == "#" { pounds += 1; j += 1 }
+                    while at(j) == "#" {
+                        pounds += 1
+                        j += 1
+                    }
                     if at(j) == "\"" {
                         let multiline = at(j + 1) == "\"" && at(j + 2) == "\""
                         let opening = j - i + (multiline ? 3 : 1)
@@ -80,7 +100,10 @@ nonisolated enum SwiftCodeScanner {
                     } else {
                         out.append(contentsOf: repeatElement(" ", count: 1 + pounds))
                         i += 1 + pounds
-                        if let next { out.append(blank(next)); i += 1 }
+                        if let next {
+                            out.append(blank(next))
+                            i += 1
+                        }
                     }
                     continue
                 }
@@ -147,17 +170,17 @@ struct SourceHygieneTests {
 
     @Test func theScannerSeesCodeAndNotWordsInCommentsOrStrings() {
         let sample = ##"""
-        // print("a comment")
-        /* print("a block /* nested */ comment") */
-        let a = "print(\"a string\")"
-        let b = #"print("a raw string")"#
-        let c = """
-        print("a multiline string")
-        """
-        let d = "\(print("inside an interpolation"))"
-        let e = value!
-        print("real")
-        """##
+            // print("a comment")
+            /* print("a block /* nested */ comment") */
+            let a = "print(\"a string\")"
+            let b = #"print("a raw string")"#
+            let c = """
+            print("a multiline string")
+            """
+            let d = "\(print("inside an interpolation"))"
+            let e = value!
+            print("real")
+            """##
         let code = SwiftCodeScanner.codeOnly(sample).split(separator: "\n", omittingEmptySubsequences: false)
         #expect(code.count == sample.split(separator: "\n", omittingEmptySubsequences: false).count)
         let printing = code.indices.filter { code[$0].hasMatch(Self.printPattern) }
@@ -186,14 +209,18 @@ struct SourceHygieneTests {
         let logging = ShippedSource.lines.filter { $0.text.contains("privacy: .public") }
         #expect(!logging.isEmpty, "the audit found public-by-design log lines (enum names, codes)")
         let bad = logging.filter {
-            $0.text.hasMatch(#"describing:\s*error|\\\(\s*error\b|localizedDescription|\\\(\s*(self\.)?(profile|snapshot|journal|message|prompt|question|answer|token|name|text|body)\b"#)
+            $0.text.hasMatch(
+                #"describing:\s*error|\\\(\s*error\b|localizedDescription|\\\(\s*(self\.)?(profile|snapshot|journal|message|prompt|question|answer|token|name|text|body)\b"#
+            )
         }
         #expect(bad.isEmpty, Comment(rawValue: bad.map { "\($0.path):\($0.number): \($0.text)" }.joined(separator: "\n")))
     }
 
     /// Anything on a log line that is not a constant must say so: there is no interpolation without a privacy level other than a literal.
     @Test func everyLoggerInterpolationNamesItsPrivacyLevel() {
-        let calls = ShippedSource.lines.filter { $0.text.hasMatch(#"(?:\b\w*[Ll]og(?:ger)?|Logger\([^)]*\))\s*\.\s*(?:debug|info|notice|error|fault|warning|trace|critical|log)\("#) }
+        let calls = ShippedSource.lines.filter {
+            $0.text.hasMatch(#"(?:\b\w*[Ll]og(?:ger)?|Logger\([^)]*\))\s*\.\s*(?:debug|info|notice|error|fault|warning|trace|critical|log)\("#)
+        }
         #expect(calls.count >= 8, Comment(rawValue: "\(calls.count) log calls"))
         for call in calls where call.text.contains("\\(") {
             // Every interpolation on the line is followed by `privacy:` before its closing parenthesis.
@@ -204,13 +231,14 @@ struct SourceHygieneTests {
         }
     }
 
-
     // MARK: Tests
 
     /// R66: a test does not sleep for a guessed duration. The few sleeps that stay are a simulated slow dependency (`HomeRepositoryTests`' provider
     /// latency), a backstop that returns the moment its condition is met (`AlarmServiceTests`), and the helpers themselves (`TestWaiting.swift`).
     @Test func noTestSleepsForAGuessedDuration() {
-        let allowed: Set<String> = ["TestWaiting.swift", "HomeRepositoryTests.swift", "AlarmServiceTests.swift", "SourceHygieneTests.swift", "SoundPlayerTests.swift"]
+        let allowed: Set<String> = [
+            "TestWaiting.swift", "HomeRepositoryTests.swift", "AlarmServiceTests.swift", "SourceHygieneTests.swift", "SoundPlayerTests.swift",
+        ]
         let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Tests/NoctisKitTests"])
         #expect(files.count > 50)
         var found: [String] = []
@@ -254,7 +282,11 @@ struct SourceHygieneTests {
     @Test func everyForceUnwrapTryBangAndFatalErrorIsListedWithItsReason() {
         let found = ShippedSource.lines.filter { $0.code.hasMatch(Self.forcePattern) }
         let unlisted = found.filter { Self.allowed["\($0.path)::\($0.text)"] == nil }
-        #expect(unlisted.isEmpty, Comment(rawValue: "Remove it, or list it in SourceHygieneTests.allowed with the reason it cannot trap:\n" + unlisted.map { "\($0.path):\($0.number): \($0.text)" }.joined(separator: "\n")))
+        #expect(
+            unlisted.isEmpty,
+            Comment(
+                rawValue: "Remove it, or list it in SourceHygieneTests.allowed with the reason it cannot trap:\n"
+                    + unlisted.map { "\($0.path):\($0.number): \($0.text)" }.joined(separator: "\n")))
     }
 
     @Test func theAllowListHasNoEntryForCodeThatIsGone() {

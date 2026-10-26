@@ -146,8 +146,9 @@ public enum InsightEngineV2 {
     /// Compares two groups of outcomes: nil unless each has the minimum.
     public static func comparePatternGroups(early: [Double], late: [Double]) -> PatternResult? {
         guard early.count >= InsightModelV2.patternMinimumPerGroup, late.count >= InsightModelV2.patternMinimumPerGroup,
-              let earlyMean = InsightStats.mean(early), let lateMean = InsightStats.mean(late),
-              let pooled = InsightStats.pooledSD(early, late) else { return nil }
+            let earlyMean = InsightStats.mean(early), let lateMean = InsightStats.mean(late),
+            let pooled = InsightStats.pooledSD(early, late)
+        else { return nil }
         let difference = earlyMean - lateMean
         return PatternResult(
             earlyMean: earlyMean, lateMean: lateMean, difference: difference, pooledSD: pooled,
@@ -161,7 +162,8 @@ public enum InsightEngineV2 {
     }
 
     public static func patternConfidence(early: Int, late: Int, effectSize: Double) -> InsightConfidence {
-        early >= InsightModelV2.patternHighPerGroup && late >= InsightModelV2.patternHighPerGroup && abs(effectSize) >= InsightModelV2.patternHighEffect ? .high : .moderate
+        early >= InsightModelV2.patternHighPerGroup && late >= InsightModelV2.patternHighPerGroup && abs(effectSize) >= InsightModelV2.patternHighEffect
+            ? .high : .moderate
     }
 
     static func pattern(_ inputs: InsightInputs, last: InsightNightInput) -> [InsightRecord] {
@@ -182,11 +184,13 @@ public enum InsightEngineV2 {
             earlyMean: result.earlyMean, lateMean: result.lateMean, difference: result.difference,
             effectSize: result.effectSize, pooledSD: result.pooledSD
         )
-        return [InsightRecord(
-            type: .earlierBedtimePattern, generatedAt: inputs.asOf, evidence: .pattern(evidence),
-            confidence: patternConfidence(early: early.count, late: late.count, effectSize: result.effectSize),
-            nightsUsed: early.count + late.count
-        )]
+        return [
+            InsightRecord(
+                type: .earlierBedtimePattern, generatedAt: inputs.asOf, evidence: .pattern(evidence),
+                confidence: patternConfidence(early: early.count, late: late.count, effectSize: result.effectSize),
+                nightsUsed: early.count + late.count
+            )
+        ]
     }
 
     // MARK: - 5: recovery direction
@@ -215,10 +219,12 @@ public enum InsightEngineV2 {
             night: last.night, direction: latest.direction, consecutiveDays: days, pointsPerWeek: latest.pointsPerWeek,
             startScore: start.score, latestScore: latestScore.score, recentScores: recent
         )
-        return [InsightRecord(
-            type: .recoveryDirection, generatedAt: inputs.asOf, evidence: .recoveryDirection(evidence),
-            confidence: days >= 7 ? .high : .moderate, nightsUsed: series.count
-        )]
+        return [
+            InsightRecord(
+                type: .recoveryDirection, generatedAt: inputs.asOf, evidence: .recoveryDirection(evidence),
+                confidence: days >= 7 ? .high : .moderate, nightsUsed: series.count
+            )
+        ]
     }
 
     // MARK: - 6: a heart signal outside its normal range
@@ -253,11 +259,13 @@ public enum InsightEngineV2 {
                 night: last.night, signal: signal, consecutiveNights: count, value: current, baseline: base.value,
                 rangeLow: base.value - spread, rangeHigh: base.value + spread, baselineNights: base.nights, recentValues: recent
             )
-            records.append(InsightRecord(
-                type: signal == .hrv ? .hrvBelowRange : .restingHeartRateAboveRange, generatedAt: inputs.asOf, evidence: .heartSignal(evidence),
-                confidence: base.nights < RecoveryModelV1.moderateConfidenceNights ? .low : (count >= 5 && base.nights >= BaselineEngine.windowNights ? .high : .moderate),
-                nightsUsed: base.nights
-            ))
+            records.append(
+                InsightRecord(
+                    type: signal == .hrv ? .hrvBelowRange : .restingHeartRateAboveRange, generatedAt: inputs.asOf, evidence: .heartSignal(evidence),
+                    confidence: base.nights < RecoveryModelV1.moderateConfidenceNights
+                        ? .low : (count >= 5 && base.nights >= BaselineEngine.windowNights ? .high : .moderate),
+                    nightsUsed: base.nights
+                ))
         }
         return records
     }
@@ -281,26 +289,31 @@ public enum InsightEngineV2 {
             recentNights: recent.count, previousNights: previous.count, bedtimes: series
         )
         let smaller = min(recent.count, previous.count)
-        return [InsightRecord(
-            type: .consistencyChange, generatedAt: inputs.asOf, evidence: .consistencyChange(evidence),
-            confidence: smaller >= 10 ? .high : .moderate, nightsUsed: recent.count + previous.count
-        )]
+        return [
+            InsightRecord(
+                type: .consistencyChange, generatedAt: inputs.asOf, evidence: .consistencyChange(evidence),
+                confidence: smaller >= 10 ? .high : .moderate, nightsUsed: recent.count + previous.count
+            )
+        ]
     }
 
     // MARK: - 8: balance
 
     static func balance(_ inputs: InsightInputs, last: InsightNightInput) -> [InsightRecord] {
         guard let balance = inputs.balance, let minutes = balance.minutes, balance.night == last.night,
-              abs(minutes).rounded() >= InsightModelV2.balanceMinutes else { return [] }
+            abs(minutes).rounded() >= InsightModelV2.balanceMinutes
+        else { return [] }
         let byNight = Dictionary(inputs.complete.map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
         let nightly = (0..<SleepBalanceEngine.windowNights).reversed().map { byNight[last.night.adding(days: -$0)]?.asleepMinutes }
         let evidence = BalanceEvidence(
             night: last.night, minutes: minutes, recordedNights: balance.recordedNights, needMinutes: inputs.needMinutes, nightlyMinutes: nightly
         )
-        return [InsightRecord(
-            type: .sleepBalance, generatedAt: inputs.asOf, evidence: .balance(evidence),
-            confidence: balance.recordedNights >= 7 ? .high : (balance.recordedNights >= 6 ? .moderate : .low), nightsUsed: balance.recordedNights
-        )]
+        return [
+            InsightRecord(
+                type: .sleepBalance, generatedAt: inputs.asOf, evidence: .balance(evidence),
+                confidence: balance.recordedNights >= 7 ? .high : (balance.recordedNights >= 6 ? .moderate : .low), nightsUsed: balance.recordedNights
+            )
+        ]
     }
 
     // MARK: - 9: weekends
@@ -316,17 +329,20 @@ public enum InsightEngineV2 {
         let weekend = window.filter { isWeekendNight($0.night) }.map(\.bedtimeMinutes)
         let weekday = window.filter { !isWeekendNight($0.night) }.map(\.bedtimeMinutes)
         guard weekend.count >= InsightModelV2.weekendMinimumWeekendNights, weekday.count >= InsightModelV2.weekendMinimumWeekdayNights,
-              let weekendMedian = InsightStats.median(weekend), let weekdayMedian = InsightStats.median(weekday) else { return [] }
+            let weekendMedian = InsightStats.median(weekend), let weekdayMedian = InsightStats.median(weekday)
+        else { return [] }
         let delta = weekendMedian - weekdayMedian
         guard abs(delta).rounded() >= InsightModelV2.weekendDeltaMinutes else { return [] }
         let evidence = WeekendEvidence(
             night: last.night, windowNights: InsightModelV2.weekendWindowNights, weekendMedian: weekendMedian, weekdayMedian: weekdayMedian,
             delta: delta, weekendNights: weekend.count, weekdayNights: weekday.count
         )
-        return [InsightRecord(
-            type: .weekendShift, generatedAt: inputs.asOf, evidence: .weekend(evidence),
-            confidence: weekend.count >= 8 ? .high : (weekend.count >= 5 ? .moderate : .low), nightsUsed: weekend.count + weekday.count
-        )]
+        return [
+            InsightRecord(
+                type: .weekendShift, generatedAt: inputs.asOf, evidence: .weekend(evidence),
+                confidence: weekend.count >= 8 ? .high : (weekend.count >= 5 ? .moderate : .low), nightsUsed: weekend.count + weekday.count
+            )
+        ]
     }
 
     // MARK: - 10: a stage's share
@@ -340,12 +356,14 @@ public enum InsightEngineV2 {
             guard let current = share(last), let usual = BaselineEngine.baseline(window.compactMap(share)) else { continue }
             let points = (current - usual.value) * 100
             guard abs(points).rounded() >= InsightModelV2.stagePoints else { continue }
-            let evidence = StageShareEvidence(night: last.night, stage: stage, share: current, usual: usual.value, deltaPoints: points, usualNights: usual.nights)
-            records.append(InsightRecord(
-                type: .stageShare, generatedAt: inputs.asOf, evidence: .stageShare(evidence),
-                confidence: usual.nights >= 10 ? .high : (usual.nights >= RecoveryModelV1.moderateConfidenceNights ? .moderate : .low),
-                nightsUsed: usual.nights
-            ))
+            let evidence = StageShareEvidence(
+                night: last.night, stage: stage, share: current, usual: usual.value, deltaPoints: points, usualNights: usual.nights)
+            records.append(
+                InsightRecord(
+                    type: .stageShare, generatedAt: inputs.asOf, evidence: .stageShare(evidence),
+                    confidence: usual.nights >= 10 ? .high : (usual.nights >= RecoveryModelV1.moderateConfidenceNights ? .moderate : .low),
+                    nightsUsed: usual.nights
+                ))
         }
         return records
     }
@@ -380,18 +398,23 @@ public enum InsightEngineV2 {
                 let first = last.night.adding(days: -(scope - 1))
                 let others = series.filter { $0.key >= first && $0.key < last.night }.map(\.value)
                 guard others.count + 1 >= minimum else { continue }
-                guard isStrictBest(value, others: others, higherIsBetter: higherIsBetter), let previous = best(others, higherIsBetter: higherIsBetter) else { continue }
+                guard isStrictBest(value, others: others, higherIsBetter: higherIsBetter), let previous = best(others, higherIsBetter: higherIsBetter) else {
+                    continue
+                }
                 let evidence = RecordEvidence(night: last.night, value: value, previousBest: previous, scope: scope, nightsInWindow: others.count + 1)
-                records.append(InsightRecord(
-                    type: type, generatedAt: inputs.asOf, evidence: .record(evidence),
-                    confidence: scope == InsightModelV2.recordLongWindow ? .high : .moderate, nightsUsed: others.count + 1
-                ))
+                records.append(
+                    InsightRecord(
+                        type: type, generatedAt: inputs.asOf, evidence: .record(evidence),
+                        confidence: scope == InsightModelV2.recordLongWindow ? .high : .moderate, nightsUsed: others.count + 1
+                    ))
                 return
             }
         }
 
         let nights = inputs.complete
-        record(.recordLongestNight, value: last.asleepMinutes, series: Dictionary(nights.map { ($0.night, $0.asleepMinutes) }, uniquingKeysWith: { a, _ in a }), higherIsBetter: true)
+        record(
+            .recordLongestNight, value: last.asleepMinutes, series: Dictionary(nights.map { ($0.night, $0.asleepMinutes) }, uniquingKeysWith: { a, _ in a }),
+            higherIsBetter: true)
         record(.recordBestConsistency, value: weekSpread(nights, endingAt: last.night), series: weekSpreads(nights, upTo: last.night), higherIsBetter: false)
         let recovery = Dictionary(inputs.recoveryScores.map { ($0.night, Double($0.score)) }, uniquingKeysWith: { a, _ in a })
         record(.recordHighestRecovery, value: recovery[last.night], series: recovery, higherIsBetter: true)
@@ -436,7 +459,9 @@ public enum InsightEngineV2 {
         let spreads = weekSpreads(nights, upTo: last.night)
         // A week's spread only counts once its whole week is inside the window.
         standing(.recordBestConsistency, series: spreads.filter { $0.key >= first.adding(days: 6) }.map { ($0.key, $0.value) }, higherIsBetter: false)
-        standing(.recordHighestRecovery, series: inputs.recoveryScores.filter { $0.night >= first && $0.night <= last.night }.map { ($0.night, Double($0.score)) }, higherIsBetter: true)
+        standing(
+            .recordHighestRecovery, series: inputs.recoveryScores.filter { $0.night >= first && $0.night <= last.night }.map { ($0.night, Double($0.score)) },
+            higherIsBetter: true)
         standing(.recordLowestRestingHeartRate, series: nights.compactMap { night in night.restingHeartRate.map { (night.night, $0) } }, higherIsBetter: false)
         return records
     }
@@ -446,7 +471,8 @@ public enum InsightEngineV2 {
     static func milestones(_ inputs: InsightInputs, last: InsightNightInput) -> [InsightRecord] {
         let recorded = inputs.complete.filter { $0.night <= last.night }.count
         guard let milestone = InsightModelV2.milestones.filter({ recorded >= $0 }).max(),
-              recorded - milestone < InsightModelV2.milestoneShownNights else { return [] }
+            recorded - milestone < InsightModelV2.milestoneShownNights
+        else { return [] }
         let evidence = MilestoneEvidence(night: last.night, milestone: milestone, nightsRecorded: recorded)
         return [InsightRecord(type: .milestone, generatedAt: inputs.asOf, evidence: .milestone(evidence), confidence: .high, nightsUsed: recorded)]
     }

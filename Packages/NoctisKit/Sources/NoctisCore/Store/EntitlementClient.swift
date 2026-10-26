@@ -27,7 +27,8 @@ public struct StoreKitEntitlementClient: EntitlementClient {
             }
             found.append(
                 EntitlementRecord(
-                    productID: transaction.productID, isVerified: verified, revocationDate: transaction.revocationDate, expirationDate: transaction.expirationDate,
+                    productID: transaction.productID, isVerified: verified, revocationDate: transaction.revocationDate,
+                    expirationDate: transaction.expirationDate,
                     ownership: transaction.ownershipType == .familyShared ? .familyShared : .purchased,
                     isFreeTrial: transaction.offer?.type == .introductory && transaction.offer?.paymentMode == .freeTrial
                 )
@@ -38,10 +39,11 @@ public struct StoreKitEntitlementClient: EntitlementClient {
 
     public func renewal() async -> RenewalRecord? {
         guard let products = try? await Product.products(for: StoreProductID.all), let subscription = products.first?.subscription,
-              let statuses = try? await subscription.status, !statuses.isEmpty
+            let statuses = try? await subscription.status, !statuses.isEmpty
         else { return nil }
         // The status that says the most: one in grace or billing retry first, then a subscribed one.
-        let status = statuses.first { $0.state == .inGracePeriod || $0.state == .inBillingRetryPeriod } ?? statuses.first { $0.state == .subscribed } ?? statuses[0]
+        let status =
+            statuses.first { $0.state == .inGracePeriod || $0.state == .inBillingRetryPeriod } ?? statuses.first { $0.state == .subscribed } ?? statuses[0]
         let state: RenewalRecord.State
         switch status.state {
         case .subscribed: state = .subscribed
@@ -52,7 +54,8 @@ public struct StoreKitEntitlementClient: EntitlementClient {
         default: state = .unknown
         }
         guard case .verified(let info) = status.renewalInfo else { return RenewalRecord(state: state) }
-        return RenewalRecord(state: state, isInBillingRetry: info.isInBillingRetry, gracePeriodExpirationDate: info.gracePeriodExpirationDate, willAutoRenew: info.willAutoRenew)
+        return RenewalRecord(
+            state: state, isInBillingRetry: info.isInBillingRetry, gracePeriodExpirationDate: info.gracePeriodExpirationDate, willAutoRenew: info.willAutoRenew)
     }
 
     public func updates() -> AsyncStream<Void> {

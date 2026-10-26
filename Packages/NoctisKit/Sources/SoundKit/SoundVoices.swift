@@ -139,23 +139,24 @@ final class SoundVoiceBank: @unchecked Sendable {
         crackles = .allocate(capacity: FireSource.crackleCount * 2)
         pads = .allocate(capacity: AmbientSource.count * 2)
         voices = .allocate(capacity: 1)
-        voices.initialize(to: SoundVoices(
-            brown: BrownVoice(left: BrownSource(seed: seed(.brown, 0)), right: BrownSource(seed: seed(.brown, 1))),
-            rain: RainVoice(
-                left: RainSource(seed: seed(.rain, 0), drops: drops),
-                right: RainSource(seed: seed(.rain, 1), drops: drops + RainSource.dropCount)
-            ),
-            ocean: OceanVoice(left: OceanSource(seed: seed(.ocean, 0)), right: OceanSource(seed: seed(.ocean, 1))),
-            wind: WindVoice(left: WindSource(seed: seed(.wind, 0)), right: WindSource(seed: seed(.wind, 1))),
-            fire: FireVoice(
-                left: FireSource(seed: seed(.fireplace, 0), crackles: crackles),
-                right: FireSource(seed: seed(.fireplace, 1), crackles: crackles + FireSource.crackleCount)
-            ),
-            ambient: AmbientVoice(
-                left: AmbientSource(seed: seed(.ambient, 0), oscillators: pads),
-                right: AmbientSource(seed: seed(.ambient, 1), oscillators: pads + AmbientSource.count)
-            )
-        ))
+        voices.initialize(
+            to: SoundVoices(
+                brown: BrownVoice(left: BrownSource(seed: seed(.brown, 0)), right: BrownSource(seed: seed(.brown, 1))),
+                rain: RainVoice(
+                    left: RainSource(seed: seed(.rain, 0), drops: drops),
+                    right: RainSource(seed: seed(.rain, 1), drops: drops + RainSource.dropCount)
+                ),
+                ocean: OceanVoice(left: OceanSource(seed: seed(.ocean, 0)), right: OceanSource(seed: seed(.ocean, 1))),
+                wind: WindVoice(left: WindSource(seed: seed(.wind, 0)), right: WindSource(seed: seed(.wind, 1))),
+                fire: FireVoice(
+                    left: FireSource(seed: seed(.fireplace, 0), crackles: crackles),
+                    right: FireSource(seed: seed(.fireplace, 1), crackles: crackles + FireSource.crackleCount)
+                ),
+                ambient: AmbientVoice(
+                    left: AmbientSource(seed: seed(.ambient, 0), oscillators: pads),
+                    right: AmbientSource(seed: seed(.ambient, 1), oscillators: pads + AmbientSource.count)
+                )
+            ))
     }
 
     deinit {

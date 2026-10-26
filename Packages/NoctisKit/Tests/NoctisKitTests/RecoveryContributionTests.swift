@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import HealthProviding
 @testable import RecoveryKit
 @testable import SleepKit
@@ -20,8 +21,10 @@ private struct Generator {
 private func varied(count: Int, seed: UInt64 = 11, heart: Bool = true) -> [NightMetrics] {
     var rng = Generator(state: seed)
     return Fixture.metrics(count: count) { _ in
-        (asleep: 380 + rng.next() * 140, bedtime: 640 + rng.next() * 70, wake: 1120 + rng.next() * 50,
-         hrv: heart ? 40 + rng.next() * 20 : nil, resting: heart ? 52 + rng.next() * 8 : nil)
+        (
+            asleep: 380 + rng.next() * 140, bedtime: 640 + rng.next() * 70, wake: 1120 + rng.next() * 50,
+            hrv: heart ? 40 + rng.next() * 20 : nil, resting: heart ? 52 + rng.next() * 8 : nil
+        )
     }
 }
 
@@ -127,10 +130,11 @@ struct RecoveryContributionTests {
     @Test func whenTheHeartCapAppliesTheReportSaysWhyAndKeepsThePreCapScore() throws {
         // 20 steady nights, then last night's HRV far below and resting heart rate far above.
         var history = steady(count: 19, endingOn: lastNight.adding(days: -1))
-        history.append(NightMetrics(
-            night: lastNight, wakeTime: Fixture.date(2026, 9, 24, 7), asleepMinutes: 480, bedtimeMinutes: 660, wakeMinutes: 1140,
-            hrv: 40, restingHeartRate: 62
-        ))
+        history.append(
+            NightMetrics(
+                night: lastNight, wakeTime: Fixture.date(2026, 9, 24, 7), asleepMinutes: 480, bedtimeMinutes: 660, wakeMinutes: 1140,
+                hrv: 40, restingHeartRate: 62
+            ))
         let result = try today(history)
         #expect(result.heartCapApplied && result.score == 50)
         let parts = RecoveryContributionEngine.contributions(for: result)
@@ -165,7 +169,9 @@ struct RecoveryConfidenceReportTests {
     @Test func theTierFollowsTheSameRulesAsTheEngine() throws {
         for count in [6, 8, 10, 15, 30] {
             let result = try today(varied(count: count))
-            #expect(RecoveryConfidenceReportBuilder.report(for: result).tier == RecoveryEngine.confidence(factorCount: result.factors.count, baselineNights: result.baselineNights))
+            #expect(
+                RecoveryConfidenceReportBuilder.report(for: result).tier
+                    == RecoveryEngine.confidence(factorCount: result.factors.count, baselineNights: result.baselineNights))
         }
     }
 
@@ -181,16 +187,20 @@ struct RecoveryConfidenceReportTests {
         let report = RecoveryConfidenceReportBuilder.report(for: try today(varied(count: 30, heart: false)))
         #expect(report.tier == .low)
         #expect(report.factorsUsed == [.sleepDuration, .sleepConsistency])
-        #expect(report.factorsMissing == [
-            .init(kind: .hrv, reason: .unavailable), .init(kind: .restingHeartRate, reason: .unavailable),
-        ])
+        #expect(
+            report.factorsMissing == [
+                .init(kind: .hrv, reason: .unavailable), .init(kind: .restingHeartRate, reason: .unavailable),
+            ])
         #expect(report.nextStep == .wearWatchToSleep(adding: [.hrv, .restingHeartRate]))
     }
 
     @Test func aFactorNotRecordedLastNightIsTheSmallestStepAndBeatsAWatch() throws {
         // Twenty nights of HRV and resting heart rate, but last night has no HRV.
         var history = steady(count: 19, endingOn: lastNight.adding(days: -1))
-        history.append(NightMetrics(night: lastNight, wakeTime: Fixture.date(2026, 9, 24, 7), asleepMinutes: 480, bedtimeMinutes: 660, wakeMinutes: 1140, hrv: nil, restingHeartRate: 55))
+        history.append(
+            NightMetrics(
+                night: lastNight, wakeTime: Fixture.date(2026, 9, 24, 7), asleepMinutes: 480, bedtimeMinutes: 660, wakeMinutes: 1140, hrv: nil,
+                restingHeartRate: 55))
         let report = RecoveryConfidenceReportBuilder.report(for: try today(history))
         #expect(report.factorsMissing == [.init(kind: .hrv, reason: .notRecorded)])
         #expect(report.nextStep == .recordAgain(factors: [.hrv]))
@@ -269,7 +279,8 @@ struct RecoveryFactorSeriesTests {
     @Test func eachPointsScoreIsTheOneThatNightHadOnItsOwnMorning() throws {
         let history = varied(count: 40)
         let series = RecoveryFactorSeriesBuilder.series(.hrv, range: .fortnight, history: history, needMinutes: 480, asOf: now)
-        let byNight = Dictionary(RecoveryHistoryEngine.scores(history: history, needMinutes: 480, asOf: now).map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
+        let byNight = Dictionary(
+            RecoveryHistoryEngine.scores(history: history, needMinutes: 480, asOf: now).map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
         for point in series.points {
             #expect(point.score == byNight[point.night]?.factorScore(.hrv))
         }

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import InsightsKit
 @testable import NoctisCore
 @testable import SleepKit
@@ -106,7 +107,8 @@ struct InsightV2FatigueTests {
 
     @Test func aFileWithExtraKeysStillDecodes() throws {
         // A file written while the v1 fatigue keys were still around: the extras are ignored.
-        let file = #"{"lastShown":null,"dismissals":[],"hiddenKinds":[],"featuredTypes":{},"featuredByNight":{},"dismissedIDs":["bedtimeShift-3fa9c2d1"],"hiddenTypes":["weekendShift"]}"#
+        let file =
+            #"{"lastShown":null,"dismissals":[],"hiddenKinds":[],"featuredTypes":{},"featuredByNight":{},"dismissedIDs":["bedtimeShift-3fa9c2d1"],"hiddenTypes":["weekendShift"]}"#
         let history = try JSONDecoder().decode(InsightHistory.self, from: Data(file.utf8))
         #expect(history.dismissedIDs == ["bedtimeShift-3fa9c2d1"])
         #expect(history.isHidden(.weekendShift))

@@ -35,16 +35,17 @@ public enum CoachFollowUps {
     public static let maximum = 3
 
     public static func questions(after intent: CoachIntent) -> [CoachQuestion] {
-        let list: [CoachQuestion] = switch intent {
-        case .recoveryChange: [.sleep(nil), .bedtime, .focus]
-        case .sleepChange: [.recovery(nil), .bedtime, .consistency]
-        case .weekChange: [.recovery(nil), .consistency, .focus]
-        case .bedtimeAdvice: [.consistency, .sleep(nil), .focus]
-        case .consistencyHelp: [.bedtime, .week, .sleep(nil)]
-        case .todayFocus: [.recovery(nil), .bedtime, .week]
-        case .patterns: [.week, .recovery(nil), .consistency]
-        case .medicalOutOfScope, .crisis, .unknown: []
-        }
+        let list: [CoachQuestion] =
+            switch intent {
+            case .recoveryChange: [.sleep(nil), .bedtime, .focus]
+            case .sleepChange: [.recovery(nil), .bedtime, .consistency]
+            case .weekChange: [.recovery(nil), .consistency, .focus]
+            case .bedtimeAdvice: [.consistency, .sleep(nil), .focus]
+            case .consistencyHelp: [.bedtime, .week, .sleep(nil)]
+            case .todayFocus: [.recovery(nil), .bedtime, .week]
+            case .patterns: [.week, .recovery(nil), .consistency]
+            case .medicalOutOfScope, .crisis, .unknown: []
+            }
         return Array(list.prefix(maximum))
     }
 }

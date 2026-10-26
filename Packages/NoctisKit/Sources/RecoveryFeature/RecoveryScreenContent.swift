@@ -3,9 +3,9 @@ import Foundation
 import HealthProviding
 import HomeFeature
 import NoctisCore
+import NoctisText
 import RecoveryKit
 import SleepKit
-import NoctisText
 
 // The Recovery tab's presentation model: every string and readable value,
 // built by `RecoveryScreenBuilder` from a `RecoverySnapshot` and its render
@@ -281,11 +281,12 @@ public nonisolated enum RecoveryScreenBuilder {
     // MARK: Confidence
 
     static func confidence(_ report: RecoveryConfidenceReport) -> RecoveryConfidenceContent {
-        let tier = switch report.tier {
-        case .high: "High confidence"
-        case .moderate: "Moderate confidence"
-        case .low: "Low confidence"
-        }
+        let tier =
+            switch report.tier {
+            case .high: "High confidence"
+            case .moderate: "Moderate confidence"
+            case .low: "Low confidence"
+            }
         let signals = "\(report.factorsUsed.count) of \(RecoveryFactorKind.allCases.count) signals"
         let nights = NoctisCount.nights(report.nights)
         let sentence: String
@@ -330,7 +331,8 @@ public nonisolated enum RecoveryScreenBuilder {
         switch step {
         case .recordAgain(let kinds):
             let verb = kinds.count > 1 ? "weren't" : "wasn't"
-            return "\(names(kinds).prefix(1).uppercased() + names(kinds).dropFirst()) \(verb) recorded last night. Wearing your Apple Watch to sleep tonight would bring \(kinds.count > 1 ? "them" : "it") back."
+            return
+                "\(names(kinds).prefix(1).uppercased() + names(kinds).dropFirst()) \(verb) recorded last night. Wearing your Apple Watch to sleep tonight would bring \(kinds.count > 1 ? "them" : "it") back."
         case .keepTracking(let nights):
             return "\(NoctisCount.moreNights(nights)) of tracking and the baselines that are still forming will be ready."
         case .wearWatchToSleep(let kinds):

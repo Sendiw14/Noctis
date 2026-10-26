@@ -44,7 +44,10 @@ public struct LockedCard: View {
     private let identifier: String
     private let action: () -> Void
 
-    public init(systemImage: String = "lock.fill", title: String, line: String, buttonTitle: String = "See Premium", identifier: String = "locked.card", action: @escaping () -> Void) {
+    public init(
+        systemImage: String = "lock.fill", title: String, line: String, buttonTitle: String = "See Premium", identifier: String = "locked.card",
+        action: @escaping () -> Void
+    ) {
         self.systemImage = systemImage
         self.title = title
         self.line = line

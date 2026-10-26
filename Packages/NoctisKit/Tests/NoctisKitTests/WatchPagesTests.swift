@@ -271,7 +271,8 @@ struct WatchSettingsPageTests {
         #expect(updated(after: 3600) == "Updated 1h ago" && updated(after: 3 * 3600) == "Updated 3h ago" && updated(after: 47 * 3600) == "Updated 47h ago")
         #expect(updated(after: 48 * 3600) == "Updated 2d ago")
         #expect(WatchCopy.updated(since: nil, now: received) == nil, "nothing received: no claim")
-        #expect(WatchCopy.updated(since: received, now: received.addingTimeInterval(-30)) == "Updated just now", "a clock that moved back never says negative time")
+        #expect(
+            WatchCopy.updated(since: received, now: received.addingTimeInterval(-30)) == "Updated just now", "a clock that moved back never says negative time")
     }
 }
 
@@ -280,7 +281,9 @@ struct WatchSettingsPageTests {
 struct WatchPageWordingTests {
     @Test func everyHealthNumberIsMarkedHealthAndOnlyThePlanIsNot() {
         let value = input(sample(.full))
-        #expect(WatchPages.recovery(value).sensitivity == .health && WatchPages.sleep(value).sensitivity == .health && WatchPages.heart(value).sensitivity == .health)
+        #expect(
+            WatchPages.recovery(value).sensitivity == .health && WatchPages.sleep(value).sensitivity == .health
+                && WatchPages.heart(value).sensitivity == .health)
         #expect(WatchPages.tonight(value).sensitivity == .plan, "the bedtime, the wake time and the alarm are the person's settings")
     }
 
@@ -301,23 +304,34 @@ struct WatchPageWordingTests {
 
     @Test func everySentenceIsFreeOfTheBannedLanguage() {
         let states: [WidgetSnapshot?] = [
-            sample(.full), sample(.sleepOnly), sample(.learning(nightsSoFar: 3)), sample(.empty), sample(.noPermission), sample(.stale(hours: 14)), sample(.gap),
+            sample(.full), sample(.sleepOnly), sample(.learning(nightsSoFar: 3)), sample(.empty), sample(.noPermission), sample(.stale(hours: 14)),
+            sample(.gap),
             sample(.full, day: 23), nil,
         ]
-        var strings: [String] = [WatchCopy.unreachable, WatchCopy.asked, WatchCopy.askFailed, WatchCopy.askButton, WatchCopy.breathingTagline, WatchCopy.heartMissing]
+        var strings: [String] = [
+            WatchCopy.unreachable, WatchCopy.asked, WatchCopy.askFailed, WatchCopy.askButton, WatchCopy.breathingTagline, WatchCopy.heartMissing,
+        ]
         for value in states {
             for now in [at(24, 10), at(24, 21), at(25, 1)] {
                 let page = input(value, now: now, received: at(24, 7))
                 let recovery = WatchPages.recovery(page), sleep = WatchPages.sleep(page), heart = WatchPages.heart(page), tonight = WatchPages.tonight(page)
                 strings += [recovery.accessibilityLabel, sleep.accessibilityLabel, heart.accessibilityLabel, tonight.accessibilityLabel]
-                strings += [recovery.message?.title, recovery.message?.detail, recovery.confidence, recovery.staleLine, recovery.delta?.text, sleep.quality, sleep.staleLine].compactMap { $0 }
-                strings += heart.tiles.compactMap { $0.sentence } + heart.tiles.compactMap { $0.baseline } + [tonight.wakeLine, tonight.alarmLine].compactMap { $0 }
+                strings += [
+                    recovery.message?.title, recovery.message?.detail, recovery.confidence, recovery.staleLine, recovery.delta?.text, sleep.quality,
+                    sleep.staleLine,
+                ].compactMap { $0 }
+                strings +=
+                    heart.tiles.compactMap { $0.sentence } + heart.tiles.compactMap { $0.baseline } + [tonight.wakeLine, tonight.alarmLine].compactMap { $0 }
                 let settings = WatchPages.settings(page, version: "NOCTIS 1.0 (1)")
                 strings += [settings.status] + [settings.updated].compactMap { $0 }
             }
         }
         #expect(strings.count > 150)
-        for text in strings { #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))")) }
+        for text in strings {
+            #expect(
+                BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty,
+                Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))"))
+        }
     }
 
     @Test func theAboutLineIsTheIPhonesDisclaimerAndTheOneSentenceThatMayNameDiagnosis() {

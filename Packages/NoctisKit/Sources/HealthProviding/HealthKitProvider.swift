@@ -134,15 +134,16 @@ public final class HealthKitProvider: HealthDataProviding {
     // MARK: - Mapping
 
     private static func readTypes(for kinds: [HealthDataKind]) -> Set<HKObjectType> {
-        Set(kinds.map { kind -> HKObjectType in
-            switch kind {
-            case .sleepAnalysis: HKCategoryType(.sleepAnalysis)
-            case .heartRate: HKQuantityType(.heartRate)
-            case .restingHeartRate: HKQuantityType(.restingHeartRate)
-            case .hrv: HKQuantityType(.heartRateVariabilitySDNN)
-            case .respiratoryRate: HKQuantityType(.respiratoryRate)
-            }
-        })
+        Set(
+            kinds.map { kind -> HKObjectType in
+                switch kind {
+                case .sleepAnalysis: HKCategoryType(.sleepAnalysis)
+                case .heartRate: HKQuantityType(.heartRate)
+                case .restingHeartRate: HKQuantityType(.restingHeartRate)
+                case .hrv: HKQuantityType(.heartRateVariabilitySDNN)
+                case .respiratoryRate: HKQuantityType(.respiratoryRate)
+                }
+            })
     }
 
     private static func stage(for value: Int) -> SleepStageValue? {
@@ -188,7 +189,6 @@ private nonisolated final class ObserverQueries: @unchecked Sendable {
         queries.forEach(store.stop)
     }
 }
-
 
 // MARK: - Background delivery (APP_RULES.md R46)
 

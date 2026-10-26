@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import DesignSystem
 @testable import HealthProviding
 @testable import HomeFeature
@@ -28,8 +29,9 @@ struct RecoveryWhyTests {
     )
 
     private func night(asleep: Double = 450, bedtime: Double = 660, wake: Double = 1140, hrv: Double? = 50, resting: Double? = 55) -> NightMetrics {
-        NightMetrics(night: SleepNightKey(year: 2026, month: 9, day: 23), wakeTime: Fixture.date(2026, 9, 24, 7),
-                     asleepMinutes: asleep, bedtimeMinutes: bedtime, wakeMinutes: wake, hrv: hrv, restingHeartRate: resting)
+        NightMetrics(
+            night: SleepNightKey(year: 2026, month: 9, day: 23), wakeTime: Fixture.date(2026, 9, 24, 7),
+            asleepMinutes: asleep, bedtimeMinutes: bedtime, wakeMinutes: wake, hrv: hrv, restingHeartRate: resting)
     }
 
     private func result(_ night: NightMetrics, delta: Int = -8) -> RecoveryResult {
@@ -100,8 +102,9 @@ struct RecoveryWhyTests {
             hrv: nil, restingHeartRate: nil
         )
         // 12 minutes off: under the 15-minute floors, so within.
-        let scored = RecoveryEngine.score(lastNight: night(asleep: 462, bedtime: 672, hrv: nil, resting: nil),
-                                          baselines: steadyWindow, baselineNights: 14, needMinutes: 480)
+        let scored = RecoveryEngine.score(
+            lastNight: night(asleep: 462, bedtime: 672, hrv: nil, resting: nil),
+            baselines: steadyWindow, baselineNights: 14, needMinutes: 480)
         #expect(scored.topContributor == nil)
     }
 
@@ -164,7 +167,8 @@ struct RecoveryHistoryTests {
     }
 
     @Test func theSparklineSaysHowManyNightsWereNormal() {
-        let history = RecoveryFactorHistory(kind: .hrv, values: [50, 52, nil, 70, 48] + Array(repeating: 50, count: 9), today: 61, usual: 50, standardDeviation: 5)
+        let history = RecoveryFactorHistory(
+            kind: .hrv, values: [50, 52, nil, 70, 48] + Array(repeating: 50, count: 9), today: 61, usual: 50, standardDeviation: 5)
         let content = HomeScreenBuilder.sparklineContent(history)
         #expect(content.accessibilityLabel == "HRV has been within your normal range on 12 of 13 nights.")
         #expect(content.nights.count == 14)
@@ -222,8 +226,9 @@ struct NightChartV3Tests {
     private let locale = Locale(identifier: "en_US")
 
     private func chart(_ samples: [RawSleepSample], heart: [HeartRateSample] = []) throws -> NightChartContent {
-        let snapshot = HomeSnapshotBuilder.build(HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: heart),
-                                                 profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
+        let snapshot = HomeSnapshotBuilder.build(
+            HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: heart),
+            profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
         let screen = HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: locale)
         return try #require(screen.lastNight?.chart)
     }
@@ -545,7 +550,8 @@ struct HomeV3ScreenTests {
             #expect(header.greeting == "Good evening.", "at \(hour):00")
         }
         for (hour, minute) in [(0, 0), (0, 30), (1, 0), (3, 59)] {
-            let header = HomeScreenBuilder.header(now: Fixture.date(2026, 9, 24, hour, minute), newestSample: nil, mode: .evening, summary: .text(""), format: format)
+            let header = HomeScreenBuilder.header(
+                now: Fixture.date(2026, 9, 24, hour, minute), newestSample: nil, mode: .evening, summary: .text(""), format: format)
             #expect(header.greeting == "Good night.", "at \(hour):\(minute)")
             #expect(header.greetingEmphasis == "night")
         }
@@ -565,9 +571,10 @@ struct HomeV3ScreenTests {
         let store = UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)")!
         let now = Fixture.date(2026, 9, 24, 10)
         let provider = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
-        let model = HomeViewModel(repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { now }),
-                                  profile: { UserProfileSnapshot() }, introGate: HomeIntroGate(defaults: store), reduceMotion: { false },
-                                  clock: { now }, calendar: Fixture.calendar(), locale: locale)
+        let model = HomeViewModel(
+            repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { now }),
+            profile: { UserProfileSnapshot() }, introGate: HomeIntroGate(defaults: store), reduceMotion: { false },
+            clock: { now }, calendar: Fixture.calendar(), locale: locale)
         await model.refresh()
         #expect(model.reveal == .pending)
         model.beginReveal()

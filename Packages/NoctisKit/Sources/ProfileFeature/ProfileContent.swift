@@ -5,9 +5,9 @@ import HomeFeature
 import NightFeature
 import NightKit
 import NoctisCore
+import NoctisText
 import SleepAnalysisKit
 import SleepKit
-import NoctisText
 
 /// One of the three status rows on Profile: where it opens, and the one word or phrase it carries.
 public nonisolated struct ProfileStatusRow: Sendable, Equatable, Identifiable {

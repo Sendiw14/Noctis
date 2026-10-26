@@ -87,7 +87,11 @@ public struct FactorSparkline: View {
                 Color.clear
             }
         }
-        .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+        .onGeometryChange(for: CGSize.self) {
+            $0.size
+        } action: {
+            size = $0
+        }
         .onChange(of: SparklinePaths.Key(content: content, size: size), initial: true) { _, key in
             guard key.size.width > 0, key.size.height > 0 else { return }
             paths = SparklinePaths.build(key)

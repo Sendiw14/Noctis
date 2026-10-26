@@ -245,8 +245,10 @@ private struct NotificationsContent: View {
                 .padding(.leading, 8)
                 .padding(.bottom, 8)
                 .accessibilityHidden(true)
-            ExampleStack(kind: shown, isOn: enabled[shown.rawValue], fanned: appeared, settling: settling, checkmarkDrawn: checkmarkDrawn, compact: compact, tap: cycle)
-                .padding(.bottom, compact ? 20 : 26)
+            ExampleStack(
+                kind: shown, isOn: enabled[shown.rawValue], fanned: appeared, settling: settling, checkmarkDrawn: checkmarkDrawn, compact: compact, tap: cycle
+            )
+            .padding(.bottom, compact ? 20 : 26)
             settingsCard
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -409,7 +411,10 @@ private struct NotificationAppTile: View {
             }
             .accessibilityHidden(true)
             .onChange(of: showCheckmark) { _, newValue in
-                guard newValue else { checkmarkProgress = 0; return }
+                guard newValue else {
+                    checkmarkProgress = 0
+                    return
+                }
                 if reduceMotion {
                     checkmarkProgress = 1
                 } else {

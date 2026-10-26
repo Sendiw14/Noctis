@@ -266,7 +266,10 @@ public final class AppPreferences {
         if after.appHaptics != before.appHaptics { result.append(.haptics) }
         if after.windDownMinutes != before.windDownMinutes || after.windDownSound != before.windDownSound { result.append(.windDown) }
         if after.breathingPattern != before.breathingPattern || after.breathingMinutes != before.breathingMinutes
-            || after.breathingHaptics != before.breathingHaptics { result.append(.breathing) }
+            || after.breathingHaptics != before.breathingHaptics
+        {
+            result.append(.breathing)
+        }
         if after.soundsGainPercent != before.soundsGainPercent || after.soundsTimer != before.soundsTimer { result.append(.sounds) }
         if after.notifications != before.notifications { result.append(.notifications) }
         return result

@@ -2,10 +2,10 @@ import DesignSystem
 import Foundation
 import HomeFeature
 import NoctisCore
+import NoctisText
 import RecoveryKit
 import SleepAnalysisKit
 import SleepKit
-import NoctisText
 
 // The Week and Month content: bars, the consistency, balance and timing
 // cards and their detail sheets, the month's rhythm and quality strip. Built
@@ -298,7 +298,9 @@ nonisolated extension SleepScreenBuilder {
             let stages = entry.record?.metrics.stages
             let day = range == .week ? format.weekday(wake, width: .abbreviated) : format.weekdayMonthDay(wake)
             var pill = [day, minutes.map { HomeFormat.compactDuration($0) } ?? "No data"]
-            var spoken = [range == .week ? format.weekday(wake, width: .wide) : format.wideDate(wake), minutes.map { HomeFormat.spokenDuration($0) } ?? "no data"]
+            var spoken = [
+                range == .week ? format.weekday(wake, width: .wide) : format.wideDate(wake), minutes.map { HomeFormat.spokenDuration($0) } ?? "no data",
+            ]
             if range == .week, let stages {
                 let deep = Int(stages.deep.rounded())
                 let rem = Int(stages.rem.rounded())
@@ -445,7 +447,8 @@ nonisolated extension SleepScreenBuilder {
         if let week {
             headline = "Bedtime varied by \(spreadText(week.bedtimeSD))"
             subline = "Wake time varied by \(spreadText(week.wakeSD)) over the last \(week.days) nights."
-            spoken = "Consistency. Bedtime varied by \(HomeFormat.spokenDuration(Int(week.bedtimeSD.rounded()))). Wake time varied by \(HomeFormat.spokenDuration(Int(week.wakeSD.rounded()))) over the last \(week.days) nights."
+            spoken =
+                "Consistency. Bedtime varied by \(HomeFormat.spokenDuration(Int(week.bedtimeSD.rounded()))). Wake time varied by \(HomeFormat.spokenDuration(Int(week.wakeSD.rounded()))) over the last \(week.days) nights."
         } else {
             headline = "Consistency needs 5 recorded nights"
             subline = "It's worked out once 5 of the last 7 nights are recorded."
@@ -458,7 +461,8 @@ nonisolated extension SleepScreenBuilder {
                 bedtime: spreadText(window.bedtimeSD),
                 wake: spreadText(window.wakeSD),
                 duration: spreadText(window.durationSD),
-                accessibilityLabel: "Last \(window.days) nights, \(window.nights) recorded. Bedtime varied by \(HomeFormat.spokenDuration(Int(window.bedtimeSD.rounded()))), wake time by \(HomeFormat.spokenDuration(Int(window.wakeSD.rounded()))), sleep length by \(HomeFormat.spokenDuration(Int(window.durationSD.rounded())))."
+                accessibilityLabel:
+                    "Last \(window.days) nights, \(window.nights) recorded. Bedtime varied by \(HomeFormat.spokenDuration(Int(window.bedtimeSD.rounded()))), wake time by \(HomeFormat.spokenDuration(Int(window.wakeSD.rounded()))), sleep length by \(HomeFormat.spokenDuration(Int(window.durationSD.rounded())))."
             )
         }
         return SleepConsistencyContent(
@@ -555,7 +559,8 @@ nonisolated extension SleepScreenBuilder {
         let shift = timing.recentShift.map { shiftText($0) }
         var suggested: String?
         if let range = timing.suggested {
-            suggested = "Bedtime \(clockRange(range.bedtime, format: format)) · Wake \(clockRange(range.wake, format: format)). This is the middle half of your own nights: it describes your pattern, it isn't a target."
+            suggested =
+                "Bedtime \(clockRange(range.bedtime, format: format)) · Wake \(clockRange(range.wake, format: format)). This is the middle half of your own nights: it describes your pattern, it isn't a target."
         }
         var label = "Timing. Usual bedtime \(bedText). Usual wake time \(wakeText). Midpoint \(midText)."
         if let shift { label += " " + shift }
@@ -585,6 +590,7 @@ nonisolated extension SleepScreenBuilder {
             if size < 10 { return "\(name) about the same" }
             return "\(name) \(HomeFormat.compactDuration(size, minutesWord: true)) \(minutes > 0 ? "later" : "earlier")"
         }
-        return "Over the last \(SleepTimingEngine.recentNights) nights: \(phrase("bedtime", shift.bedtimeMinutes)), \(phrase("wake time", shift.wakeMinutes)), compared with the \(SleepTimingEngine.priorNights) nights before."
+        return
+            "Over the last \(SleepTimingEngine.recentNights) nights: \(phrase("bedtime", shift.bedtimeMinutes)), \(phrase("wake time", shift.wakeMinutes)), compared with the \(SleepTimingEngine.priorNights) nights before."
     }
 }

@@ -120,10 +120,12 @@ public struct NoctisAnimatableVector: VectorArithmetic, Sendable {
         values.reduce(0) { $0 + $1 * $1 }
     }
 
-    private static func combine(_ lhs: NoctisAnimatableVector, _ rhs: NoctisAnimatableVector, _ operation: (Double, Double) -> Double) -> NoctisAnimatableVector {
+    private static func combine(_ lhs: NoctisAnimatableVector, _ rhs: NoctisAnimatableVector, _ operation: (Double, Double) -> Double) -> NoctisAnimatableVector
+    {
         let count = max(lhs.values.count, rhs.values.count)
-        return NoctisAnimatableVector((0..<count).map { index in
-            operation(index < lhs.values.count ? lhs.values[index] : 0, index < rhs.values.count ? rhs.values[index] : 0)
-        })
+        return NoctisAnimatableVector(
+            (0..<count).map { index in
+                operation(index < lhs.values.count ? lhs.values[index] : 0, index < rhs.values.count ? rhs.values[index] : 0)
+            })
     }
 }

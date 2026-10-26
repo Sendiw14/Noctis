@@ -72,10 +72,11 @@ public actor ReviewRepository {
                 )
                 let library = await insights.snapshot()
                 let placed: ReviewPeriod? = debugPlaced ? period : nil
-                return .result(ReviewEngine.build(
-                    period: period, nights: nights, needMinutes: profile.needMinutes,
-                    insights: ReviewInputsBuilder.insights(from: library, placedIn: placed, calendar: calendar), now: now, calendar: calendar
-                ))
+                return .result(
+                    ReviewEngine.build(
+                        period: period, nights: nights, needMinutes: profile.needMinutes,
+                        insights: ReviewInputsBuilder.insights(from: library, placedIn: placed, calendar: calendar), now: now, calendar: calendar
+                    ))
             } catch {
                 return .failed
             }

@@ -1,7 +1,7 @@
 import DesignSystem
 import Foundation
-import SoundKit
 import NoctisText
+import SoundKit
 
 // What the Sounds screen says and shows, built from the player's state (APP_RULES.md R18, R20, R31).
 // Views lay it out; the words are here.

@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import HomeFeature
 @testable import InsightsKit
 @testable import NoctisCore
@@ -51,7 +52,10 @@ struct InsightScenarioTests {
     @Test func earlyBirdFindsTheEarlierBedtimePatternWithHighConfidence() async throws {
         let all = try await records(.earlyBird)
         let pattern = try #require(all.first { $0.type == .earlierBedtimePattern })
-        guard case .pattern(let evidence) = pattern.evidence else { Issue.record("expected pattern evidence"); return }
+        guard case .pattern(let evidence) = pattern.evidence else {
+            Issue.record("expected pattern evidence")
+            return
+        }
         #expect(pattern.confidence == .high)
         #expect(evidence.earlyNights >= 10 && evidence.lateNights >= 10)
         #expect(evidence.difference > 6)
@@ -62,7 +66,10 @@ struct InsightScenarioTests {
     @Test func weekendShiftFindsLaterWeekendBedtimes() async throws {
         let all = try await records(.weekendShift)
         let weekend = try #require(all.first { $0.type == .weekendShift })
-        guard case .weekend(let evidence) = weekend.evidence else { Issue.record("expected weekend evidence"); return }
+        guard case .weekend(let evidence) = weekend.evidence else {
+            Issue.record("expected weekend evidence")
+            return
+        }
         #expect(evidence.delta >= 45)
         #expect(evidence.weekendNights >= 3)
     }
@@ -163,11 +170,14 @@ struct InsightScenarioTests {
         let empty = await repository(.empty).refresh(profile: UserProfileSnapshot())
         #expect(empty.dataState == .empty)
         let clock = now
-        let noPermission = await InsightsRepository(provider: mock(.full, authorized: false), timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
+        let noPermission = await InsightsRepository(provider: mock(.full, authorized: false), timeZone: Fixture.newYork, clock: { clock }).refresh(
+            profile: UserProfileSnapshot())
         #expect(noPermission.dataState == .permissionRequired)
-        let unavailable = await InsightsRepository(provider: mock(.full, available: false), timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
+        let unavailable = await InsightsRepository(provider: mock(.full, available: false), timeZone: Fixture.newYork, clock: { clock }).refresh(
+            profile: UserProfileSnapshot())
         #expect(unavailable.dataState == .healthDataUnavailable)
-        let failed = await InsightsRepository(provider: mock(.full, fails: true), timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
+        let failed = await InsightsRepository(provider: mock(.full, fails: true), timeZone: Fixture.newYork, clock: { clock }).refresh(
+            profile: UserProfileSnapshot())
         #expect(failed.dataState == .failed)
         for snapshot in [empty, noPermission, unavailable, failed] {
             #expect(snapshot.featured == nil && snapshot.recent.isEmpty && snapshot.records.isEmpty)

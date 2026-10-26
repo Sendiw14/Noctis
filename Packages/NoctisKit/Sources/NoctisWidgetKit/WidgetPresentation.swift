@@ -174,7 +174,9 @@ public enum WidgetPresentationBuilder {
     public static func build(_ entry: WidgetEntryModel, format: WidgetFormat = WidgetFormat()) -> WidgetPresentation {
         let link: WidgetLink = entry.mode == .evening ? .tonight : .recovery
         guard let snapshot = entry.snapshot else {
-            return message(entry, WidgetMessage(glyph: "moon.stars", title: WidgetCopy.getStarted), lock: ["Open NOCTIS", "to get started"], inline: WidgetCopy.getStarted, link: .recovery)
+            return message(
+                entry, WidgetMessage(glyph: "moon.stars", title: WidgetCopy.getStarted), lock: ["Open NOCTIS", "to get started"], inline: WidgetCopy.getStarted,
+                link: .recovery)
         }
         let footer = entry.staleHours.map(WidgetCopy.updated(hours:))
         switch entry.mode {
@@ -201,7 +203,8 @@ public enum WidgetPresentationBuilder {
 
     // MARK: Day
 
-    private static func day(_ entry: WidgetEntryModel, snapshot: WidgetSnapshot, format: WidgetFormat, footer: String?, link: WidgetLink) -> WidgetPresentation {
+    private static func day(_ entry: WidgetEntryModel, snapshot: WidgetSnapshot, format: WidgetFormat, footer: String?, link: WidgetLink) -> WidgetPresentation
+    {
         if entry.scene == .waiting {
             return message(
                 entry, WidgetMessage(glyph: "hourglass", title: WidgetCopy.waitingTitle, detail: WidgetCopy.waitingDetail),
@@ -210,20 +213,26 @@ public enum WidgetPresentationBuilder {
         }
         switch snapshot.state {
         case .noPermission, .empty:
-            return message(entry, WidgetMessage(glyph: "heart.text.square", title: WidgetCopy.connectHealth), lock: ["Open NOCTIS", "to connect Apple Health"], inline: "Open NOCTIS for Health", link: link)
+            return message(
+                entry, WidgetMessage(glyph: "heart.text.square", title: WidgetCopy.connectHealth), lock: ["Open NOCTIS", "to connect Apple Health"],
+                inline: "Open NOCTIS for Health", link: link)
         case .learning(let nights):
             return message(
                 entry, WidgetMessage(glyph: "chart.line.uptrend.xyaxis", title: WidgetCopy.learningTitle, detail: WidgetCopy.nights(nights)),
                 lock: [WidgetCopy.learningTitle, WidgetCopy.nights(nights)], inline: "Learning · \(WidgetCopy.nights(nights))", link: link
             )
         case .gap:
-            return message(entry, WidgetMessage(glyph: "moon.zzz", title: WidgetCopy.noSleep), lock: ["No sleep recorded", "last night"], inline: "No sleep last night", link: link)
+            return message(
+                entry, WidgetMessage(glyph: "moon.zzz", title: WidgetCopy.noSleep), lock: ["No sleep recorded", "last night"], inline: "No sleep last night",
+                link: link)
         case .full, .sleepOnly, .stale:
             return numbers(entry, snapshot: snapshot, format: format, footer: footer, link: link)
         }
     }
 
-    private static func numbers(_ entry: WidgetEntryModel, snapshot: WidgetSnapshot, format: WidgetFormat, footer: String?, link: WidgetLink) -> WidgetPresentation {
+    private static func numbers(
+        _ entry: WidgetEntryModel, snapshot: WidgetSnapshot, format: WidgetFormat, footer: String?, link: WidgetLink
+    ) -> WidgetPresentation {
         let isStale = entry.staleHours != nil
         let recovery = snapshot.recovery
         var delta: WidgetDelta?
@@ -240,7 +249,8 @@ public enum WidgetPresentationBuilder {
             rows.append(WidgetLine(label: "HRV", value: WidgetFormat.quantityMetric(hrv, .millisecond), sensitivity: .health, tint: .hrv))
         }
         if let heart = snapshot.factors?.restingHeartRate {
-            rows.append(WidgetLine(label: "Resting HR", value: WidgetFormat.quantityMetric(heart, .beatsPerMinute), sensitivity: .health, tint: .restingHeartRate))
+            rows.append(
+                WidgetLine(label: "Resting HR", value: WidgetFormat.quantityMetric(heart, .beatsPerMinute), sensitivity: .health, tint: .restingHeartRate))
         }
 
         var night: WidgetNightBody?
@@ -249,13 +259,16 @@ public enum WidgetPresentationBuilder {
                 WidgetLine(label: "Sleep quality", value: NoctisMetricValue(parts: [.number("\($0)")], spoken: "\($0)"), sensitivity: .health)
             }
             night = WidgetNightBody(
-                duration: WidgetLine(label: isStale ? "Last recorded" : "Last night", value: WidgetFormat.durationMetric(last.asleepMinutes), sensitivity: .health, tint: .sleepDuration),
+                duration: WidgetLine(
+                    label: isStale ? "Last recorded" : "Last night", value: WidgetFormat.durationMetric(last.asleepMinutes), sensitivity: .health,
+                    tint: .sleepDuration),
                 stages: last.stages, quality: quality,
                 times: "\(format.clock(minutesSinceMidnight: last.bedtimeMinutes)) – \(format.clock(minutesSinceMidnight: last.wakeMinutes))"
             )
         }
 
-        let tonight = WidgetTonight(bedtime: bedtimeText(snapshot.plan, format: format), wake: "Wake \(format.clock(minutesSinceMidnight: snapshot.plan.wakeMinutes))")
+        let tonight = WidgetTonight(
+            bedtime: bedtimeText(snapshot.plan, format: format), wake: "Wake \(format.clock(minutesSinceMidnight: snapshot.plan.wakeMinutes))")
         let body = WidgetDayBody(score: recovery?.score, delta: delta, ring: recovery?.ring ?? [], rows: rows, night: night, tonight: tonight)
 
         // Lock Screen: Recovery 70, Sleep 6h 42m, Bed 11:00 PM; the Health words are hidden while locked.
@@ -308,7 +321,9 @@ public enum WidgetPresentationBuilder {
             wake: WidgetLine(label: "Wake", value: format.clockMetric(minutesSinceMidnight: plan.wakeMinutes), sensitivity: .plan),
             wakeText: format.clock(minutesSinceMidnight: plan.wakeMinutes),
             need: WidgetLine(label: "Need", value: WidgetFormat.durationMetric(plan.needMinutes), sensitivity: .plan),
-            alarm: snapshot.alarm.flatMap { $0.isOn ? WidgetLine(label: "Alarm", value: format.clockMetric(minutesSinceMidnight: $0.minutes), sensitivity: .plan) : nil },
+            alarm: snapshot.alarm.flatMap {
+                $0.isOn ? WidgetLine(label: "Alarm", value: format.clockMetric(minutesSinceMidnight: $0.minutes), sensitivity: .plan) : nil
+            },
             score: score, ring: score == nil ? [] : (snapshot.recovery?.ring ?? [])
         )
 
@@ -318,7 +333,10 @@ public enum WidgetPresentationBuilder {
             rectangular = [[.text("Bedtime was \(timeText)")], [.text("Wake \(format.clock(minutesSinceMidnight: plan.wakeMinutes))")]]
             inline = [.text("Bedtime was \(timeText)")]
         } else {
-            rectangular = [[.text("Bedtime \(timeText)")], [.text("in "), .countdown(bedtimeDate)], [.text("Wake \(format.clock(minutesSinceMidnight: plan.wakeMinutes))")]]
+            rectangular = [
+                [.text("Bedtime \(timeText)")], [.text("in "), .countdown(bedtimeDate)],
+                [.text("Wake \(format.clock(minutesSinceMidnight: plan.wakeMinutes))")],
+            ]
             inline = [.text("Bedtime in "), .countdown(bedtimeDate)]
         }
 

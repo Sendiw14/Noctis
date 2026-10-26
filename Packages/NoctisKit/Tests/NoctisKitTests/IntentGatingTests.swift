@@ -9,8 +9,8 @@ import Testing
 @testable import HealthProviding
 @testable import HomeFeature
 @testable import InsightsKit
-@testable import NightKit
 @testable import NightFeature
+@testable import NightKit
 @testable import NoctisCore
 @testable import NoctisIntentKit
 @testable import NoctisWidgetKit
@@ -73,7 +73,8 @@ private nonisolated final class Reloads: @unchecked Sendable {
 private func runtime(_ snapshot: WidgetSnapshot?, host: GateHost, reloads: Reloads = Reloads()) -> IntentRuntime {
     let (now, calendar, format) = (gateMorning, gateCalendar, gateFormat)
     return IntentRuntime(
-        environment: IntentEnvironment(snapshot: { snapshot }, now: { now }, calendar: { calendar }, format: { format }, reloadControl: { reloads.add($0) }), host: host
+        environment: IntentEnvironment(snapshot: { snapshot }, now: { now }, calendar: { calendar }, format: { format }, reloadControl: { reloads.add($0) }),
+        host: host
     )
 }
 
@@ -259,7 +260,9 @@ struct IntentGatePerformTests {
     @Test func theWindDownControlRunsTheSameIntentSoItOpensThePaywallSheetForTheFreePlan() throws {
         let controls = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisControls.swift"), encoding: .utf8)
         #expect(RawDefaultsTests.code(controls).contains("ControlWidgetButton(action: StartWindDownIntent())"), "one intent, one gate")
-        #expect(!RawDefaultsTests.code(controls).contains("StoreKit") && !RawDefaultsTests.code(controls).contains("FeatureTable"), "the control decides nothing itself")
+        #expect(
+            !RawDefaultsTests.code(controls).contains("StoreKit") && !RawDefaultsTests.code(controls).contains("FeatureTable"),
+            "the control decides nothing itself")
     }
 }
 
@@ -361,7 +364,8 @@ struct IntentGateAppTests {
                 #expect(!file.text.contains("import StoreKit"), Comment(rawValue: "\(file.path) imports StoreKit"))
             }
         }
-        let runner = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/IntentRunner.swift"), encoding: .utf8)
+        let runner = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/IntentRunner.swift"), encoding: .utf8)
         #expect(runner.contains("-intentRunnerTier") && runner.contains("IntentGate.premiumSoundDialog") && runner.contains("IntentGate.coachLimitReached"))
     }
 }

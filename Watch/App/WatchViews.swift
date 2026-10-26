@@ -262,7 +262,8 @@ struct HeartPageView: View {
                             }
                             if let sentence = tile.sentence {
                                 WatchPrivate(content.sensitivity) {
-                                    Text(sentence).noctisFont(13, .semibold, relativeTo: .footnote).foregroundStyle(WatchTheme.ink).multilineTextAlignment(.center)
+                                    Text(sentence).noctisFont(13, .semibold, relativeTo: .footnote).foregroundStyle(WatchTheme.ink).multilineTextAlignment(
+                                        .center)
                                 }
                             }
                         }

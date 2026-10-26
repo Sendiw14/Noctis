@@ -39,10 +39,15 @@ struct WelcomeScreen: View {
             let bandsHeight = isAccessibilitySize ? max(total * 0.56, 340) : max(total - controlsHeight, 240)
 
             let content = VStack(spacing: 0) {
-                WelcomeBands(size: CGSize(width: width, height: bandsHeight), safeTop: safeTop, scale: isAccessibilitySize ? min(scale, 0.6) : scale, reveal: reveal)
+                WelcomeBands(
+                    size: CGSize(width: width, height: bandsHeight), safeTop: safeTop, scale: isAccessibilitySize ? min(scale, 0.6) : scale, reveal: reveal)
                 controls(safeBottom: safeBottom)
                     .opacity(reveal.controls ? 1 : 0)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { controlsHeight = $0 }
+                    .onGeometryChange(for: CGFloat.self) {
+                        $0.size.height
+                    } action: {
+                        controlsHeight = $0
+                    }
             }
             .frame(width: width)
 
@@ -148,7 +153,10 @@ struct WelcomeScreen: View {
     private func start() {
         guard !started else { return }
         started = true
-        guard !reduceMotion else { reveal = .final; return }
+        guard !reduceMotion else {
+            reveal = .final
+            return
+        }
         let landing = 0.55
         for index in 0..<4 {
             let delay = Double(index) * 0.1

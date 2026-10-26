@@ -2,9 +2,9 @@ import DesignSystem
 import Foundation
 import HomeFeature
 import NoctisCore
+import NoctisText
 import RecoveryKit
 import SleepKit
-import NoctisText
 
 // Recovery over 7, 30 or 90 nights: the words around the line, the stat
 // tiles and the factor rows. Built by `RecoveryScreenBuilder` from the
@@ -100,7 +100,8 @@ nonisolated extension RecoveryScreenBuilder {
     /// state takes over) or without a history.
     static func historyContent(_ snapshot: RecoverySnapshot, segment: RecoverySegment, format: HomeFormat) -> RecoveryHistoryContent? {
         guard let range = segment.historyRange, let history = snapshot.history(range),
-              history.stats.scoredDays >= RecoveryHistoryModel.trendMinimumDays else { return nil }
+            history.stats.scoredDays >= RecoveryHistoryModel.trendMinimumDays
+        else { return nil }
         let days = history.days
         let first = days.first.map { format.monthDay($0.night.adding(days: 1)) } ?? ""
         let last = days.last.map { format.monthDay($0.night.adding(days: 1)) } ?? ""
@@ -109,7 +110,8 @@ nonisolated extension RecoveryScreenBuilder {
             let wake = day.night.adding(days: 1)
             let name = range == .week ? format.weekday(wake, width: .abbreviated) : format.weekdayMonthDay(wake)
             guard let score = day.score else {
-                return RecoveryHistoryPointContent(night: day.night, position: nil, score: nil, detail: "\(name) · No score", accessibilityLabel: "\(format.wideDate(wake)), no score")
+                return RecoveryHistoryPointContent(
+                    night: day.night, position: nil, score: nil, detail: "\(name) · No score", accessibilityLabel: "\(format.wideDate(wake)), no score")
             }
             let sleep = HomeFormat.compactDuration(Int(score.asleepMinutes.rounded()))
             let position = history.stats.usualRange.map { RecoveryUsualPosition(score: score.score, usual: $0) }
@@ -174,36 +176,41 @@ nonisolated extension RecoveryScreenBuilder {
         func dated(_ date: Date) -> String { format.shortDate(date) }
         var tiles: [RecoveryHistoryTile] = []
         if let current = stats.current {
-            tiles.append(RecoveryHistoryTile(
-                id: "current", title: "Current", value: number(current.score), note: dated(current.date), symbol: nil,
-                accessibilityLabel: "Current \(current.score)"
-            ))
+            tiles.append(
+                RecoveryHistoryTile(
+                    id: "current", title: "Current", value: number(current.score), note: dated(current.date), symbol: nil,
+                    accessibilityLabel: "Current \(current.score)"
+                ))
         }
         if let average = stats.average {
             let value = Int(average.rounded())
-            tiles.append(RecoveryHistoryTile(
-                id: "average", title: "Average", value: number(value), note: NoctisCount.nights(stats.scoredDays), symbol: nil,
-                accessibilityLabel: "Average \(value)"
-            ))
+            tiles.append(
+                RecoveryHistoryTile(
+                    id: "average", title: "Average", value: number(value), note: NoctisCount.nights(stats.scoredDays), symbol: nil,
+                    accessibilityLabel: "Average \(value)"
+                ))
         }
         if let baseline = stats.baseline {
             let value = Int(baseline.value.rounded())
-            tiles.append(RecoveryHistoryTile(
-                id: "baseline", title: "Baseline", value: number(value), note: "last \(baseline.nights) nights", symbol: nil,
-                accessibilityLabel: "Baseline \(value)"
-            ))
+            tiles.append(
+                RecoveryHistoryTile(
+                    id: "baseline", title: "Baseline", value: number(value), note: "last \(baseline.nights) nights", symbol: nil,
+                    accessibilityLabel: "Baseline \(value)"
+                ))
         }
         if let high = stats.high {
-            tiles.append(RecoveryHistoryTile(
-                id: "high", title: "High", value: number(high.score), note: dated(high.date), symbol: nil,
-                accessibilityLabel: "High \(high.score), \(format.longDate(high.date))"
-            ))
+            tiles.append(
+                RecoveryHistoryTile(
+                    id: "high", title: "High", value: number(high.score), note: dated(high.date), symbol: nil,
+                    accessibilityLabel: "High \(high.score), \(format.longDate(high.date))"
+                ))
         }
         if let low = stats.low {
-            tiles.append(RecoveryHistoryTile(
-                id: "low", title: "Low", value: number(low.score), note: dated(low.date), symbol: nil,
-                accessibilityLabel: "Low \(low.score), \(format.longDate(low.date))"
-            ))
+            tiles.append(
+                RecoveryHistoryTile(
+                    id: "low", title: "Low", value: number(low.score), note: dated(low.date), symbol: nil,
+                    accessibilityLabel: "Low \(low.score), \(format.longDate(low.date))"
+                ))
         }
         if let trend = stats.trend {
             let slope = signedSlope(trend.pointsPerWeek)
@@ -214,11 +221,14 @@ nonisolated extension RecoveryScreenBuilder {
             case .steady: (direction, symbol) = ("Steady", "arrow.right")
             case .lower: (direction, symbol) = ("Lower than earlier", "arrow.down.right")
             }
-            tiles.append(RecoveryHistoryTile(
-                id: "trend", title: "Trend",
-                value: NoctisMetricValue(parts: [.number(slope), .space, .unit(NoctisUnit.perWeek.symbol)], spoken: "\(slope) \(NoctisUnit.point.symbol) \(NoctisUnit.perWeek.symbol)"),
-                note: direction, symbol: symbol, accessibilityLabel: trendWords(trend)
-            ))
+            tiles.append(
+                RecoveryHistoryTile(
+                    id: "trend", title: "Trend",
+                    value: NoctisMetricValue(
+                        parts: [.number(slope), .space, .unit(NoctisUnit.perWeek.symbol)],
+                        spoken: "\(slope) \(NoctisUnit.point.symbol) \(NoctisUnit.perWeek.symbol)"),
+                    note: direction, symbol: symbol, accessibilityLabel: trendWords(trend)
+                ))
         }
         return tiles
     }
@@ -233,11 +243,12 @@ nonisolated extension RecoveryScreenBuilder {
     }
 
     static func trendWords(_ trend: RecoveryHistoryTrend) -> String {
-        let direction = switch trend.direction {
-        case .rising: "Rising"
-        case .steady: "Steady"
-        case .lower: "Lower than earlier"
-        }
+        let direction =
+            switch trend.direction {
+            case .rising: "Rising"
+            case .steady: "Steady"
+            case .lower: "Lower than earlier"
+            }
         return "Trend: \(direction), \(signedSlope(trend.pointsPerWeek).replacingOccurrences(of: "\u{2212}", with: "minus ")) points a week"
     }
 
@@ -251,7 +262,8 @@ nonisolated extension RecoveryScreenBuilder {
         let values = points.compactMap(\.value)
         let name = HomeScreenBuilder.shortName(kind)
         guard !values.isEmpty else {
-            return RecoveryHistoryFactorRow(kind: kind, name: name, average: nil, factorRange: factorRange, accessibilityLabel: "\(name), nothing recorded in these nights")
+            return RecoveryHistoryFactorRow(
+                kind: kind, name: name, average: nil, factorRange: factorRange, accessibilityLabel: "\(name), nothing recorded in these nights")
         }
         let mean = values.reduce(0, +) / Double(values.count)
         let metric = valueMetric(kind, mean, format: format)

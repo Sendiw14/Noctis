@@ -6,7 +6,9 @@ import XCTest
 @MainActor
 final class PlanQATests: XCTestCase {
     private func plan(goals: String? = "betterFocus,betterConsistency", wake: Int = 420, need: Int = 480, extra: [String] = []) -> XCUIApplication {
-        QA.launch(step: "plan", goals: goals, extra: ["-useMockHealth", "-noctis.onboarding.wakeMinutes", "\(wake)", "-noctis.onboarding.needMinutes", "\(need)"] + extra)
+        QA.launch(
+            step: "plan", goals: goals,
+            extra: ["-useMockHealth", "-noctis.onboarding.wakeMinutes", "\(wake)", "-noctis.onboarding.needMinutes", "\(need)"] + extra)
     }
 
     private func element(_ app: XCUIApplication, _ id: String) -> XCUIElement { app.descendants(matching: .any)[id] }
@@ -39,7 +41,11 @@ final class PlanQATests: XCTestCase {
         guard let cgImage = XCUIScreen.main.screenshot().image.cgImage else { return nil }
         let width = cgImage.width, height = cgImage.height
         var pixels = [UInt8](repeating: 0, count: width * height * 4)
-        guard let context = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        guard
+            let context = CGContext(
+                data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
         let scale = CGFloat(width) / app.windows.firstMatch.frame.width
         let x = width / 2
@@ -104,7 +110,9 @@ final class PlanQATests: XCTestCase {
     func testNoGoalsChosenHidesTheRow() {
         let app = plan(goals: nil)
         ready(app)
-        for goal in ["betterSleep", "moreEnergy", "betterRecovery", "betterConsistency", "betterFocus"] { XCTAssertFalse(element(app, "plan.chip.\(goal)").exists, goal) }
+        for goal in ["betterSleep", "moreEnergy", "betterRecovery", "betterConsistency", "betterFocus"] {
+            XCTAssertFalse(element(app, "plan.chip.\(goal)").exists, goal)
+        }
         XCTAssertFalse(app.staticTexts["FOCUS"].exists, "the caption goes with the chips")
         QA.shot("plan-ready-no-goals")
     }
@@ -142,7 +150,9 @@ final class PlanQATests: XCTestCase {
                 XCTAssertLessThanOrEqual(element(app, id).frame.maxY, next.frame.minY + 0.5, "\(id) is not under Continue", file: file, line: line)
             }
         } else {
-            for (a, b) in zip(tiles, tiles.dropFirst()) { XCTAssertLessThanOrEqual(a.maxY, b.minY + 0.5, "the tiles stack without overlap", file: file, line: line) }
+            for (a, b) in zip(tiles, tiles.dropFirst()) {
+                XCTAssertLessThanOrEqual(a.maxY, b.minY + 0.5, "the tiles stack without overlap", file: file, line: line)
+            }
         }
     }
 

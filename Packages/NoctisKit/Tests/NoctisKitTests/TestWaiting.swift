@@ -46,7 +46,10 @@ actor ManualTimer {
     private func add(_ continuation: CheckedContinuation<Void, Never>, id: UUID, seconds: Double) {
         requested.append(seconds)
         // Cancelled before it was registered: it is already over.
-        if cancelled.remove(id) != nil { continuation.resume(); return }
+        if cancelled.remove(id) != nil {
+            continuation.resume()
+            return
+        }
         waiting[id] = (seconds, continuation)
     }
 

@@ -7,7 +7,6 @@ import SwiftUI
 // a 44pt End button. They draw a `ContentState` and decide nothing; the extension puts them in an `ActivityConfiguration` and gives the End
 // button its intent (the kit cannot name the intent: it is the other way round), and the debug gallery draws the same views with a plain label.
 
-
 /// The countdown: "14:32", frozen while paused. The system keeps it ticking with no help from the app.
 public struct WindDownTimerText: View {
     let state: WindDownActivityAttributes.ContentState
@@ -34,7 +33,11 @@ public struct WindDownActivityProgress: View {
     public var body: some View {
         Group {
             if state.phase == .running {
-                ProgressView(timerInterval: state.windowStart...state.windowEnd, countsDown: false) { EmptyView() } currentValueLabel: { EmptyView() }
+                ProgressView(timerInterval: state.windowStart...state.windowEnd, countsDown: false) {
+                    EmptyView()
+                } currentValueLabel: {
+                    EmptyView()
+                }
             } else {
                 ProgressView(value: state.progress(at: state.pausedAt ?? state.windowEnd))
             }

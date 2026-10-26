@@ -49,7 +49,8 @@ extension ReviewPageTint {
         switch self {
         case .cocoa: NoctisAppColor.nightInk.opacity(raised ? 0.9 : 0.7)
         case .paper: raised ? NoctisAppColor.ink : NoctisAppColor.ink2
-        default: NoctisAppColor.blockInk.opacity(raised ? 1 : (section?.quietOpacity(target: NoctisFieldInkStyle.summaryOpacity, dark: dark) ?? (dark ? 1 : 0.9)))
+        default:
+            NoctisAppColor.blockInk.opacity(raised ? 1 : (section?.quietOpacity(target: NoctisFieldInkStyle.summaryOpacity, dark: dark) ?? (dark ? 1 : 0.9)))
         }
     }
 
@@ -202,9 +203,10 @@ public final class ReviewStoryViewModel {
         }
         guard case .review(let stored) = outcome else { return }
         let story = ReviewStoryBuilder.build(stored.record, format: format)
-        let ids = Set(story.pages.flatMap { page -> [String] in
-            if case .insights(let content) = page.content { content.insightIDs } else { [] }
-        })
+        let ids = Set(
+            story.pages.flatMap { page -> [String] in
+                if case .insights(let content) = page.content { content.insightIDs } else { [] }
+            })
         phase = .story(story.keepingInsights(availableInsights(ids)))
         if let startPage, let start = pages.firstIndex(where: { $0.kind.rawValue == startPage }) { index = start }
         await repository.markSeen(stored.id)

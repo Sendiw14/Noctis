@@ -3,10 +3,11 @@ import HealthProviding
 import OSLog
 import SwiftData
 import Testing
-@testable import InsightsKit
+
 @testable import CoachKit
 @testable import DesignSystem
 @testable import HomeFeature
+@testable import InsightsKit
 @testable import NoctisCore
 
 // MARK: - Doubles
@@ -99,7 +100,7 @@ nonisolated let coachExpectedCodes: [(MockAIProvider.Misbehavior, String)] = [
     (.numberWord, "numberWordInText"), (.unknownToken, "unknownToken"), (.missingConfidence, "missingField"), (.missingCaution, "cautionRequired"),
     (.overlong, "tooLong"), (.unknownDestination, "unknownDestination"), (.patternWithoutHedge, "patternWithoutHedge"),
     (.tooManyContributors, "tooManyContributors"),
-    ]
+]
 
 struct CoachServiceTests {
     private func service(
@@ -336,7 +337,9 @@ struct CoachServiceTests {
         #expect(await service(classifier: throwing).answer(to: "so how was the night, honestly?").outcome == .scripted(.unknown))
 
         let off = FakeClassifier(.success(.sleepChange))
-        #expect(await service(classifier: off, flags: CoachFeatureFlags(aiAppleIntelligence: false)).answer(to: "so how was the night, honestly?").outcome == .scripted(.unknown))
+        #expect(
+            await service(classifier: off, flags: CoachFeatureFlags(aiAppleIntelligence: false)).answer(to: "so how was the night, honestly?").outcome
+                == .scripted(.unknown))
         #expect(off.calls == 0)
     }
 
@@ -438,7 +441,9 @@ struct CoachServiceTests {
         for entry in entries {
             #expect(!entry.composedMessage.contains(secret), "no question is logged")
             #expect(!entry.composedMessage.contains("insomnia"), "no draft is logged")
-            #expect(!entry.composedMessage.lowercased().contains("crisis") && !entry.composedMessage.lowercased().contains("die"), "a crisis exchange is never logged")
+            #expect(
+                !entry.composedMessage.lowercased().contains("crisis") && !entry.composedMessage.lowercased().contains("die"),
+                "a crisis exchange is never logged")
         }
     }
 }

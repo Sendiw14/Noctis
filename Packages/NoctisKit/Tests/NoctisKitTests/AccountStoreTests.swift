@@ -21,7 +21,9 @@ private final class SpyChecker: AppleCredentialChecking, @unchecked Sendable {
 
 @MainActor
 struct AccountStoreTests {
-    private func store(keychain: MemoryAccountKeychain = MemoryAccountKeychain(), checker: any AppleCredentialChecking = FixedCredentialChecker()) -> AccountStore {
+    private func store(
+        keychain: MemoryAccountKeychain = MemoryAccountKeychain(), checker: any AppleCredentialChecking = FixedCredentialChecker()
+    ) -> AccountStore {
         AccountStore(keychain: keychain, checker: checker)
     }
 
@@ -128,7 +130,9 @@ struct AccountStoreTests {
         #expect(AccountStore.prefilledName(existing: "", given: nil) == nil)
         #expect(AccountStore.prefilledName(existing: "", given: "  ") == nil)
         let account = store()
-        #expect(account.complete(.success(AppleSignInCredential(userID: "u", givenName: nil)), existingName: "") == .signedIn(prefill: nil), "a returning user: no name comes back")
+        #expect(
+            account.complete(.success(AppleSignInCredential(userID: "u", givenName: nil)), existingName: "") == .signedIn(prefill: nil),
+            "a returning user: no name comes back")
     }
 
     @Test func aSignInOverAnExistingNameOffersNothing() {

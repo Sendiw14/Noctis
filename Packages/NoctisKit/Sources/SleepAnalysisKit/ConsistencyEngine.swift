@@ -63,8 +63,9 @@ public enum ConsistencyEngine {
             let nights = mains.filter { $0.night >= first && $0.night <= end }
             let metrics = nights.map(SleepMetricsEngine.metrics(for:))
             guard let bedtime = BaselineEngine.baseline(metrics.map(\.bedtimeMinutes)),
-                  let wake = BaselineEngine.baseline(metrics.map(\.wakeMinutes)),
-                  let duration = BaselineEngine.baseline(metrics.map(\.asleepMinutes)) else { return nil }
+                let wake = BaselineEngine.baseline(metrics.map(\.wakeMinutes)),
+                let duration = BaselineEngine.baseline(metrics.map(\.asleepMinutes))
+            else { return nil }
             return ConsistencyWindow(
                 days: days, nights: bedtime.nights,
                 bedtimeSD: bedtime.standardDeviation, wakeSD: wake.standardDeviation, durationSD: duration.standardDeviation,

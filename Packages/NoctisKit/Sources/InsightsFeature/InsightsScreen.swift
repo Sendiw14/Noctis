@@ -42,10 +42,12 @@ public struct InsightsScreen: View {
                 dateCaption: viewModel.screen?.dateCaption ?? " ",
                 title: "Insights",
                 summary: viewModel.screen.map { AnyView(summary($0.summary)) },
-                trailing: showsHistory ? AnyView(InsightsHistoryButton(locked: !viewModel.canOpenHistory) {
-                    // History is Premium: a free person's tap opens the paywall (R58).
-                    if viewModel.canOpenHistory { openHistory() } else { appModel.presentPaywall(.insightsHistory) }
-                }) : nil
+                trailing: showsHistory
+                    ? AnyView(
+                        InsightsHistoryButton(locked: !viewModel.canOpenHistory) {
+                            // History is Premium: a free person's tap opens the paywall (R58).
+                            if viewModel.canOpenHistory { openHistory() } else { appModel.presentPaywall(.insightsHistory) }
+                        }) : nil
             ),
             entrance: viewModel.fieldEntrance,
             onEntered: { viewModel.fieldEntered() },

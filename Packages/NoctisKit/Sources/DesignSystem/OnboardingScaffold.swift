@@ -248,7 +248,8 @@ public struct OnboardingScaffold<Hero: View, Bottom: View>: View {
         //    clean end is past them, so the end is sparse but never faded.
         let lastTextTop = textBlocks.map(\.minY).max() ?? overflow
         let wide = sorted.filter { $0 <= overflow + scrollViewportHeight && $0 <= lastTextTop }
-        let target = inReach.first(where: isClean)
+        let target =
+            inReach.first(where: isClean)
             ?? inReach.first(where: textIsClean)
             ?? wide.first(where: textIsClean)
             ?? overflow

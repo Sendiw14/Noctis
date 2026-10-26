@@ -44,7 +44,9 @@ public struct TabScreenHeader {
         hero: AnyView? = nil,
         trailing: AnyView? = nil
     ) {
-        self.init(dateCaption: dateCaption, title: Text(title), plainTitle: title, showsTitle: showsTitle, summary: summary, control: control, hero: hero, trailing: trailing)
+        self.init(
+            dateCaption: dateCaption, title: Text(title), plainTitle: title, showsTitle: showsTitle, summary: summary, control: control, hero: hero,
+            trailing: trailing)
     }
 
     public init(
@@ -231,7 +233,8 @@ public struct TabScreenScaffold<Content: View>: View {
     @ViewBuilder
     private func chrome(_ scroll: some View) -> some View {
         let configured: AnyView = configureScroll?(AnyView(scroll)) ?? AnyView(scroll)
-        let base = configured
+        let base =
+            configured
             .scrollPosition($scrollPosition)
             // R14: cards keep their shadows at the scroll view's edges.
             .scrollClipDisabled()

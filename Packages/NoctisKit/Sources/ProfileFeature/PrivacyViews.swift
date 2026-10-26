@@ -58,7 +58,9 @@ struct PrivacyCenterView: View {
                 NoctisRowCard {
                     ForEach(Array(content.reads.enumerated()), id: \.element.id) { index, line in
                         if index > 0 { NoctisRowDivider() }
-                        NoctisInfoRow(systemImage: "heart.text.square", fill: NoctisAppColor.blockSage, title: line.title, detail: line.detail, value: "", identifier: "privacy.reads.\(line.id)")
+                        NoctisInfoRow(
+                            systemImage: "heart.text.square", fill: NoctisAppColor.blockSage, title: line.title, detail: line.detail, value: "",
+                            identifier: "privacy.reads.\(line.id)")
                     }
                 }
                 if let note = content.readsNote { SettingsNote(note) }
@@ -146,7 +148,9 @@ struct PrivacyCenterView: View {
                         detail: "Change what NOCTIS may read in the Health app.", hint: "Opens the Health app.", identifier: "privacy.link.health"
                     ) { viewModel.openHealth() }
                     NoctisRowDivider()
-                    ExternalLinkRow(systemImage: "hand.raised", fill: NoctisAppColor.blockLavender, title: "Privacy Policy", url: StoreLegalLinks.privacy, identifier: "privacy.link.policy")
+                    ExternalLinkRow(
+                        systemImage: "hand.raised", fill: NoctisAppColor.blockLavender, title: "Privacy Policy", url: StoreLegalLinks.privacy,
+                        identifier: "privacy.link.policy")
                 }
             }
             .noctisRise(index: 8)

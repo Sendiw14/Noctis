@@ -95,9 +95,10 @@ struct PlanReadyTests {
     }
 
     @Test func theCopyUnderFirstTwoWeeksIsTheCopyThePlanAlwaysHad() {
-        #expect(PlanReadyFacts.legacyTimeline(nightCount: 0) == [
-            "Today: tonight is your first night, read in the morning", "Day 7: your first weekly review", "Day 14: early patterns appear",
-        ])
+        #expect(
+            PlanReadyFacts.legacyTimeline(nightCount: 0) == [
+                "Today: tonight is your first night, read in the morning", "Day 7: your first weekly review", "Day 14: early patterns appear",
+            ])
         #expect(PlanReadyFacts.legacyTimeline(nightCount: 12)[0] == "Today: you already have 12 nights, so NOCTIS starts learning")
         #expect(PlanReadyFacts.timeline(nightCount: 0).map(\.day) == [.today, .daySeven, .dayFourteen])
     }

@@ -1,9 +1,9 @@
 import DesignSystem
 import NoctisCore
+import NoctisText
 import StoreKit
 import SwiftUI
 import UserNotifications
-import NoctisText
 
 private enum PaywallLoadPhase: Equatable {
     case loading
@@ -25,7 +25,9 @@ private struct TrialLength {
         let period: NoctisCount.Period
         switch offer.period.unit {
         case .day: period = .day
-        case .week: value *= 7; period = .day
+        case .week:
+            value *= 7
+            period = .day
         case .month: period = .month
         case .year: period = .year
         @unknown default: return nil
@@ -134,7 +136,9 @@ struct PaywallScreen: View {
                         column(metrics, top: topInset, bottom: bottomInset)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(width: geometry.size.width)
-                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                            .onGeometryChange(for: CGFloat.self) {
+                                $0.size.height
+                            } action: { height in
                                 if height > total + 0.5, density < Self.densities.count - 1 { density += 1 }
                             }
                     } else {
@@ -403,7 +407,9 @@ struct PaywallScreen: View {
             PaywallButton(title: "Loading plans", spoken: "Loading plans", height: metrics.buttonHeight, state: .loading, action: {})
                 .disabled(true)
         case .unavailable:
-            PaywallButton(title: "Try again", spoken: "Try again", height: metrics.buttonHeight, state: .idle, icon: "arrow.clockwise") { Task { await loadStore() } }
+            PaywallButton(title: "Try again", spoken: "Try again", height: metrics.buttonHeight, state: .idle, icon: "arrow.clockwise") {
+                Task { await loadStore() }
+            }
         case .ready:
             let facts = facts
             PaywallButton(
@@ -506,7 +512,9 @@ struct PaywallScreen: View {
         #if DEBUG
         // `-mockNotificationsAuthorized yes|no`: the trial reminder's switch on or off, whatever this simulator was told.
         let launch = ProcessInfo.processInfo.arguments
-        if let flag = launch.firstIndex(of: "-mockNotificationsAuthorized"), launch.indices.contains(flag + 1) { notificationsAuthorized = launch[flag + 1] == "yes" }
+        if let flag = launch.firstIndex(of: "-mockNotificationsAuthorized"), launch.indices.contains(flag + 1) {
+            notificationsAuthorized = launch[flag + 1] == "yes"
+        }
         #endif
         isEligibleForTrial = await eligible
         #if DEBUG
@@ -951,7 +959,10 @@ private struct PlanTileSkeleton: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 28, style: .continuous)
             .fill(dark ? NoctisPaper.ivory.opacity(0.08) : NoctisPaper.surface)
-            .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(dark ? NoctisPaper.ivory.opacity(0.18) : NoctisPaper.hairline, lineWidth: 1.5))
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(
+                    dark ? NoctisPaper.ivory.opacity(0.18) : NoctisPaper.hairline, lineWidth: 1.5)
+            )
             .overlay(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: 8) {
                     RoundedRectangle(cornerRadius: 4).fill(NoctisPaper.track.opacity(dark ? 0.2 : 1)).frame(width: 70, height: 16)
@@ -996,8 +1007,11 @@ extension PaywallScreen {
 }
 
 enum PaywallPlanSamples {
-    static let yearly = PaywallPlan(id: StoreProductID.yearly, isYearly: true, displayPrice: "$39.99", price: 39.99, perMonthText: "$3.33 / month", trialPhrase: "7 days", trialAdjective: "7-day")
-    static let monthly = PaywallPlan(id: StoreProductID.monthly, isYearly: false, displayPrice: "$6.99", price: 6.99, perMonthText: nil, trialPhrase: nil, trialAdjective: nil)
+    static let yearly = PaywallPlan(
+        id: StoreProductID.yearly, isYearly: true, displayPrice: "$39.99", price: 39.99, perMonthText: "$3.33 / month", trialPhrase: "7 days",
+        trialAdjective: "7-day")
+    static let monthly = PaywallPlan(
+        id: StoreProductID.monthly, isYearly: false, displayPrice: "$6.99", price: 6.99, perMonthText: nil, trialPhrase: nil, trialAdjective: nil)
 }
 
 #Preview("Paywall plans — yearly selected") {
@@ -1022,7 +1036,9 @@ struct PlanCardPreviewHarness: View {
             (colorScheme == .dark ? PaywallStyle.darkGround : NoctisPaper.bg).ignoresSafeArea()
             HStack(spacing: 8) {
                 ForEach(facts.plans) { plan in
-                    PlanTile(plan: plan, facts: facts, isSelected: selectedID == plan.id, height: 118, dark: colorScheme == .dark, reduceMotion: false) { selectedID = plan.id }
+                    PlanTile(plan: plan, facts: facts, isSelected: selectedID == plan.id, height: 118, dark: colorScheme == .dark, reduceMotion: false) {
+                        selectedID = plan.id
+                    }
                 }
             }
             .padding(20)

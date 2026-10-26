@@ -170,7 +170,8 @@ struct AppPreferencesTests {
     @Test func aSoundStartedFromSilenceTakesThePreferredTimerAndOneTakingOverKeepsTheRunningOne() async {
         let bench = PlayerBench.make()
         var choice = SleepTimerChoice.off
-        let sounds = SoundsViewModel(player: bench.player, now: { bench.time.now }, haptic: {}, defaultTimer: { choice }, sleeper: { await bench.time.sleep($0) })
+        let sounds = SoundsViewModel(
+            player: bench.player, now: { bench.time.now }, haptic: {}, defaultTimer: { choice }, sleeper: { await bench.time.sleep($0) })
         sounds.tap(.rain)
         #expect(bench.player.state.timer == nil, "off means no timer")
         sounds.tap(.rain)
@@ -222,7 +223,9 @@ nonisolated struct AppearanceTests {
 // MARK: - The reminders' schedule
 
 nonisolated struct NotificationPlanTests {
-    static func plan(wake: Int = 7 * 60, center: Int = 23 * 60, tier: Tier = .premium, _ change: (inout NotificationPreferences) -> Void = { _ in }) -> [ScheduledNotification] {
+    static func plan(
+        wake: Int = 7 * 60, center: Int = 23 * 60, tier: Tier = .premium, _ change: (inout NotificationPreferences) -> Void = { _ in }
+    ) -> [ScheduledNotification] {
         var preferences = NotificationPreferences()
         change(&preferences)
         return NotificationPlan.make(preferences: preferences, wakeMinutes: wake, bedtimeCenterMinutes: center, tier: tier)
@@ -252,7 +255,9 @@ nonisolated struct NotificationPlanTests {
         let minutes = (windDown?.hour ?? 0) * 60 + (windDown?.minute ?? 0)
         #expect(minutes == 23 * 60 + 10 - lead)
         #expect(plan.first { $0.identifier == NoctisNotification.windDown }?.body == "Your wind-down window starts in \(lead) minutes.")
-        #expect(Self.plan(center: 23 * 60 + 10, tier: .free) { $0.windDownLeadMinutes = lead }.first { $0.identifier == NoctisNotification.windDown }?.body == "Your bedtime window starts in \(lead) minutes.")
+        #expect(
+            Self.plan(center: 23 * 60 + 10, tier: .free) { $0.windDownLeadMinutes = lead }.first { $0.identifier == NoctisNotification.windDown }?.body
+                == "Your bedtime window starts in \(lead) minutes.")
     }
 
     @Test(arguments: NotificationPreferences.morningOffsets)
@@ -301,7 +306,10 @@ nonisolated struct NotificationPlanTests {
         let plan = Self.plan()
         #expect(plan.allSatisfy { $0.title == "NOCTIS" })
         #expect(plan.map(\.body) == ["Your morning summary is ready.", "Your wind-down window starts in 20 minutes.", "Your weekly review is ready."])
-        #expect(Self.plan(tier: .free).map(\.body) == ["Your morning summary is ready.", "Your bedtime window starts in 20 minutes.", "Your weekly review is ready."])
+        #expect(
+            Self.plan(tier: .free).map(\.body) == [
+                "Your morning summary is ready.", "Your bedtime window starts in 20 minutes.", "Your weekly review is ready.",
+            ])
         for item in plan where item.identifier != NoctisNotification.windDown {
             #expect(!item.body.contains(where: { $0.isNumber }), Comment(rawValue: item.body))
         }
@@ -421,7 +429,8 @@ struct NotificationSchedulerTests {
     }
 
     @Test func itNeverTouchesAnyOtherPendingNotification() async {
-        let trial = ScheduledNotification(identifier: "noctis.notification.trialEnding", title: "T", body: "B", components: NotificationPlan.clock(600), repeats: false)
+        let trial = ScheduledNotification(
+            identifier: "noctis.notification.trialEnding", title: "T", body: "B", components: NotificationPlan.clock(600), repeats: false)
         let center = InMemoryNotificationCenter(authorization: .allowed, pending: [trial])
         let scheduler = NotificationScheduler(center: center)
         await scheduler.rebuild(preferences: Self.preferences(), wakeMinutes: 420, bedtimeCenterMinutes: 1380)
@@ -497,7 +506,10 @@ struct NotificationCoordinatorTests {
         let bench = Self.make(center: { _, _ in
             calls += 1
             // The first answer comes after the second, whatever the machine is doing.
-            if calls == 1 { _ = await waitFor { secondAnswered }; return 23 * 60 }
+            if calls == 1 {
+                _ = await waitFor { secondAnswered }
+                return 23 * 60
+            }
             secondAnswered = true
             return 22 * 60
         })
@@ -596,12 +608,15 @@ nonisolated struct RawDefaultsTests {
         for folder in folders {
             let base = root.appendingPathComponent(folder)
             // A folder that is not there must fail the test that names it, not pass it by scanning nothing.
-            guard FileManager.default.fileExists(atPath: base.path), let walker = FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil) else {
+            guard FileManager.default.fileExists(atPath: base.path), let walker = FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil)
+            else {
                 Issue.record("\(folder) does not exist: a test names a folder that was moved or renamed")
                 continue
             }
             for case let url as URL in walker where url.pathExtension == "swift" {
-                if let text = try? String(contentsOf: url, encoding: .utf8) { result.append((url.path.replacingOccurrences(of: root.path + "/", with: ""), text)) }
+                if let text = try? String(contentsOf: url, encoding: .utf8) {
+                    result.append((url.path.replacingOccurrences(of: root.path + "/", with: ""), text))
+                }
             }
         }
         return result

@@ -223,7 +223,8 @@ public final class BreathSessionDriver {
 
     /// `clock` is what the runtime session's own events are stamped with (the system's, or a test's).
     public init(
-        schedule: BreathingSchedule, now: Date, isActive: Bool = true, hapticsEnabled: Bool, runtime: any ExtendedRuntimeClient, haptics: any BreathHapticPlaying,
+        schedule: BreathingSchedule, now: Date, isActive: Bool = true, hapticsEnabled: Bool, runtime: any ExtendedRuntimeClient,
+        haptics: any BreathHapticPlaying,
         clock: @escaping @Sendable () -> Date = { Date() }
     ) {
         model = BreathSessionModel(schedule: schedule, now: now, isActive: isActive)

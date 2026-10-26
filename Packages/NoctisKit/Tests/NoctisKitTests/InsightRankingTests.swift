@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import InsightsKit
 @testable import SleepKit
 
@@ -16,7 +17,9 @@ struct InsightRankingTests {
         #expect(InsightRanking.score(confidence: .moderate, relevance: 0.5, novelty: 0.5, actionability: 0.25) == 0.4975)
         // low 0.3
         #expect(InsightRanking.score(confidence: .low, relevance: 0, novelty: 0, actionability: 0) == 0.105)
-        #expect(abs(InsightRanking.confidenceWeight + InsightRanking.relevanceWeight + InsightRanking.noveltyWeight + InsightRanking.actionabilityWeight - 1) < 1e-12)
+        #expect(
+            abs(InsightRanking.confidenceWeight + InsightRanking.relevanceWeight + InsightRanking.noveltyWeight + InsightRanking.actionabilityWeight - 1)
+                < 1e-12)
     }
 
     @Test func relevanceFallsAwayOverTwoWeeks() {

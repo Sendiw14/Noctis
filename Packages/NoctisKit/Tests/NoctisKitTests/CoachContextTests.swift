@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import CoachKit
 @testable import HomeFeature
 @testable import InsightsKit
@@ -63,7 +64,8 @@ struct CoachContextTests {
         let context = await CoachFixture.context(.todayFocus)
         #expect(context.goalIDs == ["betterRecovery", "betterConsistency"])
         #expect(context.sleepNeedMinutes == 480)
-        let single = builder().build(intent: .todayFocus, direction: nil, snapshots: CoachSnapshots(), profile: UserProfileSnapshot(name: "Sam", primaryGoal: .moreEnergy))
+        let single = builder().build(
+            intent: .todayFocus, direction: nil, snapshots: CoachSnapshots(), profile: UserProfileSnapshot(name: "Sam", primaryGoal: .moreEnergy))
         #expect(single.goalIDs == ["moreEnergy"])
     }
 
@@ -83,7 +85,10 @@ struct CoachContextTests {
         let context = await CoachFixture.context(.recoveryChange, scenario: .learning)
         #expect(context.dataState == .learning)
         #expect(context.nightsOfHistory == 3)
-        for id in ["recovery.score", "recovery.usual", "recovery.deltaVsUsual", "sleep.baseline", "sleep.deltaVsBaseline", "hrv.baseline", "bedtime.usual", "week.avgSleepDelta"] {
+        for id in [
+            "recovery.score", "recovery.usual", "recovery.deltaVsUsual", "sleep.baseline", "sleep.deltaVsBaseline", "hrv.baseline", "bedtime.usual",
+            "week.avgSleepDelta",
+        ] {
             #expect(!context.has(id), Comment(rawValue: id))
         }
         #expect(context.availableFactors.isEmpty)
@@ -97,7 +102,9 @@ struct CoachContextTests {
             let context = await CoachFixture.context(intent, scenario: .empty)
             #expect(context.dataState == .noData)
             // Only what the person set themselves (their sleep need, wake time and the bedtime they give) can be there.
-            #expect(Set(context.facts.map(\.id)).isSubset(of: ["sleep.need", "wake.typical", "bedtime.suggested"]), Comment(rawValue: "\(intent.rawValue): \(context.facts.map(\.id))"))
+            #expect(
+                Set(context.facts.map(\.id)).isSubset(of: ["sleep.need", "wake.typical", "bedtime.suggested"]),
+                Comment(rawValue: "\(intent.rawValue): \(context.facts.map(\.id))"))
             #expect(context.nightsOfHistory == 0)
             #expect(context.insights.isEmpty && context.availableFactors.isEmpty && context.missingFactors.isEmpty)
             #expect(context.confidenceCeiling == .low)
@@ -151,7 +158,11 @@ struct CoachContextTests {
         let turns = (0..<5).map { CoachTurnSummary(question: "q\($0)", answerSummary: "a\($0)") }
         let context = CoachFixture.handmade().withTurns(turns)
         #expect(context.recentTurns.map(\.question) == ["q3", "q4"])
-        #expect(CoachContext(intent: .patterns, direction: nil, facts: [], insights: [], availableFactors: [], missingFactors: [], nightsOfHistory: 0, dataState: .noData, goalIDs: [], sleepNeedMinutes: 480, confidenceCeiling: .low, recentTurns: turns).recentTurns.count == 2)
+        #expect(
+            CoachContext(
+                intent: .patterns, direction: nil, facts: [], insights: [], availableFactors: [], missingFactors: [], nightsOfHistory: 0, dataState: .noData,
+                goalIDs: [], sleepNeedMinutes: 480, confidenceCeiling: .low, recentTurns: turns
+            ).recentTurns.count == 2)
     }
 
     // MARK: - Slices by intent
@@ -162,7 +173,11 @@ struct CoachContextTests {
             Set(builder().build(intent: intent, direction: nil, snapshots: snapshots, profile: CoachFixture.profile).facts.map(\.id))
         }
         let recovery = ids(.recoveryChange)
-        #expect(recovery.isSuperset(of: ["recovery.score", "recovery.usual", "recovery.deltaVsUsual", "hrv.today", "hrv.baseline", "rhr.today", "rhr.baseline", "sleep.duration", "bedtime.last"]))
+        #expect(
+            recovery.isSuperset(of: [
+                "recovery.score", "recovery.usual", "recovery.deltaVsUsual", "hrv.today", "hrv.baseline", "rhr.today", "rhr.baseline", "sleep.duration",
+                "bedtime.last",
+            ]))
         #expect(!recovery.contains("week.avgSleep") && !recovery.contains("consistency.bedtimeVarMin"))
 
         let sleep = ids(.sleepChange)
@@ -264,7 +279,8 @@ struct CoachContextTests {
     @Test func numbersAndTimesFollowTheLocale() async {
         let snapshots = await CoachFixture.snapshots(.full)
         func fact(_ id: String, _ locale: String) -> String? {
-            builder(Locale(identifier: locale)).build(intent: .bedtimeAdvice, direction: nil, snapshots: snapshots, profile: CoachFixture.profile).fact(id)?.display
+            builder(Locale(identifier: locale)).build(intent: .bedtimeAdvice, direction: nil, snapshots: snapshots, profile: CoachFixture.profile).fact(id)?
+                .display
         }
         #expect(fact("bedtime.suggested", "en_US")?.plain == "11:00 PM")
         #expect(fact("bedtime.suggested", "de_DE") == "23:00")

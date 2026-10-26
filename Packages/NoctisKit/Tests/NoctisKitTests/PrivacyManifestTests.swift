@@ -36,8 +36,10 @@ private nonisolated enum RequiredReasonAPI: String, CaseIterable {
     var tokens: [String] {
         switch self {
         case .fileTimestamp:
-            ["creationDate", "modificationDate", "contentModificationDate", "creationDateKey", "fileModificationDate", "fileCreationDate",
-             "NSFileCreationDate", "NSFileModificationDate", "getattrlist", "fstatat", "fstat(", "lstat("]
+            [
+                "creationDate", "modificationDate", "contentModificationDate", "creationDateKey", "fileModificationDate", "fileCreationDate",
+                "NSFileCreationDate", "NSFileModificationDate", "getattrlist", "fstatat", "fstat(", "lstat(",
+            ]
         case .systemBootTime: ["systemUptime", "mach_absolute_time", "mach_continuous_time", "clock_gettime_nsec_np"]
         case .diskSpace: ["volumeAvailableCapacity", "volumeTotalCapacity", "systemFreeSize", "NSFileSystemFreeSize", "NSFileSystemSize", "statfs", "statvfs"]
         case .activeKeyboards: ["activeInputModes"]
@@ -66,7 +68,10 @@ struct PrivacyManifestTests {
         #expect(manifest["NSPrivacyTracking"] as? Bool == false)
         #expect((manifest["NSPrivacyTrackingDomains"] as? [Any])?.isEmpty == true)
         for file in appCode() {
-            for token in ["import AdSupport", "import AppTrackingTransparency", "ATTrackingManager", "ASIdentifierManager", "advertisingIdentifier", "identifierForVendor"] {
+            for token in [
+                "import AdSupport", "import AppTrackingTransparency", "ATTrackingManager", "ASIdentifierManager", "advertisingIdentifier",
+                "identifierForVendor",
+            ] {
                 #expect(!file.code.contains(token), Comment(rawValue: "\(file.path) uses \(token); tracking would need an answer"))
             }
         }
@@ -91,7 +96,11 @@ struct PrivacyManifestTests {
         #expect(!inventory.facts.hasAccount)
         if leaves.isEmpty && !inventory.facts.coachUsesRemoteModel { #expect(collected.isEmpty) }
         // No code of NOCTIS's own reaches a network: the only network-capable APIs are the listed system ones.
-        for use in inventory.networkUses { #expect(["import StoreKit", "import MessageUI", "import WatchConnectivity", "import AuthenticationServices"].contains(use.token), Comment(rawValue: "\(use.token) needs a decision in PRIVACY_REPORT.md")) }
+        for use in inventory.networkUses {
+            #expect(
+                ["import StoreKit", "import MessageUI", "import WatchConnectivity", "import AuthenticationServices"].contains(use.token),
+                Comment(rawValue: "\(use.token) needs a decision in PRIVACY_REPORT.md"))
+        }
     }
 
     @Test func everyRequiredReasonAPIInTheCodeIsDeclaredAndNothingElseIs() throws {
@@ -125,7 +134,9 @@ struct PrivacyManifestTests {
         }
         // The alarm extension and the widgets' extension read no defaults and no timestamps; each has a manifest of its own that says so.
         for file in appCode() where file.path.hasPrefix("Widgets/Alarm/") || file.path.hasPrefix("Widgets/Home/") {
-            for api in RequiredReasonAPI.allCases { #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): the extension needs its own manifest")) }
+            for api in RequiredReasonAPI.allCases {
+                #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): the extension needs its own manifest"))
+            }
         }
     }
 
@@ -140,15 +151,21 @@ struct PrivacyManifestTests {
         let kitFiles = appCode().filter { $0.path.contains("NoctisWidgetKit/") || $0.path.hasPrefix("Widgets/Home/") }
         #expect(kitFiles.count >= 8)
         for api in RequiredReasonAPI.allCases {
-            for file in kitFiles { #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): declare it in Widgets/Home/PrivacyInfo.xcprivacy")) }
+            for file in kitFiles {
+                #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): declare it in Widgets/Home/PrivacyInfo.xcprivacy"))
+            }
         }
         let project = try String(contentsOf: root("Noctis.xcodeproj/project.pbxproj"), encoding: .utf8)
-        #expect(project.components(separatedBy: "PrivacyInfo.xcprivacy in Resources").count - 1 == 10, "the app's, the alarm's, the widgets' and the two Watch targets', each as a file and in a build phase")
+        #expect(
+            project.components(separatedBy: "PrivacyInfo.xcprivacy in Resources").count - 1 == 10,
+            "the app's, the alarm's, the widgets' and the two Watch targets', each as a file and in a build phase")
         let yml = try String(contentsOf: root("project.yml"), encoding: .utf8)
         #expect(yml.contains("NoctisWidgets:") && yml.contains("com.noctis.app.widgets"))
         // No HealthKit, no network and no iCloud for the extension: its entitlements are the App Group alone.
         let entitlements = try String(contentsOf: root("Config/NoctisWidgets.entitlements"), encoding: .utf8)
-        #expect(entitlements.contains("com.apple.security.application-groups") && !entitlements.contains("healthkit") && !entitlements.contains("icloud") && !entitlements.contains("network"))
+        #expect(
+            entitlements.contains("com.apple.security.application-groups") && !entitlements.contains("healthkit") && !entitlements.contains("icloud")
+                && !entitlements.contains("network"))
     }
 
     @Test func theAlarmExtensionHasItsOwnManifestAndUsesNoRequiredReasonAPI() throws {
@@ -160,7 +177,9 @@ struct PrivacyManifestTests {
         let files = appCode().filter { $0.path.contains("AlarmShared/") || $0.path.hasPrefix("Widgets/Alarm/") }
         #expect(!files.isEmpty)
         for api in RequiredReasonAPI.allCases {
-            for file in files { #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): declare it in Widgets/Alarm/PrivacyInfo.xcprivacy")) }
+            for file in files {
+                #expect(!api.isUsed(in: file.code), Comment(rawValue: "\(file.path) uses \(api.rawValue): declare it in Widgets/Alarm/PrivacyInfo.xcprivacy"))
+            }
         }
     }
 

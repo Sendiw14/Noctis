@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import HealthProviding
 @testable import RecoveryKit
 @testable import SleepKit
@@ -27,8 +28,10 @@ private struct Generator {
 private func varied(count: Int, seed: UInt64 = 7, heart: Bool = true) -> [NightMetrics] {
     var rng = Generator(state: seed)
     return Fixture.metrics(count: count) { _ in
-        (asleep: 380 + rng.next() * 140, bedtime: 640 + rng.next() * 70, wake: 1120 + rng.next() * 50,
-         hrv: heart ? 40 + rng.next() * 20 : nil, resting: heart ? 52 + rng.next() * 8 : nil)
+        (
+            asleep: 380 + rng.next() * 140, bedtime: 640 + rng.next() * 70, wake: 1120 + rng.next() * 50,
+            hrv: heart ? 40 + rng.next() * 20 : nil, resting: heart ? 52 + rng.next() * 8 : nil
+        )
     }
 }
 
@@ -44,7 +47,9 @@ private func scores(_ history: [NightMetrics], need: Double = 480, asOf: Date = 
 /// A scored day by hand, for stats.
 private func day(_ index: Int, _ score: Int) -> RecoveryDayScore {
     let night = SleepNightKey(year: 2026, month: 8, day: 1).adding(days: index)
-    return RecoveryDayScore(night: night, date: Fixture.date(2026, 8, 2, 7).addingTimeInterval(Double(index) * 86400), score: score, confidence: .high, factorScores: [], capApplied: false, asleepMinutes: 450)
+    return RecoveryDayScore(
+        night: night, date: Fixture.date(2026, 8, 2, 7).addingTimeInterval(Double(index) * 86400), score: score, confidence: .high, factorScores: [],
+        capApplied: false, asleepMinutes: 450)
 }
 
 // MARK: - One score per night
@@ -63,10 +68,11 @@ struct RecoveryHistoryScoresTests {
 
     @Test func aNightWhoseScoreWasTodaysIsTheSameScore() throws {
         let history = varied(count: 30)
-        let today = try #require({ () -> RecoveryResult? in
-            if case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: now) { return result }
-            return nil
-        }())
+        let today = try #require(
+            { () -> RecoveryResult? in
+                if case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: now) { return result }
+                return nil
+            }())
         let last = try #require(scores(history).last)
         #expect(last.score == today.score)
         #expect(last.factorScores.map(\.kind) == RecoveryFactorKind.allCases.filter { today.factor($0) != nil })

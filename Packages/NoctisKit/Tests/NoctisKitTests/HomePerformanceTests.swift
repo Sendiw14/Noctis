@@ -3,6 +3,7 @@ import Foundation
 import Observation
 import SwiftUI
 import Testing
+
 @testable import HealthProviding
 @testable import HomeFeature
 @testable import InsightsKit
@@ -159,7 +160,10 @@ struct HomeRenderModelTests {
     @Test func theScreenReadsItsGeometryFromTheSnapshotsModel() async throws {
         let snap = await snapshot()
         let screen = HomeScreenBuilder.build(snap, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
-        guard case .scored(let scored) = screen.recovery else { Issue.record("not scored"); return }
+        guard case .scored(let scored) = screen.recovery else {
+            Issue.record("not scored")
+            return
+        }
         #expect(scored.segments.map(\.arc) == snap.render.ring)
         #expect(screen.lastNight?.chart.render == snap.render.night)
         #expect(screen.week?.bars.map(\.fraction) == snap.render.week.bars.map(\.fraction))
@@ -515,13 +519,19 @@ struct HomeCollapseWriteTests {
     @Test func aScrollWritesStateOnlyWhenAStepOrThresholdIsCrossed() async {
         let model = await model()
         var writes = 0
-        var change = watch { _ = model.collapseProgress; _ = model.showsCollapsedBar }
+        var change = watch {
+            _ = model.collapseProgress
+            _ = model.showsCollapsedBar
+        }
         /// Counts a write and watches again.
         func scroll(to top: Double) {
             model.scrolled(visibleTop: top, heroTop: 0, heroHeight: 500)
             if change.happened {
                 writes += 1
-                change = watch { _ = model.collapseProgress; _ = model.showsCollapsedBar }
+                change = watch {
+                    _ = model.collapseProgress
+                    _ = model.showsCollapsedBar
+                }
             }
         }
         // 500pt hero at the top of the content: progress moves in steps of
@@ -571,10 +581,15 @@ struct HomePerformanceRulesTests {
     /// system sources names 12 or more. (Onboarding, which has its own rules,
     /// and its badge are left out.)
     @Test func noTextInTheMainAppIsUnder12pt() throws {
-        let pattern = try Regex(#"(?:noctisFont|noctisNumeral)\(\s*(\d+(?:\.\d+)?)|Font\.system\(size:\s*(\d+(?:\.\d+)?)|\.font\(\.system\(size:\s*(\d+(?:\.\d+)?)"#)
+        let pattern = try Regex(
+            #"(?:noctisFont|noctisNumeral)\(\s*(\d+(?:\.\d+)?)|Font\.system\(size:\s*(\d+(?:\.\d+)?)|\.font\(\.system\(size:\s*(\d+(?:\.\d+)?)"#)
         var checked = 0
         for module in ["HomeFeature", "SleepFeature", "RecoveryFeature", "DesignSystem", "AppRoot"] {
-            for file in try Self.sources(module) where !["NoctisBadge.swift", "NoctisScaledType.swift", "NoctisMetric.swift", "OnboardingScaffold.swift", "SampleNight.swift", "NoctisPaper.swift", "NoctisColor.swift"].contains(file.name) {
+            for file in try Self.sources(module)
+            where ![
+                "NoctisBadge.swift", "NoctisScaledType.swift", "NoctisMetric.swift", "OnboardingScaffold.swift", "SampleNight.swift", "NoctisPaper.swift",
+                "NoctisColor.swift",
+            ].contains(file.name) {
                 for match in file.text.matches(of: pattern) {
                     let number = (1...3).compactMap { match.output[$0].substring }.first.flatMap { Double($0) }
                     if let number {
@@ -710,7 +725,11 @@ struct NoctisSignpostTests {
     @Test func everyIntervalHasItsOwnNameForInstrumentsAndTheMetrics() {
         let names = NoctisSignpost.Interval.allCases.map(\.rawValue)
         #expect(Set(names).count == names.count)
-        #expect(Set(names) == ["LaunchToFirstFrame", "LaunchToPopulated", "Reveal", "Morph", "Collapse", "Scrub", "TabSwitch", "SleepLoad", "SleepModel", "RecoveryLoad", "RecoveryModel", "BackgroundRefresh"])
+        #expect(
+            Set(names) == [
+                "LaunchToFirstFrame", "LaunchToPopulated", "Reveal", "Morph", "Collapse", "Scrub", "TabSwitch", "SleepLoad", "SleepModel", "RecoveryLoad",
+                "RecoveryModel", "BackgroundRefresh",
+            ])
         #expect(NoctisSignpost.subsystem == "com.noctis.app" && NoctisSignpost.category == "Performance")
     }
 

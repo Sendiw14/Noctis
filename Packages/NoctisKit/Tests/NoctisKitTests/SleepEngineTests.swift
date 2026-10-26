@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import HealthProviding
 @testable import NoctisCore
 @testable import RecoveryKit
@@ -28,7 +29,8 @@ enum SleepFixture {
             cursor = end
         }
         if inBed {
-            result.append(Fixture.sample(bedtime.addingTimeInterval(-5 * 60), cursor.addingTimeInterval(5 * 60), .inBed, source: "Phone", bundle: "com.example.phone"))
+            result.append(
+                Fixture.sample(bedtime.addingTimeInterval(-5 * 60), cursor.addingTimeInterval(5 * 60), .inBed, source: "Phone", bundle: "com.example.phone"))
         }
         return result
     }
@@ -84,7 +86,9 @@ enum SleepFixture {
     ) -> [SleepSession] {
         let samples = (0..<count).flatMap { index -> [RawSleepSample] in
             let key = last.adding(days: index - (count - 1))
-            return night(key, hour: bedtime(index), blocks: staged(asleep: asleep(index), deep: deep(index), rem: rem(index), awakeAfterOnset: awakeAfterOnset(index)), inBed: inBed)
+            return night(
+                key, hour: bedtime(index), blocks: staged(asleep: asleep(index), deep: deep(index), rem: rem(index), awakeAfterOnset: awakeAfterOnset(index)),
+                inBed: inBed)
         }
         return sessions(samples)
     }
@@ -217,12 +221,14 @@ struct SleepQualityEngineTests {
         var samples = (0..<priorNights).flatMap { index -> [RawSleepSample] in
             let key = lastKey.adding(days: index - priorNights)
             let asleep = 480 + Double(index % 3) * 6
-            let blocks: [(SleepStageValue, Double)] = staged
+            let blocks: [(SleepStageValue, Double)] =
+                staged
                 ? SleepFixture.staged(asleep: asleep, deep: 0.18 + Double(index % 3) * 0.01, rem: 0.22 + Double(index % 2) * 0.01)
                 : [(.unspecified, asleep)]
             return SleepFixture.night(key, hour: 23 + Double(index % 3) * 0.1, blocks: blocks, inBed: inBed)
         }
-        let blocks: [(SleepStageValue, Double)] = staged
+        let blocks: [(SleepStageValue, Double)] =
+            staged
             ? SleepFixture.staged(asleep: last.asleep, deep: last.deep, rem: last.rem, awakeAfterOnset: last.awake)
             : [(.unspecified, last.asleep)]
         samples += SleepFixture.night(lastKey, hour: last.bedtime, blocks: blocks, inBed: inBed)
@@ -275,7 +281,10 @@ struct SleepQualityEngineTests {
         let typical = try result(priorNights: 6)
         #expect(typical.stageBalance?.basis == .typical)
         let personal = try result(priorNights: 14)
-        guard case .personal(let nights)? = personal.stageBalance?.basis else { Issue.record("expected personal"); return }
+        guard case .personal(let nights)? = personal.stageBalance?.basis else {
+            Issue.record("expected personal")
+            return
+        }
         #expect(nights == 14)
         let seven = try result(priorNights: 7)
         #expect(seven.stageBalance?.basis == .personal(nights: 7))

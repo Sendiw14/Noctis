@@ -57,7 +57,10 @@ extension NoctisMetricValue {
                 flush()
                 if !parts.isEmpty { parts.append(.space) }
             } else {
-                if !number.isEmpty { parts.append(.number(number)); number = "" }
+                if !number.isEmpty {
+                    parts.append(.number(number))
+                    number = ""
+                }
                 unit.append(character)
             }
         }

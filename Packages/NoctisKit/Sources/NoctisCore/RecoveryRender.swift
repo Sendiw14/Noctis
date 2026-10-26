@@ -183,7 +183,9 @@ public nonisolated enum RecoveryRenderModelBuilder {
 
     /// The row's line over the history range: the last 7 nights of the
     /// 14-night series for 7D, otherwise the series that covers the range.
-    static func rowSeries(_ kind: RecoveryFactorKind, range: RecoveryHistoryRange, snapshot: RecoverySnapshot, fortnight: RecoveryFactorSeries) -> FactorLineRender? {
+    static func rowSeries(
+        _ kind: RecoveryFactorKind, range: RecoveryHistoryRange, snapshot: RecoverySnapshot, fortnight: RecoveryFactorSeries
+    ) -> FactorLineRender? {
         switch range {
         case .week: factorLine(fortnight, last: 7)
         case .month: snapshot.series(kind, .month).flatMap { factorLine($0) }
@@ -252,10 +254,11 @@ public nonisolated enum RecoveryRenderModelBuilder {
     /// A round step for the labels: whole hours for minutes, 1, 2, 5, 10…
     /// for ms and bpm, giving at most five labels.
     static func tickStep(_ kind: RecoveryFactorKind, span: Double) -> Double {
-        let candidates: [Double] = switch kind {
-        case .sleepDuration, .sleepConsistency: [30, 60, 120, 180, 240, 360]
-        case .hrv, .restingHeartRate: [1, 2, 5, 10, 20, 50, 100]
-        }
+        let candidates: [Double] =
+            switch kind {
+            case .sleepDuration, .sleepConsistency: [30, 60, 120, 180, 240, 360]
+            case .hrv, .restingHeartRate: [1, 2, 5, 10, 20, 50, 100]
+            }
         let wanted = span / 5
         return candidates.first { $0 >= wanted } ?? candidates[candidates.count - 1]
     }

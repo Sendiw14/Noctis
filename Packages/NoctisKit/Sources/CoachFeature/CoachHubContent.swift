@@ -1,5 +1,5 @@
-import DesignSystem
 import CoachKit
+import DesignSystem
 import Foundation
 import HomeFeature
 import NoctisCore
@@ -84,7 +84,8 @@ public nonisolated enum CoachHubBuilder {
         var learning: String?
         if state == nil, case .learning(let nights)? = dataState, nights > 0 {
             let count = nights.formatted(.number.locale(format.locale))
-            learning = nights == 1
+            learning =
+                nights == 1
                 ? "Coach has \(count) night to read so far. Answers say when there isn't enough yet."
                 : "Coach has \(count) nights to read so far. Answers say when there isn't enough yet."
         }
@@ -119,15 +120,16 @@ public nonisolated enum CoachHubBuilder {
     }
 
     static func card(_ suggestion: CoachSuggestion, enabled: Bool) -> CoachQuestionCard {
-        let (symbol, tile): (String, CoachTile) = switch suggestion.question {
-        case .recovery: ("heart", .lavender)
-        case .sleep: ("moon.zzz", .sage)
-        case .week: ("calendar", .butter)
-        case .bedtime: ("bed.double", .apricot)
-        case .consistency: ("repeat", .butter)
-        case .focus: ("scope", .rose)
-        case .insight: ("lightbulb", .butter)
-        }
+        let (symbol, tile): (String, CoachTile) =
+            switch suggestion.question {
+            case .recovery: ("heart", .lavender)
+            case .sleep: ("moon.zzz", .sage)
+            case .week: ("calendar", .butter)
+            case .bedtime: ("bed.double", .apricot)
+            case .consistency: ("repeat", .butter)
+            case .focus: ("scope", .rose)
+            case .insight: ("lightbulb", .butter)
+            }
         return CoachQuestionCard(
             question: suggestion.question, title: CoachQuestionText.text(suggestion.question), symbol: symbol, tile: tile, isEnabled: enabled
         )

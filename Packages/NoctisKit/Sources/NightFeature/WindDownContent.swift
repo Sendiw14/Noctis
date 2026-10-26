@@ -1,8 +1,8 @@
 import DesignSystem
 import Foundation
 import NightKit
-import SoundKit
 import NoctisText
+import SoundKit
 
 /// The Wind-down screen's fixed words (APP_RULES.md R32). Calm and plain: no streak, no score, no
 /// shame, and nothing about what any of it does for anyone's sleep or health.

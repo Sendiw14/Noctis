@@ -94,8 +94,14 @@ public actor BackgroundRefresher {
         let budget = timeBudget
         return await withCheckedContinuation { continuation in
             let gate = OneShot(continuation)
-            Task { await work(); gate.finish(true) }
-            Task { await wait(budget); gate.finish(false) }
+            Task {
+                await work()
+                gate.finish(true)
+            }
+            Task {
+                await wait(budget)
+                gate.finish(false)
+            }
         }
     }
 }

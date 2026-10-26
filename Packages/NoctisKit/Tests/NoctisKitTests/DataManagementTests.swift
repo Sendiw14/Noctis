@@ -28,7 +28,8 @@ struct DataManagementCopyTests {
             #expect(message.contains(group.removes), Comment(rawValue: "\(group.id) does not say what is removed"))
             #expect(message.contains(group.keeps), Comment(rawValue: "\(group.id) does not say what is kept"))
             #expect(group.keeps.contains("not affected") || group.keeps.contains("untouched") || group.keeps.contains("kept"), Comment(rawValue: group.id))
-            #expect(!group.question.isEmpty && group.question.hasSuffix("?") && !group.confirm.isEmpty && group.done.hasSuffix("."), Comment(rawValue: group.id))
+            #expect(
+                !group.question.isEmpty && group.question.hasSuffix("?") && !group.confirm.isEmpty && group.done.hasSuffix("."), Comment(rawValue: group.id))
         }
         #expect(shared.groups.map(\.id) == ["journal", "coach", "insights", "reviews", "windDown", "cache", "preferences", "setAside"])
     }
@@ -42,13 +43,18 @@ struct DataManagementCopyTests {
     @Test func theDeleteAllSheetListsWhatGoesFromTheInventoryAndWhatStays() {
         let removes = DataManagementCopy.deleteAllRemoves(shared)
         #expect(removes.lead == "Everything NOCTIS stores on this iPhone:")
-        for name in ["Your profile", "Preferences", "Wake alarm", "Wind-down history", "Journal", "Coach conversations", "Insights history", "Cached summaries", "Scheduled reminders"] {
+        for name in [
+            "Your profile", "Preferences", "Wake alarm", "Wind-down history", "Journal", "Coach conversations", "Insights history", "Cached summaries",
+            "Scheduled reminders",
+        ] {
             #expect(removes.items.contains(name), Comment(rawValue: name))
         }
         #expect(!removes.items.contains("Apple Health data") && !removes.items.contains("Subscription"), "what is not NOCTIS's to delete")
         #expect(DataManagementCopy.deleteAllKeeps == ["Your Apple Health data is untouched.", "Your subscription isn't canceled; manage it in Settings."])
         #expect(DataManagementCopy.manageSubscription == "Manage subscription" && DataManagementCopy.deleteAllClosing.contains("can't be undone"))
-        #expect(DataManagementCopy.exportNote().contains("raw Apple Health readings") && DataManagementCopy.exportNote().contains("stays on this iPhone unless you share it"))
+        #expect(
+            DataManagementCopy.exportNote().contains("raw Apple Health readings")
+                && DataManagementCopy.exportNote().contains("stays on this iPhone unless you share it"))
     }
 
     @Test func theResultLineSaysWhatHappened() {
@@ -76,7 +82,10 @@ struct DeletionRunnerTests {
         var heard: [String] = []
         let steps = [
             DeleteStep(id: "a", title: "A") { ran.append("a") },
-            DeleteStep(id: "b", title: "B") { ran.append("b"); throw Boom() },
+            DeleteStep(id: "b", title: "B") {
+                ran.append("b")
+                throw Boom()
+            },
             DeleteStep(id: "c", title: "C") { ran.append("c") },
         ]
         let report = await DeletionRunner.run(steps) { id, finished, failure in heard.append("\(id)\(finished ? "+" : "")\(failure.map { ":\($0)" } ?? "")") }
@@ -111,7 +120,8 @@ final class DataBench {
     let roots: DataRoots
     var calls: [String] = []
     let watchSession = FakeWatchSession()
-    lazy var watch = WatchSyncService(session: watchSession, defaults: WatchSyncDefaults(defaults: defaults), clock: { Date(timeIntervalSince1970: 1_790_100_000) })
+    lazy var watch = WatchSyncService(
+        session: watchSession, defaults: WatchSyncDefaults(defaults: defaults), clock: { Date(timeIntervalSince1970: 1_790_100_000) })
     lazy var sleepSounds = SleepSoundsPublisher(store: SleepSoundsStore(directory: roots.url(.appGroup)), reload: { [unowned self] in calls.append("control") })
     var manager: DataManager!
     var failJournal = false
@@ -145,25 +155,26 @@ final class DataBench {
     }
 
     func wire() {
-        manager = DataWiring.manager(DataWiringInputs(
-            model: model, preferences: preferences, defaults: defaults, profileStore: profileStore, alarmService: alarmService, alarmStore: alarmStore,
-            windDownStore: windDownStore, journal: failJournal ? FailingJournal() : journal, coachHistory: coachHistory, insightFile: insightFile,
-            snapshotStore: snapshotStore, notifications: NotificationScheduler(center: center), roots: roots, appVersion: { "NOCTIS 1.0 (7)" },
-            stopAudio: { [unowned self] in calls.append("audio") }, endWindDown: { [unowned self] in calls.append("windDown") },
-            silenceReminders: { [unowned self] in
-                calls.append("silence")
-                preferences.onChange = nil
-                model.onProfileChange = nil
-            },
-            settleReminders: { [unowned self] in calls.append("settle") },
-            afterJournalDeleted: { [unowned self] in calls.append("journalReload") },
-            afterCoachDeleted: { [unowned self] in calls.append("coachReload") },
-            clearMemory: { [unowned self] in calls.append("memory") },
-            forgetSoundChoices: { [unowned self] in calls.append("soundChoices") },
-            reloadWidgets: { [unowned self] in calls.append("widgets") }, watch: watch, sleepSounds: sleepSounds,
-            reloadControls: { [unowned self] in calls.append("controls") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") },
-            stopBackgroundUpdates: { [unowned self] in calls.append("background") }, reviewFile: reviewFile
-        ))
+        manager = DataWiring.manager(
+            DataWiringInputs(
+                model: model, preferences: preferences, defaults: defaults, profileStore: profileStore, alarmService: alarmService, alarmStore: alarmStore,
+                windDownStore: windDownStore, journal: failJournal ? FailingJournal() : journal, coachHistory: coachHistory, insightFile: insightFile,
+                snapshotStore: snapshotStore, notifications: NotificationScheduler(center: center), roots: roots, appVersion: { "NOCTIS 1.0 (7)" },
+                stopAudio: { [unowned self] in calls.append("audio") }, endWindDown: { [unowned self] in calls.append("windDown") },
+                silenceReminders: { [unowned self] in
+                    calls.append("silence")
+                    preferences.onChange = nil
+                    model.onProfileChange = nil
+                },
+                settleReminders: { [unowned self] in calls.append("settle") },
+                afterJournalDeleted: { [unowned self] in calls.append("journalReload") },
+                afterCoachDeleted: { [unowned self] in calls.append("coachReload") },
+                clearMemory: { [unowned self] in calls.append("memory") },
+                forgetSoundChoices: { [unowned self] in calls.append("soundChoices") },
+                reloadWidgets: { [unowned self] in calls.append("widgets") }, watch: watch, sleepSounds: sleepSounds,
+                reloadControls: { [unowned self] in calls.append("controls") }, endLiveActivities: { [unowned self] in calls.append("liveActivities") },
+                stopBackgroundUpdates: { [unowned self] in calls.append("background") }, reviewFile: reviewFile
+            ))
     }
 
     /// The widgets' summary, in the (test) App Group.
@@ -184,7 +195,12 @@ final class DataBench {
             $0.needMinutes = 450
             $0.sleepGoalHours = 7.5
         }
-        preferences.update { $0.appearance = .dark; $0.windDownMinutes = 30; $0.notifications.weeklyIsOn = false; $0.soundsGainPercent = 70 }
+        preferences.update {
+            $0.appearance = .dark
+            $0.windDownMinutes = 30
+            $0.notifications.weeklyIsOn = false
+            $0.soundsGainPercent = 70
+        }
         for key in shared[.soundSettings].defaultsKeys + shared[.appState].defaultsKeys { defaults.set("x", forKey: key) }
         defaults.set(true, forKey: "noctis.stray.key")
         _ = await alarmService.enable(AlarmSettings(minutesSinceMidnight: 6 * 60 + 30))
@@ -262,12 +278,15 @@ struct DataManagementIntegrationTests {
         #expect(!FileManager.default.fileExists(atPath: bench.snapshotStore.fileURL.path))
         #expect(!FileManager.default.fileExists(atPath: bench.widgetFile.path), "the widgets' summary is deleted")
         #expect(!FileManager.default.fileExists(atPath: bench.controlsFile.path), "the Sleep sounds control's status is deleted")
-        #expect(bench.calls.contains("widgets") && bench.calls.contains("controls") && bench.calls.contains("liveActivities"), "the widgets and controls are told to redraw and no Live Activity is left")
+        #expect(
+            bench.calls.contains("widgets") && bench.calls.contains("controls") && bench.calls.contains("liveActivities"),
+            "the widgets and controls are told to redraw and no Live Activity is left")
         #expect(bench.calls.contains("background"), "Health stops waking the app")
         // The Watch: told to wipe with a greater epoch and no snapshot; the epoch is the one value that stays, the status notes go.
         let sync = WatchSyncDefaults(defaults: bench.defaults)
         let wipe = try #require(bench.watchSession.contexts.last.flatMap { WatchContext(dictionary: $0) })
-        #expect(wipe.snapshot == nil && wipe.epoch == 1_790_100_000 && sync.dataEpoch == 1_790_100_000 && sync.dataEpoch > 1_000, "the epoch is now, and it stays")
+        #expect(
+            wipe.snapshot == nil && wipe.epoch == 1_790_100_000 && sync.dataEpoch == 1_790_100_000 && sync.dataEpoch > 1_000, "the epoch is now, and it stays")
         #expect(sync.lastSentAt == nil && sync.complicationMark == nil && bench.defaults.object(forKey: WatchSyncDefaults.lastSentAtKey) == nil)
         #expect(bench.manager.stepNotes["watch"] == "Apple Watch: wipe sent")
         #expect(report.entries.contains { $0.id == "watch" && $0.failure == nil })
@@ -301,7 +320,9 @@ struct DataManagementIntegrationTests {
         #expect(order.prefix(5) == ["silence", "audio", "windDown", "cancelAlarm", "reminders"])
         #expect(order.suffix(2) == ["preferences", "setup"])
         let stores = Array(order.dropFirst(5).dropLast(2))
-        #expect(stores.contains("databases") && stores.contains("journal") && stores.contains("coachHistory") && stores.contains("profile") && stores.contains("cachedSummaries") && stores.contains("systemFiles"))
+        #expect(
+            stores.contains("databases") && stores.contains("journal") && stores.contains("coachHistory") && stores.contains("profile")
+                && stores.contains("cachedSummaries") && stores.contains("systemFiles"))
         #expect(!stores.contains("appleHealth") && !stores.contains("purchases") && !stores.contains("diagnosticLog"), "not NOCTIS's to delete")
         #expect(bench.manager.steps.allSatisfy { $0.state == .done })
         #expect(bench.manager.deleteAllReport?.succeeded == true)
@@ -312,7 +333,8 @@ struct DataManagementIntegrationTests {
         bench.wire()
         let support = bench.roots.url(.applicationSupport)
         let files = [
-            "default.store", "default.store-wal", "default.store-shm", ".default_SUPPORT/_EXTERNAL_DATA/x", "Noctis/Journal/journal.store", "Noctis/Journal/journal.store-wal",
+            "default.store", "default.store-wal", "default.store-shm", ".default_SUPPORT/_EXTERNAL_DATA/x", "Noctis/Journal/journal.store",
+            "Noctis/Journal/journal.store-wal",
             "Noctis/CoachHistory/coach-history.store", "Noctis/CoachHistory/coach-history.store-shm",
         ]
         for file in files {
@@ -339,7 +361,7 @@ struct DataManagementIntegrationTests {
         let pending = await bench.center.pendingIdentifiers()
         #expect(bench.profileStore.recordCount == 0 && coachLeft == 0 && bench.windDownStore.sessions().isEmpty, "the rest were deleted")
         #expect(pending.isEmpty && bench.insightFile.load() == nil)
-        if case .failed = bench.manager.steps.first(where: { $0.id == "journal" })?.state { } else { Issue.record("the sheet shows the failed step") }
+        if case .failed = bench.manager.steps.first(where: { $0.id == "journal" })?.state {} else { Issue.record("the sheet shows the failed step") }
     }
 
     @Test func deletingOneKindLeavesTheRest() async throws {
@@ -357,9 +379,13 @@ struct DataManagementIntegrationTests {
         let coachGone = await bench.coachHistory.messageCount()
         #expect(coachGone == 0 && bench.calls.contains("coachReload"))
         _ = await bench.manager.delete(shared.groups.first { $0.id == "insights" }!)
-        #expect(bench.insightFile.load() == nil && bench.windDownStore.sessions().count == 1 && bench.reviewFile.load() != nil, "deleting insights leaves the reviews")
+        #expect(
+            bench.insightFile.load() == nil && bench.windDownStore.sessions().count == 1 && bench.reviewFile.load() != nil,
+            "deleting insights leaves the reviews")
         let reviewsGroup = shared.groups.first { $0.id == "reviews" }!
-        #expect(bench.manager.sizeText(for: reviewsGroup).hasSuffix("B") || bench.manager.sizeText(for: reviewsGroup).contains("Less"), "Reviews has a size of its own")
+        #expect(
+            bench.manager.sizeText(for: reviewsGroup).hasSuffix("B") || bench.manager.sizeText(for: reviewsGroup).contains("Less"),
+            "Reviews has a size of its own")
         let reviewsReport = await bench.manager.delete(reviewsGroup)
         #expect(reviewsReport.succeeded && bench.reviewFile.load() == nil && bench.windDownStore.sessions().count == 1)
         #expect(bench.manager.sizeText(for: reviewsGroup) == "Nothing stored")
@@ -377,8 +403,11 @@ struct DataManagementIntegrationTests {
         let report = await bench.manager.delete(shared.groups.first { $0.id == "preferences" }!)
         #expect(report.succeeded)
         #expect(bench.preferences.values == PreferenceValues())
-        for key in shared[.preferences].defaultsKeys + shared[.soundSettings].defaultsKeys { #expect(bench.defaults.object(forKey: key) == nil, Comment(rawValue: key)) }
-        #expect(bench.model.profile.selectedGoals == [.betterSleep] && bench.model.profile.primaryGoal == .betterSleep && bench.model.profile.secondaryGoal == nil)
+        for key in shared[.preferences].defaultsKeys + shared[.soundSettings].defaultsKeys {
+            #expect(bench.defaults.object(forKey: key) == nil, Comment(rawValue: key))
+        }
+        #expect(
+            bench.model.profile.selectedGoals == [.betterSleep] && bench.model.profile.primaryGoal == .betterSleep && bench.model.profile.secondaryGoal == nil)
         #expect(bench.model.profile.name == "Sam" && bench.model.profile.needMinutes == 450 && bench.model.profile.onboardingComplete)
         #expect(bench.defaults.object(forKey: shared[.appState].defaultsKeys[0]) != nil, "flags are not preferences")
         #expect(bench.calls.contains("soundChoices"))
@@ -392,7 +421,9 @@ struct DataManagementIntegrationTests {
         #expect(bench.manager.sizeText(for: cache).contains("B") || bench.manager.sizeText(for: cache).contains("Less"))
         _ = await bench.manager.delete(cache)
         #expect(bench.manager.sizeText(for: cache) == "Nothing stored")
-        #expect(bench.manager.sizeText(for: shared.groups.first { $0.id == "windDown" }!) == "Kept with your profile" || bench.manager.sizeText(for: shared.groups.first { $0.id == "windDown" }!).hasSuffix("B"))
+        #expect(
+            bench.manager.sizeText(for: shared.groups.first { $0.id == "windDown" }!) == "Kept with your profile"
+                || bench.manager.sizeText(for: shared.groups.first { $0.id == "windDown" }!).hasSuffix("B"))
     }
 }
 
@@ -431,7 +462,9 @@ struct DataExportTests {
         }
         for category in shared.categories where category.holdsUserContent { if case .included(let key) = category.export { #expect(categories[key] != nil) } }
         let profile = try #require(categories["profile"] as? [String: Any])
-        #expect(profile["name"] as? String == "Sam" && profile["sleepNeedMinutes"] as? Int == 450 && (profile["goals"] as? [String]) == ["moreEnergy", "betterFocus"])
+        #expect(
+            profile["name"] as? String == "Sam" && profile["sleepNeedMinutes"] as? Int == 450
+                && (profile["goals"] as? [String]) == ["moreEnergy", "betterFocus"])
         let journal = try #require(categories["journal"] as? [[String: Any]])
         #expect(journal.first?["text"] as? String == "A good day" && journal.first?["mood"] as? Int == 3)
         let coach = try #require(categories["coachHistory"] as? [[String: Any]])
@@ -454,7 +487,10 @@ struct DataExportTests {
         let url = try await bench.manager.exportFile()
         defer { bench.manager.discardExport() }
         let text = try String(contentsOf: url, encoding: .utf8)
-        for forbidden in ["sourceBundleID", "sourceName", "sdnnMilliseconds", "HKQuantity", "HKCategory", "RawSleepSample", "HeartRateSample", "\"stage\"", "respiratoryRate\""] {
+        for forbidden in [
+            "sourceBundleID", "sourceName", "sdnnMilliseconds", "HKQuantity", "HKCategory", "RawSleepSample", "HeartRateSample", "\"stage\"",
+            "respiratoryRate\"",
+        ] {
             #expect(!text.contains(forbidden), Comment(rawValue: "the export holds \(forbidden)"))
         }
         // Categories NOCTIS does not store are not in it, and say why in the inventory.
@@ -508,7 +544,8 @@ struct RestartTests {
     @Test func theAppRestartsAfterDeleteAllWithAFreshContainerAndNoDebugSkip() throws {
         let app = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/NoctisApp.swift"), encoding: .utf8)
         #expect(app.contains("AppContainer(restarted: true)") && app.contains(".id(container.generation)"))
-        let container = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
+        let container = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
         #expect(container.contains("public init(restarted: Bool = false)") && container.contains("NoctisDataRegistry.shared.reset()"))
         for flag in ["debug.skipOnboarding && !restarted", "debug.resetState && !restarted", "let route = debug.initialRoute, !restarted"] {
             #expect(container.contains(flag), Comment(rawValue: "a restart still honours \(flag)"))

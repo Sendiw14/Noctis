@@ -1,5 +1,6 @@
 import SwiftUI
 import Testing
+
 @testable import DesignSystem
 
 /// APP_RULES.md R5 contrast floors, checked in both Light and Dark.
@@ -168,7 +169,8 @@ struct NoctisAppContrastTests {
     /// Block ink on all three blocks, and on the core tint.
     @Test(arguments: modes)
     func blockInkReadsOnEveryBlockAndTheCoreTint(_ mode: String, _ palette: NoctisAppPalette) {
-        for (name, fill) in [("sage", palette.blockSage), ("lavender", palette.blockLavender), ("butter", palette.blockButter), ("coreTint", palette.coreTint)] {
+        for (name, fill) in [("sage", palette.blockSage), ("lavender", palette.blockLavender), ("butter", palette.blockButter), ("coreTint", palette.coreTint)]
+        {
             let value = ratio(palette.blockInk, fill)
             #expect(value >= 4.5, "\(mode): block ink on \(name) \(value) < 4.5:1")
         }
@@ -243,7 +245,9 @@ struct NoctisAppContrastTests {
     func theDestructiveColorsReadInBothModes(_ mode: String, _ palette: NoctisAppPalette) {
         #expect(ratio(palette.destructive, palette.bg) >= 4.5, "\(mode): delete text on the paper \(ratio(palette.destructive, palette.bg))")
         #expect(ratio(palette.destructive, palette.surface) >= 4.5, "\(mode): delete text on the card \(ratio(palette.destructive, palette.surface))")
-        #expect(ratio(palette.destructiveLabel, palette.destructive) >= 4.5, "\(mode): the label on the delete fill \(ratio(palette.destructiveLabel, palette.destructive))")
+        #expect(
+            ratio(palette.destructiveLabel, palette.destructive) >= 4.5,
+            "\(mode): the label on the delete fill \(ratio(palette.destructiveLabel, palette.destructive))")
     }
 
     /// Profile's sand field: #E6D9BF in Light, #BFA97F in Dark, with cocoa ink (the block ink) on both.

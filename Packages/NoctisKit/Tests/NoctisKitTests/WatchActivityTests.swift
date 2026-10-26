@@ -37,7 +37,8 @@ struct WatchActivityTests {
 
     @Test func theActivityCarriesNothingFromHealthForTheWatchToShow() {
         let attributes = Mirror(reflecting: WindDownActivityAttributes(plannedMinutes: 20, startedAt: Date()))
-        let state = Mirror(reflecting: WindDownActivityAttributes.ContentState(phase: .running, windowStart: Date(), windowEnd: Date().addingTimeInterval(60), pausedAt: nil))
+        let state = Mirror(
+            reflecting: WindDownActivityAttributes.ContentState(phase: .running, windowStart: Date(), windowEnd: Date().addingTimeInterval(60), pausedAt: nil))
         #expect(Set(attributes.children.compactMap(\.label)) == ["plannedMinutes", "startedAt"])
         #expect(Set(state.children.compactMap(\.label)) == ["phase", "windowStart", "windowEnd", "pausedAt"])
     }

@@ -19,16 +19,19 @@ enum WidgetFixture {
     static var full: WidgetSnapshot {
         WidgetSnapshot(
             forDay: WidgetDay(year: 2026, month: 9, day: 24), generatedAt: now,
-            plan: WidgetPlan(wakeMinutes: 7 * 60, needMinutes: 8 * 60, bedtimeMinutes: 23 * 60, windowStartMinutes: 22 * 60 + 45, windowEndMinutes: 23 * 60 + 15),
+            plan: WidgetPlan(
+                wakeMinutes: 7 * 60, needMinutes: 8 * 60, bedtimeMinutes: 23 * 60, windowStartMinutes: 22 * 60 + 45, windowEndMinutes: 23 * 60 + 15),
             state: .full,
             recovery: WidgetRecovery(
                 score: 70, delta: 6, confidence: .high,
                 ring: [
                     WidgetRingSegment(kind: .sleepDuration, weight: 0.4, fraction: 0.82), WidgetRingSegment(kind: .hrv, weight: 0.25, fraction: 0.64),
-                    WidgetRingSegment(kind: .restingHeartRate, weight: 0.2, fraction: 0.71), WidgetRingSegment(kind: .sleepConsistency, weight: 0.15, fraction: 0.9),
+                    WidgetRingSegment(kind: .restingHeartRate, weight: 0.2, fraction: 0.71),
+                    WidgetRingSegment(kind: .sleepConsistency, weight: 0.15, fraction: 0.9),
                 ]
             ),
-            lastNight: WidgetNight(asleepMinutes: 402, stages: WidgetStages(deep: 74, core: 236, rem: 92), bedtimeMinutes: 23 * 60 + 4, wakeMinutes: 6 * 60 + 52, quality: 81),
+            lastNight: WidgetNight(
+                asleepMinutes: 402, stages: WidgetStages(deep: 74, core: 236, rem: 92), bedtimeMinutes: 23 * 60 + 4, wakeMinutes: 6 * 60 + 52, quality: 81),
             factors: WidgetFactors(hrv: 54, restingHeartRate: 52), alarm: WidgetAlarm(minutes: 7 * 60, isOn: true)
         )
     }
@@ -66,7 +69,8 @@ struct WidgetSnapshotShapeTests {
         // With every optional there is and the longest numbers.
         var worst = WidgetFixture.full
         worst.recovery = WidgetRecovery(score: 100, delta: -100, confidence: .moderate, ring: worst.recovery?.ring ?? [])
-        worst.lastNight = WidgetNight(asleepMinutes: 1439, stages: WidgetStages(deep: 999, core: 999, rem: 999), bedtimeMinutes: 1439, wakeMinutes: 1439, quality: 100)
+        worst.lastNight = WidgetNight(
+            asleepMinutes: 1439, stages: WidgetStages(deep: 999, core: 999, rem: 999), bedtimeMinutes: 1439, wakeMinutes: 1439, quality: 100)
         worst.factors = WidgetFactors(hrv: 999, restingHeartRate: 199)
         worst.state = .stale(hours: 9999)
         #expect(try worst.encoded().count < WidgetSnapshot.maximumBytes)
@@ -86,15 +90,28 @@ struct WidgetSnapshotShapeTests {
         let object = try #require(try JSONSerialization.jsonObject(with: WidgetFixture.full.encoded()) as? [String: Any])
         var keys = Set<String>()
         func collect(_ value: Any) {
-            if let dictionary = value as? [String: Any] { for (key, inner) in dictionary { keys.insert(key); collect(inner) } }
+            if let dictionary = value as? [String: Any] {
+                for (key, inner) in dictionary {
+                    keys.insert(key)
+                    collect(inner)
+                }
+            }
             if let array = value as? [Any] { array.forEach(collect) }
         }
         collect(object)
-        let allowed: Set<String> = ["v", "day", "at", "p", "st", "rec", "n", "f", "al", "w", "ws", "we", "b", "s", "d", "c", "r", "k", "a", "q", "hrv", "rhr", "m", "on", "deep", "core", "rem", "rf", "nh", "de", "t"]
+        let allowed: Set<String> = [
+            "v", "day", "at", "p", "st", "rec", "n", "f", "al", "w", "ws", "we", "b", "s", "d", "c", "r", "k", "a", "q", "hrv", "rhr", "m", "on", "deep",
+            "core", "rem", "rf", "nh", "de", "t",
+        ]
         #expect(keys.isSubset(of: allowed), "unexpected keys: \(keys.subtracting(allowed).sorted())")
         // And the type's own source names none of them either.
-        let source = (try? String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift"), encoding: .utf8)) ?? ""
-        for word in ["sourceName", "sourceBundle", "sampleDate", "sampleTime", "journal", "Journal", "coach", "Coach", "insight", "Insight", "heartRateSamples"] {
+        let source =
+            (try? String(
+                contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift"), encoding: .utf8))
+            ?? ""
+        for word in [
+            "sourceName", "sourceBundle", "sampleDate", "sampleTime", "journal", "Journal", "coach", "Coach", "insight", "Insight", "heartRateSamples",
+        ] {
             #expect(!RawDefaultsTests.code(source).contains(word), Comment(rawValue: "the snapshot mentions \(word)"))
         }
     }
@@ -107,7 +124,9 @@ struct WidgetSnapshotShapeTests {
 
     @Test func aWidgetDayStartsAtFourInTheMorning() {
         let calendar = WidgetFixture.calendar
-        #expect(WidgetDay.today(at: Fixture.date(2026, 9, 24, 3, 59), calendar: calendar) == WidgetDay(year: 2026, month: 9, day: 23), "the small hours are still last evening's")
+        #expect(
+            WidgetDay.today(at: Fixture.date(2026, 9, 24, 3, 59), calendar: calendar) == WidgetDay(year: 2026, month: 9, day: 23),
+            "the small hours are still last evening's")
         #expect(WidgetDay.today(at: Fixture.date(2026, 9, 24, 4, 0), calendar: calendar) == WidgetDay(year: 2026, month: 9, day: 24))
         #expect(WidgetDay.today(at: Fixture.date(2026, 9, 24, 23, 59), calendar: calendar) == WidgetDay(year: 2026, month: 9, day: 24))
         #expect(WidgetDay.today(at: Fixture.date(2026, 10, 1, 2), calendar: calendar) == WidgetDay(year: 2026, month: 9, day: 30), "across a month")
@@ -159,9 +178,12 @@ struct WidgetSnapshotStoreTests {
         #expect(try store.fileURL.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup == true)
         // Complete-until-first-user-authentication: readable while locked after the first unlock. (The simulator does not report
         // a protection class, so the option is held in the source, and the real iPhone is on the list to check.)
-        let source = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshotStore.swift"), encoding: .utf8)
+        let source = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshotStore.swift"), encoding: .utf8)
         #expect(source.contains(".completeFileProtectionUntilFirstUserAuthentication") && source.contains(".atomic"))
-        #expect(!source.contains(".completeFileProtection,") && !source.contains("completeFileProtection]"), "not the stronger class: a locked widget could not read it")
+        #expect(
+            !source.contains(".completeFileProtection,") && !source.contains("completeFileProtection]"),
+            "not the stronger class: a locked widget could not read it")
     }
 
     @Test func deletingIsIdempotent() throws {
@@ -193,7 +215,9 @@ struct WidgetSnapshotStoreTests {
             let code = RawDefaultsTests.code(file.text)
             #expect(!code.contains("containerURL(forSecurityApplicationGroupIdentifier"), Comment(rawValue: "\(file.path) opens the App Group"))
             #expect(!code.contains("group.com.noctis"), Comment(rawValue: "\(file.path) names the App Group"))
-            #expect(code.range(of: #"UserDefaults\(suiteName"#, options: .regularExpression) == nil || file.path.hasSuffix("HomePreviews.swift"), Comment(rawValue: "\(file.path) opens a defaults suite"))
+            #expect(
+                code.range(of: #"UserDefaults\(suiteName"#, options: .regularExpression) == nil || file.path.hasSuffix("HomePreviews.swift"),
+                Comment(rawValue: "\(file.path) opens a defaults suite"))
         }
         let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/Noctis.entitlements"), encoding: .utf8)
         #expect(entitlements.components(separatedBy: "<string>group.").count == 2, "exactly one group")
@@ -205,14 +229,19 @@ struct WidgetSnapshotStoreTests {
         #expect(!kit.isEmpty)
         for file in kit {
             let code = RawDefaultsTests.code(file.text)
-            for token in ["import HealthKit", "import HealthProviding", "import SwiftData", "import CoachKit", "import JournalKit", "import NoctisCore", "import SleepKit", "import RecoveryKit",
-                          "import InsightsKit", "import NightKit", "HKHealthStore", "ModelContainer", "ModelContext", "import AppRoot"] {
+            for token in [
+                "import HealthKit", "import HealthProviding", "import SwiftData", "import CoachKit", "import JournalKit", "import NoctisCore",
+                "import SleepKit", "import RecoveryKit",
+                "import InsightsKit", "import NightKit", "HKHealthStore", "ModelContainer", "ModelContext", "import AppRoot",
+            ] {
                 #expect(!code.contains(token), Comment(rawValue: "\(file.path) has \(token)"))
             }
         }
         let package = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Package.swift"), encoding: .utf8)
-        #expect(package.contains(#".target(name: "NoctisWidgetKit", dependencies: ["NoctisText", "DesignSystem", "PremiumKit"]"#),
-                "the kit depends on the units and counts (a leaf with no dependencies), the design tokens and the plan's names (a leaf with no dependencies) and nothing more")
+        #expect(
+            package.contains(#".target(name: "NoctisWidgetKit", dependencies: ["NoctisText", "DesignSystem", "PremiumKit"]"#),
+            "the kit depends on the units and counts (a leaf with no dependencies), the design tokens and the plan's names (a leaf with no dependencies) and nothing more"
+        )
     }
 }
 
@@ -223,7 +252,8 @@ struct WidgetSnapshotMakerTests {
 
     private func home(_ scenario: MockScenario, profile: UserProfileSnapshot = UserProfileSnapshot()) async -> HomeSnapshot {
         let clock = now
-        let provider = MockHealthKitProvider(scenario: scenario, referenceDate: clock, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: true, failsQueries: false)
+        let provider = MockHealthKitProvider(
+            scenario: scenario, referenceDate: clock, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: true, failsQueries: false)
         return await HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }).refresh(profile: profile)
     }
 
@@ -235,7 +265,10 @@ struct WidgetSnapshotMakerTests {
         let home = await home(.full)
         let snapshot = try #require(make(home, alarm: WidgetAlarm(minutes: 420, isOn: true)))
         #expect(snapshot.state == .full)
-        guard case .scored(let result)? = home.recovery else { Issue.record("scored"); return }
+        guard case .scored(let result)? = home.recovery else {
+            Issue.record("scored")
+            return
+        }
         let recovery = try #require(snapshot.recovery)
         #expect(recovery.score == result.score && recovery.delta == result.comparison.delta)
         #expect(recovery.ring.map(\.kind) == [.sleepDuration, .hrv, .restingHeartRate, .sleepConsistency], "the ring's order")
@@ -262,7 +295,8 @@ struct WidgetSnapshotMakerTests {
     }
 
     @Test func aRecommendationGivesTheWidgetItsWindowAndItsBedtime() async throws {
-        let recommendation = BedtimeRecommendationEngine.recommend(BedtimeInputs(wakeMinutes: 7 * 60, needMinutes: 8 * 60, balanceMinutes: -90, usualBedtimeMinutes: 23 * 60, nights: 10))
+        let recommendation = BedtimeRecommendationEngine.recommend(
+            BedtimeInputs(wakeMinutes: 7 * 60, needMinutes: 8 * 60, balanceMinutes: -90, usualBedtimeMinutes: 23 * 60, nights: 10))
         let snapshot = try #require(make(await home(.full), bedtime: recommendation))
         #expect(snapshot.plan.bedtimeMinutes == recommendation.centerMinutes)
         #expect(snapshot.plan.windowStartMinutes == recommendation.window?.startMinutes && snapshot.plan.windowEndMinutes == recommendation.window?.endMinutes)
@@ -278,8 +312,14 @@ struct WidgetSnapshotMakerTests {
     @Test func learningHasNoScoreAndSaysHowFarItIs() async throws {
         let home = await home(.learning)
         let snapshot = try #require(make(home))
-        guard case .learning(let nights) = snapshot.state else { Issue.record("learning, not \(snapshot.state)"); return }
-        guard case .learning(let expected) = home.dataState else { Issue.record("home is learning"); return }
+        guard case .learning(let nights) = snapshot.state else {
+            Issue.record("learning, not \(snapshot.state)")
+            return
+        }
+        guard case .learning(let expected) = home.dataState else {
+            Issue.record("home is learning")
+            return
+        }
         #expect(nights == expected)
         #expect(snapshot.recovery == nil && snapshot.factors == nil)
     }
@@ -287,26 +327,34 @@ struct WidgetSnapshotMakerTests {
     @Test func emptyAndNoPermissionAndGapAndStaleEachGetTheirOwnState() async throws {
         #expect(try #require(make(await home(.empty))).state == .empty)
         let clock = now
-        let denied = MockHealthKitProvider(scenario: .full, referenceDate: clock, calendar: Fixture.calendar(), startAuthorized: false, isHealthDataAvailable: true, failsQueries: false)
+        let denied = MockHealthKitProvider(
+            scenario: .full, referenceDate: clock, calendar: Fixture.calendar(), startAuthorized: false, isHealthDataAvailable: true, failsQueries: false)
         let permission = await HomeRepository(provider: denied, timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
         #expect(try #require(make(permission)).state == .noPermission)
         #expect(try #require(make(await home(.gap))).state == .gap)
         let stale = try #require(make(await home(.stale)))
-        guard case .stale(let hours) = stale.state else { Issue.record("stale, not \(stale.state)"); return }
+        guard case .stale(let hours) = stale.state else {
+            Issue.record("stale, not \(stale.state)")
+            return
+        }
         #expect(hours >= 24, "the age at the time it was made")
-        #expect(stale.forDay == WidgetDay.today(at: now, calendar: WidgetFixture.calendar), "a stale snapshot is for the day it was made, not the day of its numbers")
+        #expect(
+            stale.forDay == WidgetDay.today(at: now, calendar: WidgetFixture.calendar),
+            "a stale snapshot is for the day it was made, not the day of its numbers")
     }
 
     @Test func aFailedReadWritesNothing() async throws {
         let clock = now
-        let failing = MockHealthKitProvider(scenario: .full, referenceDate: clock, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: true, failsQueries: true)
+        let failing = MockHealthKitProvider(
+            scenario: .full, referenceDate: clock, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: true, failsQueries: true)
         let home = await HomeRepository(provider: failing, timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
         #expect(home.dataState == .failed)
         #expect(make(home) == nil, "the last good snapshot is left as it was")
     }
 
     @Test func theMakerNeverCopiesASampleASourceOrAnInsight() throws {
-        let source = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/WidgetSnapshotMaker.swift"), encoding: .utf8)
+        let source = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/WidgetSnapshotMaker.swift"), encoding: .utf8)
         let code = RawDefaultsTests.code(source)
         for word in ["sourceName", "sourceBundleID", "newestSample", "topInsight", "heartRate:", "lastNightHeart", "Journal", "Coach"] {
             #expect(!code.contains(word), Comment(rawValue: "the maker reads \(word)"))
@@ -335,7 +383,8 @@ struct WidgetPublisherTests {
     private let now = WidgetFixture.now
 
     private func provider(_ scenario: MockScenario = .full, fails: Bool = false) -> MockHealthKitProvider {
-        MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: true, failsQueries: fails)
+        MockHealthKitProvider(
+            scenario: scenario, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: true, failsQueries: fails)
     }
 
     private func bench(alarm: @escaping @Sendable () async -> WidgetAlarm? = { nil }) throws -> (WidgetPublisher, WidgetSnapshotStore, ReloadCount, URL) {
@@ -393,7 +442,8 @@ struct WidgetPublisherTests {
         let clock = now
         _ = await HomeRepository(provider: provider(), timeZone: Fixture.newYork, clock: { clock }, widgets: publisher).refresh(profile: UserProfileSnapshot())
         let good = try #require(store.load())
-        _ = await HomeRepository(provider: provider(fails: true), timeZone: Fixture.newYork, clock: { clock }, widgets: publisher).refresh(profile: UserProfileSnapshot())
+        _ = await HomeRepository(provider: provider(fails: true), timeZone: Fixture.newYork, clock: { clock }, widgets: publisher).refresh(
+            profile: UserProfileSnapshot())
         #expect(store.load() == good && reloads.count == 1)
     }
 
@@ -445,12 +495,16 @@ struct WidgetLinkTests {
 
     @Test func nothingButTheFiveLinksIsAccepted() {
         let rejected = [
-            "noctis://coach", "noctis://insights", "noctis://insights?category=sleep", "noctis://settings", "noctis://settings?section=notifications", "noctis://profile",
+            "noctis://coach", "noctis://insights", "noctis://insights?category=sleep", "noctis://settings", "noctis://settings?section=notifications",
+            "noctis://profile",
             "noctis://alarm", "noctis://sounds", "noctis://home", "noctis://insight?id=bedtimeShift-3fa9c2d1",
             "noctis://wind-down?autostart=1", "noctis://recovery?range=30d", "noctis://sleep?night=2026-09-28T23:04:00Z", "noctis://tonight?x=1",
-            "noctis://recovery/coach", "noctis://recovery/../coach", "noctis://recovery#section", "noctis://user@recovery", "noctis://user:pw@recovery", "noctis://recovery:8080",
-            "noctis:recovery", "noctis:///recovery", "noctis://", "noctis", "https://recovery", "http://noctis/recovery", "noctisx://recovery", "xnoctis://recovery",
-            "noctis://%72ecovery", "noctis://recovery%00", "noctis://recovery%20", "noctis://r\u{0435}covery", "noctis://RECOVERY.evil.example", "noctis://recovery.evil.example",
+            "noctis://recovery/coach", "noctis://recovery/../coach", "noctis://recovery#section", "noctis://user@recovery", "noctis://user:pw@recovery",
+            "noctis://recovery:8080",
+            "noctis:recovery", "noctis:///recovery", "noctis://", "noctis", "https://recovery", "http://noctis/recovery", "noctisx://recovery",
+            "xnoctis://recovery",
+            "noctis://%72ecovery", "noctis://recovery%00", "noctis://recovery%20", "noctis://r\u{0435}covery", "noctis://RECOVERY.evil.example",
+            "noctis://recovery.evil.example",
             "noctis://recovery//", "noctis://recovery/x", "noctis://wind_down", "noctis://winddown", "noctis://Wind Down",
             "noctis://" + String(repeating: "a", count: 5000), "noctis://recovery?" + String(repeating: "a", count: 5000),
         ]

@@ -39,7 +39,8 @@ public struct AlarmKitBackend: AlarmBackend {
         } catch {
             // The system's error domain and code (constants), never its description and never the person's data.
             let reported = error as NSError
-            Logger(subsystem: "com.noctis.app", category: "alarm").error("AlarmKit schedule threw \(reported.domain, privacy: .public) \(reported.code, privacy: .public)")
+            Logger(subsystem: "com.noctis.app", category: "alarm").error(
+                "AlarmKit schedule threw \(reported.domain, privacy: .public) \(reported.code, privacy: .public)")
             throw AlarmBackendError.failed
         }
     }

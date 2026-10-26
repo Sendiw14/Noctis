@@ -35,12 +35,13 @@ private func sp(_ text: String) -> String { text.replacingOccurrences(of: "\u{20
 
 /// The words of a line, the way the view writes them (a countdown as "<timer>").
 private func words(_ pieces: [WidgetLockPiece]) -> String {
-    sp(pieces.map { piece -> String in
-        switch piece {
-        case .text(let string), .health(let string): string
-        case .countdown: "<timer>"
-        }
-    }.joined())
+    sp(
+        pieces.map { piece -> String in
+            switch piece {
+            case .text(let string), .health(let string): string
+            case .countdown: "<timer>"
+            }
+        }.joined())
 }
 
 private func lines(_ content: WatchComplicationContent) -> [String] { content.rectangular.map(words) }
@@ -63,7 +64,10 @@ struct WatchRecoveryComplicationTests {
         let made = content(.recovery, sample(), now: at(24, 21, 30))
         #expect(lines(made) == ["Bedtime 11:00 PM", "in <timer>", "Recovery 70"])
         #expect(words(made.inline) == "Bedtime in <timer>" && made.link == .tonight)
-        guard case .countdown(let date) = made.rectangular[1][1] else { Issue.record("a countdown"); return }
+        guard case .countdown(let date) = made.rectangular[1][1] else {
+            Issue.record("a countdown")
+            return
+        }
         #expect(date == at(24, 23))
         #expect(made.gauge == 0.7, "the score stays on the gauge")
         let passed = content(.recovery, sample(), now: at(25, 0, 30))
@@ -89,7 +93,9 @@ struct WatchRecoveryComplicationTests {
 struct WatchSleepComplicationTests {
     @Test func theCircleSaysTheHoursAndMinutesWithOneUnit() {
         #expect(WatchComplications.circularDuration(402) == "6h42" && WatchComplications.circularDuration(365) == "6h05")
-        #expect(WatchComplications.circularDuration(480) == "8h00" && WatchComplications.circularDuration(45) == "45m" && WatchComplications.circularDuration(0) == "0m")
+        #expect(
+            WatchComplications.circularDuration(480) == "8h00" && WatchComplications.circularDuration(45) == "45m"
+                && WatchComplications.circularDuration(0) == "0m")
     }
 
     @Test func itIsTheDurationAndAFlatStageStripAndTheLineIsWords() {
@@ -188,9 +194,12 @@ struct WatchComplicationStateTests {
         for kind in healthKinds {
             #expect(lines(content(kind, sample(.learning(nightsSoFar: 3)))) == ["Learning your baseline", "3 of 5 nights"])
             #expect(words(content(kind, sample(.learning(nightsSoFar: 3))).inline) == "Learning · 3 of 5 nights")
-            #expect(lines(content(kind, sample(.gap))) == ["No sleep recorded", "last night"] && words(content(kind, sample(.gap)).inline) == "No sleep last night")
+            #expect(
+                lines(content(kind, sample(.gap))) == ["No sleep recorded", "last night"] && words(content(kind, sample(.gap)).inline) == "No sleep last night")
             for state in [WidgetDataState.empty, .noPermission] {
-                #expect(lines(content(kind, sample(state))) == ["Open NOCTIS", "to connect Apple Health"] && words(content(kind, sample(state)).inline) == "Open NOCTIS for Health")
+                #expect(
+                    lines(content(kind, sample(state))) == ["Open NOCTIS", "to connect Apple Health"]
+                        && words(content(kind, sample(state)).inline) == "Open NOCTIS for Health")
             }
         }
     }
@@ -200,7 +209,9 @@ struct WatchComplicationStateTests {
             for state in [WidgetDataState.learning(nightsSoFar: 3), .gap, .empty, .noPermission] {
                 let made = content(kind, sample(state))
                 guard kind != .bedtime else { continue }
-                #expect(!made.centerIsHealth && made.rectangular.allSatisfy { !hasHealth($0) } && !hasHealth(made.inline), Comment(rawValue: "\(kind.rawValue) \(state.token)"))
+                #expect(
+                    !made.centerIsHealth && made.rectangular.allSatisfy { !hasHealth($0) } && !hasHealth(made.inline),
+                    Comment(rawValue: "\(kind.rawValue) \(state.token)"))
             }
         }
     }
@@ -214,7 +225,8 @@ struct WatchComplicationPrivacyTests {
             let open = content(kind, sample())
             #expect(open.centerIsHealth && open.rectangular.contains(where: hasHealth) && hasHealth(open.inline), Comment(rawValue: kind.rawValue))
             let locked = open.locked()
-            #expect(locked.gauge == nil && locked.centerText == "" && locked.centerGlyph == "lock.fill" && locked.stages == nil, Comment(rawValue: kind.rawValue))
+            #expect(
+                locked.gauge == nil && locked.centerText == "" && locked.centerGlyph == "lock.fill" && locked.stages == nil, Comment(rawValue: kind.rawValue))
             #expect(!locked.rectangular.contains(where: hasHealth) && !hasHealth(locked.inline))
             #expect(locked.accessibilityLabel == WidgetCopy.unlock)
             let everything = (locked.rectangular + [locked.inline]).map(words).joined(separator: " ") + locked.accessibilityLabel
@@ -242,7 +254,9 @@ struct WatchComplicationScheduleTests {
         let plan = WatchComplicationSchedule.dates(snapshot: sample(), now: now, calendar: ny)
         let dates = plan.entries.map(\.date)
         #expect(dates == [at(24, 16), at(24, 20), at(24, 23)], "now, when the evening starts, and the bedtime; 4 AM is the horizon")
-        #expect(dates.allSatisfy { $0 < now.addingTimeInterval(WidgetTimelineBuilder.horizon) } && plan.reloadAfter <= now.addingTimeInterval(WidgetTimelineBuilder.horizon))
+        #expect(
+            dates.allSatisfy { $0 < now.addingTimeInterval(WidgetTimelineBuilder.horizon) }
+                && plan.reloadAfter <= now.addingTimeInterval(WidgetTimelineBuilder.horizon))
         #expect(plan.reloadAfter > dates.last ?? now)
         #expect(WatchComplicationSchedule.dates(snapshot: nil, now: now, calendar: ny).entries.map(\.date) == [now])
     }
@@ -256,10 +270,13 @@ struct WatchComplicationScheduleTests {
 
     @Test func theMorningKindsAreWantedInTheMorningWindowAndBedtimeInTheEveningHour() {
         let value = sample()
-        func score(_ kind: WatchComplicationKind, _ date: Date) -> Float { WatchComplicationSchedule.relevance(kind, at: date, snapshot: value, calendar: ny).score }
+        func score(_ kind: WatchComplicationKind, _ date: Date) -> Float {
+            WatchComplicationSchedule.relevance(kind, at: date, snapshot: value, calendar: ny).score
+        }
         for kind in [WatchComplicationKind.recovery, .sleep, .quality] {
             #expect(score(kind, at(24, 6, 30)) == 100 && score(kind, at(24, 8)) == 100 && score(kind, at(24, 10)) == 100, Comment(rawValue: kind.rawValue))
-            #expect(score(kind, at(24, 10, 1)) == 10 && score(kind, at(24, 6, 29)) == 10 && score(kind, at(24, 22, 30)) == 10, "idle outside it, even at bedtime")
+            #expect(
+                score(kind, at(24, 10, 1)) == 10 && score(kind, at(24, 6, 29)) == 10 && score(kind, at(24, 22, 30)) == 10, "idle outside it, even at bedtime")
         }
         #expect(score(.bedtime, at(24, 22)) == 90 && score(.bedtime, at(24, 23, 30)) == 90)
         #expect(score(.bedtime, at(24, 21, 59)) == 10 && score(.bedtime, at(24, 23, 31)) == 10 && score(.bedtime, at(24, 8)) == 10, "idle in the morning")
@@ -279,7 +296,9 @@ struct WatchComplicationScheduleTests {
         #expect(morning == DateInterval(start: at(25, 6, 30), end: at(25, 10)))
         let evening = WatchComplicationSchedule.window(.bedtime, snapshot: value, from: at(24, 12), calendar: ny)
         #expect(evening == DateInterval(start: at(24, 22), end: at(24, 23, 30)))
-        #expect(WatchComplicationSchedule.window(.sleep, snapshot: value, from: at(24, 7), calendar: ny) == DateInterval(start: at(24, 6, 30), end: at(24, 10)), "the one going on now")
+        #expect(
+            WatchComplicationSchedule.window(.sleep, snapshot: value, from: at(24, 7), calendar: ny) == DateInterval(start: at(24, 6, 30), end: at(24, 10)),
+            "the one going on now")
         #expect(WatchComplicationSchedule.window(.recovery, snapshot: nil, from: at(24, 12), calendar: ny) == nil)
     }
 
@@ -313,10 +332,14 @@ struct WatchLinkTests {
         let rejected = [
             "noctis://coach", "noctis://insights", "noctis://settings", "noctis://settings?section=notifications", "noctis://wind-down", "noctis://bedtime",
             "noctis://recovery?range=30d", "noctis://sleep?night=2026-09-28", "noctis://tonight?x=1", "noctis://heart?autostart=1",
-            "noctis://recovery/coach", "noctis://recovery/../coach", "noctis://recovery#section", "noctis://user@recovery", "noctis://user:pw@recovery", "noctis://recovery:8080",
-            "noctis:recovery", "noctis:///recovery", "noctis://", "noctis", "https://recovery", "http://noctis/recovery", "noctisx://recovery", "xnoctis://recovery",
-            "noctis://%72ecovery", "noctis://recovery%00", "noctis://recovery%20", "noctis://r\u{0435}covery", "noctis://RECOVERY.evil.example", "noctis://recovery.evil.example",
-            "noctis://recovery//", "noctis://recovery/x", "noctis://" + String(repeating: "a", count: 5000), "noctis://recovery?" + String(repeating: "a", count: 5000),
+            "noctis://recovery/coach", "noctis://recovery/../coach", "noctis://recovery#section", "noctis://user@recovery", "noctis://user:pw@recovery",
+            "noctis://recovery:8080",
+            "noctis:recovery", "noctis:///recovery", "noctis://", "noctis", "https://recovery", "http://noctis/recovery", "noctisx://recovery",
+            "xnoctis://recovery",
+            "noctis://%72ecovery", "noctis://recovery%00", "noctis://recovery%20", "noctis://r\u{0435}covery", "noctis://RECOVERY.evil.example",
+            "noctis://recovery.evil.example",
+            "noctis://recovery//", "noctis://recovery/x", "noctis://" + String(repeating: "a", count: 5000),
+            "noctis://recovery?" + String(repeating: "a", count: 5000),
         ]
         for text in rejected {
             guard let url = URL(string: text) else { continue }
@@ -342,7 +365,8 @@ struct WatchComplicationWordingTests {
     @Test func everySentenceIsFreeOfTheBannedLanguage() {
         var strings: [String] = WatchComplicationKind.allCases.flatMap { [$0.displayName, $0.summary, $0.cornerLabel] }
         let states: [WidgetSnapshot?] = [
-            sample(), sample(.sleepOnly), sample(.learning(nightsSoFar: 3)), sample(.empty), sample(.noPermission), sample(.stale(hours: 14)), sample(.gap), sample(day: 23), nil,
+            sample(), sample(.sleepOnly), sample(.learning(nightsSoFar: 3)), sample(.empty), sample(.noPermission), sample(.stale(hours: 14)), sample(.gap),
+            sample(day: 23), nil,
         ]
         for value in states {
             for now in [at(24, 10), at(24, 21), at(25, 1)] {
@@ -353,7 +377,11 @@ struct WatchComplicationWordingTests {
             }
         }
         #expect(strings.count > 400)
-        for text in strings { #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))")) }
+        for text in strings {
+            #expect(
+                BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty,
+                Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))"))
+        }
     }
 
     @Test func theFourKindsKeepTheirIdentifiersBecauseAFaceKeepsAComplicationByThem() {

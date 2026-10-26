@@ -101,7 +101,9 @@ struct IntentAnswerTests {
         #expect(recovery(stale) == "The latest numbers are 14 hours old. Your recovery was 70. Sleep was 6 hours 42 minutes.")
         #expect(sleep(stale) == "The latest numbers are 14 hours old. The last recorded sleep was 6 hours 42 minutes. Sleep quality was 81.")
         // Older as time goes on, and in days.
-        #expect(WidgetSpoken.recovery(stale, now: morning.addingTimeInterval(3 * 3600), calendar: calendar, format: format).hasPrefix("The latest numbers are 17 hours old."))
+        #expect(
+            WidgetSpoken.recovery(stale, now: morning.addingTimeInterval(3 * 3600), calendar: calendar, format: format).hasPrefix(
+                "The latest numbers are 17 hours old."))
         var old = snapshot(.stale(hours: 60))
         old.generatedAt = morning
         #expect(recovery(old).hasPrefix("The latest numbers are 2 days old."))
@@ -139,16 +141,22 @@ struct IntentAnswerTests {
             strings += [recovery(value), sleep(value), WidgetSpoken.bedtime(value, format: format)]
         }
         strings += [WidgetSpoken.alarmSet(minutes: 390, format: format)]
-        strings += [StartWindDownIntent.dialog(length: nil), StartWindDownIntent.withoutApp, PlaySleepSoundsIntent.withoutApp, SetTonightAlarmIntent.withoutApp]
+        strings += [
+            StartWindDownIntent.dialog(length: nil), StartWindDownIntent.withoutApp, PlaySleepSoundsIntent.withoutApp, SetTonightAlarmIntent.withoutApp,
+        ]
         strings += WindDownLength.allCases.map { StartWindDownIntent.dialog(length: $0) }
         strings += SoundKind.allCases.map { PlaySleepSoundsIntent.dialog(kind: $0) }
         strings += [AlarmIntentOutcome.set(minutes: 450), .couldNotSet, .needsAuthorization].map { SetTonightAlarmIntent.dialog($0, format: format) }
         strings += [AskCoachIntent.noQuestion, AskCoachIntent.opening, AskCoachIntent.withoutApp]
         strings += [IntentGate.startWindDownLocked, IntentGate.coachLimitReached] + SoundKind.allCases.map { IntentGate.premiumSoundDialog($0) }
-        strings += [WidgetSpoken.bedtime(snapshot(.full).with(tier: .free), format: format), WidgetSpoken.bedtime(snapshot(.full).with(tier: .premium), format: format)]
+        strings += [
+            WidgetSpoken.bedtime(snapshot(.full).with(tier: .free), format: format), WidgetSpoken.bedtime(snapshot(.full).with(tier: .premium), format: format),
+        ]
         #expect(strings.count > 40)
         for text in strings {
-            #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))"))
+            #expect(
+                BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty,
+                Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))"))
         }
     }
 }
@@ -179,7 +187,9 @@ struct IntentPerformTests {
         try await run(PlaySleepSoundsIntent(sound: SoundEntity(.ocean)), under: under)
         try await run(PlaySleepSoundsIntent(), under: under)
         try await run(AskCoachIntent(question: "  Why was my sleep short?  "), under: under)
-        #expect(host.calls == ["windDown 30", "windDown nil", "play ocean", "play ocean", "coach Why was my sleep short?"], "no sound named: the last one played, here Ocean")
+        #expect(
+            host.calls == ["windDown 30", "windDown nil", "play ocean", "play ocean", "coach Why was my sleep short?"],
+            "no sound named: the last one played, here Ocean")
     }
 
     @Test func theAlarmIsSetOnlyWithAccessAndOtherwiseTheSheetOpens() async throws {
@@ -204,7 +214,8 @@ struct IntentPerformTests {
         try await run(AskCoachIntent(question: long), under: under)
         #expect(host.calls.count == 1)
         // The intent holds nothing: no storage, no log, no donation.
-        let source = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisIntentKit/ActionIntents.swift"), encoding: .utf8)
+        let source = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisIntentKit/ActionIntents.swift"), encoding: .utf8)
         let ask = try #require(source.range(of: "public struct AskCoachIntent"))
         let code = RawDefaultsTests.code(String(source[ask.lowerBound...]))
         for token in ["UserDefaults", "Logger", "os_log", "print(", ".donate(", "FileManager", "NoctisAnalytics", "write(to"] {
@@ -315,7 +326,9 @@ struct AppShortcutsTests {
         #expect(code.matches(of: /shortTitle: "[^"]+", systemImageName: "[a-z0-9.]+"/).count == 6)
         // The intents name a description each (the Shortcuts gallery shows it).
         let intents = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources/NoctisIntentKit"]).map(\.text).joined()
-        for name in ["ShowMyRecoveryIntent", "ShowMySleepIntent", "StartWindDownIntent", "ShowRecommendedBedtimeIntent", "PlaySleepSoundsIntent", "AskCoachIntent"] {
+        for name in [
+            "ShowMyRecoveryIntent", "ShowMySleepIntent", "StartWindDownIntent", "ShowRecommendedBedtimeIntent", "PlaySleepSoundsIntent", "AskCoachIntent",
+        ] {
             #expect(code.contains("\(name)()"), Comment(rawValue: "\(name) has no shortcut"))
             #expect(intents.contains("struct \(name)"))
         }
@@ -341,10 +354,15 @@ struct AppShortcutsTests {
         let app = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/NoctisShortcuts.swift"), encoding: .utf8)
         #expect(app.contains("NoctisIntentKitPackage.self"))
         let kit = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Package.swift"), encoding: .utf8)
-        #expect(kit.contains(#"name: "NoctisIntentKit", dependencies: ["NoctisWidgetKit", "SoundCatalog"]"#), "the intents depend on the snapshot and the sound names, never on Health, SwiftData, Coach or the player")
+        #expect(
+            kit.contains(#"name: "NoctisIntentKit", dependencies: ["NoctisWidgetKit", "SoundCatalog"]"#),
+            "the intents depend on the snapshot and the sound names, never on Health, SwiftData, Coach or the player")
         for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources/NoctisIntentKit"]) {
             let code = RawDefaultsTests.code(file.text)
-            for token in ["import HealthKit", "import HealthProviding", "import SoundKit", "import SwiftData", "import CoachKit", "import JournalKit", "import NoctisCore", "import SleepKit", "import RecoveryKit", "import AppRoot"] {
+            for token in [
+                "import HealthKit", "import HealthProviding", "import SoundKit", "import SwiftData", "import CoachKit", "import JournalKit",
+                "import NoctisCore", "import SleepKit", "import RecoveryKit", "import AppRoot",
+            ] {
                 #expect(!code.contains(token), Comment(rawValue: "\(file.path) has \(token)"))
             }
         }

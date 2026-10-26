@@ -2,6 +2,7 @@ import DesignSystem
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import HomeFeature
 @testable import InsightsFeature
 @testable import InsightsKit
@@ -195,16 +196,22 @@ struct InsightsScreenTests {
     // MARK: - States reuse the app's copy
 
     @Test func statesUseTheSameCopyAsHomeSleepAndRecovery() {
-        #expect(screen(InsightsSnapshot.placeholder(.permissionRequired, now: now)).state == .connect(
-            title: "Your first night starts here.", message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true
-        ))
-        #expect(screen(InsightsSnapshot.placeholder(.healthDataUnavailable, now: now)).state == .connect(
-            title: "Your first night starts here.", message: "Apple Health isn't available on this device.", showsButton: false
-        ))
-        #expect(screen(InsightsSnapshot.placeholder(.empty, now: now)).state == .noSleepData(
-            title: "No sleep data yet",
-            message: "NOCTIS reads sleep from Apple Health. Track sleep with Apple Watch or set up Sleep in the Health app."
-        ))
+        #expect(
+            screen(InsightsSnapshot.placeholder(.permissionRequired, now: now)).state
+                == .connect(
+                    title: "Your first night starts here.", message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true
+                ))
+        #expect(
+            screen(InsightsSnapshot.placeholder(.healthDataUnavailable, now: now)).state
+                == .connect(
+                    title: "Your first night starts here.", message: "Apple Health isn't available on this device.", showsButton: false
+                ))
+        #expect(
+            screen(InsightsSnapshot.placeholder(.empty, now: now)).state
+                == .noSleepData(
+                    title: "No sleep data yet",
+                    message: "NOCTIS reads sleep from Apple Health. Track sleep with Apple Watch or set up Sleep in the Health app."
+                ))
         #expect(screen(InsightsSnapshot.placeholder(.failed, now: now)).state == .failed(message: "We couldn't read your latest sleep data."))
         #expect(screen(InsightsSnapshot.placeholder(.learning(nightsSoFar: 0), now: now)).state != nil)
         for state in [HomeDataState.permissionRequired, .healthDataUnavailable, .empty, .failed] {
@@ -256,14 +263,17 @@ struct InsightsScreenTests {
 struct InsightsViewModelTests {
     private let now = Fixture.date(2026, 9, 24, 10)
 
-    private func viewModel(_ scenario: MockScenario = .full, defaults: UserDefaults? = nil, reduceMotion: Bool = false, store: InsightStore = InsightStore()) -> InsightsViewModel {
+    private func viewModel(
+        _ scenario: MockScenario = .full, defaults: UserDefaults? = nil, reduceMotion: Bool = false, store: InsightStore = InsightStore()
+    ) -> InsightsViewModel {
         let clock = now
         let provider = MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
         let repository = InsightsRepository(provider: provider, store: store, timeZone: Fixture.newYork, clock: { clock })
         let suite = defaults ?? UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)")!
         return InsightsViewModel(
             repository: repository, profile: { UserProfileSnapshot() },
-            introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey), washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
+            introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey),
+            washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
             reduceMotion: { reduceMotion }, lowPower: { false }, clock: { clock }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"),
             revealSleep: held
         )
@@ -370,7 +380,10 @@ struct InsightChartDataTests {
     }
 
     @Test func durationIsTwoBarsScaledToTheLonger() throws {
-        guard case .bars(let bars)? = chart(R.duration(delta: -70)) else { Issue.record("expected bars"); return }
+        guard case .bars(let bars)? = chart(R.duration(delta: -70)) else {
+            Issue.record("expected bars")
+            return
+        }
         #expect(bars.bars.map(\.label) == ["Last night", "Usual"])
         #expect(bars.bars.map(\.valueText) == ["5h 50m", "7h"])
         #expect(bars.bars[1].fraction == 1)
@@ -379,19 +392,28 @@ struct InsightChartDataTests {
     }
 
     @Test func balanceIsSevenNightsAgainstTheNeed() throws {
-        guard case .bars(let bars)? = chart(R.balance(behind: true)) else { Issue.record("expected bars"); return }
+        guard case .bars(let bars)? = chart(R.balance(behind: true)) else {
+            Issue.record("expected bars")
+            return
+        }
         #expect(bars.bars.count == 7)
         #expect(bars.reference?.label == "Need 8h")
         #expect(bars.bars.allSatisfy { $0.reachesReference == false }, "457 minutes is under 480")
         #expect(bars.bars.last?.emphasized == true)
         let position = try #require(bars.reference?.position)
         #expect(position > 0 && position < 1)
-        guard case .bars(let ahead)? = chart(R.balance(behind: false)) else { Issue.record("expected bars"); return }
+        guard case .bars(let ahead)? = chart(R.balance(behind: false)) else {
+            Issue.record("expected bars")
+            return
+        }
         #expect(ahead.bars.allSatisfy { $0.reachesReference == true })
     }
 
     @Test func bedtimeIsATimelineWithTwoMarksAndAUsualBand() throws {
-        guard case .timeline(let timeline)? = chart(R.bedtime(delta: 55)) else { Issue.record("expected a timeline"); return }
+        guard case .timeline(let timeline)? = chart(R.bedtime(delta: 55)) else {
+            Issue.record("expected a timeline")
+            return
+        }
         #expect(timeline.marks.map(\.label) == ["Usual", "Last night"])
         #expect(timeline.marks.map(\.timeText).map { $0.replacingOccurrences(of: "\u{202F}", with: " ") } == ["11:00 PM", "11:55 PM"])
         // The axis runs 10 PM to 1 AM: whole hours with half an hour of room either side.
@@ -403,7 +425,10 @@ struct InsightChartDataTests {
     }
 
     @Test func aStreakIsFourteenDots() throws {
-        guard case .dots(let dots)? = chart(R.streak(nights: 6)) else { Issue.record("expected dots"); return }
+        guard case .dots(let dots)? = chart(R.streak(nights: 6)) else {
+            Issue.record("expected dots")
+            return
+        }
         #expect(dots.dots.count == 14)
         #expect(dots.dots.suffix(6).allSatisfy { $0.within == true })
         #expect(dots.dots.first?.within == false)
@@ -411,7 +436,10 @@ struct InsightChartDataTests {
     }
 
     @Test func thePatternIsTwoColumnsWithMeansAndSampleSizes() throws {
-        guard case .groups(let groups)? = chart(R.pattern(earlier: true, early: 16, late: 17)) else { Issue.record("expected groups"); return }
+        guard case .groups(let groups)? = chart(R.pattern(earlier: true, early: 16, late: 17)) else {
+            Issue.record("expected groups")
+            return
+        }
         #expect(groups.groups.map(\.label) == ["Earlier nights", "Later nights"])
         #expect(groups.groups.map(\.countText) == ["16 nights", "17 nights"])
         #expect(groups.groups.map(\.meanText) == ["Average 92", "Average 66"])
@@ -425,11 +453,17 @@ struct InsightChartDataTests {
     }
 
     @Test func heartIsALineWithItsNormalRange() throws {
-        let record = R.record(.hrvBelowRange, .heartSignal(HeartSignalEvidence(
-            night: R.night, signal: .hrv, consecutiveNights: 3, value: 41, baseline: 52, rangeLow: 47, rangeHigh: 57, baselineNights: 14,
-            recentValues: [52, 51, nil, 53, 50, 52, 54, 51, 52, 50, 44, 42, 41, 41]
-        )), confidence: .moderate)
-        guard case .line(let line)? = chart(record) else { Issue.record("expected a line"); return }
+        let record = R.record(
+            .hrvBelowRange,
+            .heartSignal(
+                HeartSignalEvidence(
+                    night: R.night, signal: .hrv, consecutiveNights: 3, value: 41, baseline: 52, rangeLow: 47, rangeHigh: 57, baselineNights: 14,
+                    recentValues: [52, 51, nil, 53, 50, 52, 54, 51, 52, 50, 44, 42, 41, 41]
+                )), confidence: .moderate)
+        guard case .line(let line)? = chart(record) else {
+            Issue.record("expected a line")
+            return
+        }
         #expect(line.segments.count == 2, "the missing night breaks the line")
         #expect(line.band != nil && line.bandLabel == "Normal range")
         #expect(line.latest?.valueText == "41 ms")
@@ -449,10 +483,16 @@ struct InsightChartDataTests {
     }
 
     @Test func recordsCompareNowAgainstThePreviousBest() throws {
-        guard case .bars(let bars)? = chart(R.standingRecord(.recordLongestNight)) else { Issue.record("expected bars"); return }
+        guard case .bars(let bars)? = chart(R.standingRecord(.recordLongestNight)) else {
+            Issue.record("expected bars")
+            return
+        }
         #expect(bars.bars.map(\.label) == ["Now", "Previous best"])
         #expect(bars.bars.map(\.valueText) == ["8h 30m", "8h 12m"])
-        guard case .bars(let low)? = chart(R.standingRecord(.recordLowestRestingHeartRate)) else { Issue.record("expected bars"); return }
+        guard case .bars(let low)? = chart(R.standingRecord(.recordLowestRestingHeartRate)) else {
+            Issue.record("expected bars")
+            return
+        }
         #expect(low.bars.map(\.valueText) == ["49 bpm", "51 bpm"])
     }
 }

@@ -39,8 +39,9 @@ public enum CoachAnswerAssembler {
         }
 
         guard let summary = resolve(draft.summary), let changed = resolve(draft.whatChanged), let notice = resolve(draft.whatToNotice),
-              let tonight = resolveOptional(draft.tonightSuggestion), let pattern = resolveOptional(draft.pattern),
-              let draftCaution = resolveOptional(draft.caution) else { return nil }
+            let tonight = resolveOptional(draft.tonightSuggestion), let pattern = resolveOptional(draft.pattern),
+            let draftCaution = resolveOptional(draft.caution)
+        else { return nil }
 
         var contributors: [CoachContributor] = []
         for item in draft.contributors {
@@ -96,7 +97,8 @@ public enum CoachAnswerAssembler {
         let level = copy("coach.confidence.\(confidence.rawValue)")
         guard nights > 0 else { return level }
         let template = copy(nights == 1 ? "coach.confidence.line.one" : "coach.confidence.line.other")
-        return template
+        return
+            template
             .replacingOccurrences(of: "{level}", with: level)
             .replacingOccurrences(of: "{nights}", with: nights.formatted(.number.locale(locale)))
     }

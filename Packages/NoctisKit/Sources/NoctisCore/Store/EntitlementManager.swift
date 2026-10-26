@@ -34,7 +34,10 @@ public final class EntitlementManager {
     /// Told when the tier changes: the new tier and the old.
     @ObservationIgnored public var onTierChange: (@MainActor (_ new: Tier, _ old: Tier) -> Void)?
 
-    public init(client: any EntitlementClient = StoreKitEntitlementClient(), cache: EntitlementCache = EntitlementCache(), clock: @escaping @Sendable () -> Date = { Date() }) {
+    public init(
+        client: any EntitlementClient = StoreKitEntitlementClient(), cache: EntitlementCache = EntitlementCache(),
+        clock: @escaping @Sendable () -> Date = { Date() }
+    ) {
         self.client = client
         self.cache = cache
         self.clock = clock

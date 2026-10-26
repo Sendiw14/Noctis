@@ -64,7 +64,10 @@ public nonisolated struct EntitlementRecord: Sendable, Equatable {
     public var ownership: Ownership
     public var isFreeTrial: Bool
 
-    public init(productID: String, isVerified: Bool = true, revocationDate: Date? = nil, expirationDate: Date? = nil, ownership: Ownership = .purchased, isFreeTrial: Bool = false) {
+    public init(
+        productID: String, isVerified: Bool = true, revocationDate: Date? = nil, expirationDate: Date? = nil, ownership: Ownership = .purchased,
+        isFreeTrial: Bool = false
+    ) {
         self.productID = productID
         self.isVerified = isVerified
         self.revocationDate = revocationDate
@@ -108,7 +111,8 @@ public nonisolated enum EntitlementResolver {
         if live.contains(where: { $0.ownership == .familyShared }) { return .premium(.familySharing) }
         // Grace: the entitlement has run out by its own date, but billing is being retried and the App Store has said when that stops.
         if !candidates.isEmpty, let renewal, renewal.state == .inGracePeriod || renewal.state == .inBillingRetryPeriod || renewal.isInBillingRetry,
-           let graceEnd = renewal.gracePeriodExpirationDate, graceEnd > now {
+            let graceEnd = renewal.gracePeriodExpirationDate, graceEnd > now
+        {
             return .premium(.grace)
         }
         switch previous {

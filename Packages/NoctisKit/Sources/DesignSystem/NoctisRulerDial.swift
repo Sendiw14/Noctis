@@ -24,9 +24,26 @@ public struct NoctisRulerDial: View {
         /// On a colour card (onboarding's band style): ink ticks, ink labels, in Light and Dark alike.
         case band
 
-        var ink: Color { switch self { case .paper, .band: NoctisPaper.ink; case .app: NoctisAppColor.ink } }
-        var ink3: Color { switch self { case .paper: NoctisPaper.ink3; case .band: NoctisPaper.ink.opacity(0.85); case .app: NoctisAppColor.ink3 } }
-        var cocoa: Color { switch self { case .paper: NoctisPaper.cocoa; case .band: NoctisPaper.ink; case .app: NoctisAppColor.cocoa } }
+        var ink: Color {
+            switch self {
+            case .paper, .band: NoctisPaper.ink
+            case .app: NoctisAppColor.ink
+            }
+        }
+        var ink3: Color {
+            switch self {
+            case .paper: NoctisPaper.ink3
+            case .band: NoctisPaper.ink.opacity(0.85)
+            case .app: NoctisAppColor.ink3
+            }
+        }
+        var cocoa: Color {
+            switch self {
+            case .paper: NoctisPaper.cocoa
+            case .band: NoctisPaper.ink
+            case .app: NoctisAppColor.cocoa
+            }
+        }
     }
 
     let range: ClosedRange<Int>

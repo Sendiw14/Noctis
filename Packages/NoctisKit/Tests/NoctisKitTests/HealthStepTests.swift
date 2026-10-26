@@ -16,9 +16,10 @@ struct HealthStepTests {
 
     @Test func theCardsSayWhatTheDesignSays() {
         #expect(HealthStepFacts.requestedKinds.map(HealthStepFacts.title) == ["Sleep", "Heart rate", "HRV"])
-        #expect(HealthStepFacts.requestedKinds.map(HealthStepFacts.line) == [
-            "How long and consistently you sleep", "Puts your recovery trend in context", "Your recovery signal vs your own baseline",
-        ])
+        #expect(
+            HealthStepFacts.requestedKinds.map(HealthStepFacts.line) == [
+                "How long and consistently you sleep", "Puts your recovery trend in context", "Your recovery signal vs your own baseline",
+            ])
         #expect(HealthStepFacts.requestedKinds.map(\.systemImage) == ["bed.double.fill", "heart.fill", "waveform.path.ecg"])
     }
 
@@ -34,7 +35,8 @@ struct HealthStepTests {
 
     @Test func theUsageDescriptionIsTheOneTheStepShippedWith() throws {
         let yml = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("project.yml"), encoding: .utf8)
-        let expected = "NOCTIS reads your sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan, show your recovery trends and keep your widgets up to date. It never writes to Health."
+        let expected =
+            "NOCTIS reads your sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health to build your sleep plan, show your recovery trends and keep your widgets up to date. It never writes to Health."
         #expect(yml.contains("INFOPLIST_KEY_NSHealthShareUsageDescription: \"\(expected)\""))
     }
 }

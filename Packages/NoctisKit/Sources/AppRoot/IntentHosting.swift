@@ -1,7 +1,7 @@
 import CoachFeature
 import Foundation
-import NightKit
 import NightFeature
+import NightKit
 import NoctisCore
 import NoctisIntentKit
 import NoctisWidgetKit

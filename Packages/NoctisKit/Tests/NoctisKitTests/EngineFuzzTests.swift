@@ -63,18 +63,18 @@ struct FuzzTimeline {
             let source = sources.randomElement(using: &rng)!
             let tz: TimeZone? = Int.random(in: 0..<6, using: &rng) == 0 ? zones.randomElement(using: &rng) : nil
             switch Int.random(in: 0..<14, using: &rng) {
-            case 0: // in-bed only
+            case 0:  // in-bed only
                 add(bedtime, bedtime.addingTimeInterval(Double(Int.random(in: 4...10, using: &rng)) * 3600), .inBed, source, tz: tz)
-            case 1: // unspecified only
+            case 1:  // unspecified only
                 add(bedtime, bedtime.addingTimeInterval(Double(Int.random(in: 3...10, using: &rng)) * 3600), .unspecified, source, tz: tz)
-            case 2: // a nap
+            case 2:  // a nap
                 let nap = day.addingTimeInterval(Double(Int.random(in: 12...17, using: &rng)) * 3600)
                 add(nap, nap.addingTimeInterval(Double(Int.random(in: 10...100, using: &rng)) * 60), .core, source, tz: tz)
-            case 3: // zero and negative durations, and a very long one
+            case 3:  // zero and negative durations, and a very long one
                 add(bedtime, bedtime, .core, source)
                 add(bedtime.addingTimeInterval(600), bedtime, .deep, source)
                 add(bedtime, bedtime.addingTimeInterval(Double(Int.random(in: 25...40, using: &rng)) * 3600), .core, source, tz: tz)
-            default: // a staged night with awakenings, gaps, overlaps and duplicates
+            default:  // a staged night with awakenings, gaps, overlaps and duplicates
                 var cursor = bedtime
                 let length = Double(Int.random(in: 120...660, using: &rng)) * 60
                 let end = bedtime.addingTimeInterval(length)
@@ -84,12 +84,12 @@ struct FuzzTimeline {
                     let stage = [SleepStageValue.core, .core, .deep, .rem, .awake, .unspecified].randomElement(using: &rng)!
                     let segmentEnd = min(cursor.addingTimeInterval(span), end)
                     add(cursor, segmentEnd, stage, source, tz: tz)
-                    if Int.random(in: 0..<8, using: &rng) == 0 { add(cursor, segmentEnd, stage, source, tz: tz) } // duplicate
-                    if Int.random(in: 0..<10, using: &rng) == 0 { // a second source overlaps
+                    if Int.random(in: 0..<8, using: &rng) == 0 { add(cursor, segmentEnd, stage, source, tz: tz) }  // duplicate
+                    if Int.random(in: 0..<10, using: &rng) == 0 {  // a second source overlaps
                         let other = sources.randomElement(using: &rng)!
                         add(cursor.addingTimeInterval(-300), segmentEnd.addingTimeInterval(300), .core, other, tz: tz)
                     }
-                    if Int.random(in: 0..<10, using: &rng) == 0 { // a gap, sometimes past the join gap
+                    if Int.random(in: 0..<10, using: &rng) == 0 {  // a gap, sometimes past the join gap
                         cursor = segmentEnd.addingTimeInterval(Double(Int.random(in: 1...150, using: &rng)) * 60)
                     } else {
                         cursor = segmentEnd
@@ -129,15 +129,22 @@ func sessionViolations(_ timeline: FuzzTimeline) -> [String] {
     let again = SleepSessionEngine.history(from: timeline.samples.reversed(), asOf: timeline.now, timeZone: timeline.timeZone)
     if again != history { out.append("history depends on input order") }
     // Idempotent under duplication.
-    let doubled = timeline.samples + timeline.samples.map {
-        RawSleepSample(start: $0.start, end: $0.end, stage: $0.stage, sourceName: $0.sourceName, sourceBundleID: $0.sourceBundleID, timeZone: $0.timeZone)
+    let doubled =
+        timeline.samples
+        + timeline.samples.map {
+            RawSleepSample(start: $0.start, end: $0.end, stage: $0.stage, sourceName: $0.sourceName, sourceBundleID: $0.sourceBundleID, timeZone: $0.timeZone)
+        }
+    if SleepSessionEngine.history(from: doubled, asOf: timeline.now, timeZone: timeline.timeZone) != history {
+        out.append("duplicating every sample changes the history")
     }
-    if SleepSessionEngine.history(from: doubled, asOf: timeline.now, timeZone: timeline.timeZone) != history { out.append("duplicating every sample changes the history") }
     // No lookahead: samples that start more than the join gap after now change nothing.
     let future = RawSleepSample(
-        start: timeline.now.addingTimeInterval(4 * 3600), end: timeline.now.addingTimeInterval(12 * 3600), stage: .core, sourceName: "Watch", sourceBundleID: "com.apple.health.watch"
+        start: timeline.now.addingTimeInterval(4 * 3600), end: timeline.now.addingTimeInterval(12 * 3600), stage: .core, sourceName: "Watch",
+        sourceBundleID: "com.apple.health.watch"
     )
-    if SleepSessionEngine.history(from: timeline.samples + [future], asOf: timeline.now, timeZone: timeline.timeZone) != history { out.append("a future sample changes the history") }
+    if SleepSessionEngine.history(from: timeline.samples + [future], asOf: timeline.now, timeZone: timeline.timeZone) != history {
+        out.append("a future sample changes the history")
+    }
     return out
 }
 
@@ -169,7 +176,9 @@ func scoreViolations(_ timeline: FuzzTimeline, rng: inout FuzzRandom) -> [String
     if state != RecoveryEngine.evaluate(history: metrics, needMinutes: need, asOf: timeline.now) { out.append("recovery not deterministic") }
     if case .scored(let result) = state {
         if !(0...100).contains(result.score) { out.append("recovery score \(result.score)") }
-        if result.factors.contains(where: { !(0...100).contains($0.score) || !$0.weight.isFinite || !$0.value.isFinite }) { out.append("recovery factor out of range") }
+        if result.factors.contains(where: { !(0...100).contains($0.score) || !$0.weight.isFinite || !$0.value.isFinite }) {
+            out.append("recovery factor out of range")
+        }
         let sum = result.factors.reduce(0) { $0 + $1.weight }
         if abs(sum - 1) > 1e-9 { out.append("recovery weights sum \(sum)") }
     }
@@ -178,8 +187,11 @@ func scoreViolations(_ timeline: FuzzTimeline, rng: inout FuzzRandom) -> [String
         night: SleepNightKey(containing: timeline.now.addingTimeInterval(86_400), in: timeline.timeZone), wakeTime: timeline.now.addingTimeInterval(90_000),
         asleepMinutes: 480, bedtimeMinutes: 660, wakeMinutes: 1140, hrv: 80, restingHeartRate: 50
     )
-    if RecoveryEngine.evaluate(history: metrics + [later], needMinutes: need, asOf: timeline.now) != state { out.append("recovery reads a night that has not ended") }
-    for (_, score) in RecoveryEngine.nightlyScores(history: metrics, nights: metrics.map(\.night), needMinutes: need, asOf: timeline.now) where !(0...100).contains(score) {
+    if RecoveryEngine.evaluate(history: metrics + [later], needMinutes: need, asOf: timeline.now) != state {
+        out.append("recovery reads a night that has not ended")
+    }
+    for (_, score) in RecoveryEngine.nightlyScores(history: metrics, nights: metrics.map(\.night), needMinutes: need, asOf: timeline.now)
+    where !(0...100).contains(score) {
         out.append("nightly score \(score)")
     }
     return out
@@ -273,7 +285,9 @@ struct EngineFuzzTests {
             #expect(result.expectedSleepMinutes >= 0 && result.expectedSleepMinutes <= 1440 + 60)
             if let window = result.window { #expect(window.lengthMinutes <= 60, "window \(window)") }
             if inputs.usualBedtimeMinutes == nil || result.kind == .single {
-                #expect(abs(BedtimeClock.signedDistance(from: target, to: result.centerMinutes)) <= 30, "center \(result.centerMinutes) target \(target) inputs \(inputs)")
+                #expect(
+                    abs(BedtimeClock.signedDistance(from: target, to: result.centerMinutes)) <= 30,
+                    "center \(result.centerMinutes) target \(target) inputs \(inputs)")
             } else if let usual = inputs.usualBedtimeMinutes {
                 let toUsual = abs(BedtimeClock.signedDistance(from: usual, to: result.centerMinutes))
                 let targetToUsual = abs(BedtimeClock.signedDistance(from: usual, to: target))

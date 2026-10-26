@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import RecoveryKit
 @testable import SleepKit
 
@@ -8,7 +9,9 @@ struct BaselineEngineTests {
     private let target = SleepNightKey(year: 2026, month: 9, day: 23)
 
     /// Nights on the evenings before `target`, `offsets` nights back.
-    private func nights(back offsets: [Int], asleep: (Int) -> Double = { _ in 420 }, hrv: (Int) -> Double? = { _ in 50 }, resting: (Int) -> Double? = { _ in 55 }) -> [NightMetrics] {
+    private func nights(
+        back offsets: [Int], asleep: (Int) -> Double = { _ in 420 }, hrv: (Int) -> Double? = { _ in 50 }, resting: (Int) -> Double? = { _ in 55 }
+    ) -> [NightMetrics] {
         offsets.map { offset in
             NightMetrics(
                 night: target.adding(days: -offset),
@@ -76,8 +79,9 @@ struct BaselineEngineTests {
     @Test func bedtimesEitherSideOfMidnightAverageToMidnight() {
         // 11:30 PM (690) and 12:30 AM (750), minutes after noon.
         let history = (1...6).map { offset in
-            NightMetrics(night: target.adding(days: -offset), wakeTime: .distantPast, asleepMinutes: 420,
-                         bedtimeMinutes: offset.isMultiple(of: 2) ? 690 : 750, wakeMinutes: 1140, hrv: nil, restingHeartRate: nil)
+            NightMetrics(
+                night: target.adding(days: -offset), wakeTime: .distantPast, asleepMinutes: 420,
+                bedtimeMinutes: offset.isMultiple(of: 2) ? 690 : 750, wakeMinutes: 1140, hrv: nil, restingHeartRate: nil)
         }
         #expect(BaselineEngine.baselines(for: target, history: history).bedtime?.value == 720)
     }
@@ -93,11 +97,11 @@ struct NightMetricsBuilderTests {
 
     @Test func hrvIsTheMeanFromBedtimeUntilHalfAnHourAfterWaking() throws {
         let hrv = [
-            HRVSample(date: Fixture.date(2026, 9, 1, 22), sdnnMilliseconds: 99), // before bed
+            HRVSample(date: Fixture.date(2026, 9, 1, 22), sdnnMilliseconds: 99),  // before bed
             HRVSample(date: Fixture.date(2026, 9, 2, 2), sdnnMilliseconds: 40),
             HRVSample(date: Fixture.date(2026, 9, 2, 5), sdnnMilliseconds: 50),
             HRVSample(date: Fixture.date(2026, 9, 2, 7, 20), sdnnMilliseconds: 60),
-            HRVSample(date: Fixture.date(2026, 9, 2, 8), sdnnMilliseconds: 99), // too late
+            HRVSample(date: Fixture.date(2026, 9, 2, 8), sdnnMilliseconds: 99),  // too late
         ]
         let metrics = NightMetricsBuilder.metrics(for: try session(), hrv: hrv, restingHeartRate: [])
         #expect(metrics.hrv == 50)

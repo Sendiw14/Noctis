@@ -37,7 +37,9 @@ private struct AlarmCard: View {
                     AlarmChipView(chip: card.chip)
                 }
                 HStack(alignment: .center, spacing: NoctisSpacing.sm) {
-                    Button { viewModel.openSheet() } label: {
+                    Button {
+                        viewModel.openSheet()
+                    } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             NoctisMetric(card.time, size: 44)
                                 .lineLimit(1)
@@ -55,10 +57,13 @@ private struct AlarmCard: View {
                     .accessibilityHint("Opens the alarm.")
                     .accessibilityAddTraits(.isButton)
                     .accessibilityIdentifier("tonight.alarmCard")
-                    Toggle("Alarm", isOn: Binding(
-                        get: { card.isOn },
-                        set: { on in Task { await viewModel.setAlarm(on: on) } }
-                    ))
+                    Toggle(
+                        "Alarm",
+                        isOn: Binding(
+                            get: { card.isOn },
+                            set: { on in Task { await viewModel.setAlarm(on: on) } }
+                        )
+                    )
                     .labelsHidden()
                     .frame(minWidth: 52, minHeight: 44)
                     .disabled(viewModel.isWorking)

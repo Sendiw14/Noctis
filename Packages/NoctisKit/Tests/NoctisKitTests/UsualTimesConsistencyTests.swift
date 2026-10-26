@@ -29,7 +29,8 @@ struct UsualTimesConsistencyTests {
             guard let sleep = snapshots.sleep, let last = sleep.records.last(where: { $0.night == sleep.defaultNight }) else { continue }
             let window = sleep.window(before: last.night)
             guard let bedtime = BaselineEngine.baseline(window.map(\.metrics.bedtimeMinutes)),
-                  let wake = BaselineEngine.baseline(window.map(\.metrics.wakeMinutes)) else { continue }
+                let wake = BaselineEngine.baseline(window.map(\.metrics.wakeMinutes))
+            else { continue }
             let tag = Comment(rawValue: scenario.rawValue)
             let lateness = last.metrics.bedtimeMinutes - bedtime.value
 
@@ -44,7 +45,8 @@ struct UsualTimesConsistencyTests {
             #expect(plain(usual.display) == plain(format.clock(minutesAfterNoon: bedtime.value)), tag)
             let wakeUsual = try #require(context.facts.first { $0.id == "wake.usual" }, tag)
             #expect(plain(wakeUsual.display) == plain(format.clock(minutesAfterNoon: wake.value)), tag)
-            let sleepContext = CoachContextBuilder(format: format).build(intent: .sleepChange, direction: nil, snapshots: snapshots, profile: CoachFixture.profile)
+            let sleepContext = CoachContextBuilder(format: format).build(
+                intent: .sleepChange, direction: nil, snapshots: snapshots, profile: CoachFixture.profile)
             if let delta = sleepContext.facts.first(where: { $0.id == "bedtime.deltaVsUsual" }) {
                 #expect(abs(abs(delta.value) - abs(lateness)) < 0.001, tag)
             }
@@ -53,12 +55,15 @@ struct UsualTimesConsistencyTests {
             let sentence = SleepScreenBuilder.consistencySentence(last.metrics, window: window.map(\.metrics), format: format)
             #expect(plain(sentence).contains(plain(format.clock(minutesAfterNoon: bedtime.value))), Comment(rawValue: "\(scenario.rawValue): \(sentence)"))
             if abs(lateness.rounded()) >= 10 {
-                #expect(plain(sentence).contains(HomeFormat.compactDuration(Int(abs(lateness).rounded()), minutesWord: true)), Comment(rawValue: "\(scenario.rawValue): \(sentence)"))
+                #expect(
+                    plain(sentence).contains(HomeFormat.compactDuration(Int(abs(lateness).rounded()), minutesWord: true)),
+                    Comment(rawValue: "\(scenario.rawValue): \(sentence)"))
             }
 
             // Home's and Insights' bedtime insight: its baseline and its lateness for that night.
             if let record = snapshots.home?.topInsight, record.type == .bedtimeShift, case .baseline(let evidence) = record.evidence,
-               let insightNight = sleep.records.first(where: { $0.night == evidence.night }) {
+                let insightNight = sleep.records.first(where: { $0.night == evidence.night })
+            {
                 let insightBaseline = BaselineEngine.baseline(sleep.window(before: insightNight.night).map(\.metrics.bedtimeMinutes))
                 #expect(abs(evidence.baseline - (insightBaseline?.value ?? -1)) < 0.001, tag)
                 #expect(abs(evidence.delta - (insightNight.metrics.bedtimeMinutes - evidence.baseline)) < 0.001, tag)
@@ -73,7 +78,8 @@ struct UsualTimesConsistencyTests {
         for scenario in CoachFixture.scenarios {
             let snapshots = await CoachFixture.snapshots(scenario)
             guard let result = snapshots.recovery?.result ?? CoachContextBuilder.result(snapshots.home) else { continue }
-            let context = CoachContextBuilder(format: format).build(intent: .recoveryChange, direction: nil, snapshots: snapshots, profile: CoachFixture.profile)
+            let context = CoachContextBuilder(format: format).build(
+                intent: .recoveryChange, direction: nil, snapshots: snapshots, profile: CoachFixture.profile)
             #expect(context.baselineNights == result.baselineNights, Comment(rawValue: scenario.rawValue))
             let line = CoachAnswerAssembler.confidenceLine(.high, nights: context.baselineNights, locale: Locale(identifier: "en_US"))
             #expect(line.hasSuffix("based on \(NoctisCount.nights(result.baselineNights))"), Comment(rawValue: line))

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import DesignSystem
 @testable import HealthProviding
 @testable import NoctisCore
@@ -13,7 +14,9 @@ import Testing
 private let now = Fixture.date(2026, 9, 24, 10)
 
 private func mock(_ scenario: MockScenario = .full, authorized: Bool = true, available: Bool = true, fails: Bool = false) -> MockHealthKitProvider {
-    MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: authorized, isHealthDataAvailable: available, failsQueries: fails)
+    MockHealthKitProvider(
+        scenario: scenario, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: authorized, isHealthDataAvailable: available, failsQueries: fails
+    )
 }
 
 private func repository(_ provider: some HealthDataProviding) -> RecoveryRepository {
@@ -55,7 +58,8 @@ struct RecoverySnapshotTests {
         #expect(recovery.recovery == home.recovery)
         #expect(recovery.dataState == home.dataState)
         let sleepOnly = await snapshot(.sleepOnly)
-        let homeSleepOnly = await HomeRepository(provider: mock(.sleepOnly), timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
+        let homeSleepOnly = await HomeRepository(provider: mock(.sleepOnly), timeZone: Fixture.newYork, clock: { clock }).refresh(
+            profile: UserProfileSnapshot())
         #expect(sleepOnly.recovery == homeSleepOnly.recovery)
     }
 
@@ -183,7 +187,8 @@ struct RecoveryRenderModelTests {
     }
 
     @Test func aShortHistoryDrawsOnlyWhatExists() async throws {
-        let repository = repository(MockHealthKitProvider(scenario: .full, historyDays: 12, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true))
+        let repository = repository(
+            MockHealthKitProvider(scenario: .full, historyDays: 12, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true))
         _ = await repository.refresh(profile: UserProfileSnapshot())
         let chart = try #require(await repository.model(for: RecoverySelection(segment: .month))?.chart)
         #expect(chart.count == 8, "12 nights, the first four still learning")

@@ -54,7 +54,8 @@ final class AuditQATests: XCTestCase {
     private func reach(_ screen: CatalogScreen) -> XCUIApplication {
         store = nil
         if screen.needsStore {
-            let file = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Config/Noctis.storekit")
+            let file = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("Config/Noctis.storekit")
             store = try? SKTestSession(contentsOf: file)
             store?.disableDialogs = true
             store?.resetToDefaultState()
@@ -79,7 +80,10 @@ final class AuditQATests: XCTestCase {
             case .back: app.navigationBars.buttons.firstMatch.tap()
             case .type(let text):
                 let field = app.textFields.firstMatch
-                if field.waitForExistence(timeout: 10) { field.tap(); field.typeText(text) }
+                if field.waitForExistence(timeout: 10) {
+                    field.tap()
+                    field.typeText(text)
+                }
             case .wait(let seconds): QA.pause(seconds)
             }
             QA.pause(1.0)
@@ -97,10 +101,12 @@ final class AuditQATests: XCTestCase {
         let width = min(image.width, 400), height = min(image.height, 200)
         guard width > 1, height > 1 else { return nil }
         var pixels = [UInt8](repeating: 0, count: width * height * 4)
-        guard let context = CGContext(
-            data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return nil }
+        guard
+            let context = CGContext(
+                data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        else { return nil }
         context.interpolationQuality = .none
         context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
 
@@ -153,7 +159,8 @@ final class AuditQATests: XCTestCase {
 
         // The structural checks, at the top of the page (QAMatrixTests runs them at both ends under every configuration).
         let hierarchy = QA.hierarchyChecks(app, at: "top")
-        try? (hierarchy.isEmpty ? "none" : hierarchy.joined(separator: "\n")).write(to: directory.appendingPathComponent("\(screen.id)__hierarchy.txt"), atomically: true, encoding: .utf8)
+        try? (hierarchy.isEmpty ? "none" : hierarchy.joined(separator: "\n")).write(
+            to: directory.appendingPathComponent("\(screen.id)__hierarchy.txt"), atomically: true, encoding: .utf8)
 
         var lines: [String] = []
         var index = 0
@@ -190,7 +197,8 @@ final class AuditQATests: XCTestCase {
         } catch {
             lines.append("-1\tthe audit itself failed\t\(error.localizedDescription)\t-\t-\t-\t-\t")
         }
-        try? (lines.isEmpty ? "none" : lines.joined(separator: "\n")).write(to: directory.appendingPathComponent("\(screen.id)__audit.tsv"), atomically: true, encoding: .utf8)
+        try? (lines.isEmpty ? "none" : lines.joined(separator: "\n")).write(
+            to: directory.appendingPathComponent("\(screen.id)__audit.tsv"), atomically: true, encoding: .utf8)
 
         // The order a screen reader takes against the order the elements are drawn in.
         var order: [String] = []
@@ -208,7 +216,9 @@ final class AuditQATests: XCTestCase {
             for leaf in visible {
                 if let previous, leaf.frame.minY < previous.frame.minY - 12 {
                     jumps += 1
-                    order.append("goes back up: '\(previous.label.prefix(40))' (y \(Int(previous.frame.minY))) is followed by '\(leaf.label.prefix(40))' (y \(Int(leaf.frame.minY)))")
+                    order.append(
+                        "goes back up: '\(previous.label.prefix(40))' (y \(Int(previous.frame.minY))) is followed by '\(leaf.label.prefix(40))' (y \(Int(leaf.frame.minY)))"
+                    )
                 }
                 previous = leaf
             }
@@ -218,13 +228,16 @@ final class AuditQATests: XCTestCase {
             for leaf in visible where controls.contains(leaf.elementType) { byName[leaf.label, default: 0] += 1 }
             let duplicates = byName.filter { $0.value > 1 }.sorted { $0.key < $1.key }
             for (name, count) in duplicates { order.append("voice control: \(count) controls are named '\(name.prefix(60))'") }
-            order.insert("\(visible.count) elements, \(jumps) places where the reading order goes back up the screen, \(duplicates.count) control names used more than once", at: 0)
+            order.insert(
+                "\(visible.count) elements, \(jumps) places where the reading order goes back up the screen, \(duplicates.count) control names used more than once",
+                at: 0)
             order.append("-- in reading order:")
             order += visible.map { "\(Int($0.frame.minY)),\(Int($0.frame.minX)) \($0.elementType.rawValue) \($0.label.prefix(60))" }
         }
         try? order.joined(separator: "\n").write(to: directory.appendingPathComponent("\(screen.id)__order.txt"), atomically: true, encoding: .utf8)
 
-        let summary = "{\"id\":\"\(screen.id)\",\"config\":\"\(configuration)\",\"device\":\"\(device)\",\"issues\":\(lines.filter { !$0.hasPrefix("-1") }.count)}\n"
+        let summary =
+            "{\"id\":\"\(screen.id)\",\"config\":\"\(configuration)\",\"device\":\"\(device)\",\"issues\":\(lines.filter { !$0.hasPrefix("-1") }.count)}\n"
         if let handle = try? FileHandle(forWritingTo: directory.appendingPathComponent("summary.jsonl")) {
             _ = try? handle.seekToEnd()
             try? handle.write(contentsOf: Data(summary.utf8))

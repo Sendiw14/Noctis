@@ -272,7 +272,10 @@ public actor AlarmService {
         state = transition.state
         settings?.lastState = state
         // The state and the event, by name: nothing about the person or their nights.
-        if transition.changed { Self.log.notice("alarm \(before.rawValue, privacy: .public) -> \(self.state.rawValue, privacy: .public) on \(String(describing: event), privacy: .public)") }
+        if transition.changed {
+            Self.log.notice(
+                "alarm \(before.rawValue, privacy: .public) -> \(self.state.rawValue, privacy: .public) on \(String(describing: event), privacy: .public)")
+        }
     }
 
     private static let log = Logger(subsystem: "com.noctis.app", category: "alarm")

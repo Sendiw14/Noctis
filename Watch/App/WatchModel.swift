@@ -65,7 +65,10 @@ final class WatchModel {
     /// Everything a page needs, at `now`.
     func input(now: Date) -> WatchPageInput {
         #if DEBUG
-        if let debugClock { return WatchPageInput(snapshot: snapshot, now: debugClock.pretend.addingTimeInterval(now.timeIntervalSince(debugClock.started)), receivedAt: receivedAt) }
+        if let debugClock {
+            return WatchPageInput(
+                snapshot: snapshot, now: debugClock.pretend.addingTimeInterval(now.timeIntervalSince(debugClock.started)), receivedAt: receivedAt)
+        }
         #endif
         return WatchPageInput(snapshot: snapshot, now: now, receivedAt: receivedAt)
     }

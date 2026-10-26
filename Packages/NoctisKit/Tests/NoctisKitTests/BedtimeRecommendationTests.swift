@@ -17,7 +17,9 @@ struct BedtimeRecommendationTests {
         wake: Int = 7 * 60, need: Int = 8 * 60, balance: Double? = nil, usual: Int? = nil, spread: Double? = nil, nights: Int = 14, change: Int = 0
     ) -> BedtimeRecommendation {
         BedtimeRecommendationEngine.recommend(
-            BedtimeInputs(wakeMinutes: wake, needMinutes: need, balanceMinutes: balance, usualBedtimeMinutes: usual, bedtimeSpreadMinutes: spread, nights: nights, clockChangeMinutes: change)
+            BedtimeInputs(
+                wakeMinutes: wake, needMinutes: need, balanceMinutes: balance, usualBedtimeMinutes: usual, bedtimeSpreadMinutes: spread, nights: nights,
+                clockChangeMinutes: change)
         )
     }
 
@@ -59,7 +61,8 @@ struct BedtimeRecommendationTests {
 
     @Test(arguments: [
         (clock(7), clock(8), clock(23)), (clock(6, 30), clock(7, 30), clock(23)), (clock(5, 30), clock(8), clock(21, 30)), (clock(7), clock(9), clock(22)),
-        (clock(4), clock(8, 30), clock(19, 30)), (clock(0, 30), clock(8), clock(16, 30)), (clock(9), clock(7, 30), clock(1, 30)), (clock(8, 15), clock(8), clock(0, 15)),
+        (clock(4), clock(8, 30), clock(19, 30)), (clock(0, 30), clock(8), clock(16, 30)), (clock(9), clock(7, 30), clock(1, 30)),
+        (clock(8, 15), clock(8), clock(0, 15)),
     ])
     func theBaseIsTheWakeTimeMinusTheNeed(wake: Int, need: Int, expected: Int) {
         let result = recommend(wake: wake, need: need)
@@ -289,10 +292,12 @@ struct BedtimeInputsTests {
     }
 
     @Test func theUsualBedtimeNeedsSevenNights() {
-        let six = BedtimeInputsBuilder.inputs(wakeMinutes: 420, needMinutes: 480, timing: timing(bedtimeAfterNoon: 674, nights: 6), balance: nil, consistency: nil)
+        let six = BedtimeInputsBuilder.inputs(
+            wakeMinutes: 420, needMinutes: 480, timing: timing(bedtimeAfterNoon: 674, nights: 6), balance: nil, consistency: nil)
         #expect(six.usualBedtimeMinutes == nil)
         #expect(six.nights == 6)
-        let seven = BedtimeInputsBuilder.inputs(wakeMinutes: 420, needMinutes: 480, timing: timing(bedtimeAfterNoon: 674, nights: 7), balance: nil, consistency: nil)
+        let seven = BedtimeInputsBuilder.inputs(
+            wakeMinutes: 420, needMinutes: 480, timing: timing(bedtimeAfterNoon: 674, nights: 7), balance: nil, consistency: nil)
         #expect(seven.usualBedtimeMinutes == 23 * 60 + 14)
         #expect(seven.nights == 7)
     }
@@ -306,7 +311,8 @@ struct BedtimeInputsTests {
     }
 
     @Test func theBalanceAndTheSpreadAreCarriedAsTheyAre() {
-        let window = ConsistencyWindow(days: 14, nights: 14, bedtimeSD: 38.5, wakeSD: 20, durationSD: 30, bedtimeMean: 660, wakeMean: 1140, midpointMinutes: 900)
+        let window = ConsistencyWindow(
+            days: 14, nights: 14, bedtimeSD: 38.5, wakeSD: 20, durationSD: 30, bedtimeMean: 660, wakeMean: 1140, midpointMinutes: 900)
         let consistency = ConsistencyResult(windows: [window], night: SleepNightKey(year: 2026, month: 9, day: 29), lastMidpointMinutes: 900)
         let inputs = BedtimeInputsBuilder.inputs(
             wakeMinutes: 420, needMinutes: 480, timing: timing(bedtimeAfterNoon: 660, nights: 14), balance: balance(-70), consistency: consistency
@@ -374,8 +380,12 @@ struct TonightClockTests {
     }
 
     @Test func anOrdinaryNightHasNoClockChange() {
-        #expect(TonightClock.clockChangeMinutes(night: SleepNightKey(year: 2026, month: 9, day: 30), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("America/New_York")) == 0)
-        #expect(TonightClock.clockChangeMinutes(night: SleepNightKey(year: 2026, month: 3, day: 9), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("America/New_York")) == 0)
+        #expect(
+            TonightClock.clockChangeMinutes(
+                night: SleepNightKey(year: 2026, month: 9, day: 30), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("America/New_York")) == 0)
+        #expect(
+            TonightClock.clockChangeMinutes(
+                night: SleepNightKey(year: 2026, month: 3, day: 9), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("America/New_York")) == 0)
     }
 
     @Test func theNightClocksGoForwardIsPlus60() {
@@ -386,7 +396,9 @@ struct TonightClockTests {
         // A bedtime after the change on the new day has nothing between it and waking.
         #expect(TonightClock.clockChangeMinutes(night: night, bedtimeMinutes: 3 * 60 + 30, wakeMinutes: 10 * 60, timeZone: zone("America/New_York")) == 0)
         // Europe's change that year is on March 29.
-        #expect(TonightClock.clockChangeMinutes(night: SleepNightKey(year: 2026, month: 3, day: 28), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("Europe/London")) == 60)
+        #expect(
+            TonightClock.clockChangeMinutes(
+                night: SleepNightKey(year: 2026, month: 3, day: 28), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("Europe/London")) == 60)
     }
 
     @Test func theNightClocksGoBackIsMinus60() {
@@ -397,13 +409,16 @@ struct TonightClockTests {
 
     @Test func aPlaceWithoutDaylightSavingNeverChanges() {
         for (year, month, day) in [(2026, 3, 7), (2026, 10, 31), (2026, 6, 15)] {
-            #expect(TonightClock.clockChangeMinutes(night: SleepNightKey(year: year, month: month, day: day), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("Asia/Tokyo")) == 0)
+            #expect(
+                TonightClock.clockChangeMinutes(
+                    night: SleepNightKey(year: year, month: month, day: day), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: zone("Asia/Tokyo")) == 0)
         }
     }
 
     @Test func theClockChangeFeedsTheRecommendationEndToEnd() {
         let tz = zone("America/New_York")
-        let change = TonightClock.clockChangeMinutes(night: SleepNightKey(year: 2026, month: 3, day: 7), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: tz)
+        let change = TonightClock.clockChangeMinutes(
+            night: SleepNightKey(year: 2026, month: 3, day: 7), bedtimeMinutes: 23 * 60, wakeMinutes: 7 * 60, timeZone: tz)
         let result = BedtimeRecommendationEngine.recommend(BedtimeInputs(wakeMinutes: 7 * 60, needMinutes: 8 * 60, nights: 14, clockChangeMinutes: change))
         #expect(result.centerMinutes == 22 * 60)
         #expect(result.expectedSleepMinutes == 8 * 60)

@@ -48,11 +48,12 @@ struct SoundRealtimeSafetyTests {
 
     @Test(.disabled(if: SoundRealtimeSafetyTests.allocatorIsReplaced, "a sanitizer replaces the allocator, so the hook sees nothing"))
     func theHookCountsADeliberateAllocation() throws {
-        let counted = try #require(Self.allocations {
-            let box = UnsafeMutablePointer<Int>.allocate(capacity: 64)
-            box.initialize(repeating: 1, count: 64)
-            box.deallocate()
-        })
+        let counted = try #require(
+            Self.allocations {
+                let box = UnsafeMutablePointer<Int>.allocate(capacity: 64)
+                box.initialize(repeating: 1, count: 64)
+                box.deallocate()
+            })
         #expect(counted >= 1, "the malloc hook saw nothing, so it proves nothing")
     }
 
@@ -62,7 +63,10 @@ struct SoundRealtimeSafetyTests {
         let frames = 1156
         let l = UnsafeMutablePointer<Float>.allocate(capacity: frames)
         let r = UnsafeMutablePointer<Float>.allocate(capacity: frames)
-        defer { l.deallocate(); r.deallocate() }
+        defer {
+            l.deallocate()
+            r.deallocate()
+        }
         // `allCases` builds an array on every access; the test makes it once, off the counted path.
         let kinds = SoundKind.allCases
         // Once through everything first, so anything that is allowed to happen once has happened.
@@ -72,22 +76,35 @@ struct SoundRealtimeSafetyTests {
         }
 
         for kind in kinds {
-            let counted = try #require(Self.allocations {
-                // `while`, not `for ... in 0..<n`: a range loop allocates in a Debug build, and this
-                // closure is what is being counted.
-                renderer.apply(SoundCommand(kind: kind, gain: 0.5, crossfadeSeconds: 0.2))
-                var n = 0
-                while n < 40 { renderer.renderStereo(left: l, right: r, count: frames); n += 1 }
-                renderer.apply(SoundCommand(kind: kind, gain: 0.9, fader: nil))
-                n = 0
-                while n < 5 { renderer.renderStereo(left: l, right: r, count: 333); n += 1 }
-                renderer.apply(SoundCommand(kind: kind, gain: 0.9, fader: 0, faderSeconds: 0.1))
-                n = 0
-                while n < 10 { renderer.renderStereo(left: l, right: r, count: frames); n += 1 }
-                renderer.apply(SoundCommand(kind: kind, gain: 0.9, fader: 1, faderSeconds: 0.1))
-                n = 0
-                while n < 10 { renderer.renderStereo(left: l, right: r, count: 1); n += 1 }
-            })
+            let counted = try #require(
+                Self.allocations {
+                    // `while`, not `for ... in 0..<n`: a range loop allocates in a Debug build, and this
+                    // closure is what is being counted.
+                    renderer.apply(SoundCommand(kind: kind, gain: 0.5, crossfadeSeconds: 0.2))
+                    var n = 0
+                    while n < 40 {
+                        renderer.renderStereo(left: l, right: r, count: frames)
+                        n += 1
+                    }
+                    renderer.apply(SoundCommand(kind: kind, gain: 0.9, fader: nil))
+                    n = 0
+                    while n < 5 {
+                        renderer.renderStereo(left: l, right: r, count: 333)
+                        n += 1
+                    }
+                    renderer.apply(SoundCommand(kind: kind, gain: 0.9, fader: 0, faderSeconds: 0.1))
+                    n = 0
+                    while n < 10 {
+                        renderer.renderStereo(left: l, right: r, count: frames)
+                        n += 1
+                    }
+                    renderer.apply(SoundCommand(kind: kind, gain: 0.9, fader: 1, faderSeconds: 0.1))
+                    n = 0
+                    while n < 10 {
+                        renderer.renderStereo(left: l, right: r, count: 1)
+                        n += 1
+                    }
+                })
             #expect(counted == 0, Comment(rawValue: "rendering \(kind) allocated \(counted) times"))
         }
     }

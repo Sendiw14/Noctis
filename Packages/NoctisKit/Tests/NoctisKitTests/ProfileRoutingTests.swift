@@ -71,7 +71,8 @@ nonisolated struct HealthStateLinkTests {
         for feature in Self.features {
             for file in Self.swiftFiles(in: feature) {
                 let text = try String(contentsOf: file, encoding: .utf8)
-                let actions = text.components(separatedBy: "NoctisTextButton(\"Open Health\"").count - 1
+                let actions =
+                    text.components(separatedBy: "NoctisTextButton(\"Open Health\"").count - 1
                     + text.components(separatedBy: "NoctisCTA(\"Connect Apple Health\"").count - 1
                 guard actions > 0 else { continue }
                 let links = text.components(separatedBy: "HealthDataSettingsLink()").count - 1

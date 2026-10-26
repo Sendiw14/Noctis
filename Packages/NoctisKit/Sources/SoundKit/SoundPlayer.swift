@@ -259,12 +259,13 @@ public final class SoundPlayer {
     // MARK: The system's
 
     func handle(_ event: SoundSessionEvent) {
-        let mapped: SoundPlaybackEvent = switch event {
-        case .interruptionBegan: .interruptionBegan
-        case .interruptionEnded(let shouldResume): .interruptionEnded(shouldResume: shouldResume)
-        case .routeLost: .routeLost
-        case .mediaServicesReset: .mediaServicesReset
-        }
+        let mapped: SoundPlaybackEvent =
+            switch event {
+            case .interruptionBegan: .interruptionBegan
+            case .interruptionEnded(let shouldResume): .interruptionEnded(shouldResume: shouldResume)
+            case .routeLost: .routeLost
+            case .mediaServicesReset: .mediaServicesReset
+            }
         perform(SoundPlaybackPolicy.reduce(state.phase, mapped))
         updateMeter()
     }
@@ -272,11 +273,12 @@ public final class SoundPlayer {
     func handle(_ command: SoundRemoteCommand) {
         // The lock screen's play button with nothing loaded has nothing to play.
         if state.kind == nil, state.phase == .stopped { return }
-        let mapped: SoundPlaybackEvent = switch command {
-        case .play: .remotePlay
-        case .pause: .remotePause
-        case .toggle: .remoteToggle
-        }
+        let mapped: SoundPlaybackEvent =
+            switch command {
+            case .play: .remotePlay
+            case .pause: .remotePause
+            case .toggle: .remoteToggle
+            }
         perform(SoundPlaybackPolicy.reduce(state.phase, mapped))
         updateMeter()
     }

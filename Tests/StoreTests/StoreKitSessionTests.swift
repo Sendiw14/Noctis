@@ -5,8 +5,8 @@ import Testing
 
 @testable import NightKit
 @testable import NoctisCore
-@testable import NoctisWatchKit
 @testable import NoctisIntentKit
+@testable import NoctisWatchKit
 @testable import PremiumKit
 
 // This bundle is HOSTED by the Noctis app (project.yml, NoctisStoreTests): StoreKit answers only a process that has an app identity. The same file as a
@@ -83,7 +83,10 @@ private final class Rig {
         try #require(session.allTransactions().last { $0.productIdentifier == productID }, "no test transaction for \(productID)")
     }
 
-    func finish() { session.clearTransactions(); session.resetToDefaultState() }
+    func finish() {
+        session.clearTransactions()
+        session.resetToDefaultState()
+    }
 }
 
 /// What every consumer of the tier says for `tier`: the same answer as the feature table, and the plan-specific words.
@@ -94,9 +97,15 @@ private func expectEverySurface(agrees tier: Tier, _ rig: Rig, sourceLocation: S
         #expect(rig.gate.isUnlocked(feature) == FeatureTable.isIncluded(feature, in: tier), "\(feature)", sourceLocation: sourceLocation)
     }
     // Notification copy and routing.
-    #expect(NotificationPlan.windDownBody(leadMinutes: 20, tier: tier) == (tier == .premium ? "Your wind-down window starts in 20 minutes." : "Your bedtime window starts in 20 minutes."), sourceLocation: sourceLocation)
+    #expect(
+        NotificationPlan.windDownBody(leadMinutes: 20, tier: tier)
+            == (tier == .premium ? "Your wind-down window starts in 20 minutes." : "Your bedtime window starts in 20 minutes."), sourceLocation: sourceLocation)
     // Watch pages and complications read the tier the snapshot carries.
-    for page in WatchPage.allCases { #expect(WatchGate.isLocked(page, tier: tier) == !(WatchGate.feature(for: page).map { FeatureTable.isIncluded($0, in: tier) } ?? true), sourceLocation: sourceLocation) }
+    for page in WatchPage.allCases {
+        #expect(
+            WatchGate.isLocked(page, tier: tier) == !(WatchGate.feature(for: page).map { FeatureTable.isIncluded($0, in: tier) } ?? true),
+            sourceLocation: sourceLocation)
+    }
     // Siri and Control.
     #expect(IntentGate.includesStartWindDown(in: tier) == (tier == .premium), sourceLocation: sourceLocation)
     // Coach's free questions.
@@ -166,7 +175,8 @@ struct StoreKitSessionTests {
         try await rig.buy(StoreProductID.yearly)
         #expect(rig.entitlements.isInTrial)
         try rig.session.forceRenewalOfSubscription(productIdentifier: StoreProductID.yearly)
-        #expect(await rig.waitForState(.premium(.purchased)), "after the first renewal the trial is over and the plan is paid; state is \(rig.entitlements.state)")
+        #expect(
+            await rig.waitForState(.premium(.purchased)), "after the first renewal the trial is over and the plan is paid; state is \(rig.entitlements.state)")
         #expect(rig.tier == .premium)
         expectEverySurface(agrees: .premium, rig)
     }
@@ -202,7 +212,8 @@ struct StoreKitSessionTests {
         try await rig.buy(StoreProductID.monthly)
         #expect(rig.tier == .premium)
         rig.session.clearTransactions()
-        try await rig.session.buyProduct(identifier: StoreProductID.monthly, options: [.purchaseDate(Date().addingTimeInterval(-40 * 86_400), renewalBehavior: .cancelImmediately)])
+        try await rig.session.buyProduct(
+            identifier: StoreProductID.monthly, options: [.purchaseDate(Date().addingTimeInterval(-40 * 86_400), renewalBehavior: .cancelImmediately)])
         #expect(await rig.waitForState(.previouslyPremiumNowFree), "state is \(rig.entitlements.state)")
         #expect(rig.cache.read() == .lapsed && rig.entitlements.summary.hasLapsed)
         expectEverySurface(agrees: .free, rig)
@@ -234,8 +245,13 @@ struct StoreKitSessionTests {
         // What the app does with that answer: the plan's own period has run out (the first transaction ended in the past), the grace period has not.
         let expired = EntitlementRecord(productID: StoreProductID.monthly, expirationDate: paidThrough.addingTimeInterval(-40 * 86_400))
         let during = graceEnd.addingTimeInterval(-86_400)
-        #expect(EntitlementResolver.resolve(records: [expired], renewal: renewal, previous: .premium, productIDs: [StoreProductID.monthly], now: during) == .premium(.grace))
-        #expect(EntitlementResolver.resolve(records: [expired], renewal: renewal, previous: .premium, productIDs: [StoreProductID.monthly], now: graceEnd.addingTimeInterval(60)) == .previouslyPremiumNowFree)
+        #expect(
+            EntitlementResolver.resolve(records: [expired], renewal: renewal, previous: .premium, productIDs: [StoreProductID.monthly], now: during)
+                == .premium(.grace))
+        #expect(
+            EntitlementResolver.resolve(
+                records: [expired], renewal: renewal, previous: .premium, productIDs: [StoreProductID.monthly], now: graceEnd.addingTimeInterval(60))
+                == .previouslyPremiumNowFree)
         // The test server keeps the failed renewal (hasPurchaseIssue) in currentEntitlements with a new period, so the app reads Premium either way.
         await rig.entitlements.refresh()
         #expect(rig.tier == .premium)
@@ -257,7 +273,9 @@ struct StoreKitSessionTests {
         let renewal = try #require(await StoreKitEntitlementClient().renewal())
         #expect(renewal.state == .inBillingRetryPeriod && renewal.gracePeriodExpirationDate == nil, "renewal is \(renewal)")
         let expired = EntitlementRecord(productID: StoreProductID.monthly, expirationDate: paidThrough.addingTimeInterval(-40 * 86_400))
-        #expect(EntitlementResolver.resolve(records: [expired], renewal: renewal, previous: .premium, productIDs: [StoreProductID.monthly], now: Date()) == .previouslyPremiumNowFree)
+        #expect(
+            EntitlementResolver.resolve(records: [expired], renewal: renewal, previous: .premium, productIDs: [StoreProductID.monthly], now: Date())
+                == .previouslyPremiumNowFree)
         // UNVERIFIED: whether a real App Store drops the plan from currentEntitlements here. StoreKitTest keeps the failed renewal in it with a future end
         // date, which the app cannot tell from a paid period; needs a Sandbox account on a device (QA_REPORT.md).
     }
@@ -324,11 +342,16 @@ struct StoreKitSessionTests {
         _ = restored
         // And with nothing bought, Restore says so.
         rig.session.clearTransactions()
-        let empty = StoreManager(entitlementManager: EntitlementManager(client: StoreKitEntitlementClient(), cache: EntitlementCache(defaults: UserDefaults(suiteName: "noctis.storekit.\(UUID().uuidString)")!)))
+        let empty = StoreManager(
+            entitlementManager: EntitlementManager(
+                client: StoreKitEntitlementClient(), cache: EntitlementCache(defaults: UserDefaults(suiteName: "noctis.storekit.\(UUID().uuidString)")!)))
         let nothing = Task { await empty.restore() }
         let outcome = await withTaskGroup(of: StoreManager.RestoreResult?.self) { group -> StoreManager.RestoreResult? in
             group.addTask { await nothing.value }
-            group.addTask { try? await Task.sleep(for: .seconds(15)); return nil }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(15))
+                return nil
+            }
             let first = await group.next() ?? nil
             group.cancelAll()
             return first
@@ -431,7 +454,9 @@ struct StoreKitSessionTests {
         _ = retry
         #expect(rig.store.purchaseState == .success, "after the retry: purchaseState \(rig.store.purchaseState)")
         await rig.entitlements.refresh()
-        let transactions = rig.session.allTransactions().map { "\($0.identifier) \($0.productIdentifier.suffix(7)) state=\($0.state.rawValue) issue=\($0.hasPurchaseIssue) exp=\(String(describing: $0.expirationDate))" }
+        let transactions = rig.session.allTransactions().map {
+            "\($0.identifier) \($0.productIdentifier.suffix(7)) state=\($0.state.rawValue) issue=\($0.hasPurchaseIssue) exp=\(String(describing: $0.expirationDate))"
+        }
         let records = await StoreKitEntitlementClient().records().map { "\($0.productID.suffix(7)) exp=\(String(describing: $0.expirationDate))" }
         #expect(rig.tier == .premium, "after the retry tier is \(rig.tier); test transactions \(transactions); entitlements \(records)")
     }

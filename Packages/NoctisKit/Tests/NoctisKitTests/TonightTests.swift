@@ -94,7 +94,9 @@ struct TonightRouteTests {
         #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .free) == .tonight)
         for tier in [Tier.free, .premium] {
             #expect(NoctisNotification.route(for: NoctisNotification.morningSummary, tier: tier) == nil)
-            #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == .review(kind: .weekly), "the weekly reminder opens the latest weekly review on either plan")
+            #expect(
+                NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == .review(kind: .weekly),
+                "the weekly reminder opens the latest weekly review on either plan")
             #expect(NoctisNotification.route(for: "noctis.notification.trialEnding", tier: tier) == nil)
             #expect(NoctisNotification.route(for: "somebody.else", tier: tier) == nil)
         }
@@ -108,7 +110,9 @@ struct TonightBuilderTests {
         wake: Int = clock(7), need: Int = clock(8), balance: Double? = nil, usual: Int? = nil, spread: Double? = nil, nights: Int = 14, change: Int = 0
     ) -> BedtimeRecommendation {
         BedtimeRecommendationEngine.recommend(
-            BedtimeInputs(wakeMinutes: wake, needMinutes: need, balanceMinutes: balance, usualBedtimeMinutes: usual, bedtimeSpreadMinutes: spread, nights: nights, clockChangeMinutes: change)
+            BedtimeInputs(
+                wakeMinutes: wake, needMinutes: need, balanceMinutes: balance, usualBedtimeMinutes: usual, bedtimeSpreadMinutes: spread, nights: nights,
+                clockChangeMinutes: change)
         )
     }
 
@@ -229,7 +233,8 @@ struct TonightBuilderTests {
         ]
         for recommendation in every {
             let c = content(recommendation)
-            let strings = [c.summary, c.heroCaption, c.wakeLine, c.note, c.confidence, c.clockChange, c.accessibilityLabel].compactMap { $0 }
+            let strings =
+                [c.summary, c.heroCaption, c.wakeLine, c.note, c.confidence, c.clockChange, c.accessibilityLabel].compactMap { $0 }
                 + c.method + c.reasons.flatMap { [$0.label, $0.value.plain, $0.detail].compactMap { $0 } }
             for text in strings {
                 for word in banned {
@@ -243,9 +248,12 @@ struct TonightBuilderTests {
 // MARK: - The words of the alarm
 
 struct AlarmBuilderTests {
-    private func status(_ state: AlarmState, authorization: AlarmAuthorization = .authorized, failure: AlarmFailure? = nil, days: Set<AlarmWeekday> = []) -> AlarmStatus {
+    private func status(
+        _ state: AlarmState, authorization: AlarmAuthorization = .authorized, failure: AlarmFailure? = nil, days: Set<AlarmWeekday> = []
+    ) -> AlarmStatus {
         AlarmStatus(
-            settings: AlarmSettings(minutesSinceMidnight: clock(7, 30), repeatDays: days, lastState: state), state: state, authorization: authorization, failure: failure
+            settings: AlarmSettings(minutesSinceMidnight: clock(7, 30), repeatDays: days, lastState: state), state: state, authorization: authorization,
+            failure: failure
         )
     }
 
@@ -367,7 +375,8 @@ struct TonightViewModelTests {
         let inputs = BedtimeInputsBuilder.inputs(
             wakeMinutes: clock(7), needMinutes: clock(8), timing: snapshot.timing, balance: snapshot.balance, consistency: snapshot.consistency
         )
-        let expected = TonightBuilder.content(for: BedtimeRecommendationEngine.recommend(inputs), now: tonightNow, timeZone: Fixture.newYork, format: tonightFormat)
+        let expected = TonightBuilder.content(
+            for: BedtimeRecommendationEngine.recommend(inputs), now: tonightNow, timeZone: Fixture.newYork, format: tonightFormat)
         #expect(model.content == expected)
         #expect(model.content?.isWindow == true)
         model.onDisappear()

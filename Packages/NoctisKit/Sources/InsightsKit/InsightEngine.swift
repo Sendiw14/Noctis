@@ -29,7 +29,8 @@ public enum InsightEngine {
     public static func candidates(history: [NightMetrics], asOf now: Date) -> [Insight] {
         let complete = history.filter { $0.wakeTime <= now }
         guard let lastNight = complete.max(by: { $0.wakeTime < $1.wakeTime }),
-              now.timeIntervalSince(lastNight.wakeTime) <= RecoveryModelV1.lastNightWindow else { return [] }
+            now.timeIntervalSince(lastNight.wakeTime) <= RecoveryModelV1.lastNightWindow
+        else { return [] }
         let baselines = BaselineEngine.baselines(for: lastNight.night, history: complete)
         return candidates(lastNight: lastNight, baselines: baselines, history: complete)
     }

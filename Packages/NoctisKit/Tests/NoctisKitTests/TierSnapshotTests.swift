@@ -77,15 +77,20 @@ struct TierSnapshotShapeTests {
         let provider = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
         let home = await HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot())
         for tier in Tier.allCases {
-            let made = try #require(WidgetSnapshotMaker.make(home: home, profile: UserProfileSnapshot(), bedtime: nil, alarm: nil, now: now, calendar: WidgetFixture.calendar, tier: tier))
+            let made = try #require(
+                WidgetSnapshotMaker.make(
+                    home: home, profile: UserProfileSnapshot(), bedtime: nil, alarm: nil, now: now, calendar: WidgetFixture.calendar, tier: tier))
             #expect(made.tier == tier)
         }
-        let unspecified = try #require(WidgetSnapshotMaker.make(home: home, profile: UserProfileSnapshot(), bedtime: nil, alarm: nil, now: now, calendar: WidgetFixture.calendar))
+        let unspecified = try #require(
+            WidgetSnapshotMaker.make(home: home, profile: UserProfileSnapshot(), bedtime: nil, alarm: nil, now: now, calendar: WidgetFixture.calendar))
         #expect(unspecified.tier == .free, "no tier given is free")
     }
 
     @Test func theSnapshotNamesNothingAboutAPurchase() throws {
-        let source = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift"), encoding: .utf8))
+        let source = RawDefaultsTests.code(
+            try String(
+                contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift"), encoding: .utf8))
         for word in ["StoreKit", "Transaction", "productID", "expiration", "originalTransaction", "receipt"] {
             #expect(!source.contains(word), Comment(rawValue: "the snapshot mentions \(word)"))
         }
@@ -160,14 +165,18 @@ struct TierPublishingTests {
     }
 
     @Test func theAppRewritesTheSnapshotWhenThePlanChanges() throws {
-        let container = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
+        let container = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
         #expect(container.contains("widgetInputs.setTier { await MainActor.run { gate.tier } }"), "the snapshot says what the gate says")
         let hook = try #require(container.range(of: "store.entitlementManager.onTierChange = { new, old in"))
         #expect(container[hook.upperBound...].prefix(400).contains("widgetPublisher.republish()"), "a change of tier writes it again at once")
     }
 
     @Test func noExtensionOrWatchTargetCallsStoreKit() throws {
-        for folder in ["Widgets/Home", "Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisIntentKit"] {
+        for folder in [
+            "Widgets/Home", "Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisWatchKit",
+            "Packages/NoctisKit/Sources/NoctisIntentKit",
+        ] {
             let found = RawDefaultsTests.swiftFiles(under: [folder])
             #expect(!found.isEmpty, Comment(rawValue: folder))
             for file in found {

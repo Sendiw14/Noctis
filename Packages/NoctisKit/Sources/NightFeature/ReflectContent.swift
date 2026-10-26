@@ -1,6 +1,6 @@
 import Foundation
-import NoctisCore
 import JournalKit
+import NoctisCore
 
 /// Reflect's and the Journal's words (APP_RULES.md R35). Plain and kind: everything is optional, nothing is
 /// counted, scored or remembered against anyone, and nothing is said about what a day "should" have felt like.
@@ -27,7 +27,8 @@ public nonisolated enum ReflectCopy {
     public static let delete = "Delete"
     public static let deleteAll = "Delete all entries"
     public static let deleteAllTitle = "Delete all journal entries?"
-    public static let deleteAllMessage = "This deletes every entry you have written here, from this iPhone. It can't be undone. Your sleep data and the rest of NOCTIS are not affected."
+    public static let deleteAllMessage =
+        "This deletes every entry you have written here, from this iPhone. It can't be undone. Your sleep data and the rest of NOCTIS are not affected."
     public static let cancel = "Cancel"
 
     /// "3 of 5", or "Not set".

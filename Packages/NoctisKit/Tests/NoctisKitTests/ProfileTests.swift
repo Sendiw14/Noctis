@@ -296,7 +296,8 @@ struct HealthDataStatusTests {
         let end = profileNow.addingTimeInterval(-12 * 3600)
         let night = Fixture.sample(end.addingTimeInterval(-7 * 3600), end, .core, source: "Apple Watch", bundle: "com.apple.health")
         #expect(HealthDataStatusReader.lastNightSource([night], resolver: DefaultSourceResolver(), now: profileNow) == "Apple Watch")
-        let old = Fixture.sample(end.addingTimeInterval(-4 * 86_400), end.addingTimeInterval(-4 * 86_400 + 7 * 3600), .core, source: "Apple Watch", bundle: "com.apple.health")
+        let old = Fixture.sample(
+            end.addingTimeInterval(-4 * 86_400), end.addingTimeInterval(-4 * 86_400 + 7 * 3600), .core, source: "Apple Watch", bundle: "com.apple.health")
         #expect(HealthDataStatusReader.lastNightSource([old], resolver: DefaultSourceResolver(), now: profileNow) == nil)
         let awake = Fixture.sample(end.addingTimeInterval(-1800), end, .awake, source: "Apple Watch", bundle: "com.apple.health")
         #expect(HealthDataStatusReader.lastNightSource([awake], resolver: DefaultSourceResolver(), now: profileNow) == nil, "only time asleep counts")
@@ -311,7 +312,8 @@ struct HealthDataStatusTests {
 @MainActor
 struct ProfileViewModelTests {
     final class Bench {
-        var profile = UserProfileSnapshot(name: "", primaryGoal: .betterSleep, selectedGoals: [.betterSleep], typicalWakeMinutes: minutes(7), needMinutes: minutes(8))
+        var profile = UserProfileSnapshot(
+            name: "", primaryGoal: .betterSleep, selectedGoals: [.betterSleep], typicalWakeMinutes: minutes(7), needMinutes: minutes(8))
         var edits: [ProfileEdit] = []
         let center = InMemoryNotificationCenter(authorization: .allowed)
         let preferences: AppPreferences
@@ -328,7 +330,8 @@ struct ProfileViewModelTests {
             let sleep = SleepRepository(provider: provider, timeZone: Fixture.newYork, clock: { now })
             let service = AlarmService(backend: alarmBackend, store: alarmStore, defaultMinutes: { minutes(7) })
             let coordinator = NotificationCoordinator(
-                scheduler: NotificationScheduler(center: center), preferences: preferences, profile: { UserProfileSnapshot() }, bedtimeCenter: { _, _ in minutes(23) }
+                scheduler: NotificationScheduler(center: center), preferences: preferences, profile: { UserProfileSnapshot() },
+                bedtimeCenter: { _, _ in minutes(23) }
             )
             viewModel = ProfileViewModel(
                 sleep: sleep, alarm: service, health: HealthDataStatusReader(provider: provider), profile: { [unowned self] in profile },

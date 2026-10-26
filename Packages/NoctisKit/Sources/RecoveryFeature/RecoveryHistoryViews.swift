@@ -118,12 +118,17 @@ struct RecoveryHistoryChartCard: View {
         .accessibilityLabel(content.accessibilityLabel)
         .accessibilityValue(current.map { content.points[$0].accessibilityLabel } ?? "")
         .accessibilityHint("Swipe up or down to go through the nights.")
-        .accessibilityChartDescriptor(NoctisAudioGraph(
-            title: content.accessibilityLabel, summary: "One point a day, its recovery score from 0 to 100. Swipe up or down on the chart to go through the days.",
-            xTitle: "Day", yTitle: "Recovery score",
-            points: content.points.enumerated().map { index, point in NoctisGraphPoint(x: "Day \(index + 1)", y: point.score.map(Double.init), spoken: point.accessibilityLabel) },
-            yRange: 0...100, yDescription: { "score \(Int($0.rounded()))" }
-        ))
+        .accessibilityChartDescriptor(
+            NoctisAudioGraph(
+                title: content.accessibilityLabel,
+                summary: "One point a day, its recovery score from 0 to 100. Swipe up or down on the chart to go through the days.",
+                xTitle: "Day", yTitle: "Recovery score",
+                points: content.points.enumerated().map { index, point in
+                    NoctisGraphPoint(x: "Day \(index + 1)", y: point.score.map(Double.init), spoken: point.accessibilityLabel)
+                },
+                yRange: 0...100, yDescription: { "score \(Int($0.rounded()))" }
+            )
+        )
         .accessibilityAdjustableAction { direction in
             let last = content.points.count - 1
             switch direction {
@@ -238,7 +243,11 @@ struct RecoveryHistoryChartCard: View {
                     .frame(height: Self.height)
             }
             .frame(height: Self.height)
-            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { plotWidth = $0 }
+            .onGeometryChange(for: CGFloat.self) {
+                $0.size.width
+            } action: {
+                plotWidth = $0
+            }
             .columnScrub(count: content.points.count, chartWidth: plotWidth, outset: Self.outset, selected: $selected)
         } else {
             Color.clear.frame(height: Self.height)

@@ -28,4 +28,3 @@ public struct NoctisLoadingState: View {
         .accessibilityLabel(message)
     }
 }
-

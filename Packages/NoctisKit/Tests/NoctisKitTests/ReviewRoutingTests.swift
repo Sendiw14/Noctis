@@ -48,7 +48,9 @@ private nonisolated final class CountingProvider: HealthDataProviding, @unchecke
     func fetchHeartRateSamples(from start: Date, to end: Date) async throws -> [HeartRateSample] { try await base.fetchHeartRateSamples(from: start, to: end) }
     func fetchRestingHeartRate(from start: Date, to end: Date) async throws -> [HeartRateSample] { try await base.fetchRestingHeartRate(from: start, to: end) }
     func fetchHRVSamples(from start: Date, to end: Date) async throws -> [HRVSample] { try await base.fetchHRVSamples(from: start, to: end) }
-    func fetchRespiratorySamples(from start: Date, to end: Date) async throws -> [RespiratoryRateSample] { try await base.fetchRespiratorySamples(from: start, to: end) }
+    func fetchRespiratorySamples(from start: Date, to end: Date) async throws -> [RespiratoryRateSample] {
+        try await base.fetchRespiratorySamples(from: start, to: end)
+    }
     func sampleChanges() -> AsyncStream<Void> { base.sampleChanges() }
 }
 
@@ -92,7 +94,9 @@ struct ReviewFeatureTests {
     @Test func theWeeklyCoverIsFreeAndTheRestOfTheReviewsArePremium() {
         #expect(FeatureTable.tier(of: .weeklyReviewCover) == .free)
         #expect(FeatureTable.tier(of: .weeklyReviewFull) == .premium && FeatureTable.tier(of: .monthlyReview) == .premium)
-        #expect(FeatureTable.isIncluded(.weeklyReviewCover, in: .free) && !FeatureTable.isIncluded(.monthlyReview, in: .free) && FeatureTable.isIncluded(.monthlyReview, in: .premium))
+        #expect(
+            FeatureTable.isIncluded(.weeklyReviewCover, in: .free) && !FeatureTable.isIncluded(.monthlyReview, in: .free)
+                && FeatureTable.isIncluded(.monthlyReview, in: .premium))
         for feature in [Feature.weeklyReviewCover, .weeklyReviewFull, .monthlyReview] { #expect(FeatureTable.area(of: feature) == .reviews) }
         #expect(FeatureArea.reviews.title == "Reviews")
     }
@@ -109,7 +113,8 @@ struct ReviewFeatureTests {
 
     @Test func theLockedReviewsOpenThePaywallWithTheirOwnLine() {
         #expect(PaywallContext(feature: .weeklyReviewFull) == .weeklyReview && PaywallContext(feature: .monthlyReview) == .monthlyReview)
-        #expect(PaywallContext.weeklyReview.line == "Unlock every page of your weekly review" && PaywallContext.monthlyReview.line == "Unlock your monthly review")
+        #expect(
+            PaywallContext.weeklyReview.line == "Unlock every page of your weekly review" && PaywallContext.monthlyReview.line == "Unlock your monthly review")
         #expect(PaywallContext(feature: .weeklyReviewCover) == .general, "a free feature has no lock to open")
         for context in [PaywallContext.weeklyReview, .monthlyReview] { #expect(LockedCopy.pressure(in: context.line).isEmpty) }
     }
@@ -118,7 +123,9 @@ struct ReviewFeatureTests {
         let weekly = ReviewCardPolicy.card(for: ReviewPeriod.weekly(reviewDate: key(2026, 9, 27)), format: ReviewFormat(locale: Locale(identifier: "en_US")))
         let monthly = ReviewCardPolicy.card(for: ReviewPeriod.monthly(year: 2026, month: 9), format: ReviewFormat(locale: Locale(identifier: "en_US")))
         #expect(weekly.feature == .weeklyReviewCover && monthly.feature == .monthlyReview)
-        #expect(weekly.title == "Your weekly review" && weekly.detail == "Sep 20 \u{2013} 26" && weekly.accessibilityLabel == "Your weekly review, Sep 20 \u{2013} 26")
+        #expect(
+            weekly.title == "Your weekly review" && weekly.detail == "Sep 20 \u{2013} 26"
+                && weekly.accessibilityLabel == "Your weekly review, Sep 20 \u{2013} 26")
         #expect(monthly.title == "Your monthly review" && monthly.detail == "September 2026")
     }
 }
@@ -141,7 +148,9 @@ struct ReviewCardPolicyTests {
         let ny = calendar()
         let september = ReviewPeriod.monthly(year: 2026, month: 9)
         #expect(!ReviewCardPolicy.isInWindow(september, now: at(2026, 9, 30, 23, 59), calendar: ny))
-        #expect(ReviewCardPolicy.isInWindow(september, now: at(2026, 10, 1, 0, 0), calendar: ny) && ReviewCardPolicy.isInWindow(september, now: at(2026, 10, 3, 23, 59), calendar: ny))
+        #expect(
+            ReviewCardPolicy.isInWindow(september, now: at(2026, 10, 1, 0, 0), calendar: ny)
+                && ReviewCardPolicy.isInWindow(september, now: at(2026, 10, 3, 23, 59), calendar: ny))
         #expect(!ReviewCardPolicy.isInWindow(september, now: at(2026, 10, 4, 0, 0), calendar: ny))
     }
 
@@ -149,7 +158,9 @@ struct ReviewCardPolicyTests {
         let ny = calendar()
         // The week ending Oct 31, with clocks going back on Sunday Nov 1 (a 25-hour day): the card still runs Sun, Mon and Tue, to midnight.
         let autumn = ReviewPeriod.weekly(reviewDate: key(2026, 11, 1))
-        #expect(ReviewCardPolicy.isInWindow(autumn, now: at(2026, 11, 3, 23, 59), calendar: ny) && !ReviewCardPolicy.isInWindow(autumn, now: at(2026, 11, 4, 0, 0), calendar: ny))
+        #expect(
+            ReviewCardPolicy.isInWindow(autumn, now: at(2026, 11, 3, 23, 59), calendar: ny)
+                && !ReviewCardPolicy.isInWindow(autumn, now: at(2026, 11, 4, 0, 0), calendar: ny))
     }
 
     @Test func onlyAnUnopenedReviewShowsACard() {
@@ -272,9 +283,13 @@ struct ReviewRouteTests {
     }
 
     @Test func tooFewNightsIsTheRealCountAndAReviewHasNoMessage() async {
-        let few = await Rig(.sparseWeek, reference: at(2026, 9, 28)).repository.review(ReviewPeriod.weekly(reviewDate: key(2026, 9, 27)), profile: UserProfileSnapshot())
+        let few = await Rig(.sparseWeek, reference: at(2026, 9, 28)).repository.review(
+            ReviewPeriod.weekly(reviewDate: key(2026, 9, 27)), profile: UserProfileSnapshot())
         let period = ReviewPeriod.weekly(reviewDate: key(2026, 9, 27))
-        guard case .notEnough(let content) = ReviewRoute.page(for: few, period: period, format: format) else { Issue.record("not enough nights: \(few)"); return }
+        guard case .notEnough(let content) = ReviewRoute.page(for: few, period: period, format: format) else {
+            Issue.record("not enough nights: \(few)")
+            return
+        }
         #expect(content.title == "Not enough nights yet" && content.count == "4 of 5 nights so far" && content.dateRange == "Sep 20 \u{2013} 26")
         #expect(content.detail == "Your weekly review appears once there are at least 5.")
         let enough = await Rig(reference: at(2026, 9, 28)).repository.review(period, profile: UserProfileSnapshot())
@@ -283,16 +298,27 @@ struct ReviewRouteTests {
 
     @Test func aPeriodNotOverIsSaidPlainlyWithNoCountClaimed() {
         let period = ReviewPeriod.weekly(reviewDate: key(2026, 10, 4))
-        guard case .notOver(let content) = ReviewRoute.page(for: .notComplete, period: period, format: format) else { Issue.record("not over"); return }
-        #expect(content.title == "This review isn't ready yet" && content.count == "Ready on Sun, Oct 4" && content.detail == "A week's review is made once the week is over.")
+        guard case .notOver(let content) = ReviewRoute.page(for: .notComplete, period: period, format: format) else {
+            Issue.record("not over")
+            return
+        }
+        #expect(
+            content.title == "This review isn't ready yet" && content.count == "Ready on Sun, Oct 4"
+                && content.detail == "A week's review is made once the week is over.")
         #expect(!content.count.contains(" of "))
     }
 
     @Test func noHealthAndAFailedReadAreDifferentMessagesAndNeitherIsACountOfZero() {
         let period = ReviewPeriod.weekly(reviewDate: key(2026, 9, 27))
-        guard case .noAccess(let title, let line) = ReviewRoute.page(for: .noAccess, period: period, format: format) else { Issue.record("no access"); return }
+        guard case .noAccess(let title, let line) = ReviewRoute.page(for: .noAccess, period: period, format: format) else {
+            Issue.record("no access")
+            return
+        }
         #expect(title == "No Health data" && !line.contains("0 of"))
-        guard case .failed(let failedTitle, let failedLine) = ReviewRoute.page(for: .unavailable, period: period, format: format) else { Issue.record("failed"); return }
+        guard case .failed(let failedTitle, let failedLine) = ReviewRoute.page(for: .unavailable, period: period, format: format) else {
+            Issue.record("failed")
+            return
+        }
         #expect(failedTitle == "Your review didn't load" && failedLine.contains("Try again"))
     }
 
@@ -300,7 +326,10 @@ struct ReviewRouteTests {
         let period = ReviewPeriod.weekly(reviewDate: key(2026, 9, 27))
         let month = ReviewPeriod.monthly(year: 2026, month: 9)
         var strings: [String] = []
-        for (outcome, subject) in [(ReviewOutcome.notComplete, period), (.unavailable, period), (.noAccess, period), (.notEnoughNights(have: 19, need: 20), month), (.notEnoughNights(have: 4, need: 5), period)] {
+        for (outcome, subject) in [
+            (ReviewOutcome.notComplete, period), (.unavailable, period), (.noAccess, period), (.notEnoughNights(have: 19, need: 20), month),
+            (.notEnoughNights(have: 4, need: 5), period),
+        ] {
             switch ReviewRoute.page(for: outcome, period: subject, format: format) {
             case .notEnough(let content), .notOver(let content): strings += [content.title, content.count, content.detail, content.dateRange]
             case .noAccess(let title, let line), .failed(let title, let line): strings += [title, line]
@@ -318,7 +347,8 @@ struct ReviewRouteTests {
 struct ReviewPageModelTests {
     private func story(_ rig: Rig, kind: ReviewKind = .weekly, unlocked: Bool = true, opened: Counter = Counter()) -> ReviewStoryViewModel {
         ReviewStoryViewModel(
-            kind: kind, id: nil, repository: rig.repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, isUnlocked: { _ in unlocked }, clock: { rig.clock.now },
+            kind: kind, id: nil, repository: rig.repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, isUnlocked: { _ in unlocked },
+            clock: { rig.clock.now },
             locale: Locale(identifier: "en_US"), opened: { opened.add() }
         )
     }
@@ -329,7 +359,10 @@ struct ReviewPageModelTests {
         let model = story(rig, opened: opened)
         #expect(model.phase == .loading)
         await model.load()
-        guard case .story(let story) = model.phase else { Issue.record("a story: \(model.phase)"); return }
+        guard case .story(let story) = model.phase else {
+            Issue.record("a story: \(model.phase)")
+            return
+        }
         #expect(story.title == "Your week" && story.dateRange == "Sep 20 \u{2013} 26" && model.pages.first?.kind == .cover)
         let stored = await rig.store.stored(ReviewPeriod.weekly(reviewDate: key(2026, 9, 27)).id)
         #expect(stored?.state == .seen && opened.value == 1)
@@ -340,7 +373,10 @@ struct ReviewPageModelTests {
         let opened = Counter()
         let model = story(rig, opened: opened)
         await model.load()
-        guard case .message(.notEnough(let content)) = model.phase else { Issue.record("not enough: \(model.phase)"); return }
+        guard case .message(.notEnough(let content)) = model.phase else {
+            Issue.record("not enough: \(model.phase)")
+            return
+        }
         #expect(content.count == "4 of 5 nights so far" && opened.value == 0 && model.pages.isEmpty && !model.canShare)
     }
 
@@ -349,19 +385,29 @@ struct ReviewPageModelTests {
         let deniedModel = ReviewStoryViewModel(
             kind: .weekly, id: nil,
             repository: ReviewRepository(
-                provider: MockHealthKitProvider(scenario: .full, referenceDate: at(2026, 9, 28), calendar: calendar(), startAuthorized: false), store: ReviewStore(), insights: InsightStore(),
+                provider: MockHealthKitProvider(scenario: .full, referenceDate: at(2026, 9, 28), calendar: calendar(), startAuthorized: false),
+                store: ReviewStore(), insights: InsightStore(),
                 timeZone: { nyZone }, clock: { denied.clock.now }
             ),
             profile: { UserProfileSnapshot() }, clock: { denied.clock.now }
         )
         await deniedModel.load()
-        guard case .message(.noAccess) = deniedModel.phase else { Issue.record("no access: \(deniedModel.phase)"); return }
+        guard case .message(.noAccess) = deniedModel.phase else {
+            Issue.record("no access: \(deniedModel.phase)")
+            return
+        }
         let nothing = ReviewStoryViewModel(kind: .weekly, id: nil, repository: nil, profile: { UserProfileSnapshot() })
         await nothing.load()
-        guard case .message(.failed) = nothing.phase else { Issue.record("failed: \(nothing.phase)"); return }
+        guard case .message(.failed) = nothing.phase else {
+            Issue.record("failed: \(nothing.phase)")
+            return
+        }
         // Try again runs the same load.
         await nothing.load()
-        guard case .message(.failed) = nothing.phase else { Issue.record("still failed"); return }
+        guard case .message(.failed) = nothing.phase else {
+            Issue.record("still failed")
+            return
+        }
     }
 
     private static func appModel(_ tier: Tier) throws -> AppModel {
@@ -416,7 +462,8 @@ struct HomeReviewCardTests {
         let now = at(2026, 9, 28)
         let provider = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: calendar(), startAuthorized: true)
         return HomeViewModel(
-            repository: HomeRepository(provider: provider, timeZone: nyZone, clock: { now }), profile: { UserProfileSnapshot() }, clock: { now }, calendar: calendar(),
+            repository: HomeRepository(provider: provider, timeZone: nyZone, clock: { now }), profile: { UserProfileSnapshot() }, clock: { now },
+            calendar: calendar(),
             reviewCards: cards
         )
     }
@@ -433,7 +480,9 @@ struct HomeReviewCardTests {
     }
 
     @Test func aCardGoesWhenTheSourceStopsGivingIt() async {
-        let box = CardBox([ReviewCardPolicy.card(for: ReviewPeriod.weekly(reviewDate: key(2026, 9, 27)), format: ReviewFormat(locale: Locale(identifier: "en_US")))])
+        let box = CardBox([
+            ReviewCardPolicy.card(for: ReviewPeriod.weekly(reviewDate: key(2026, 9, 27)), format: ReviewFormat(locale: Locale(identifier: "en_US")))
+        ])
         let model = homeModel { await box.cards }
         await model.refresh()
         #expect(model.reviewCards.count == 1)
@@ -448,7 +497,9 @@ struct HomeReviewCardTests {
             let card = ReviewCardPolicy.card(for: period, format: format)
             for text in [card.title, card.detail, card.accessibilityLabel] {
                 #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty && LockedCopy.pressure(in: text).isEmpty, Comment(rawValue: text))
-                for word in ["new", "!", "ready", "don't", "miss", "unread"] { #expect(!text.lowercased().contains(word), Comment(rawValue: "\(text) has \(word)")) }
+                for word in ["new", "!", "ready", "don't", "miss", "unread"] {
+                    #expect(!text.lowercased().contains(word), Comment(rawValue: "\(text) has \(word)"))
+                }
             }
         }
     }

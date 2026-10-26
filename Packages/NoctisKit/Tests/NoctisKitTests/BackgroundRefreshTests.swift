@@ -134,7 +134,11 @@ struct BackgroundRefresherTests {
             }
             let done = Count()
             let finished = Gate()
-            #expect(provider.simulateWake { done.bump(); Task { await finished.release() } })
+            #expect(
+                provider.simulateWake {
+                    done.bump()
+                    Task { await finished.release() }
+                })
             await finished.wait()
             #expect(done.count == 1, "onboarded \(onboarded), authorized \(authorized)")
         }
@@ -153,7 +157,8 @@ struct BackgroundDeliveryChoicesTests {
     }
 
     @Test func backgroundDeliveryIsOnlyAskedForByTheHealthProviderAndTheEntitlementIsThere() throws {
-        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Widgets/Alarm"]) where file.text.contains("enableBackgroundDelivery") {
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Widgets/Alarm"])
+        where file.text.contains("enableBackgroundDelivery") {
             #expect(file.path.hasSuffix("HealthProviding/HealthKitProvider.swift"), Comment(rawValue: "\(file.path) asks for background delivery"))
         }
         let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/Noctis.entitlements"), encoding: .utf8)
@@ -164,7 +169,8 @@ struct BackgroundDeliveryChoicesTests {
     }
 
     @Test func everyObserverPathCallsHealthKitsCompletionHandler() throws {
-        let source = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift"), encoding: .utf8)
+        let source = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift"), encoding: .utf8)
         let observers = try #require(source.range(of: "final class BackgroundObservers"))
         let code = RawDefaultsTests.code(String(source[observers.lowerBound...]))
         // Delivered: `done` is the completion handler. Failed: it is called here. Either way it is called.
@@ -174,9 +180,13 @@ struct BackgroundDeliveryChoicesTests {
 
     @Test func theInventoryAndTheCodeAgreeAboutReadingHealthInTheBackground() throws {
         let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/Noctis.entitlements"), encoding: .utf8)
-        let provider = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift"), encoding: .utf8)
-        let container = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
-        let inCode = entitlements.contains("healthkit.background-delivery") && provider.contains("enableBackgroundDelivery") && container.contains("startBackgroundDelivery")
+        let provider = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift"), encoding: .utf8)
+        let container = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
+        let inCode =
+            entitlements.contains("healthkit.background-delivery") && provider.contains("enableBackgroundDelivery")
+            && container.contains("startBackgroundDelivery")
         #expect(DataInventory.shared.facts.readsHealthInBackground == inCode)
         #expect(inCode)
     }
@@ -192,7 +202,9 @@ struct BackgroundDeliveryChoicesTests {
         let facts = shared.facts
         let quiet = DataInventory(
             categories: shared.categories, flows: shared.flows, networkUses: shared.networkUses, groups: shared.groups, retiredKeys: shared.retiredKeys,
-            facts: DataInventoryFacts(healthAccess: facts.healthAccess, hasAccount: facts.hasAccount, coachUsesRemoteModel: facts.coachUsesRemoteModel, coachNeverSees: facts.coachNeverSees, readsHealthInBackground: false)
+            facts: DataInventoryFacts(
+                healthAccess: facts.healthAccess, hasAccount: facts.hasAccount, coachUsesRemoteModel: facts.coachUsesRemoteModel,
+                coachNeverSees: facts.coachNeverSees, readsHealthInBackground: false)
         )
         #expect(PrivacyStatements.whenHealthIsRead(quiet) == "It reads Apple Health when you open the app.")
         #expect(!PrivacyStatements.helpStorage(quiet).contains("background"))

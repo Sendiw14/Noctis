@@ -14,54 +14,57 @@ struct AlarmStateMachineTests {
     }
 
     /// The whole table: each line is a transition that exists.
-    nonisolated static let steps: [Step] = [
-        // Getting going from a resting state.
-        Step(from: .off, event: .scheduleAccepted, to: .scheduled),
-        Step(from: .dismissed, event: .scheduleAccepted, to: .scheduled),
-        Step(from: .cancelled, event: .scheduleAccepted, to: .scheduled),
-        Step(from: .error, event: .scheduleAccepted, to: .scheduled),
-        Step(from: .off, event: .scheduleFailed, to: .error),
-        Step(from: .dismissed, event: .scheduleFailed, to: .error),
-        Step(from: .cancelled, event: .scheduleFailed, to: .error),
-        Step(from: .error, event: .reset, to: .off),
-        Step(from: .permissionDenied, event: .reset, to: .off),
-        Step(from: .unavailable, event: .reset, to: .off),
-        Step(from: .permissionDenied, event: .authorizationGranted, to: .off),
-        Step(from: .error, event: .cancelRequested, to: .cancelled),
-        // Waiting to ring.
-        Step(from: .scheduled, event: .systemScheduled, to: .armed),
-        Step(from: .scheduled, event: .systemAlerting, to: .firing),
-        Step(from: .scheduled, event: .systemCountdown, to: .snoozed),
-        Step(from: .scheduled, event: .systemGone, to: .dismissed),
-        Step(from: .scheduled, event: .scheduleAccepted, to: .scheduled),
-        Step(from: .scheduled, event: .scheduleFailed, to: .error),
-        Step(from: .scheduled, event: .cancelRequested, to: .cancelled),
-        Step(from: .armed, event: .systemAlerting, to: .firing),
-        Step(from: .armed, event: .systemCountdown, to: .snoozed),
-        Step(from: .armed, event: .systemGone, to: .dismissed),
-        Step(from: .armed, event: .scheduleAccepted, to: .scheduled),
-        Step(from: .armed, event: .scheduleFailed, to: .error),
-        Step(from: .armed, event: .cancelRequested, to: .cancelled),
-        // Ringing and snoozing.
-        Step(from: .firing, event: .systemCountdown, to: .snoozed),
-        Step(from: .firing, event: .systemScheduled, to: .armed),
-        Step(from: .firing, event: .systemGone, to: .dismissed),
-        Step(from: .firing, event: .scheduleAccepted, to: .scheduled),
-        Step(from: .firing, event: .scheduleFailed, to: .error),
-        Step(from: .firing, event: .cancelRequested, to: .cancelled),
-        Step(from: .snoozed, event: .systemAlerting, to: .firing),
-        Step(from: .snoozed, event: .systemScheduled, to: .armed),
-        Step(from: .snoozed, event: .systemGone, to: .dismissed),
-        Step(from: .snoozed, event: .scheduleAccepted, to: .scheduled),
-        Step(from: .snoozed, event: .scheduleFailed, to: .error),
-        Step(from: .snoozed, event: .cancelRequested, to: .cancelled),
-    ] + AlarmState.allCases.filter { $0 != .permissionDenied && $0 != .unavailable }.map {
-        // Permission is lost in any state but the two that already are it.
-        Step(from: $0, event: .authorizationDenied, to: .permissionDenied)
-    } + AlarmState.allCases.filter { $0 != .unavailable }.map {
-        // A device that can't schedule alarms can't, in any state.
-        Step(from: $0, event: .alarmsUnavailable, to: .unavailable)
-    }
+    nonisolated static let steps: [Step] =
+        [
+            // Getting going from a resting state.
+            Step(from: .off, event: .scheduleAccepted, to: .scheduled),
+            Step(from: .dismissed, event: .scheduleAccepted, to: .scheduled),
+            Step(from: .cancelled, event: .scheduleAccepted, to: .scheduled),
+            Step(from: .error, event: .scheduleAccepted, to: .scheduled),
+            Step(from: .off, event: .scheduleFailed, to: .error),
+            Step(from: .dismissed, event: .scheduleFailed, to: .error),
+            Step(from: .cancelled, event: .scheduleFailed, to: .error),
+            Step(from: .error, event: .reset, to: .off),
+            Step(from: .permissionDenied, event: .reset, to: .off),
+            Step(from: .unavailable, event: .reset, to: .off),
+            Step(from: .permissionDenied, event: .authorizationGranted, to: .off),
+            Step(from: .error, event: .cancelRequested, to: .cancelled),
+            // Waiting to ring.
+            Step(from: .scheduled, event: .systemScheduled, to: .armed),
+            Step(from: .scheduled, event: .systemAlerting, to: .firing),
+            Step(from: .scheduled, event: .systemCountdown, to: .snoozed),
+            Step(from: .scheduled, event: .systemGone, to: .dismissed),
+            Step(from: .scheduled, event: .scheduleAccepted, to: .scheduled),
+            Step(from: .scheduled, event: .scheduleFailed, to: .error),
+            Step(from: .scheduled, event: .cancelRequested, to: .cancelled),
+            Step(from: .armed, event: .systemAlerting, to: .firing),
+            Step(from: .armed, event: .systemCountdown, to: .snoozed),
+            Step(from: .armed, event: .systemGone, to: .dismissed),
+            Step(from: .armed, event: .scheduleAccepted, to: .scheduled),
+            Step(from: .armed, event: .scheduleFailed, to: .error),
+            Step(from: .armed, event: .cancelRequested, to: .cancelled),
+            // Ringing and snoozing.
+            Step(from: .firing, event: .systemCountdown, to: .snoozed),
+            Step(from: .firing, event: .systemScheduled, to: .armed),
+            Step(from: .firing, event: .systemGone, to: .dismissed),
+            Step(from: .firing, event: .scheduleAccepted, to: .scheduled),
+            Step(from: .firing, event: .scheduleFailed, to: .error),
+            Step(from: .firing, event: .cancelRequested, to: .cancelled),
+            Step(from: .snoozed, event: .systemAlerting, to: .firing),
+            Step(from: .snoozed, event: .systemScheduled, to: .armed),
+            Step(from: .snoozed, event: .systemGone, to: .dismissed),
+            Step(from: .snoozed, event: .scheduleAccepted, to: .scheduled),
+            Step(from: .snoozed, event: .scheduleFailed, to: .error),
+            Step(from: .snoozed, event: .cancelRequested, to: .cancelled),
+        ]
+        + AlarmState.allCases.filter { $0 != .permissionDenied && $0 != .unavailable }.map {
+            // Permission is lost in any state but the two that already are it.
+            Step(from: $0, event: .authorizationDenied, to: .permissionDenied)
+        }
+        + AlarmState.allCases.filter { $0 != .unavailable }.map {
+            // A device that can't schedule alarms can't, in any state.
+            Step(from: $0, event: .alarmsUnavailable, to: .unavailable)
+        }
 
     @Test(arguments: AlarmStateMachineTests.steps)
     func everyTransitionThatExists(step: Step) {

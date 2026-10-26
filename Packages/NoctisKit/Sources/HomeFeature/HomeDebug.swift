@@ -88,7 +88,10 @@ struct HomeDebugProbeView: View {
                 .frame(width: 2, height: 2)
                 .accessibilityElement()
                 .accessibilityIdentifier("debug.probe")
-                .accessibilityLabel(HomeBodyProbe.summary + ";requests=\(RequestRecorder.count);lowPower=\(lowPower ? 1 : 0)" + String(format: ";reusable=%.1f", HomeBodyProbe.reusableMegabytes))
+                .accessibilityLabel(
+                    HomeBodyProbe.summary + ";requests=\(RequestRecorder.count);lowPower=\(lowPower ? 1 : 0)"
+                        + String(format: ";reusable=%.1f", HomeBodyProbe.reusableMegabytes)
+                )
                 .accessibilityValue(String(format: "%.1f", HomeBodyProbe.footprintMegabytes))
         }
         .allowsHitTesting(false)

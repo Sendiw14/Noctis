@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Testing
+
 @testable import DesignSystem
 @testable import HealthProviding
 @testable import HomeFeature
@@ -37,11 +38,12 @@ struct HomeWidthTests {
         typeSize: DynamicTypeSize = .large,
         weight: LegibilityWeight = .regular
     ) -> CGSize? {
-        let renderer = ImageRenderer(content: HomeRenderHarness(viewModel: model)
-            .environment(\.horizontalSizeClass, sizeClass)
-            .environment(\.dynamicTypeSize, typeSize)
-            .environment(\.legibilityWeight, weight)
-            .frame(width: width))
+        let renderer = ImageRenderer(
+            content: HomeRenderHarness(viewModel: model)
+                .environment(\.horizontalSizeClass, sizeClass)
+                .environment(\.dynamicTypeSize, typeSize)
+                .environment(\.legibilityWeight, weight)
+                .frame(width: width))
         renderer.scale = 2
         guard let image = renderer.uiImage else { return nil }
         if let name, let directory = ProcessInfo.processInfo.environment["NOCTIS_RENDER_OUT"] {

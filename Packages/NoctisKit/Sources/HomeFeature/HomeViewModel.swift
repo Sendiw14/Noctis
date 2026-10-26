@@ -1,10 +1,11 @@
 import DesignSystem
 import Foundation
 import NoctisCore
-import Observation
 import OSLog
-import SwiftUI
+import Observation
 import SleepKit
+import SwiftUI
+
 #if canImport(UIKit)
 import UIKit
 #endif

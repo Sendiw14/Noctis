@@ -55,7 +55,9 @@ final class QAMatrixTests: XCTestCase {
             // The core pass leaves out the states that lay a tab out as another state does (gap, sleep only, no permission, loading); a later pass
             // without the list does them.
             let skipped = (environment["QA_SKIP_STATES"] ?? "").split(separator: ",").map(String.init)
-            if let last = screen.id.split(separator: ".").last, skipped.contains(String(last)), [.home, .sleep, .recovery, .insights].contains(screen.area) { return false }
+            if let last = screen.id.split(separator: ".").last, skipped.contains(String(last)), [.home, .sleep, .recovery, .insights].contains(screen.area) {
+                return false
+            }
             return only.isEmpty || only.contains { screen.id.hasPrefix($0) }
         }
     }
@@ -98,7 +100,8 @@ final class QAMatrixTests: XCTestCase {
         // the visit (the session is the device's, not the app's: the app asks StoreKit as it always does).
         var store: SKTestSession?
         if screen.needsStore {
-            let file = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Config/Noctis.storekit")
+            let file = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("Config/Noctis.storekit")
             store = try? SKTestSession(contentsOf: file)
             store?.disableDialogs = true
             store?.resetToDefaultState()
@@ -144,12 +147,21 @@ final class QAMatrixTests: XCTestCase {
                 tap(app.navigationBars.buttons.firstMatch, in: app, what: "\(screen.id): the back button")
             case .type(let text):
                 let field = app.textFields.firstMatch
-                if field.waitForExistence(timeout: 10) { field.tap(); field.typeText(text) } else { XCTFail("\(screen.id): no text field to type into") }
+                if field.waitForExistence(timeout: 10) {
+                    field.tap()
+                    field.typeText(text)
+                } else {
+                    XCTFail("\(screen.id): no text field to type into")
+                }
             case .wait(let seconds):
                 QA.pause(seconds)
             }
         }
-        if !screen.steps.isEmpty, let identifier = screen.ready { ready = element(app, identifier).waitForExistence(timeout: 20) } else if !screen.steps.isEmpty { QA.pause(2) }
+        if !screen.steps.isEmpty, let identifier = screen.ready {
+            ready = element(app, identifier).waitForExistence(timeout: 20)
+        } else if !screen.steps.isEmpty {
+            QA.pause(2)
+        }
         QA.pause(1.0)
 
         var produced: [String] = []
@@ -207,7 +219,9 @@ final class QAMatrixTests: XCTestCase {
         while !target.isHittable, attempts < 8 {
             let scrollView = app.scrollViews.firstMatch
             scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.8))
-                .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.35)), withVelocity: .slow, thenHoldForDuration: 0.3)
+                .press(
+                    forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.35)), withVelocity: .slow,
+                    thenHoldForDuration: 0.3)
             attempts += 1
         }
         target.tap()
@@ -218,7 +232,9 @@ final class QAMatrixTests: XCTestCase {
     /// chips, which does not scroll the page).
     private func scroller(_ app: XCUIApplication) -> XCUIElement? {
         let candidates = [app.scrollViews, app.tables, app.collectionViews].flatMap { $0.allElementsBoundByIndex }
-        return candidates.filter { $0.exists && $0.frame.height > 200 && $0.frame.width > 200 }.max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
+        return candidates.filter { $0.exists && $0.frame.height > 200 && $0.frame.width > 200 }.max {
+            $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height
+        }
     }
 
     /// How different two screenshots of the middle of the screen are: a 48 x 96 grey picture of each, the mean difference out of 255.
@@ -228,10 +244,12 @@ final class QAMatrixTests: XCTestCase {
             guard let image = UIImage(data: data)?.cgImage else { return nil }
             let width = 48, height = 96
             var pixels = [UInt8](repeating: 0, count: width * height)
-            guard let context = CGContext(
-                data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(),
-                bitmapInfo: CGImageAlphaInfo.none.rawValue
-            ) else { return nil }
+            guard
+                let context = CGContext(
+                    data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(),
+                    bitmapInfo: CGImageAlphaInfo.none.rawValue
+                )
+            else { return nil }
             context.interpolationQuality = .medium
             // The middle of the screen only: the status bar, the tab bar and the bedtime accessory change by themselves while the page does not (the
             // accessory folds and unfolds with each swipe), and that kept a walk from ever saying it had reached the bottom.
@@ -273,7 +291,8 @@ final class QAMatrixTests: XCTestCase {
             scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: start))
                 .press(
                     forDuration: 0.02,
-                    thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: everyPage ? max(0.02, start - 0.5) : max(0.02, start - 0.6))),
+                    thenDragTo: scrollView.coordinate(
+                        withNormalizedOffset: CGVector(dx: 0.03, dy: everyPage ? max(0.02, start - 0.5) : max(0.02, start - 0.6))),
                     withVelocity: everyPage ? .slow : .fast, thenHoldForDuration: everyPage ? 0.4 : 0.1
                 )
             QA.pause(everyPage ? 0.6 : 1.1)

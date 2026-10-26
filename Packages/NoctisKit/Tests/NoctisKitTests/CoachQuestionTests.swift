@@ -2,6 +2,7 @@ import Foundation
 import HealthProviding
 import SwiftData
 import Testing
+
 @testable import CoachKit
 @testable import InsightsKit
 @testable import NoctisCore
@@ -56,7 +57,9 @@ struct CoachQuestionTests {
     }
 
     @Test func aQuestionThatNamesADirectionRoutesWithThatDirection() {
-        for (question, trend) in [(CoachQuestion.recovery(.higher), CoachDirection.higher), (.recovery(.lower), .lower), (.sleep(.higher), .higher), (.sleep(.lower), .lower)] {
+        for (question, trend) in [
+            (CoachQuestion.recovery(.higher), CoachDirection.higher), (.recovery(.lower), .lower), (.sleep(.higher), .higher), (.sleep(.lower), .lower),
+        ] {
             #expect(router.route(CoachQuestionText.text(question)).direction == trend, Comment(rawValue: question.token))
         }
         #expect(router.route(CoachQuestionText.text(.recovery(nil))).direction == nil)

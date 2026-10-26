@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import HealthProviding
 @testable import HomeFeature
 @testable import InsightsKit
@@ -107,21 +108,30 @@ struct HomeRepositoryTests {
         let insight = try #require(await snapshot(mock(.full)).topInsight)
         // Duration, bedtime, balance and stage insights all fire; 70 minutes short outranks 55 late.
         #expect(insight.type == .sleepDurationShift)
-        guard case .baseline(let evidence) = insight.evidence else { Issue.record("expected a baseline insight"); return }
+        guard case .baseline(let evidence) = insight.evidence else {
+            Issue.record("expected a baseline insight")
+            return
+        }
         #expect(abs(evidence.delta + 70) < 1)
     }
 
     @Test func theLateBedtimeScenarioFiresABedtimeShift() async throws {
         let insight = try #require(await snapshot(mock(.lateBedtime)).topInsight)
         #expect(insight.type == .bedtimeShift)
-        guard case .baseline(let evidence) = insight.evidence else { Issue.record("expected a baseline insight"); return }
+        guard case .baseline(let evidence) = insight.evidence else {
+            Issue.record("expected a baseline insight")
+            return
+        }
         #expect(abs(evidence.delta - 55) < 1)
     }
 
     @Test func theSteadyScenarioFiresAStreak() async throws {
         let insight = try #require(await snapshot(mock(.steady)).topInsight)
         #expect(insight.type == .consistentBedtime)
-        guard case .baseline(let evidence) = insight.evidence else { Issue.record("expected a baseline insight"); return }
+        guard case .baseline(let evidence) = insight.evidence else {
+            Issue.record("expected a baseline insight")
+            return
+        }
         #expect((evidence.streakNights ?? 0) >= InsightEngine.minimumStreakNights)
     }
 

@@ -27,7 +27,8 @@ private nonisolated let settingsClock = Date(timeIntervalSince1970: 1_790_258_40
 private nonisolated func status(
     supported: Bool = true, paired: Bool = true, installed: Bool = true, activation: WatchActivation = .activated, reachable: Bool = true, lastSent: Date? = nil
 ) -> WatchConnectionStatus {
-    WatchConnectionStatus(isSupported: supported, isPaired: paired, isWatchAppInstalled: installed, activation: activation, isReachable: reachable, lastSentAt: lastSent)
+    WatchConnectionStatus(
+        isSupported: supported, isPaired: paired, isWatchAppInstalled: installed, activation: activation, isReachable: reachable, lastSentAt: lastSent)
 }
 
 private func content(_ value: WatchConnectionStatus) -> WatchSettingsContent {
@@ -98,13 +99,17 @@ struct WatchSettingsContentTests {
         #expect(WatchSettingsContent.sendResult(.appNotInstalled, reachable: false) == "NOCTIS isn't installed on your Watch yet.")
         #expect(WatchSettingsContent.sendResult(.noWatchPaired, reachable: false) == WatchSettingsContent.sendResult(.notSupported, reachable: false))
         #expect(WatchSettingsContent.sendResult(.notActivated, reachable: false).contains("Try again"))
-        #expect(WatchSettingsContent.sendResult(.failed("The system would not queue the update."), reachable: true) == "Couldn't send the update. The system would not queue the update.")
+        #expect(
+            WatchSettingsContent.sendResult(.failed("The system would not queue the update."), reachable: true)
+                == "Couldn't send the update. The system would not queue the update.")
     }
 
     @Test func everySentenceIsFreeOfTheBannedLanguageAndMakesNoHealthClaim() {
-        var strings = WatchSettingsContent.appears + [
-            WatchSettingsContent.readsNothing, WatchSettingsContent.deleteNote, WatchSettingsContent.sendButton, WatchSettingsContent.sendHint, WatchSettingsContent.installSteps,
-        ]
+        var strings =
+            WatchSettingsContent.appears + [
+                WatchSettingsContent.readsNothing, WatchSettingsContent.deleteNote, WatchSettingsContent.sendButton, WatchSettingsContent.sendHint,
+                WatchSettingsContent.installSteps,
+            ]
         for value in [
             status(supported: false), status(paired: false), status(activation: .notActivated), status(installed: false), status(), status(reachable: false),
             status(lastSent: settingsClock.addingTimeInterval(-60)),
@@ -112,10 +117,17 @@ struct WatchSettingsContentTests {
             let made = content(value)
             strings += [made.statusTitle, made.statusDetail, made.rowValue] + [made.lastSent, made.installInstruction].compactMap { $0 }
         }
-        for outcome in [WatchSendOutcome.sent(settingsClock), .nothingToSend, .appNotInstalled, .noWatchPaired, .notSupported, .notActivated, .failed("The summary could not be prepared.")] {
+        for outcome in [
+            WatchSendOutcome.sent(settingsClock), .nothingToSend, .appNotInstalled, .noWatchPaired, .notSupported, .notActivated,
+            .failed("The summary could not be prepared."),
+        ] {
             strings += [WatchSettingsContent.sendResult(outcome, reachable: true), WatchSettingsContent.sendResult(outcome, reachable: false)]
         }
-        for text in strings { #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))")) }
+        for text in strings {
+            #expect(
+                BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty,
+                Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))"))
+        }
     }
 
     @Test func thePageListsWhatTheWatchShowsAndTheWatchPagesShowExactlyThat() {

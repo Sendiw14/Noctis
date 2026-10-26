@@ -4,8 +4,8 @@ import Testing
 @testable import DesignSystem
 @testable import HomeFeature
 @testable import NoctisCore
-@testable import NoctisWidgetKit
 @testable import NoctisText
+@testable import NoctisWidgetKit
 @testable import ReviewKit
 
 // QA part 4 (QA-118): there is one formatter. HomeFormat and WidgetFormat are aliases of NoctisFormat; ReviewFormat, onboarding, Profile and the paywall
@@ -27,10 +27,13 @@ struct NoctisFormatTests {
         #expect(metric.spoken == NoctisFormat.spokenDuration(minutes) && metric.spoken == NoctisDurationText.spoken(minutes))
         // The metric's parts and the compact string are the same text apart from the space between the pieces.
         let compact = NoctisFormat.compactDuration(minutes)
-        #expect(metric.plain.replacingOccurrences(of: " ", with: "") == compact.replacingOccurrences(of: " ", with: ""), Comment(rawValue: "\(minutes): \(metric.plain) vs \(compact)"))
+        #expect(
+            metric.plain.replacingOccurrences(of: " ", with: "") == compact.replacingOccurrences(of: " ", with: ""),
+            Comment(rawValue: "\(minutes): \(metric.plain) vs \(compact)"))
         #expect(ReviewFormat.duration(Double(minutes)) == compact)
         #expect(noctisFormattedDuration(minutes: minutes) == compact)
-        #expect(NoctisFormat.compactDuration(minutes, minutesWord: true).hasSuffix(minutes < 60 ? NoctisUnit.minuteShort.symbol : compact.suffix(1).description))
+        #expect(
+            NoctisFormat.compactDuration(minutes, minutesWord: true).hasSuffix(minutes < 60 ? NoctisUnit.minuteShort.symbol : compact.suffix(1).description))
     }
 
     @Test func everyClockFormAgreesOnBothClocks() {
@@ -46,7 +49,8 @@ struct NoctisFormatTests {
         }
         // ReviewFormat prints the same clock from minutes after noon (11 PM is 660).
         let review = ReviewFormat(locale: us)
-        var utc = Calendar(identifier: .gregorian); utc.timeZone = .gmt
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = .gmt
         #expect(review.clock(minutesAfterNoon: 660) == NoctisFormat(calendar: utc, locale: us).clock(minutesSinceMidnight: 23 * 60))
         #expect(ReviewFormat(locale: german).clock(minutesAfterNoon: 660) == NoctisFormat(calendar: utc, locale: german).clock(minutesSinceMidnight: 23 * 60))
     }
@@ -77,8 +81,12 @@ struct NoctisFormatTests {
                 let trimmed = text.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.hasPrefix("//") else { continue }
                 // Tonight's two helpers take a BedtimeWindow and call the formatter: wrappers, not copies.
-                if try declaration.firstMatch(in: text) != nil, !(path == "NightFeature/TonightContent.swift" && text.contains("BedtimeWindow")) { found.append("\(path):\(number + 1) declares a formatter that NoctisFormat owns") }
-                if try handMade.firstMatch(in: text) != nil, !text.contains("Updated \\(hours)h ago"), !text.contains("h old") { found.append("\(path):\(number + 1) writes a duration by hand: \(trimmed.prefix(80))") }
+                if try declaration.firstMatch(in: text) != nil, !(path == "NightFeature/TonightContent.swift" && text.contains("BedtimeWindow")) {
+                    found.append("\(path):\(number + 1) declares a formatter that NoctisFormat owns")
+                }
+                if try handMade.firstMatch(in: text) != nil, !text.contains("Updated \\(hours)h ago"), !text.contains("h old") {
+                    found.append("\(path):\(number + 1) writes a duration by hand: \(trimmed.prefix(80))")
+                }
                 if try handClock.firstMatch(in: text) != nil { found.append("\(path):\(number + 1) builds a 12-hour clock by hand") }
             }
         }

@@ -45,7 +45,8 @@ struct SleepSoundsStateTests {
         #expect(SleepSoundsState().isPlaying(at: now), "no timer: until the app says otherwise")
         #expect(SleepSoundsState(endsAt: now.addingTimeInterval(60)).isPlaying(at: now))
         #expect(!SleepSoundsState(endsAt: now).isPlaying(at: now), "the moment the timer ends it is over")
-        #expect(!SleepSoundsState(endsAt: now.addingTimeInterval(-1)).isPlaying(at: now), "a record the app could not take back is wrong once its timer has ended")
+        #expect(
+            !SleepSoundsState(endsAt: now.addingTimeInterval(-1)).isPlaying(at: now), "a record the app could not take back is wrong once its timer has ended")
         #expect(!SleepSoundsState(version: 2).isPlaying(at: now))
     }
 
@@ -88,7 +89,8 @@ struct SleepSoundsStoreTests {
     }
 
     @Test func itReusesTheWidgetsContainerAndNeverNamesTheGroupItself() throws {
-        let source = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/SleepSoundsState.swift"), encoding: .utf8)
+        let source = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/SleepSoundsState.swift"), encoding: .utf8)
         let code = RawDefaultsTests.code(source)
         #expect(code.contains("WidgetSnapshotStore.containerURL"))
         #expect(!code.contains("group.com.noctis") && !code.contains("forSecurityApplicationGroupIdentifier"))
@@ -106,7 +108,9 @@ struct SleepSoundsPublisherTests {
         #expect(SleepSoundsPublisher.record(for: playing()) == SleepSoundsState(endsAt: nil))
         #expect(SleepSoundsPublisher.record(for: playing(plan)) == SleepSoundsState(endsAt: plan.end))
         for phase in [SoundPlaybackPhase.paused, .interrupted, .stopped] {
-            #expect(SleepSoundsPublisher.record(for: SoundPlayerState(kind: .rain, phase: phase, timer: plan)) == nil, "not audible: the control must not say it is")
+            #expect(
+                SleepSoundsPublisher.record(for: SoundPlayerState(kind: .rain, phase: phase, timer: plan)) == nil, "not audible: the control must not say it is"
+            )
         }
     }
 
@@ -256,11 +260,18 @@ struct ControlIntentTests {
         func open(_ destination: IntentDestination) { calls.append("open \(destination)") }
         func startWindDown(minutes: Int?) { calls.append("windDown \(minutes.map(String.init) ?? "nil")") }
         var lastSleepSound: SoundKind?
-        func playSleepSounds(_ kind: SoundKind) -> Bool { calls.append("play \(kind.rawValue)"); lastSleepSound = kind; return true }
+        func playSleepSounds(_ kind: SoundKind) -> Bool {
+            calls.append("play \(kind.rawValue)")
+            lastSleepSound = kind
+            return true
+        }
         func stopSleepSounds() { calls.append("stop") }
         func endWindDown() { calls.append("end wind-down") }
         func setTonightAlarm(minutes: Int) async -> AlarmIntentOutcome { .couldNotSet }
-        func askCoach(_ text: String) -> AskCoachOutcome { calls.append("coach"); return .asked }
+        func askCoach(_ text: String) -> AskCoachOutcome {
+            calls.append("coach")
+            return .asked
+        }
     }
 
     private func run<I: AppIntent>(_ intent: I, under runtime: IntentRuntime) async throws {
@@ -350,7 +361,8 @@ struct ControlIntentTests {
         bench.player.setGain(0.9, for: .rain)
         #expect(!store.exists, "during the fade the record is not written back")
         await bench.time.advance(1.6)
-        #expect(bench.player.state.phase == .stopped || store.exists, "after the window the player's own state decides: stopped, or playing and shown as playing")
+        #expect(
+            bench.player.state.phase == .stopped || store.exists, "after the window the player's own state decides: stopped, or playing and shown as playing")
         #expect(store.exists == (bench.player.state.phase == .playing))
     }
 }
@@ -363,7 +375,9 @@ struct ControlExtensionTests {
     @Test func theBundleHoldsTheWidgetsAndBothControls() throws {
         let bundle = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisWidgets.swift"), encoding: .utf8)
         let body = RawDefaultsTests.code(bundle)
-        for name in ["NoctisTodayWidget()", "NoctisLockWidget()", "NoctisWindDownControl()", "NoctisSleepSoundsControl()"] { #expect(body.contains(name), Comment(rawValue: name)) }
+        for name in ["NoctisTodayWidget()", "NoctisLockWidget()", "NoctisWindDownControl()", "NoctisSleepSoundsControl()"] {
+            #expect(body.contains(name), Comment(rawValue: name))
+        }
     }
 
     @Test func eachControlHasItsKindItsIntentAndAnAccessibleLabel() throws {
@@ -371,7 +385,9 @@ struct ControlExtensionTests {
         #expect(code.contains("kind: ControlKind.windDown") && code.contains("kind: ControlKind.sleepSounds"))
         #expect(code.contains("ControlWidgetButton(action: StartWindDownIntent())"))
         #expect(code.contains("ControlWidgetToggle(isOn: isPlaying, action: SleepSoundsToggleIntent())"))
-        #expect(code.contains("Label(\"Wind down\", systemImage:") && code.contains("Label(\"Sleep sounds\", systemImage:"), "a title and a symbol: VoiceOver reads the title")
+        #expect(
+            code.contains("Label(\"Wind down\", systemImage:") && code.contains("Label(\"Sleep sounds\", systemImage:"),
+            "a title and a symbol: VoiceOver reads the title")
         #expect(code.contains(".tint(ControlStyle.tint)") && !code.contains("Color("), "the app's tint, not a color of its own")
         #expect(code.contains("NoctisIntentKitPackage.self"), "the extension names the package so the system finds the intents")
         #expect(code.contains("SleepSoundsStore()?.isPlaying()"), "the toggle reads the one record")
@@ -380,7 +396,10 @@ struct ControlExtensionTests {
     @Test func theExtensionHoldsNothingThatPlaysReadsHealthOrStores() throws {
         for file in RawDefaultsTests.swiftFiles(under: ["Widgets/Home"]) {
             let code = RawDefaultsTests.code(file.text)
-            for token in ["import HealthKit", "import SwiftData", "import AVFoundation", "import SoundKit", "import CoachKit", "import JournalKit", "import NoctisCore", "import NightKit", "import AppRoot", "AVAudioEngine", "UserDefaults"] {
+            for token in [
+                "import HealthKit", "import SwiftData", "import AVFoundation", "import SoundKit", "import CoachKit", "import JournalKit", "import NoctisCore",
+                "import NightKit", "import AppRoot", "AVAudioEngine", "UserDefaults",
+            ] {
                 #expect(!code.contains(token), Comment(rawValue: "\(file.path) has \(token)"))
             }
         }
@@ -388,13 +407,21 @@ struct ControlExtensionTests {
 
     @Test func theModulesTheExtensionLinksUseNoRequiredReasonAPI() throws {
         // The extension's manifest declares none (R43), and now it also links the intents and the sound names: none of that may use one.
-        let modules = ["Widgets/Home", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisIntentKit", "Packages/NoctisKit/Sources/SoundCatalog", "Packages/NoctisKit/Sources/DesignSystem"]
-        let tokens = ["UserDefaults", "@AppStorage", "creationDate", "modificationDate", "contentModificationDate", "systemUptime", "mach_absolute_time", "volumeAvailableCapacity", "systemFreeSize", "activeInputModes", "fstat(", "lstat("]
+        let modules = [
+            "Widgets/Home", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisIntentKit",
+            "Packages/NoctisKit/Sources/SoundCatalog", "Packages/NoctisKit/Sources/DesignSystem",
+        ]
+        let tokens = [
+            "UserDefaults", "@AppStorage", "creationDate", "modificationDate", "contentModificationDate", "systemUptime", "mach_absolute_time",
+            "volumeAvailableCapacity", "systemFreeSize", "activeInputModes", "fstat(", "lstat(",
+        ]
         let files = RawDefaultsTests.swiftFiles(under: modules)
         #expect(files.count > 15)
         for file in files {
             let code = RawDefaultsTests.code(file.text)
-            for token in tokens { #expect(!code.contains(token), Comment(rawValue: "\(file.path) uses \(token); the extension's manifest would have to say so")) }
+            for token in tokens {
+                #expect(!code.contains(token), Comment(rawValue: "\(file.path) uses \(token); the extension's manifest would have to say so"))
+            }
         }
     }
 
@@ -411,7 +438,8 @@ struct ControlExtensionTests {
 
     @Test func theContainerIsMadeWhenTheProcessStartsSoAHeadlessLaunchHasAHost() throws {
         let code = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/NoctisApp.swift"), encoding: .utf8))
-        #expect(code.contains("_container = State(initialValue: AppContainer())"), "an intent that starts the app with no screen still needs its host (R47, R48)")
+        #expect(
+            code.contains("_container = State(initialValue: AppContainer())"), "an intent that starts the app with no screen still needs its host (R47, R48)")
         #expect(!code.contains("@State private var container = AppContainer()"), "that form is made only when a screen is drawn")
     }
 

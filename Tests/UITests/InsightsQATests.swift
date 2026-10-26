@@ -37,7 +37,9 @@ final class InsightsQATests: XCTestCase {
         for _ in 0..<times {
             let scrollView = app.scrollViews.firstMatch
             scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
-                .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.3)), withVelocity: .slow, thenHoldForDuration: 0.3)
+                .press(
+                    forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.3)), withVelocity: .slow,
+                    thenHoldForDuration: 0.3)
             QA.pause(0.7)
         }
     }
@@ -254,7 +256,10 @@ final class InsightsQATests: XCTestCase {
         let tab = app.tabBars.buttons["Insights"]
         if !tab.exists { app.swipeDown() }
         // The minimized bar needs a first tap to open; the second re-taps the tab.
-        for _ in 0..<2 where app.tabBars.buttons["Insights"].exists { app.tabBars.buttons["Insights"].tap(); QA.pause(0.6) }
+        for _ in 0..<2 where app.tabBars.buttons["Insights"].exists {
+            app.tabBars.buttons["Insights"].tap()
+            QA.pause(0.6)
+        }
         XCTAssertTrue(element(app, "insights.chips").waitForExistence(timeout: 4))
         QA.shot("insights-after-retap")
     }

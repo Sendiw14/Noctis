@@ -49,6 +49,7 @@ public nonisolated enum DataManagementCopy {
 
     /// The line under a row after a deletion: "Journal deleted.", or what went wrong.
     public static func result(_ report: DeletionReport, group: DeletableGroup) -> String {
-        report.succeeded ? group.done : "\(group.title) couldn't be \(group.verb == .delete ? "deleted" : "reset"): \(report.failures.first?.failure ?? "unknown error")."
+        report.succeeded
+            ? group.done : "\(group.title) couldn't be \(group.verb == .delete ? "deleted" : "reset"): \(report.failures.first?.failure ?? "unknown error")."
     }
 }

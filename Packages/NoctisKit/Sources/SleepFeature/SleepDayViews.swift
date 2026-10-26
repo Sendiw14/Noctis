@@ -71,7 +71,9 @@ struct SleepNightPicker: View {
 
     private func cell(_ item: SleepPickerItem) -> some View {
         let isSelected = item.night == selected
-        return Button { choose(item.night) } label: {
+        return Button {
+            choose(item.night)
+        } label: {
             VStack(spacing: 2) {
                 Text(item.initial)
                     .noctisFont(13, .medium, relativeTo: .footnote)
@@ -107,7 +109,8 @@ struct SleepNoNightView: View {
 
     var body: some View {
         // The ring above the words at accessibility sizes: beside them it left a 190pt column and "recorded" broke into "recorde / d".
-        let layout = dynamicTypeSize.isAccessibilitySize
+        let layout =
+            dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.md))
             : AnyLayout(HStackLayout(spacing: NoctisSpacing.md))
         return NoctisAppCard {
@@ -148,7 +151,10 @@ struct SleepDayContentView: View {
                 } else {
                     // The score is everyone's; the four factors and "What changed?" are Premium, said once by one locked card (R58).
                     SleepQualityScoreCard(content: quality, ring: day.ring)
-                    LockedCard(title: LockedCopy.card(for: .sleepQuality)?.title ?? "", line: LockedCopy.card(for: .sleepQuality)?.line ?? "", identifier: "sleep.quality.locked") {
+                    LockedCard(
+                        title: LockedCopy.card(for: .sleepQuality)?.title ?? "", line: LockedCopy.card(for: .sleepQuality)?.line ?? "",
+                        identifier: "sleep.quality.locked"
+                    ) {
                         appModel.presentPaywall(.sleepQuality)
                     }
                 }
@@ -300,7 +306,9 @@ struct SleepLearningCard: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Learning your baseline, \(content.nights) of \(content.required) nights recorded. Quality joins once there are \(content.required).")
+        .accessibilityLabel(
+            "Learning your baseline, \(content.nights) of \(content.required) nights recorded. Quality joins once there are \(content.required)."
+        )
         .accessibilityIdentifier("sleep.learning")
     }
 }

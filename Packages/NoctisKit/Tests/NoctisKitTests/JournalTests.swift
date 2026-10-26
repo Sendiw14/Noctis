@@ -219,7 +219,9 @@ struct JournalViewModelTests {
         var announcements: [String] = []
     }
 
-    static func make(entries: [JournalEntrySnapshot] = [], now: Date = Date(timeIntervalSince1970: 1_800_000_000)) -> (JournalViewModel, MemoryJournalStore, Log) {
+    static func make(
+        entries: [JournalEntrySnapshot] = [], now: Date = Date(timeIntervalSince1970: 1_800_000_000)
+    ) -> (JournalViewModel, MemoryJournalStore, Log) {
         let store = MemoryJournalStore(entries)
         let log = Log()
         let model = JournalViewModel(store: store, now: { now }, announce: { log.announcements.append($0) })
@@ -250,7 +252,9 @@ struct JournalViewModelTests {
         let (model, _, _) = Self.make()
         model.step(.focus, by: 1)
         #expect(model.draft.focus == 3)
-        model.step(.focus, by: 1); model.step(.focus, by: 1); model.step(.focus, by: 1)
+        model.step(.focus, by: 1)
+        model.step(.focus, by: 1)
+        model.step(.focus, by: 1)
         #expect(model.draft.focus == 5)
         model.step(.focus, by: -1)
         #expect(model.draft.focus == 4)
@@ -398,7 +402,8 @@ nonisolated struct JournalPrivacyTests {
 
     /// The only files outside the journal's own that may name it: the wiring of the two places Reflect opens from (the wind-down, and Tonight for the free plan) and the app's.
     static let wiring: Set<String> = [
-        "NightFeature/WindDownScreen.swift", "NightFeature/TonightScreen.swift", "AppRoot/AppContainer.swift", "AppRoot/RootView.swift", "AppRoot/DataWiring.swift",
+        "NightFeature/WindDownScreen.swift", "NightFeature/TonightScreen.swift", "AppRoot/AppContainer.swift", "AppRoot/RootView.swift",
+        "AppRoot/DataWiring.swift",
     ]
 
     @Test func onlyTheReflectScreensAndTheAppDependOnTheJournalTarget() throws {
@@ -418,7 +423,10 @@ nonisolated struct JournalPrivacyTests {
             search = hit.upperBound..<manifest.endIndex
         }
         #expect(owners == ["JournalKit", "NightFeature", "AppRoot", "NoctisKitTests"], Comment(rawValue: "who names it: \(owners.sorted())"))
-        for forbidden in ["CoachKit", "CoachFeature", "InsightsKit", "InsightsFeature", "HomeFeature", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "SleepFeature", "RecoveryFeature"] {
+        for forbidden in [
+            "CoachKit", "CoachFeature", "InsightsKit", "InsightsFeature", "HomeFeature", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "SleepFeature",
+            "RecoveryFeature",
+        ] {
             #expect(!owners.contains(forbidden), Comment(rawValue: "\(forbidden) must not see the journal"))
         }
     }
@@ -449,7 +457,9 @@ nonisolated struct JournalPrivacyTests {
         #expect(!screen.contains("JournalEntry") && !screen.contains("JournalStore") && !screen.contains("JournalContainer"))
         // Tonight opens the same panel for the free plan, and likewise reads no entry.
         let tonight = files["NightFeature/TonightScreen.swift"] ?? ""
-        #expect(tonight.contains("ReflectPanel(viewModel: journal") && !tonight.contains("JournalEntry") && !tonight.contains("JournalStore") && !tonight.contains("JournalContainer"))
+        #expect(
+            tonight.contains("ReflectPanel(viewModel: journal") && !tonight.contains("JournalEntry") && !tonight.contains("JournalStore")
+                && !tonight.contains("JournalContainer"))
         // The app's container makes the store, registers its erasure and makes the view model; it reads no entry.
         let container = files["AppRoot/AppContainer.swift"] ?? ""
         #expect(container.contains("JournalErasure(provider: journalProvider)"))

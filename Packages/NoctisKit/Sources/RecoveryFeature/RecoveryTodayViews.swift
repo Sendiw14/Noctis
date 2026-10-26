@@ -63,8 +63,14 @@ struct RecoveryHeroView: View {
             VStack(spacing: NoctisSpacing.xs) {
                 // The chip and its phrase in one row when they fit; one under the other when they do not ("−17 vs your us…" on an SE at AX5).
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: NoctisSpacing.xs) { deltaChip; comparison }
-                    VStack(spacing: NoctisSpacing.xxs) { deltaChip; comparison }
+                    HStack(spacing: NoctisSpacing.xs) {
+                        deltaChip
+                        comparison
+                    }
+                    VStack(spacing: NoctisSpacing.xxs) {
+                        deltaChip
+                        comparison
+                    }
                 }
                 if let why = content.why {
                     Text(why)

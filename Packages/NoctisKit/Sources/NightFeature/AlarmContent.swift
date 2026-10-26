@@ -44,7 +44,8 @@ public nonisolated enum AlarmBuilder {
     public static let honestyLine = "Rings at your set time, even in silent mode or Focus."
 
     /// Before the very first alarm, in plain words (the system asks once).
-    public static let permissionExplanation = "NOCTIS asks your iPhone to schedule alarms so yours can ring at the time you set. Your iPhone will ask you to allow it. It asks once."
+    public static let permissionExplanation =
+        "NOCTIS asks your iPhone to schedule alarms so yours can ring at the time you set. Your iPhone will ask you to allow it. It asks once."
 
     public static let deniedMessage = "Alarms are turned off for NOCTIS. You can allow them in Settings."
     public static let unavailableMessage = "Alarms aren't available here. They need iOS 26 or later."
@@ -59,15 +60,16 @@ public nonisolated enum AlarmBuilder {
     public static func card(for status: AlarmStatus, format: HomeFormat) -> AlarmCardContent {
         let time = format.clockMetric(format.clock(minutesSinceMidnight: status.settings.minutesSinceMidnight))
         let summary = repeatSummary(status.settings.repeatDays, format: format)
-        let (kind, chip, message): (AlarmCardContent.Kind, AlarmChip, String?) = switch status.state {
-        case .scheduled, .armed: (.normal, AlarmChip(text: "Scheduled", tone: .on), nil)
-        case .snoozed: (.normal, AlarmChip(text: "Snoozed", tone: .on), nil)
-        case .firing: (.normal, AlarmChip(text: "Ringing", tone: .on), nil)
-        case .off, .cancelled, .dismissed: (.normal, AlarmChip(text: "Off", tone: .off), nil)
-        case .permissionDenied: (.permissionDenied, AlarmChip(text: "Permission needed", tone: .attention), deniedMessage)
-        case .unavailable: (.unavailable, AlarmChip(text: "Not available", tone: .attention), unavailableMessage)
-        case .error: (.error, AlarmChip(text: "Couldn't set", tone: .attention), errorMessage(status.failure))
-        }
+        let (kind, chip, message): (AlarmCardContent.Kind, AlarmChip, String?) =
+            switch status.state {
+            case .scheduled, .armed: (.normal, AlarmChip(text: "Scheduled", tone: .on), nil)
+            case .snoozed: (.normal, AlarmChip(text: "Snoozed", tone: .on), nil)
+            case .firing: (.normal, AlarmChip(text: "Ringing", tone: .on), nil)
+            case .off, .cancelled, .dismissed: (.normal, AlarmChip(text: "Off", tone: .off), nil)
+            case .permissionDenied: (.permissionDenied, AlarmChip(text: "Permission needed", tone: .attention), deniedMessage)
+            case .unavailable: (.unavailable, AlarmChip(text: "Not available", tone: .attention), unavailableMessage)
+            case .error: (.error, AlarmChip(text: "Couldn't set", tone: .attention), errorMessage(status.failure))
+            }
         let label = ["Alarm", time.spoken, summary, chip.text, message].compactMap { $0 }.joined(separator: ". ")
         return AlarmCardContent(kind: kind, time: time, isOn: status.isOn, repeatSummary: summary, chip: chip, message: message, accessibilityLabel: label)
     }
@@ -85,11 +87,12 @@ public nonisolated enum AlarmBuilder {
     public static func dayName(_ day: AlarmWeekday, width: HomeFormat.WeekdayWidth, format: HomeFormat) -> String {
         let formatter = DateFormatter()
         formatter.locale = format.locale
-        let symbols: [String] = switch width {
-        case .narrow: formatter.veryShortWeekdaySymbols
-        case .abbreviated: formatter.shortWeekdaySymbols
-        case .wide: formatter.weekdaySymbols
-        }
+        let symbols: [String] =
+            switch width {
+            case .narrow: formatter.veryShortWeekdaySymbols
+            case .abbreviated: formatter.shortWeekdaySymbols
+            case .wide: formatter.weekdaySymbols
+            }
         return symbols[day.rawValue - 1]
     }
 }

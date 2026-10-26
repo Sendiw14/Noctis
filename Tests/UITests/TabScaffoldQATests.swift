@@ -48,10 +48,12 @@ final class TabScaffoldQATests: XCTestCase {
         @MainActor init?(_ screenshot: XCUIScreenshot) {
             guard let cg = screenshot.image.cgImage else { return nil }
             var bytes = [UInt8](repeating: 0, count: cg.width * cg.height * 4)
-            guard let context = CGContext(
-                data: &bytes, width: cg.width, height: cg.height, bitsPerComponent: 8, bytesPerRow: cg.width * 4,
-                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-            ) else { return nil }
+            guard
+                let context = CGContext(
+                    data: &bytes, width: cg.width, height: cg.height, bitsPerComponent: 8, bytesPerRow: cg.width * 4,
+                    space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                )
+            else { return nil }
             context.draw(cg, in: CGRect(x: 0, y: 0, width: cg.width, height: cg.height))
             image = cg
             scale = screenshot.image.scale
@@ -125,7 +127,10 @@ final class TabScaffoldQATests: XCTestCase {
             XCTAssertEqual(title.label.isEmpty, false)
             QA.pause(4.5)
             let shot = QA.shot("tab-\(tab.name)-top")
-            guard let pixels = Pixels(XCUIScreen.main.screenshot()) else { XCTFail("no pixels"); continue }
+            guard let pixels = Pixels(XCUIScreen.main.screenshot()) else {
+                XCTFail("no pixels")
+                continue
+            }
             _ = shot
             // The field: its color beside the date caption, clear of any text.
             let field = pixels.color(atX: 6, y: 112)
@@ -160,7 +165,9 @@ final class TabScaffoldQATests: XCTestCase {
             let scrollView = app.scrollViews.firstMatch
             for _ in 0..<3 {
                 scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
-                    .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.25)), withVelocity: .slow, thenHoldForDuration: 0.3)
+                    .press(
+                        forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.25)), withVelocity: .slow,
+                        thenHoldForDuration: 0.3)
                 QA.pause(0.5)
             }
             XCTAssertTrue(element(app, identifier).waitForExistence(timeout: 4), "\(name) compact bar")
@@ -178,7 +185,9 @@ final class TabScaffoldQATests: XCTestCase {
         QA.shot("tab-home-evening-top")
         let scrollView = app.scrollViews.firstMatch
         scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
-            .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.3)), withVelocity: .slow, thenHoldForDuration: 0.4)
+            .press(
+                forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.3)), withVelocity: .slow,
+                thenHoldForDuration: 0.4)
         QA.pause(0.7)
         QA.shot("tab-home-evening-scrolled1")
         app.terminate()
@@ -193,7 +202,9 @@ final class TabScaffoldQATests: XCTestCase {
             let scrollView = app.scrollViews.firstMatch
             for index in 1...2 {
                 scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
-                    .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.3)), withVelocity: .slow, thenHoldForDuration: 0.4)
+                    .press(
+                        forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.3)), withVelocity: .slow,
+                        thenHoldForDuration: 0.4)
                 QA.pause(0.7)
                 QA.shot("tab-\(name)-scrolled\(index)")
             }

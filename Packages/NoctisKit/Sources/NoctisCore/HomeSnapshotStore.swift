@@ -100,9 +100,9 @@ public nonisolated final class HomeSnapshotStore: NoctisErasable, @unchecked Sen
             let now = clock()
             let age = now.timeIntervalSince(file.savedAt)
             guard file.schema == Self.schemaVersion,
-                  file.recoveryModel == RecoveryModel.current.version,
-                  age <= Self.maximumAge,
-                  file.savedAt <= now.addingTimeInterval(3600)
+                file.recoveryModel == RecoveryModel.current.version,
+                age <= Self.maximumAge,
+                file.savedAt <= now.addingTimeInterval(3600)
             else {
                 remove()
                 return nil

@@ -2,9 +2,9 @@ import DesignSystem
 import Foundation
 import HomeFeature
 import NoctisCore
+import NoctisText
 import RecoveryKit
 import SleepKit
-import NoctisText
 
 // A factor's detail page: the words around its chart. Built by
 // `RecoveryScreenBuilder` from the snapshot's series and the render model's
@@ -74,9 +74,10 @@ nonisolated extension RecoveryScreenBuilder {
         _ snapshot: RecoverySnapshot, model: RecoveryRenderModel?, selection: RecoverySelection, calendar: Calendar, locale: Locale
     ) -> RecoveryFactorContent? {
         guard let kind = selection.factor,
-              let series = snapshot.series(kind, selection.factorRange),
-              let result = snapshot.result,
-              let today = result.factor(kind) else { return nil }
+            let series = snapshot.series(kind, selection.factorRange),
+            let result = snapshot.result,
+            let today = result.factor(kind)
+        else { return nil }
         let format = HomeFormat(calendar: calendar, locale: locale)
         let row = HomeScreenBuilder.detailRow(today, result: result, needMinutes: snapshot.needMinutes, format: format)
         let line = model?.factor
@@ -109,7 +110,8 @@ nonisolated extension RecoveryScreenBuilder {
         }
         var band: String?
         if let range = series.normalRange {
-            band = "The shaded band is your normal range: \(valueText(kind, range.lowerBound, format: format)) – \(valueText(kind, range.upperBound, format: format))."
+            band =
+                "The shaded band is your normal range: \(valueText(kind, range.lowerBound, format: format)) – \(valueText(kind, range.upperBound, format: format))."
         }
         let empty = series.nightsRecorded == 0 ? "No \(spokenMeasure(kind)) recorded in these nights." : nil
         let tiles = tiles(kind, series: series, result: result, snapshot: snapshot, row: row, format: format)
@@ -201,29 +203,33 @@ nonisolated extension RecoveryScreenBuilder {
         var tiles: [RecoveryFactorTile] = []
         let isConsistency = kind == .sleepConsistency
         if let today = series.today {
-            tiles.append(RecoveryFactorTile(
-                id: "today", title: isConsistency ? "Today's bedtime" : "Today", value: valueMetric(kind, today, format: format), note: nil
-            ))
+            tiles.append(
+                RecoveryFactorTile(
+                    id: "today", title: isConsistency ? "Today's bedtime" : "Today", value: valueMetric(kind, today, format: format), note: nil
+                ))
         }
         if let usual = series.usual {
-            tiles.append(RecoveryFactorTile(
-                id: "baseline", title: isConsistency ? "Usual bedtime" : "Baseline", value: valueMetric(kind, usual, format: format),
-                note: "last \(BaselineEngine.windowNights) nights"
-            ))
+            tiles.append(
+                RecoveryFactorTile(
+                    id: "baseline", title: isConsistency ? "Usual bedtime" : "Baseline", value: valueMetric(kind, usual, format: format),
+                    note: "last \(BaselineEngine.windowNights) nights"
+                ))
         }
         if let low = series.minimum, let high = series.maximum {
-            tiles.append(RecoveryFactorTile(
-                id: "range", title: "Range", value: rangeMetric(valueMetric(kind, low, format: format), valueMetric(kind, high, format: format)),
-                note: "last \(series.range.nights) nights"
-            ))
+            tiles.append(
+                RecoveryFactorTile(
+                    id: "range", title: "Range", value: rangeMetric(valueMetric(kind, low, format: format), valueMetric(kind, high, format: format)),
+                    note: "last \(series.range.nights) nights"
+                ))
         }
         if let item = snapshot.contributions?.contribution(kind) {
             let points = item.wholePoints
-            tiles.append(RecoveryFactorTile(
-                id: "points", title: "In today's score",
-                value: NoctisMetricValue(parts: [.number("+\(points)"), .space, .unit(NoctisUnit.point.symbol)], spoken: NoctisUnit.point.spoken(points)),
-                note: item.deltaPoints.map { "vs usual: \(HomeScreenBuilder.signed(Int($0.rounded())))" }
-            ))
+            tiles.append(
+                RecoveryFactorTile(
+                    id: "points", title: "In today's score",
+                    value: NoctisMetricValue(parts: [.number("+\(points)"), .space, .unit(NoctisUnit.point.symbol)], spoken: NoctisUnit.point.spoken(points)),
+                    note: item.deltaPoints.map { "vs usual: \(HomeScreenBuilder.signed(Int($0.rounded())))" }
+                ))
         }
         return tiles
     }
@@ -242,31 +248,39 @@ nonisolated extension RecoveryScreenBuilder {
             return [
                 RecoveryExplanationBlock(
                     title: "How it's scored",
-                    text: "Sleep is scored against your \(HomeFormat.compactDuration(needMinutes)) need. At or above it the score is 100; each 1% under it takes off \(Int(RecoveryModelV1.durationPointsPerShortfall / 100)) points."
+                    text:
+                        "Sleep is scored against your \(HomeFormat.compactDuration(needMinutes)) need. At or above it the score is 100; each 1% under it takes off \(Int(RecoveryModelV1.durationPointsPerShortfall / 100)) points."
                 ),
-                RecoveryExplanationBlock(title: "Why it counts", text: "\(counts) Your baseline is the average of your last \(BaselineEngine.windowNights) nights."),
+                RecoveryExplanationBlock(
+                    title: "Why it counts", text: "\(counts) Your baseline is the average of your last \(BaselineEngine.windowNights) nights."),
             ]
         case .hrv:
             return [
                 RecoveryExplanationBlock(
                     title: "How it's scored",
-                    text: "HRV is the variation between heartbeats, recorded by your Apple Watch while you sleep. It's scored against how much it normally varies for you: on your usual it scores about \(center), and each standard deviation above it adds \(step) points, each below takes \(step) away."
+                    text:
+                        "HRV is the variation between heartbeats, recorded by your Apple Watch while you sleep. It's scored against how much it normally varies for you: on your usual it scores about \(center), and each standard deviation above it adds \(step) points, each below takes \(step) away."
                 ),
-                RecoveryExplanationBlock(title: "Why it counts", text: "\(counts) It's only ever compared with your own last \(BaselineEngine.windowNights) nights, never with anyone else's."),
+                RecoveryExplanationBlock(
+                    title: "Why it counts",
+                    text: "\(counts) It's only ever compared with your own last \(BaselineEngine.windowNights) nights, never with anyone else's."),
             ]
         case .restingHeartRate:
             return [
                 RecoveryExplanationBlock(
                     title: "How it's scored",
-                    text: "Resting heart rate is scored the same way, the other way up: on your usual it scores about \(center), each standard deviation lower adds \(step) points, and each higher takes \(step) away."
+                    text:
+                        "Resting heart rate is scored the same way, the other way up: on your usual it scores about \(center), each standard deviation lower adds \(step) points, and each higher takes \(step) away."
                 ),
-                RecoveryExplanationBlock(title: "Why it counts", text: "\(counts) It's only ever compared with your own last \(BaselineEngine.windowNights) nights."),
+                RecoveryExplanationBlock(
+                    title: "Why it counts", text: "\(counts) It's only ever compared with your own last \(BaselineEngine.windowNights) nights."),
             ]
         case .sleepConsistency:
             return [
                 RecoveryExplanationBlock(
                     title: "How it's scored",
-                    text: "Consistency is how close your bedtime and wake time were to your usual, on average. On your usual it scores 100, and it falls to 0 at \(Int(RecoveryModelV1.consistencyZeroAtMinutes)) minutes away."
+                    text:
+                        "Consistency is how close your bedtime and wake time were to your usual, on average. On your usual it scores 100, and it falls to 0 at \(Int(RecoveryModelV1.consistencyZeroAtMinutes)) minutes away."
                 ),
                 RecoveryExplanationBlock(title: "Why it counts", text: "\(counts) The chart shows your bedtime; the score counts your wake time too."),
             ]

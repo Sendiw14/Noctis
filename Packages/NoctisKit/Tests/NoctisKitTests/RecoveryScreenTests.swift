@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import DesignSystem
 @testable import HealthProviding
 @testable import HomeFeature
@@ -62,8 +63,13 @@ struct RecoveryTodayContentTests {
     }
 
     @Test func theCapRowNamesTheCapAndTheReason() throws {
-        var history = Fixture.metrics(count: 19, endingOn: SleepNightKey(year: 2026, month: 9, day: 22)) { _ in (asleep: 480, bedtime: 660, wake: 1140, hrv: 50, resting: 55) }
-        history.append(NightMetrics(night: SleepNightKey(year: 2026, month: 9, day: 23), wakeTime: Fixture.date(2026, 9, 24, 7), asleepMinutes: 480, bedtimeMinutes: 660, wakeMinutes: 1140, hrv: 40, restingHeartRate: 62))
+        var history = Fixture.metrics(count: 19, endingOn: SleepNightKey(year: 2026, month: 9, day: 22)) { _ in
+            (asleep: 480, bedtime: 660, wake: 1140, hrv: 50, resting: 55)
+        }
+        history.append(
+            NightMetrics(
+                night: SleepNightKey(year: 2026, month: 9, day: 23), wakeTime: Fixture.date(2026, 9, 24, 7), asleepMinutes: 480, bedtimeMinutes: 660,
+                wakeMinutes: 1140, hrv: 40, restingHeartRate: 62))
         guard case .scored(let result) = RecoveryEngine.evaluate(history: history, needMinutes: 480, asOf: now) else { throw TestFailure() }
         let build = RecoveryScreenBuilder.build(RecoveryContributionEngine.contributions(for: result), render: nil)
         #expect(build.capNote == "Capped at 50: your heart rate and HRV are both well outside your normal range.")
@@ -109,10 +115,18 @@ struct RecoveryConfidenceContentTests {
     }
 
     @Test func eachNextStepIsWordedFromItsFactsAlone() {
-        #expect(RecoveryScreenBuilder.nextStep(.recordAgain(factors: [.hrv])) == "HRV wasn't recorded last night. Wearing your Apple Watch to sleep tonight would bring it back.")
-        #expect(RecoveryScreenBuilder.nextStep(.recordAgain(factors: [.hrv, .restingHeartRate])) == "HRV and resting heart rate weren't recorded last night. Wearing your Apple Watch to sleep tonight would bring them back.")
-        #expect(RecoveryScreenBuilder.nextStep(.keepTracking(nightsNeeded: 2)) == "2 more nights of tracking and the baselines that are still forming will be ready.")
-        #expect(RecoveryScreenBuilder.nextStep(.keepTracking(nightsNeeded: 1)) == "1 more night of tracking and the baselines that are still forming will be ready.")
+        #expect(
+            RecoveryScreenBuilder.nextStep(.recordAgain(factors: [.hrv]))
+                == "HRV wasn't recorded last night. Wearing your Apple Watch to sleep tonight would bring it back.")
+        #expect(
+            RecoveryScreenBuilder.nextStep(.recordAgain(factors: [.hrv, .restingHeartRate]))
+                == "HRV and resting heart rate weren't recorded last night. Wearing your Apple Watch to sleep tonight would bring them back.")
+        #expect(
+            RecoveryScreenBuilder.nextStep(.keepTracking(nightsNeeded: 2))
+                == "2 more nights of tracking and the baselines that are still forming will be ready.")
+        #expect(
+            RecoveryScreenBuilder.nextStep(.keepTracking(nightsNeeded: 1)) == "1 more night of tracking and the baselines that are still forming will be ready."
+        )
         #expect(RecoveryScreenBuilder.nextStep(.wearWatchToSleep(adding: [.hrv])) == "Wear your Apple Watch to sleep to add HRV.")
         #expect(RecoveryScreenBuilder.nextStep(.reachHigh(nightsNeeded: 5)) == "5 more nights and this reaches high confidence.")
     }
@@ -127,12 +141,18 @@ struct RecoveryConfidenceContentTests {
 struct RecoveryStatesTests {
     @Test func everyDataStateHasHomesAndSleepsCopy() {
         func state(_ value: HomeDataState) -> RecoveryStateContent? { RecoveryScreenBuilder.stateContent(value) }
-        #expect(state(.healthDataUnavailable) == .connect(title: "Your first night starts here.", message: "Apple Health isn't available on this device.", showsButton: false))
-        #expect(state(.permissionRequired) == .connect(title: "Your first night starts here.", message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
-        #expect(state(.empty) == .noSleepData(
-            title: "No sleep data yet",
-            message: "NOCTIS reads sleep from Apple Health. Track sleep with Apple Watch or set up Sleep in the Health app."
-        ))
+        #expect(
+            state(.healthDataUnavailable)
+                == .connect(title: "Your first night starts here.", message: "Apple Health isn't available on this device.", showsButton: false))
+        #expect(
+            state(.permissionRequired)
+                == .connect(title: "Your first night starts here.", message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
+        #expect(
+            state(.empty)
+                == .noSleepData(
+                    title: "No sleep data yet",
+                    message: "NOCTIS reads sleep from Apple Health. Track sleep with Apple Watch or set up Sleep in the Health app."
+                ))
         #expect(state(.failed) == .failed(message: "We couldn't read your latest sleep data."))
         #expect(state(.ready) == nil && state(.noSleepLastNight) == nil && state(.learning(nightsSoFar: 3)) == nil)
         #expect(state(.stale(newestSample: now)) == nil, "stale still shows the nights, under a banner")
@@ -198,7 +218,8 @@ struct RecoveryViewModelTests {
         return RecoveryViewModel(
             repository: RecoveryRepository(provider: provider, timeZone: Fixture.newYork, clock: { time }),
             profile: { UserProfileSnapshot() },
-            introGate: HomeIntroGate(defaults: defaults ?? UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? .standard, key: RecoveryViewModel.introKey),
+            introGate: HomeIntroGate(
+                defaults: defaults ?? UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? .standard, key: RecoveryViewModel.introKey),
             reduceMotion: { reduceMotion }, lowPower: { false }, clock: { now }, calendar: Fixture.calendar(), locale: locale
         )
     }
@@ -282,7 +303,6 @@ struct RecoveryViewModelTests {
     }
 }
 
-
 private struct TestFailure: Error {}
 
 struct RecoveryHistoryContentTests {
@@ -362,7 +382,8 @@ struct RecoveryHistoryContentTests {
 
     @Test func aStatWithNoValueIsNoTileNotADash() {
         let format = HomeFormat(calendar: Fixture.calendar(), locale: locale)
-        let stats = RecoveryHistoryStats(current: nil, average: 80, baseline: nil, usualRange: nil, daysInUsualRange: nil, high: nil, low: nil, trend: nil, scoredDays: 3)
+        let stats = RecoveryHistoryStats(
+            current: nil, average: 80, baseline: nil, usualRange: nil, daysInUsualRange: nil, high: nil, low: nil, trend: nil, scoredDays: 3)
         #expect(RecoveryScreenBuilder.historyTiles(stats, format: format).map(\.id) == ["average"])
     }
 

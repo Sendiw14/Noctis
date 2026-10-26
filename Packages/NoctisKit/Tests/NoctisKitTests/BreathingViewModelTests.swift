@@ -47,8 +47,10 @@ nonisolated struct BreathingCopyTests {
     }
 
     @Test func theCopyMakesNoClaimsAboutTheBodyOrMind() {
-        let words = [BreathingCopy.line, BreathingCopy.hapticsNote, BreathingCopy.finishedTitle, BreathingCopy.finishedLine(pattern: .pattern(.calm), minutes: 5)]
-            .joined(separator: " ").lowercased()
+        let words = [
+            BreathingCopy.line, BreathingCopy.hapticsNote, BreathingCopy.finishedTitle, BreathingCopy.finishedLine(pattern: .pattern(.calm), minutes: 5),
+        ]
+        .joined(separator: " ").lowercased()
         #expect(BreathingCopy.line == "A slow breathing exercise.")
         for banned in ["anxiety", "stress", "treat", "cure", "heal", "therapy", "medical", "clinical", "better sleep", "fall asleep", "score", "streak"] {
             #expect(!words.contains(banned), Comment(rawValue: "the breathing copy says \"\(banned)\""))
@@ -85,7 +87,8 @@ struct BreathingViewModelTests {
         defaults.removePersistentDomain(forName: suite)
         seed?(defaults)
         let model = BreathingViewModel(
-            haptics: silent, preferences: AppPreferences(defaults: defaults), now: { time.now.addingTimeInterval(away.seconds) }, sleeper: { await time.sleep($0) },
+            haptics: silent, preferences: AppPreferences(defaults: defaults), now: { time.now.addingTimeInterval(away.seconds) },
+            sleeper: { await time.sleep($0) },
             announce: { log.announcements.append($0) }, completion: { log.completions += 1 }
         )
         return Bench(model: model, time: time, haptics: silent, log: log, away: away, defaults: defaults)
@@ -118,7 +121,10 @@ struct BreathingViewModelTests {
         let again = BreathingViewModel(haptics: SilentBreathingHaptics(available: true), preferences: AppPreferences(defaults: defaults))
         #expect(again.patternID == .box && again.minutes == 10 && again.hapticsOn)
 
-        let bad = Self.make(seed: { $0.set("nonsense", forKey: BreathingViewModel.patternKey); $0.set(3, forKey: BreathingViewModel.minutesKey) })
+        let bad = Self.make(seed: {
+            $0.set("nonsense", forKey: BreathingViewModel.patternKey)
+            $0.set(3, forKey: BreathingViewModel.minutesKey)
+        })
         #expect(bad.model.patternID == .calm && bad.model.minutes == 5)
     }
 

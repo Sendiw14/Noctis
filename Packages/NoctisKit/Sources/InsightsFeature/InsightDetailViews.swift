@@ -272,7 +272,9 @@ struct InsightDetailBody: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("insights.dismissed")
             } else {
-                Button { act(.notUseful) } label: {
+                Button {
+                    act(.notUseful)
+                } label: {
                     HStack(spacing: NoctisSpacing.xs) {
                         Image(systemName: "hand.thumbsdown")
                             .font(.system(size: 15, weight: .semibold))

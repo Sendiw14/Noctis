@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import RecoveryKit
 @testable import SleepAnalysisKit
 @testable import SleepKit
@@ -82,7 +83,8 @@ struct SleepHighlightsEngineTests {
         let fewer = nights(count: 14, bedtime: { $0 >= 7 ? 660 : 660 + ($0 % 2 == 0 ? 30 : -30) })
         #expect(!SleepHighlightsEngine.mostConsistentWeek(metrics: fewer, endingAt: last), "7 earlier weeks")
         // Under 5 recorded nights in the week: no spread, no claim.
-        let gaps = nights(count: 30, bedtime: { $0 >= 20 ? 660 : 660 + ($0 % 2 == 0 ? 30 : -30) }).enumerated().filter { !(20...25).contains($0.offset) }.map(\.element)
+        let gaps = nights(count: 30, bedtime: { $0 >= 20 ? 660 : 660 + ($0 % 2 == 0 ? 30 : -30) }).enumerated().filter { !(20...25).contains($0.offset) }.map(
+            \.element)
         #expect(SleepHighlightsEngine.bedtimeSpread(metrics: gaps, endingAt: last) == nil)
         #expect(!SleepHighlightsEngine.mostConsistentWeek(metrics: gaps, endingAt: last))
     }
@@ -101,7 +103,9 @@ struct RecoveryHighlightEngineTests {
         (0..<count).map { index in
             let night = last.adding(days: -(count - 1 - index))
             let score = scores(index).map {
-                RecoveryDayScore(night: night, date: Date(timeIntervalSince1970: 1_790_000_000 + Double(index) * 86_400), score: $0, confidence: .high, factorScores: [], capApplied: false)
+                RecoveryDayScore(
+                    night: night, date: Date(timeIntervalSince1970: 1_790_000_000 + Double(index) * 86_400), score: $0, confidence: .high, factorScores: [],
+                    capApplied: false)
             }
             return RecoveryHistoryDay(night: night, score: score)
         }

@@ -31,7 +31,9 @@ struct AudioGraphTests {
     }
 
     @Test func aSingleOrEmptySeriesStillMakesADescriptor() {
-        let one = NoctisAudioGraph(title: "t", summary: "s", xTitle: "x", yTitle: "y", points: [NoctisGraphPoint(x: "a", y: 1, spoken: "a")], yRange: 0...1) { _ in "" }
+        let one = NoctisAudioGraph(title: "t", summary: "s", xTitle: "x", yTitle: "y", points: [NoctisGraphPoint(x: "a", y: 1, spoken: "a")], yRange: 0...1) {
+            _ in ""
+        }
         #expect(one.makeChartDescriptor().series.first?.dataPoints.count == 1)
         let none = NoctisAudioGraph(title: "t", summary: "s", xTitle: "x", yTitle: "y", points: [], yRange: 0...1) { _ in "" }
         #expect(none.makeChartDescriptor().series.first?.dataPoints.isEmpty == true)

@@ -307,7 +307,8 @@ public enum InsightEvidenceData: Sendable, Equatable, Codable {
         func list(_ values: [Double?]) -> String { values.map { $0.map { n($0) } ?? "-" }.joined(separator: ",") }
         switch self {
         case .baseline(let e):
-            return "baseline|\(e.night)|\(n(e.value))|\(n(e.baseline))|\(e.streakNights ?? 0)|\(e.recentNights.map { $0.map { $0 ? "1" : "0" } ?? "-" }.joined())"
+            return
+                "baseline|\(e.night)|\(n(e.value))|\(n(e.baseline))|\(e.streakNights ?? 0)|\(e.recentNights.map { $0.map { $0 ? "1" : "0" } ?? "-" }.joined())"
         case .pattern(let e):
             return "pattern|\(e.night)|\(e.earlyNights)|\(e.lateNights)|\(n(e.earlyMean, 1))|\(n(e.lateMean, 1))|\(n(e.medianBedtime))"
         case .recoveryDirection(let e):
@@ -375,7 +376,8 @@ public struct InsightRecord: Sendable, Equatable, Codable, Identifiable {
     }
 
     func with(relevance: Double, novelty: Double) -> InsightRecord {
-        InsightRecord(type: type, generatedAt: generatedAt, evidence: evidence, confidence: confidence, relevance: relevance, novelty: novelty, nightsUsed: nightsUsed)
+        InsightRecord(
+            type: type, generatedAt: generatedAt, evidence: evidence, confidence: confidence, relevance: relevance, novelty: novelty, nightsUsed: nightsUsed)
     }
 
     /// The type, and for a stage-share the stage: what the Recent list keeps

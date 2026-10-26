@@ -260,7 +260,8 @@ struct AboutContentTests {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let manifest = try String(contentsOf: root.appendingPathComponent("Package.swift"), encoding: .utf8)
         #expect(!manifest.contains(".package("), "an acknowledgements page is needed the day this fails")
-        let project = try String(contentsOf: root.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("project.yml"), encoding: .utf8)
+        let project = try String(
+            contentsOf: root.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("project.yml"), encoding: .utf8)
         #expect(!project.contains("url: http") && !project.contains("github.com"), "no remote package")
     }
 }
@@ -310,7 +311,9 @@ struct HealthCopyTests {
         let found = HealthKindStatus(kind: .sleepAnalysis, lastSample: Fixture.date(2026, 9, 29, 7))
         #expect(HealthCopy.line(found, calendar: calendar, locale: locale) == "Data found · last sample Sep 29")
         #expect(HealthCopy.line(HealthKindStatus(kind: .hrv, lastSample: nil), calendar: calendar, locale: locale) == "No data found")
-        #expect(HealthCopy.line(HealthKindStatus(kind: .hrv, lastSample: nil, couldNotCheck: true), calendar: calendar, locale: locale) == "Couldn't check just now")
+        #expect(
+            HealthCopy.line(HealthKindStatus(kind: .hrv, lastSample: nil, couldNotCheck: true), calendar: calendar, locale: locale) == "Couldn't check just now"
+        )
     }
 
     @Test func noWordInTheHealthCopyClaimsAPermissionState() {
@@ -463,10 +466,23 @@ struct SettingsViewModelTests {
 
     @Test func thePreferencesSettingsWritesAreTheOnesTheAppReads() {
         let bench = make()
-        bench.preferences.update { $0.appearance = .dark; $0.appHaptics = false; $0.windDownMinutes = 30; $0.soundsGainPercent = 65; $0.soundsTimer = .minutes45 }
+        bench.preferences.update {
+            $0.appearance = .dark
+            $0.appHaptics = false
+            $0.windDownMinutes = 30
+            $0.soundsGainPercent = 65
+            $0.soundsTimer = .minutes45
+        }
         let values = bench.viewModel.values
-        #expect(values.appearance == .dark && !values.appHaptics && values.windDownMinutes == 30 && values.soundsGainPercent == 65 && values.soundsTimer == .minutes45)
-        bench.preferences.update { $0.windDownMinutes = 99; $0.soundsGainPercent = 500 }
-        #expect(bench.viewModel.values.windDownMinutes == WindDownClock.defaultMinutes && bench.viewModel.values.soundsGainPercent == 100, "kept inside what is offered")
+        #expect(
+            values.appearance == .dark && !values.appHaptics && values.windDownMinutes == 30 && values.soundsGainPercent == 65
+                && values.soundsTimer == .minutes45)
+        bench.preferences.update {
+            $0.windDownMinutes = 99
+            $0.soundsGainPercent = 500
+        }
+        #expect(
+            bench.viewModel.values.windDownMinutes == WindDownClock.defaultMinutes && bench.viewModel.values.soundsGainPercent == 100,
+            "kept inside what is offered")
     }
 }

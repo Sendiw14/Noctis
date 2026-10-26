@@ -1,5 +1,5 @@
-import DesignSystem
 import AppIntents
+import DesignSystem
 import Foundation
 import NoctisWidgetKit
 import SoundCatalog
@@ -48,7 +48,8 @@ public struct StartWindDownIntent: AppIntent {
 
 public struct PlaySleepSoundsIntent: AudioPlaybackIntent {
     public static let title: LocalizedStringResource = "Play sleep sounds"
-    public static let description = IntentDescription("Plays a sleep sound, without opening NOCTIS. The last one you played if you leave it out.", categoryName: "Sleep")
+    public static let description = IntentDescription(
+        "Plays a sleep sound, without opening NOCTIS. The last one you played if you leave it out.", categoryName: "Sleep")
 
     @Parameter(title: "Sound")
     public var sound: SoundEntity?

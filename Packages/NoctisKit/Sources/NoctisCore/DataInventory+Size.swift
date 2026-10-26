@@ -67,7 +67,8 @@ nonisolated extension DataInventory {
             var total = 0
             for key in keys {
                 guard let value = roots.defaults.object(forKey: key),
-                      let data = try? PropertyListSerialization.data(fromPropertyList: value, format: .binary, options: 0) else { continue }
+                    let data = try? PropertyListSerialization.data(fromPropertyList: value, format: .binary, options: 0)
+                else { continue }
                 total += data.count
             }
             return total

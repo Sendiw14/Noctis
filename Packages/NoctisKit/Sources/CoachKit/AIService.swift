@@ -138,7 +138,8 @@ public actor AIService {
         guard result.answer.intent != .crisis else { return result }
         log(result.outcome)
         guard result.answer.isStorable, let history, let conversationID,
-              let id = await history.append(question: question, answer: result.answer, to: conversationID) else { return result }
+            let id = await history.append(question: question, answer: result.answer, to: conversationID)
+        else { return result }
         return CoachResult(answer: result.answer, outcome: result.outcome, messageID: id)
     }
 
@@ -267,13 +268,15 @@ enum CoachRace {
     ) async -> CoachRaceResult<Value> {
         await withCheckedContinuation { continuation in
             let box = Box(continuation)
-            box.add(Task {
-                do { box.finish(.value(try await work())) } catch { box.finish(.failed) }
-            })
-            box.add(Task {
-                try? await Task.sleep(for: timeout)
-                box.finish(.timedOut)
-            })
+            box.add(
+                Task {
+                    do { box.finish(.value(try await work())) } catch { box.finish(.failed) }
+                })
+            box.add(
+                Task {
+                    try? await Task.sleep(for: timeout)
+                    box.finish(.timedOut)
+                })
         }
     }
 

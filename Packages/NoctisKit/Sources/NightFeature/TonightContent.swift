@@ -155,7 +155,10 @@ public nonisolated enum TonightBuilder {
         let labels = [0, 4, 8, 12, 16].map { step in
             TonightStrip.Label(position: Double(step) / 16, text: format.hour(minutesSinceMidnight: stripStartMinutes + step * 60))
         }
-        let what = recommendation.kind == .window ? "Bedtime window \(windowText(recommendation.window ?? BedtimeWindow(startMinutes: start, endMinutes: end), format: format))" : "Bedtime \(format.clock(minutesSinceMidnight: start))"
+        let what =
+            recommendation.kind == .window
+            ? "Bedtime window \(windowText(recommendation.window ?? BedtimeWindow(startMinutes: start, endMinutes: end), format: format))"
+            : "Bedtime \(format.clock(minutesSinceMidnight: start))"
         return TonightStrip(
             windowStart: fraction(start), windowEnd: max(fraction(end), fraction(start)), wake: fraction(recommendation.wakeMinutes), labels: labels,
             accessibilityLabel: "\(what), wake \(format.clock(minutesSinceMidnight: recommendation.wakeMinutes)), on a strip from 6 PM to 10 AM"
@@ -199,14 +202,16 @@ public nonisolated enum TonightBuilder {
         let moved = reason.shiftMinutes < 0 ? "Moved \(abs(reason.shiftMinutes)) min earlier to catch up." : nil
         guard size >= 5 else {
             return TonightReasonRow(
-                kind: .balance, label: "Last \(SleepBalanceEngine.windowNights) nights", value: NoctisMetricValue(parts: [.unit("Even with your need")], spoken: "Even with your need"),
+                kind: .balance, label: "Last \(SleepBalanceEngine.windowNights) nights",
+                value: NoctisMetricValue(parts: [.unit("Even with your need")], spoken: "Even with your need"),
                 detail: nil, systemImage: "calendar", tone: .lavender
             )
         }
         let word = reason.value < 0 ? "behind" : "ahead"
         let duration = HomeFormat.durationMetric(size)
         let value = NoctisMetricValue(parts: duration.parts + [.space, .unit(word)], spoken: "\(duration.spoken) \(word)")
-        return TonightReasonRow(kind: .balance, label: "Last \(SleepBalanceEngine.windowNights) nights", value: value, detail: moved, systemImage: "calendar", tone: .lavender)
+        return TonightReasonRow(
+            kind: .balance, label: "Last \(SleepBalanceEngine.windowNights) nights", value: value, detail: moved, systemImage: "calendar", tone: .lavender)
     }
 
     // MARK: How this is calculated

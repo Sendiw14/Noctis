@@ -1,7 +1,7 @@
 import Foundation
 import HealthProviding
-import Observation
 import InsightsKit
+import Observation
 import PremiumKit
 import RecoveryKit
 
@@ -151,11 +151,12 @@ public final class AppModel {
             sleepDestination = SleepDestination(night: night, range: range, serial: serial)
         case .recovery(let requested, let requestedFactor):
             // A link never opens what is Premium for a free person: 30 and 90 days fall back to 7, a factor's detail to the tab (no paywall: nothing was tapped).
-            let range: RecoverySegment = switch requested {
-            case .month: isUnlocked(.recovery30D) ? .month : .week
-            case .quarter: isUnlocked(.recovery90D) ? .quarter : .week
-            default: requested
-            }
+            let range: RecoverySegment =
+                switch requested {
+                case .month: isUnlocked(.recovery30D) ? .month : .week
+                case .quarter: isUnlocked(.recovery90D) ? .quarter : .week
+                default: requested
+                }
             let factor = isUnlocked(.recoveryFactorDetail) ? requestedFactor : nil
             serial += 1
             recoveryDestination = RecoveryDestination(segment: range, factor: factor, serial: serial)

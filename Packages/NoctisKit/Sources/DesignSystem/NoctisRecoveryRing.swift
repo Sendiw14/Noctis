@@ -266,7 +266,11 @@ public struct NoctisRecoveryRing: View, Animatable {
         }
         .aspectRatio(1, contentMode: .fit)
         .frame(maxWidth: diameter, maxHeight: diameter)
-        .onGeometryChange(for: CGFloat.self) { min($0.size.width, $0.size.height) } action: { side = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            min($0.size.width, $0.size.height)
+        } action: {
+            side = $0
+        }
         .onChange(of: key, initial: true) { _, key in
             guard key.side > 0 else { return }
             let next = NoctisRingPaths.build(key)
@@ -388,7 +392,8 @@ private struct NoctisRingFillLayer: View, Equatable {
                 // Your usual: a 3pt tick across the segment's track, on top
                 // of its fill.
                 if showsUsual, let tick = segment.tick {
-                    layer.stroke(tick, with: .color(NoctisAppColor.ink.opacity(0.7)), style: StrokeStyle(lineWidth: NoctisRecoveryRing.tickWidth, lineCap: .butt))
+                    layer.stroke(
+                        tick, with: .color(NoctisAppColor.ink.opacity(0.7)), style: StrokeStyle(lineWidth: NoctisRecoveryRing.tickWidth, lineCap: .butt))
                 }
             }
         }
@@ -464,7 +469,8 @@ public struct NoctisRingLayout: Layout {
         let side = min(bounds.width, bounds.height)
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
         for (index, subview) in subviews.enumerated() {
-            let size = index == 0
+            let size =
+                index == 0
                 ? CGSize(width: side, height: side)
                 : CGSize(width: side * centerWidth, height: side * centerHeight)
             subview.place(at: center, anchor: .center, proposal: ProposedViewSize(size))

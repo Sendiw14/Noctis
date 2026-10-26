@@ -102,36 +102,44 @@ private let allFamilies: [WidgetFamily] = [.accessoryCircular, .accessoryRectang
 
 struct NoctisRecoveryWatchWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: WatchComplicationKind.recovery.rawValue, provider: WatchComplicationProvider(kind: .recovery)) { WatchComplicationEntryView(entry: $0) }
-            .configurationDisplayName(WatchComplicationKind.recovery.displayName)
-            .description(WatchComplicationKind.recovery.summary)
-            .supportedFamilies(allFamilies)
+        StaticConfiguration(kind: WatchComplicationKind.recovery.rawValue, provider: WatchComplicationProvider(kind: .recovery)) {
+            WatchComplicationEntryView(entry: $0)
+        }
+        .configurationDisplayName(WatchComplicationKind.recovery.displayName)
+        .description(WatchComplicationKind.recovery.summary)
+        .supportedFamilies(allFamilies)
     }
 }
 
 struct NoctisSleepWatchWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: WatchComplicationKind.sleep.rawValue, provider: WatchComplicationProvider(kind: .sleep)) { WatchComplicationEntryView(entry: $0) }
-            .configurationDisplayName(WatchComplicationKind.sleep.displayName)
-            .description(WatchComplicationKind.sleep.summary)
-            .supportedFamilies(allFamilies)
+        StaticConfiguration(kind: WatchComplicationKind.sleep.rawValue, provider: WatchComplicationProvider(kind: .sleep)) {
+            WatchComplicationEntryView(entry: $0)
+        }
+        .configurationDisplayName(WatchComplicationKind.sleep.displayName)
+        .description(WatchComplicationKind.sleep.summary)
+        .supportedFamilies(allFamilies)
     }
 }
 
 struct NoctisBedtimeWatchWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: WatchComplicationKind.bedtime.rawValue, provider: WatchComplicationProvider(kind: .bedtime)) { WatchComplicationEntryView(entry: $0) }
-            .configurationDisplayName(WatchComplicationKind.bedtime.displayName)
-            .description(WatchComplicationKind.bedtime.summary)
-            .supportedFamilies(allFamilies)
+        StaticConfiguration(kind: WatchComplicationKind.bedtime.rawValue, provider: WatchComplicationProvider(kind: .bedtime)) {
+            WatchComplicationEntryView(entry: $0)
+        }
+        .configurationDisplayName(WatchComplicationKind.bedtime.displayName)
+        .description(WatchComplicationKind.bedtime.summary)
+        .supportedFamilies(allFamilies)
     }
 }
 
 struct NoctisQualityWatchWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: WatchComplicationKind.quality.rawValue, provider: WatchComplicationProvider(kind: .quality)) { WatchComplicationEntryView(entry: $0) }
-            .configurationDisplayName(WatchComplicationKind.quality.displayName)
-            .description(WatchComplicationKind.quality.summary)
-            .supportedFamilies(allFamilies)
+        StaticConfiguration(kind: WatchComplicationKind.quality.rawValue, provider: WatchComplicationProvider(kind: .quality)) {
+            WatchComplicationEntryView(entry: $0)
+        }
+        .configurationDisplayName(WatchComplicationKind.quality.displayName)
+        .description(WatchComplicationKind.quality.summary)
+        .supportedFamilies(allFamilies)
     }
 }

@@ -39,10 +39,11 @@ public enum BedtimeInputsBuilder {
         let change = TonightClock.clockChangeMinutes(
             night: TonightClock.tonight(now: now, in: timeZone), bedtimeMinutes: base, wakeMinutes: wakeMinutes, timeZone: timeZone
         )
-        return BedtimeRecommendationEngine.recommend(inputs(
-            wakeMinutes: wakeMinutes, needMinutes: needMinutes, timing: timing, balance: balance, consistency: consistency,
-            clockChangeMinutes: change
-        ))
+        return BedtimeRecommendationEngine.recommend(
+            inputs(
+                wakeMinutes: wakeMinutes, needMinutes: needMinutes, timing: timing, balance: balance, consistency: consistency,
+                clockChangeMinutes: change
+            ))
     }
 
     /// Engines count clock times in minutes after noon (11:00 PM is 660); the recommendation

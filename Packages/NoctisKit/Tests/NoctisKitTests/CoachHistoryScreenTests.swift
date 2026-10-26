@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import CoachFeature
 @testable import CoachKit
 @testable import HomeFeature
@@ -39,7 +40,9 @@ struct CoachHistoryBuilderTests {
         let three = CoachHistoryBuilder.build([summary("Q", turns: 3, at: Fixture.date(2026, 9, 30, 9, 5))], now: now, format: format)
         #expect(three.days[0].rows[0].detail.plain == "3 questions · 9:05 AM")
         let german = HomeFormat(calendar: Fixture.calendar(), locale: Locale(identifier: "de_DE"))
-        #expect(CoachHistoryBuilder.build([summary("Q", turns: 2, at: Fixture.date(2026, 9, 30, 21, 41))], now: now, format: german).days[0].rows[0].detail.contains("21:41"))
+        #expect(
+            CoachHistoryBuilder.build([summary("Q", turns: 2, at: Fixture.date(2026, 9, 30, 21, 41))], now: now, format: german).days[0].rows[0].detail
+                .contains("21:41"))
     }
 
     @Test func aDayAcrossMidnightIsTheDayOfItsLastActivity() {
@@ -68,9 +71,12 @@ struct CoachHistoryViewModelTests {
         let defaults = UserDefaults(suiteName: "coach-tests-\(UUID().uuidString)")!
         let person = CoachFixture.profile
         let answering: any CoachAnswering
-        if let service { answering = service } else {
+        if let service {
+            answering = service
+        } else {
             answering = AIService(
-                format: CoachFixture.format, dataSource: StaticCoachDataSource(await CoachFixture.snapshots(.full)), profile: { person }, model: nil, history: history
+                format: CoachFixture.format, dataSource: StaticCoachDataSource(await CoachFixture.snapshots(.full)), profile: { person }, model: nil,
+                history: history
             )
         }
         return CoachViewModel(

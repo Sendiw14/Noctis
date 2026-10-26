@@ -243,9 +243,10 @@ public nonisolated enum NightRenderBuilder {
             lastEnd = span.end
             guard !span.isNotch else { continue }
             if let previous, intact, previous.stage.lane != span.stage.lane {
-                steps.append(NightConnector(
-                    position: (previous.end + span.start) / 2, from: previous.stage.lane, to: span.stage.lane, entered: span.stage
-                ))
+                steps.append(
+                    NightConnector(
+                        position: (previous.end + span.start) / 2, from: previous.stage.lane, to: span.stage.lane, entered: span.stage
+                    ))
             }
             previous = span
             intact = true

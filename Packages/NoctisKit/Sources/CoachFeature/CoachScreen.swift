@@ -33,10 +33,11 @@ public struct CoachScreen: View {
                 dateCaption: viewModel.hub?.dateCaption ?? " ",
                 title: "Coach",
                 summary: AnyView(summary),
-                trailing: AnyView(HStack(spacing: 0) {
-                    if viewModel.keepsHistory { CoachHistoryButton(open: openHistory) }
-                    CoachInfoButton { viewModel.openPrivacy() }
-                })
+                trailing: AnyView(
+                    HStack(spacing: 0) {
+                        if viewModel.keepsHistory { CoachHistoryButton(open: openHistory) }
+                        CoachInfoButton { viewModel.openPrivacy() }
+                    })
             ),
             entrance: viewModel.fieldEntrance,
             onEntered: { viewModel.fieldEntered() },
@@ -51,7 +52,8 @@ public struct CoachScreen: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             CoachInputBar(
-                viewModel: viewModel, placeholder: viewModel.isLimited ? CoachQuota.usedUpPlaceholder : "Ask about your sleep or recovery", identifier: "coach.hub", send: send
+                viewModel: viewModel, placeholder: viewModel.isLimited ? CoachQuota.usedUpPlaceholder : "Ask about your sleep or recovery",
+                identifier: "coach.hub", send: send
             )
         }
         .task { await viewModel.onAppear() }

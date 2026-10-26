@@ -16,7 +16,10 @@ final class NotificationsQATests: XCTestCase {
     func testThreeSwitchesAreOnAndEachHasItsLine() {
         let app = notifications()
         QA.pause(1.5)
-        for (index, words) in [(0, "Morning summary. Your night and recovery, ready when you wake"), (1, "Wind-down reminder. 20 minutes before your bedtime"), (2, "Weekly review. A calm look back, once a week")] {
+        for (index, words) in [
+            (0, "Morning summary. Your night and recovery, ready when you wake"), (1, "Wind-down reminder. 20 minutes before your bedtime"),
+            (2, "Weekly review. A calm look back, once a week"),
+        ] {
             let row = toggle(app, index)
             XCTAssertTrue(row.exists, "switch \(index)")
             XCTAssertEqual(row.label, words)

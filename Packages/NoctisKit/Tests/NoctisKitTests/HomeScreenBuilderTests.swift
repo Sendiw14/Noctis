@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import Testing
+
 @testable import HealthProviding
 @testable import HomeFeature
 @testable import InsightsKit
@@ -23,8 +24,9 @@ struct HomeScreenBuilderTests {
     }
 
     private func screen(_ scenario: MockScenario, authorized: Bool = true, available: Bool = true, fails: Bool = false) async -> HomeScreen {
-        let provider = MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: calendar,
-                                             startAuthorized: authorized, isHealthDataAvailable: available, failsQueries: fails)
+        let provider = MockHealthKitProvider(
+            scenario: scenario, referenceDate: now, calendar: calendar,
+            startAuthorized: authorized, isHealthDataAvailable: available, failsQueries: fails)
         let clock = now
         let snapshot = await HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }).refresh(profile: UserProfileSnapshot())
         return HomeScreenBuilder.build(snapshot, now: now, calendar: calendar, locale: locale)
@@ -43,8 +45,9 @@ struct HomeScreenBuilderTests {
     }
 
     private func snapshot(sleep: [RawSleepSample], profile: UserProfileSnapshot = UserProfileSnapshot()) -> HomeSnapshot {
-        HomeSnapshotBuilder.build(HomeHealthInputs(sleep: sleep, hrv: [], restingHeartRate: [], heartRate: []),
-                                  profile: profile, now: now, timeZone: Fixture.newYork)
+        HomeSnapshotBuilder.build(
+            HomeHealthInputs(sleep: sleep, hrv: [], restingHeartRate: [], heartRate: []),
+            profile: profile, now: now, timeZone: Fixture.newYork)
     }
 
     // MARK: - Header
@@ -76,7 +79,10 @@ struct HomeScreenBuilderTests {
 
     @Test func fullStateShowsEveryCard() async throws {
         let screen = await screen(.full)
-        guard case .scored(let scored) = screen.recovery else { Issue.record("expected a score"); return }
+        guard case .scored(let scored) = screen.recovery else {
+            Issue.record("expected a score")
+            return
+        }
         #expect(scored.segments.map(\.kind) == [.sleepDuration, .hrv, .restingHeartRate, .sleepConsistency])
         #expect(abs(scored.segments.map(\.weight).reduce(0, +) - 1) < 1e-9)
         #expect(scored.factors.map(\.name) == ["Sleep", "HRV", "Resting HR", "Consistency"])
@@ -92,7 +98,10 @@ struct HomeScreenBuilderTests {
 
     @Test func sleepOnlyStateNamesWhatIsMissing() async {
         let screen = await screen(.sleepOnly)
-        guard case .scored(let scored) = screen.recovery else { Issue.record("expected a score"); return }
+        guard case .scored(let scored) = screen.recovery else {
+            Issue.record("expected a score")
+            return
+        }
         #expect(scored.segments.map(\.kind) == [.sleepDuration, .sleepConsistency])
         #expect(scored.confidence == "Low confidence · sleep only. HRV and heart rate aren't available from your sources.")
         #expect(scored.confidenceCaption == scored.confidence)
@@ -109,7 +118,10 @@ struct HomeScreenBuilderTests {
 
     @Test func gapStateSaysNoSleepAndWhenTheLastWas() async {
         let screen = await screen(.gap)
-        guard case .noSleep(let title, let detail) = screen.recovery else { Issue.record("expected no sleep"); return }
+        guard case .noSleep(let title, let detail) = screen.recovery else {
+            Issue.record("expected no sleep")
+            return
+        }
         #expect(title == "No sleep recorded last night.")
         #expect(detail == "Last recorded night ended Wed, Sep 23.")
         #expect(screen.lastNight == nil)
@@ -119,7 +131,10 @@ struct HomeScreenBuilderTests {
     @Test func staleStateSaysSyncIsBehindNotThatYouDidntSleep() async {
         let screen = await screen(.stale)
         #expect(screen.header.updated == "Updated 30h ago")
-        guard case .stale(let title, let detail) = screen.recovery else { Issue.record("expected stale"); return }
+        guard case .stale(let title, let detail) = screen.recovery else {
+            Issue.record("expected stale")
+            return
+        }
         #expect(plain(title).hasPrefix("Apple Health hasn't updated since Wed "))
         #expect(plain(title).hasSuffix(" AM."))
         #expect(detail == "Open Health or pull to refresh.")
@@ -133,14 +148,20 @@ struct HomeScreenBuilderTests {
             HomeHealthInputs(sleep: [], hrv: [], restingHeartRate: [], heartRate: [HeartRateSample(date: newest, bpm: 60, sourceName: "Watch")]),
             profile: UserProfileSnapshot(), now: Fixture.date(2026, 9, 24, 13), timeZone: Fixture.newYork)
         let screen = HomeScreenBuilder.build(snapshot, now: Fixture.date(2026, 9, 24, 13), calendar: calendar, locale: locale)
-        guard case .stale(let title, _) = screen.recovery else { Issue.record("expected stale"); return }
+        guard case .stale(let title, _) = screen.recovery else {
+            Issue.record("expected stale")
+            return
+        }
         #expect(plain(title) == "Apple Health hasn't updated since Wed 7:02 AM.")
     }
 
     @Test func neverAskedOffersToConnect() async {
         let screen = await screen(.full, authorized: false)
-        #expect(screen.recovery == .connect(title: "Your first night starts here.",
-                                            message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
+        #expect(
+            screen.recovery
+                == .connect(
+                    title: "Your first night starts here.",
+                    message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
         #expect(screen.lastNight == nil && screen.insight == nil && screen.week == nil)
         #expect(plain(screen.tonight.bedtimeText) == "Bedtime around 11:00 PM")
     }
@@ -153,7 +174,8 @@ struct HomeScreenBuilderTests {
         #expect(await screen(.empty).recovery == expected)
         // Heart data but not a single night of sleep reads the same way.
         let heartOnly = HomeSnapshotBuilder.build(
-            HomeHealthInputs(sleep: [], hrv: [], restingHeartRate: [], heartRate: [HeartRateSample(date: now.addingTimeInterval(-600), bpm: 70, sourceName: "Watch")]),
+            HomeHealthInputs(
+                sleep: [], hrv: [], restingHeartRate: [], heartRate: [HeartRateSample(date: now.addingTimeInterval(-600), bpm: 70, sourceName: "Watch")]),
             profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
         #expect(HomeScreenBuilder.build(heartOnly, now: now, calendar: calendar, locale: locale).recovery == expected)
         #expect(HomeScreenBuilder.build(heartOnly, now: now, calendar: calendar, locale: locale).week == nil)
@@ -161,8 +183,11 @@ struct HomeScreenBuilderTests {
 
     @Test func withoutHealthThereIsNoConnectButton() async {
         let screen = await screen(.full, available: false)
-        #expect(screen.recovery == .connect(title: "Your first night starts here.",
-                                            message: "Apple Health isn't available on this device.", showsButton: false))
+        #expect(
+            screen.recovery
+                == .connect(
+                    title: "Your first night starts here.",
+                    message: "Apple Health isn't available on this device.", showsButton: false))
     }
 
     @Test func aFailedReadIsStatedWithTheTonightCardOnly() async {
@@ -210,18 +235,22 @@ struct HomeScreenBuilderTests {
 
     @Test func confidenceLineExplainsMissingHeartData() {
         func line(_ gaps: [RecoveryFactorKind: RecoveryFactorGap]) -> String {
-            HomeScreenBuilder.confidenceLine(RecoveryResult(
-                night: lastNightKey, score: 70,
-                factors: [RecoveryFactor(kind: .sleepDuration, score: 70, weight: 1, value: 400, baseline: nil, delta: nil)],
-                confidence: .low, baselineNights: 4, modelVersion: "recovery-v1", missingFactors: gaps
-            ))
+            HomeScreenBuilder.confidenceLine(
+                RecoveryResult(
+                    night: lastNightKey, score: 70,
+                    factors: [RecoveryFactor(kind: .sleepDuration, score: 70, weight: 1, value: 400, baseline: nil, delta: nil)],
+                    confidence: .low, baselineNights: 4, modelVersion: "recovery-v1", missingFactors: gaps
+                ))
         }
-        #expect(line([.hrv: .unavailable, .restingHeartRate: .unavailable])
-            == "Low confidence · sleep only. HRV and heart rate aren't available from your sources.")
-        #expect(line([.hrv: .notRecorded, .restingHeartRate: .unavailable])
-            == "Low confidence · sleep only. Heart rate isn't available from your sources. HRV wasn't recorded last night.")
-        #expect(line([.hrv: .buildingBaseline, .restingHeartRate: .buildingBaseline])
-            == "Low confidence · sleep only. HRV and heart rate baselines are still forming.")
+        #expect(
+            line([.hrv: .unavailable, .restingHeartRate: .unavailable])
+                == "Low confidence · sleep only. HRV and heart rate aren't available from your sources.")
+        #expect(
+            line([.hrv: .notRecorded, .restingHeartRate: .unavailable])
+                == "Low confidence · sleep only. Heart rate isn't available from your sources. HRV wasn't recorded last night.")
+        #expect(
+            line([.hrv: .buildingBaseline, .restingHeartRate: .buildingBaseline])
+                == "Low confidence · sleep only. HRV and heart rate baselines are still forming.")
         #expect(HomeScreenBuilder.confidenceLine(result(delta: 1)) == "Moderate confidence · sleep, HRV, heart rate, consistency")
     }
 
@@ -244,8 +273,9 @@ struct HomeScreenBuilderTests {
         #expect(chart.connectors.map(\.to) == [.core, .deep, .rem, .core])
         #expect(abs(chart.connectors[0].position - 3.0 / 505.0) < 1e-9)
         #expect(chart.timeLabels.map(plain) == ["11:02 PM", "3:14 AM", "7:27 AM"])
-        #expect(plain(card.accessibilityLabel)
-            == "Last night, slept 8 hours 22 minutes, 11:02 PM to 7:27 AM. Deep 1 hour, Core 6 hours 22 minutes, REM 1 hour, Awake 3 minutes.")
+        #expect(
+            plain(card.accessibilityLabel)
+                == "Last night, slept 8 hours 22 minutes, 11:02 PM to 7:27 AM. Deep 1 hour, Core 6 hours 22 minutes, REM 1 hour, Awake 3 minutes.")
     }
 
     @Test func lanesRunAwakeREMCoreDeepTopToBottom() {
@@ -343,10 +373,12 @@ struct HomeScreenBuilderTests {
     }
 
     @Test func consistencyRowShowsTheUsualTimes() {
-        let baselines = Baselines(sleepDuration: nil, bedtime: Baseline(value: 665, nights: 14), wakeTime: Baseline(value: 1142, nights: 14), hrv: nil, restingHeartRate: nil)
+        let baselines = Baselines(
+            sleepDuration: nil, bedtime: Baseline(value: 665, nights: 14), wakeTime: Baseline(value: 1142, nights: 14), hrv: nil, restingHeartRate: nil)
         let factor = RecoveryFactor(kind: .sleepConsistency, score: 100, weight: 1, value: 0.2, baseline: nil, delta: 0)
-        let result = RecoveryResult(night: lastNightKey, score: 100, factors: [factor], confidence: .low, baselineNights: 14,
-                                    modelVersion: "recovery-v1", baselines: baselines)
+        let result = RecoveryResult(
+            night: lastNightKey, score: 100, factors: [factor], confidence: .low, baselineNights: 14,
+            modelVersion: "recovery-v1", baselines: baselines)
         let row = HomeScreenBuilder.detailRow(factor, result: result, needMinutes: 480, format: HomeFormat(calendar: calendar, locale: locale))
         #expect(plain(row.baseline) == "usual 11:05 PM – 7:02 AM")
         #expect(row.sentence == "Right on your usual bedtime and wake time.")
@@ -372,9 +404,11 @@ struct HomeSnapshotAdditionsTests {
     private let now = Fixture.date(2026, 9, 24, 10)
 
     @Test func weekAverageUsesOnlyNightsWithData() {
-        let nights = [NightDuration(night: SleepNightKey(year: 2026, month: 9, day: 22), asleepMinutes: 420),
-                      NightDuration(night: SleepNightKey(year: 2026, month: 9, day: 23), asleepMinutes: nil),
-                      NightDuration(night: SleepNightKey(year: 2026, month: 9, day: 24), asleepMinutes: 480)]
+        let nights = [
+            NightDuration(night: SleepNightKey(year: 2026, month: 9, day: 22), asleepMinutes: 420),
+            NightDuration(night: SleepNightKey(year: 2026, month: 9, day: 23), asleepMinutes: nil),
+            NightDuration(night: SleepNightKey(year: 2026, month: 9, day: 24), asleepMinutes: 480),
+        ]
         #expect(HomeSnapshotBuilder.averageMinutes(nights) == 450)
         #expect(HomeSnapshotBuilder.averageMinutes([NightDuration(night: SleepNightKey(year: 2026, month: 9, day: 23), asleepMinutes: nil)]) == nil)
     }
@@ -382,8 +416,9 @@ struct HomeSnapshotAdditionsTests {
     @Test func snapshotKeepsTheNewestSampleAndLatestSleep() {
         let samples = Fixture.plainNight(september: 21)
         let heartRate = [HeartRateSample(date: Fixture.date(2026, 9, 24, 9, 30), bpm: 70, sourceName: "Watch")]
-        let snapshot = HomeSnapshotBuilder.build(HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: heartRate),
-                                                 profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
+        let snapshot = HomeSnapshotBuilder.build(
+            HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: heartRate),
+            profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
         #expect(snapshot.newestSample == Fixture.date(2026, 9, 24, 9, 30))
         #expect(snapshot.latestSleep?.night == SleepNightKey(year: 2026, month: 9, day: 21))
         #expect(snapshot.lastNight == nil)
@@ -433,14 +468,17 @@ struct HomeViewModelIntroTests {
         return UserDefaults(suiteName: name)!
     }
 
-    private func viewModel(scenario: MockScenario = .full, at date: Date, defaults: UserDefaults, reduceMotion: Bool = false,
-                           connect: @escaping () async -> Void = {},
-                           sleep: @escaping @Sendable (Double) async -> Void = held) -> HomeViewModel {
+    private func viewModel(
+        scenario: MockScenario = .full, at date: Date, defaults: UserDefaults, reduceMotion: Bool = false,
+        connect: @escaping () async -> Void = {},
+        sleep: @escaping @Sendable (Double) async -> Void = held
+    ) -> HomeViewModel {
         let provider = MockHealthKitProvider(scenario: scenario, referenceDate: date, calendar: Fixture.calendar(), startAuthorized: true)
         let repository = HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { date })
-        return HomeViewModel(repository: repository, profile: { UserProfileSnapshot() }, connectHealth: connect,
-                             introGate: HomeIntroGate(defaults: defaults), reduceMotion: { reduceMotion },
-                             clock: { date }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"), sleep: sleep)
+        return HomeViewModel(
+            repository: repository, profile: { UserProfileSnapshot() }, connectHealth: connect,
+            introGate: HomeIntroGate(defaults: defaults), reduceMotion: { reduceMotion },
+            clock: { date }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"), sleep: sleep)
     }
 
     @Test func theRevealPlaysOncePerDay() async {
@@ -535,9 +573,10 @@ struct HomeViewModelIntroTests {
         let store = defaults()
         let provider = MockHealthKitProvider(scenario: .full, referenceDate: Fixture.date(2026, 9, 24, 10), calendar: Fixture.calendar(), startAuthorized: true)
         let evening = Fixture.date(2026, 9, 24, 10)
-        let model = HomeViewModel(repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { evening }),
-                                  profile: { UserProfileSnapshot() }, introGate: HomeIntroGate(defaults: store), reduceMotion: { false },
-                                  clock: { evening }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"), modeOverride: .evening)
+        let model = HomeViewModel(
+            repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { evening }),
+            profile: { UserProfileSnapshot() }, introGate: HomeIntroGate(defaults: store), reduceMotion: { false },
+            clock: { evening }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"), modeOverride: .evening)
         await model.refresh()
         #expect(model.reveal == .none)
         // The morph flips Home to day in place: no reveal over it.

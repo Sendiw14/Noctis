@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import DesignSystem
 @testable import HealthProviding
 @testable import HomeFeature
@@ -79,7 +80,9 @@ struct RecoveryFactorContentTests {
         #expect(RecoveryScreenBuilder.axisText(.hrv, 50, format: format) == "50")
         #expect(RecoveryScreenBuilder.axisText(.sleepConsistency, 660, format: format) == format.hour(minutesSinceMidnight: 23 * 60))
         #expect(RecoveryScreenBuilder.rangeMetric(HomeFormat.durationMetric(350), HomeFormat.durationMetric(500)).plain == "5h 50m – 8h 20m")
-        #expect(RecoveryScreenBuilder.rangeMetric(HomeFormat.durationMetric(350), HomeFormat.durationMetric(500)).spoken == "5 hours 50 minutes to 8 hours 20 minutes")
+        #expect(
+            RecoveryScreenBuilder.rangeMetric(HomeFormat.durationMetric(350), HomeFormat.durationMetric(500)).spoken
+                == "5 hours 50 minutes to 8 hours 20 minutes")
     }
 
     @Test func todayBaselineRangeAndTheFactorsPointsAreTheEnginesNumbers() async throws {

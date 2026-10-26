@@ -237,7 +237,8 @@ public final class SoundRenderer: @unchecked Sendable {
             if st.pointee.faderStep != 0 {
                 st.pointee.fader += st.pointee.faderStep
                 if (st.pointee.faderStep > 0 && st.pointee.fader >= st.pointee.faderTarget)
-                    || (st.pointee.faderStep < 0 && st.pointee.fader <= st.pointee.faderTarget) {
+                    || (st.pointee.faderStep < 0 && st.pointee.fader <= st.pointee.faderTarget)
+                {
                     st.pointee.fader = st.pointee.faderTarget
                     st.pointee.faderStep = 0
                 }

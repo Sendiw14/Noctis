@@ -36,7 +36,8 @@ public enum SleepHighlightsEngine {
 
         // Longest night: strictly more asleep than every other night in the window.
         if window.count >= minimumWindowNights,
-           window.allSatisfy({ $0.night == night || $0.asleepMinutes < tonight.asleepMinutes }) {
+            window.allSatisfy({ $0.night == night || $0.asleepMinutes < tonight.asleepMinutes })
+        {
             result.append(.longestNight)
         }
 

@@ -192,7 +192,6 @@ private struct ProfileSleepCard: View {
     }
 }
 
-
 /// Sign in with Apple, optional and local (APP_RULES.md R69): signed out, one button; signed in, a line and "Sign out". Nothing in the app is different
 /// either way.
 private struct ProfileAccountCard: View {

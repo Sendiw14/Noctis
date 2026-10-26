@@ -69,7 +69,9 @@ struct PersistedFormatTests {
         try found.bytes(from: good, versionKey: "version").write(to: store.fileURL)
         let loaded = store.load()
         if found == .empty || found == .garbage || found == .wrongShape || found == .anotherVersion { #expect(loaded == nil, Comment(rawValue: "\(found)")) }
-        #expect(found == .empty || found == .garbage || found == .wrongShape || found == .anotherVersion ? !store.isPlaying() : true, "an unreadable status is never 'on'")
+        #expect(
+            found == .empty || found == .garbage || found == .wrongShape || found == .anotherVersion ? !store.isPlaying() : true,
+            "an unreadable status is never 'on'")
         #expect(store.save(state) && store.load() != nil)
     }
 

@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Testing
+
 @testable import DesignSystem
 @testable import HealthProviding
 @testable import HomeFeature
@@ -181,13 +182,16 @@ struct MessyNightTests {
     @Test func theRevealDrawsLeftToRightBehindItsHead() async throws {
         let chart = try await chart()
         var renders: [Data] = []
-        for (name, drawn, details) in [("reveal-25", 0.25, 0.0), ("reveal-50", 0.5, 0.0), ("reveal-80", 0.8, 0.0), ("reveal-96", 0.96, 0.0), ("reveal-done", 1.0, 1.0)] {
-            let renderer = ImageRenderer(content: ZStack {
-                NoctisAppColor.nightPanel
-                NightChartView(chart: chart, drawn: drawn, details: details).padding(20)
-            }
-            .frame(width: 362, height: 260)
-            .environment(\.colorScheme, .light))
+        for (name, drawn, details) in [
+            ("reveal-25", 0.25, 0.0), ("reveal-50", 0.5, 0.0), ("reveal-80", 0.8, 0.0), ("reveal-96", 0.96, 0.0), ("reveal-done", 1.0, 1.0),
+        ] {
+            let renderer = ImageRenderer(
+                content: ZStack {
+                    NoctisAppColor.nightPanel
+                    NightChartView(chart: chart, drawn: drawn, details: details).padding(20)
+                }
+                .frame(width: 362, height: 260)
+                .environment(\.colorScheme, .light))
             renderer.scale = 3
             let image = try #require(renderer.uiImage)
             let data = try #require(image.pngData())
@@ -207,17 +211,18 @@ struct MessyNightTests {
         let chart = try await chart()
         var renders: [Data] = []
         for (name, position) in [("pill-ax3-left", 0.02), ("pill-ax3-middle", 0.5), ("pill-ax3-right", 0.98)] {
-            let renderer = ImageRenderer(content: ZStack {
-                NoctisAppColor.nightPanel
-                NightChartView(
-                    chart: chart, focusLane: .core, focusActive: true,
-                    pillText: "12:14 AM · Core · 35 min · 59 bpm", pillPosition: position
-                )
-                .padding(EdgeInsets(top: 120, leading: 20, bottom: 20, trailing: 20))
-            }
-            .frame(width: 362, height: 640)
-            .environment(\.dynamicTypeSize, .accessibility3)
-            .environment(\.colorScheme, .light))
+            let renderer = ImageRenderer(
+                content: ZStack {
+                    NoctisAppColor.nightPanel
+                    NightChartView(
+                        chart: chart, focusLane: .core, focusActive: true,
+                        pillText: "12:14 AM · Core · 35 min · 59 bpm", pillPosition: position
+                    )
+                    .padding(EdgeInsets(top: 120, leading: 20, bottom: 20, trailing: 20))
+                }
+                .frame(width: 362, height: 640)
+                .environment(\.dynamicTypeSize, .accessibility3)
+                .environment(\.colorScheme, .light))
             renderer.scale = 3
             let data = try #require(renderer.uiImage?.pngData())
             renders.append(data)

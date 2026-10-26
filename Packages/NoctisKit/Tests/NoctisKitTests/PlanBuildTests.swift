@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
+
 @testable import HealthProviding
 @testable import NoctisCore
 
@@ -67,10 +68,10 @@ struct PlanBuildTests {
         let samples = [
             block(at(20, 23), hours: 7.5),
             block(at(14, 22, 30), hours: 8),
-            block(at(9, 1, 15), hours: 6.5), // after midnight: night of day 10
-            block(at(5, 22), hours: 3.5), // split night, part 1
-            block(at(4, 3), hours: 4), // split night, part 2 (90-minute gap)
-            block(at(3, 14), hours: 40.0 / 60), // afternoon nap only
+            block(at(9, 1, 15), hours: 6.5),  // after midnight: night of day 10
+            block(at(5, 22), hours: 3.5),  // split night, part 1
+            block(at(4, 3), hours: 4),  // split night, part 2 (90-minute gap)
+            block(at(3, 14), hours: 40.0 / 60),  // afternoon nap only
             block(at(1, 23), hours: 8),
         ]
         let model = try makeModel(provider: StubSleepProvider(samples: samples))
@@ -92,15 +93,16 @@ struct PlanBuildTests {
         var samples: [RawSleepSample] = []
         for eveningsBefore in 1...35 {
             let evening = try #require(calendar.date(byAdding: .day, value: -eveningsBefore, to: sep24))
-            let isEarlyNight = eveningsBefore == 31 // Aug 24
+            let isEarlyNight = eveningsBefore == 31  // Aug 24
             let bedtime = try #require(calendar.date(bySettingHour: isEarlyNight ? 20 : 23, minute: 0, second: 0, of: evening))
-            samples.append(RawSleepSample(
-                start: bedtime,
-                end: bedtime.addingTimeInterval(isEarlyNight ? 7 * 3600 : 8 * 3600),
-                stage: .core,
-                sourceName: "Stub",
-                sourceBundleID: "stub"
-            ))
+            samples.append(
+                RawSleepSample(
+                    start: bedtime,
+                    end: bedtime.addingTimeInterval(isEarlyNight ? 7 * 3600 : 8 * 3600),
+                    stage: .core,
+                    sourceName: "Stub",
+                    sourceBundleID: "stub"
+                ))
         }
         let model = try makeModel(provider: StubSleepProvider(samples: samples))
         let countAt0227 = try await model.fetchRecentNightCount(asOf: at0227)

@@ -64,7 +64,10 @@ struct SampleNightScreen: View {
     private func runEntranceIfNeeded() {
         guard !entranceStarted else { return }
         entranceStarted = true
-        guard !reduceMotion else { entranceFinished = true; return }
+        guard !reduceMotion else {
+            entranceFinished = true
+            return
+        }
         entranceStartDate = Date()
         animateEntranceFrame()
     }

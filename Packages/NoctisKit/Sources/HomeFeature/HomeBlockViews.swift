@@ -233,7 +233,9 @@ struct NightStageTotalsView: View {
     @ViewBuilder
     private func stat(_ total: NightLaneTotal) -> some View {
         if let onTap {
-            Button { onTap(total.lane) } label: {
+            Button {
+                onTap(total.lane)
+            } label: {
                 content(total)
                     .frame(minHeight: 44, alignment: .leading)
                     .contentShape(Rectangle())
@@ -572,7 +574,8 @@ private struct InsightSwipeActions: ViewModifier {
                     .tint(NoctisAppColor.ink2)
                 Button("Not useful", systemImage: "hand.thumbsdown", action: dismiss)
                     .tint(NoctisAppColor.ink)
-            } onPresentationChanged: { _ in }
+            } onPresentationChanged: { _ in
+            }
         } else {
             content
         }
@@ -714,7 +717,11 @@ struct WeekCardView: View {
         // for the two outer ones. A tap on the chart picks a night rather
         // than opening Sleep; a sideways drag scrubs; an up-and-down drag
         // is the page's own scroll.
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { tapWidth = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.width
+        } action: {
+            tapWidth = $0
+        }
         .columnScrub(count: content.bars.count, chartWidth: barsWidth, outset: Self.tapOutset, selected: $selected)
     }
 
@@ -868,7 +875,6 @@ nonisolated struct DashedLine: Shape {
     }
 }
 
-
 // MARK: - Review cards
 
 /// "Your weekly review": the dates, an icon tile in the review's color and a chevron, or a lock for what Premium holds. No badge, no count, no urgency, and it goes by
@@ -886,7 +892,8 @@ struct ReviewCardView: View {
             NoctisAppCard {
                 HStack(spacing: NoctisSpacing.sm) {
                     NoctisIconTile(
-                        systemImage: "calendar", fill: card.kind == .weekly ? NoctisAppColor.blockLavender : NoctisAppColor.blockSage, foreground: NoctisAppColor.blockInk, size: 40
+                        systemImage: "calendar", fill: card.kind == .weekly ? NoctisAppColor.blockLavender : NoctisAppColor.blockSage,
+                        foreground: NoctisAppColor.blockInk, size: 40
                     )
                     VStack(alignment: .leading, spacing: 2) {
                         Text(card.title)

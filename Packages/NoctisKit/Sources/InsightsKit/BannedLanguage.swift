@@ -12,10 +12,11 @@ public enum BannedLanguage {
 
     /// What Coach never says: everything above, and the language of medicine,
     /// certainty and blame. "cause" also covers "caused" and "because".
-    public static let coach = insights + [
-        "disorder", "depress", "anxiety", "treatment", "medication", "prescri", "cure", "you have", "healthy", "unhealthy",
-        "completely recovered", "definitely", "guarantee", "caused",
-    ]
+    public static let coach =
+        insights + [
+            "disorder", "depress", "anxiety", "treatment", "medication", "prescri", "cure", "you have", "healthy", "unhealthy",
+            "completely recovered", "definitely", "guarantee", "caused",
+        ]
 
     /// The terms of `list` that `text` contains, in list order.
     public static func hits(in text: String, of list: [String]) -> [String] {

@@ -1,4 +1,5 @@
 import SwiftUI
+
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -15,10 +16,11 @@ public enum NoctisColor {
         // The Watch app is dark only and has no dynamic UIColor: it takes the dark value.
         Color(red: dark.0, green: dark.1, blue: dark.2)
         #elseif canImport(UIKit)
-        Color(uiColor: UIColor { traits in
-            let (r, g, b) = traits.userInterfaceStyle == .dark ? dark : light
-            return UIColor(red: r, green: g, blue: b, alpha: 1)
-        })
+        Color(
+            uiColor: UIColor { traits in
+                let (r, g, b) = traits.userInterfaceStyle == .dark ? dark : light
+                return UIColor(red: r, green: g, blue: b, alpha: 1)
+            })
         #else
         Color(red: light.0, green: light.1, blue: light.2)
         #endif

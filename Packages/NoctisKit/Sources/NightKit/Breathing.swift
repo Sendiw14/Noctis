@@ -1,9 +1,8 @@
 import BreathingKit
-import Foundation
-
 // What the haptics do in each breathing phase on the iPhone (APP_RULES.md R33): the patterns and the schedule are in `BreathingKit` (the Apple Watch's
 // breathing uses them too), re-exported here so every iPhone module sees them as it always did.
 @_exported import BreathingKit
+import Foundation
 
 /// What the haptics do through one phase: a gentle swell on an inhale, a single tick on a hold, a
 /// fade on an exhale. Plain numbers, so a test can check them; the Core Haptics side only plays them.

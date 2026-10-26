@@ -24,13 +24,13 @@ public nonisolated enum WidgetLink: String, Sendable, CaseIterable, Equatable {
     /// credentials. Anything else is nil.
     public init?(url: URL) {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              components.scheme?.lowercased() == Self.scheme,
-              // The host as written, not as decoded: "%72ecovery" is not "recovery".
-              let host = components.percentEncodedHost?.lowercased(),
-              components.user == nil, components.password == nil, components.port == nil,
-              components.query == nil, components.fragment == nil,
-              components.percentEncodedPath.isEmpty || components.percentEncodedPath == "/",
-              let link = WidgetLink(rawValue: host)
+            components.scheme?.lowercased() == Self.scheme,
+            // The host as written, not as decoded: "%72ecovery" is not "recovery".
+            let host = components.percentEncodedHost?.lowercased(),
+            components.user == nil, components.password == nil, components.port == nil,
+            components.query == nil, components.fragment == nil,
+            components.percentEncodedPath.isEmpty || components.percentEncodedPath == "/",
+            let link = WidgetLink(rawValue: host)
         else { return nil }
         self = link
     }
@@ -61,10 +61,10 @@ public nonisolated struct PremiumLink: Equatable, Sendable {
 
     public init?(url: URL) {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              components.scheme?.lowercased() == WidgetLink.scheme,
-              components.percentEncodedHost?.lowercased() == Self.host,
-              components.user == nil, components.password == nil, components.port == nil, components.fragment == nil,
-              components.percentEncodedPath.isEmpty || components.percentEncodedPath == "/"
+            components.scheme?.lowercased() == WidgetLink.scheme,
+            components.percentEncodedHost?.lowercased() == Self.host,
+            components.user == nil, components.password == nil, components.port == nil, components.fragment == nil,
+            components.percentEncodedPath.isEmpty || components.percentEncodedPath == "/"
         else { return nil }
         // No query is the general context; the only query is exactly `context=<a whitelisted name>`, as written.
         guard let query = components.percentEncodedQuery else {
@@ -73,7 +73,7 @@ public nonisolated struct PremiumLink: Equatable, Sendable {
         }
         let pair = query.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
         guard pair.count == 2, pair[0] == "context",
-              let context = Self.allowedContexts.first(where: { $0.rawValue == pair[1] }), context != .general
+            let context = Self.allowedContexts.first(where: { $0.rawValue == pair[1] }), context != .general
         else { return nil }
         self.init(context: context)
     }

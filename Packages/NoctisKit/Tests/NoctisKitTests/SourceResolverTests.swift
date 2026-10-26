@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import HealthProviding
 
 struct SourceResolverTests {
@@ -59,7 +60,8 @@ struct SourceResolverTests {
 
     @Test func exactDuplicateSleepSamplesAreRemoved() {
         let sample = sleepSample(start: 0, end: 3600, source: "Watch", bundleID: "com.apple.health")
-        let duplicate = RawSleepSample(start: sample.start, end: sample.end, stage: sample.stage, sourceName: sample.sourceName, sourceBundleID: sample.sourceBundleID)
+        let duplicate = RawSleepSample(
+            start: sample.start, end: sample.end, stage: sample.stage, sourceName: sample.sourceName, sourceBundleID: sample.sourceBundleID)
         let resolved = DefaultSourceResolver().resolveSleepSamples([sample, duplicate])
         #expect(resolved.count == 1)
     }

@@ -12,7 +12,9 @@ extension HomeSnapshot {
         case .scored(let result)?:
             lines.append("recovery=\(result.score) confidence=\(result.confidence) baselineNights=\(result.baselineNights) model=\(result.modelVersion)")
             for factor in result.factors {
-                lines.append("  \(factor.kind.rawValue): score=\(factor.score) weight=\(String(format: "%.3f", factor.weight)) value=\(String(format: "%.1f", factor.value)) delta=\(factor.delta.map { String(format: "%+.1f", $0) } ?? "nil")")
+                lines.append(
+                    "  \(factor.kind.rawValue): score=\(factor.score) weight=\(String(format: "%.3f", factor.weight)) value=\(String(format: "%.1f", factor.value)) delta=\(factor.delta.map { String(format: "%+.1f", $0) } ?? "nil")"
+                )
             }
         case let other?:
             lines.append("recovery=\(other)")
@@ -21,7 +23,9 @@ extension HomeSnapshot {
         }
         if let lastNight {
             let totals = lastNight.totals
-            lines.append("lastNight=\(lastNight.night) asleep=\(Int(totals.asleep / 60))m inBed=\(Int(totals.inBed / 60))m deep=\(Int(totals.deep / 60))m core=\(Int(totals.core / 60))m rem=\(Int(totals.rem / 60))m awake=\(Int(totals.awake / 60))m awakenings=\(lastNight.awakenings) efficiency=\(lastNight.efficiency.map { String(format: "%.2f", $0) } ?? "nil") coverage=\(String(format: "%.2f", lastNight.completeness.coverage))")
+            lines.append(
+                "lastNight=\(lastNight.night) asleep=\(Int(totals.asleep / 60))m inBed=\(Int(totals.inBed / 60))m deep=\(Int(totals.deep / 60))m core=\(Int(totals.core / 60))m rem=\(Int(totals.rem / 60))m awake=\(Int(totals.awake / 60))m awakenings=\(lastNight.awakenings) efficiency=\(lastNight.efficiency.map { String(format: "%.2f", $0) } ?? "nil") coverage=\(String(format: "%.2f", lastNight.completeness.coverage))"
+            )
         } else {
             lines.append("lastNight=nil")
         }

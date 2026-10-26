@@ -42,12 +42,13 @@ public final class MockAlarmBackend: AlarmBackend, Sendable {
 
     public init(mode: Mode = .authorized) {
         self.mode = mode
-        let start: AlarmAuthorization = switch mode {
-        case .authorized, .failing, .limitReached: .authorized
-        case .notDetermined, .willDeny: .notDetermined
-        case .denied: .denied
-        case .unavailable: .unavailable
-        }
+        let start: AlarmAuthorization =
+            switch mode {
+            case .authorized, .failing, .limitReached: .authorized
+            case .notDetermined, .willDeny: .notDetermined
+            case .denied: .denied
+            case .unavailable: .unavailable
+            }
         state = OSAllocatedUnfairLock(initialState: State(authorization: start))
     }
 
@@ -158,7 +159,9 @@ public final class MockAlarmBackend: AlarmBackend, Sendable {
     }
 
     private func publishAlarms() {
-        let (alarms, continuations) = state.withLock { ($0.alarms.map { BackendAlarm(id: $0.key, state: $0.value.state) }, Array($0.alarmContinuations.values)) }
+        let (alarms, continuations) = state.withLock {
+            ($0.alarms.map { BackendAlarm(id: $0.key, state: $0.value.state) }, Array($0.alarmContinuations.values))
+        }
         for continuation in continuations { continuation.yield(alarms) }
     }
 

@@ -58,14 +58,17 @@ struct WidgetGateDecisionTests {
         let states: [WidgetDataState] = [.full, .sleepOnly, .learning(nightsSoFar: 3), .empty, .noPermission, .stale(hours: 14), .gap]
         for state in states {
             for surface in WidgetSurface.allCases {
-                #expect(WidgetGate.isLocked(GateFixture.entry(.free, state: state), in: surface) == surface.isLocked(in: .free), Comment(rawValue: "\(state) \(surface)"))
+                #expect(
+                    WidgetGate.isLocked(GateFixture.entry(.free, state: state), in: surface) == surface.isLocked(in: .free),
+                    Comment(rawValue: "\(state) \(surface)"))
                 #expect(!WidgetGate.isLocked(GateFixture.entry(.premium, state: state), in: surface))
             }
         }
     }
 
     @Test func theGalleryPreviewKeepsTheUnlockedDesign() {
-        let preview = WidgetTimelineBuilder.previewEntry(WidgetSamples.snapshot(.full, now: GateFixture.morning, calendar: GateFixture.calendar), at: GateFixture.morning, calendar: GateFixture.calendar)
+        let preview = WidgetTimelineBuilder.previewEntry(
+            WidgetSamples.snapshot(.full, now: GateFixture.morning, calendar: GateFixture.calendar), at: GateFixture.morning, calendar: GateFixture.calendar)
         #expect(preview.isPreview && preview.snapshot?.tier == .premium, "a sample is the unlocked design, whatever the tier")
         #expect(WidgetSamples.snapshot(.full, now: GateFixture.morning, calendar: GateFixture.calendar, tier: .free).tier == .free)
         for surface in WidgetSurface.allCases {
@@ -99,7 +102,9 @@ struct WidgetLockedContentTests {
         #expect(WidgetLockedContent(.lockInline).line == nil, "one line of text has room for the title alone")
         for surface in lockedSurfaces {
             let content = WidgetLockedContent(surface)
-            #expect(content.accessibilityLabel.hasPrefix("NOCTIS Premium") && content.accessibilityLabel.hasSuffix("Opens NOCTIS."), Comment(rawValue: content.accessibilityLabel))
+            #expect(
+                content.accessibilityLabel.hasPrefix("NOCTIS Premium") && content.accessibilityLabel.hasSuffix("Opens NOCTIS."),
+                Comment(rawValue: content.accessibilityLabel))
         }
     }
 
@@ -128,7 +133,9 @@ struct WidgetLockedContentTests {
     }
 
     @Test func theLockedViewDrawsOnlyTheContent() throws {
-        let views = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetViews.swift"), encoding: .utf8))
+        let views = RawDefaultsTests.code(
+            try String(
+                contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetViews.swift"), encoding: .utf8))
         let start = try #require(views.range(of: "struct WidgetLockedView: View {"))
         let end = try #require(views.range(of: "struct WidgetMessageView: View {", range: start.upperBound..<views.endIndex))
         let locked = String(views[start.lowerBound..<end.lowerBound])
@@ -141,25 +148,35 @@ struct WidgetLockedContentTests {
     }
 
     @Test func theExtensionDecidesNothingItselfAndTheLockedTextIs12ptOrMore() throws {
-        let extensionCode = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisWidgets.swift"), encoding: .utf8))
+        let extensionCode = RawDefaultsTests.code(
+            try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisWidgets.swift"), encoding: .utf8))
         #expect(extensionCode.contains("WidgetGate.entries(entries, in: $0)"))
         #expect(!extensionCode.contains("StoreKit") && !extensionCode.contains(".tier"), "the extension never reads or asks for the plan: the kit does")
-        let views = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetViews.swift"), encoding: .utf8)
+        let views = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetViews.swift"), encoding: .utf8)
         let locked = try #require(views.range(of: "struct WidgetLockedView: View {"))
-        for size in views[locked.lowerBound...].prefix(2600).components(separatedBy: "noctisFont(").dropFirst().compactMap({ Int($0.prefix { $0.isNumber }) }) { #expect(size >= 12) }
+        for size in views[locked.lowerBound...].prefix(2600).components(separatedBy: "noctisFont(").dropFirst().compactMap({ Int($0.prefix { $0.isNumber }) }) {
+            #expect(size >= 12)
+        }
     }
 }
 
 struct PremiumLinkTests {
     private let hostile = [
         "noctis://premium?context=evil", "noctis://premium?context=widgets&context=watch", "noctis://premium?context=widgets&x=1", "noctis://premium?x=widgets",
-        "noctis://premium?context=", "noctis://premium?context", "noctis://premium?=widgets", "noctis://premium?context=%77idgets", "noctis://premium?context=Widgets",
-        "noctis://premium?context=widgets%20", "noctis://premium?context=widgets%00", "noctis://premium?context=whatPremiumIncludes", "noctis://premium?context=recovery30D",
-        "noctis://premium?context=coachQuestions;drop", "noctis://premium?context=general", "noctis://premium?context=widgets&", "noctis://premium?&context=widgets",
+        "noctis://premium?context=", "noctis://premium?context", "noctis://premium?=widgets", "noctis://premium?context=%77idgets",
+        "noctis://premium?context=Widgets",
+        "noctis://premium?context=widgets%20", "noctis://premium?context=widgets%00", "noctis://premium?context=whatPremiumIncludes",
+        "noctis://premium?context=recovery30D",
+        "noctis://premium?context=coachQuestions;drop", "noctis://premium?context=general", "noctis://premium?context=widgets&",
+        "noctis://premium?&context=widgets",
         "noctis://premium?context=widgets=1", "noctis://premium?context=https://evil.example", "noctis://premium?" + String(repeating: "a", count: 5000),
-        "noctis://premium/extra", "noctis://premium/../recovery", "noctis://premium#widgets", "noctis://premium?context=widgets#x", "noctis://user@premium", "noctis://user:pw@premium",
-        "noctis://premium:8080", "noctis:premium", "noctis:///premium", "noctis://premium.evil.example", "noctis://PREMIUM.evil.example", "noctis://%70remium", "noctis://premium%20",
-        "noctis://pr\u{0435}mium", "noctis://premiums", "noctis://premium//", "https://premium", "http://noctis/premium", "noctisx://premium", "xnoctis://premium",
+        "noctis://premium/extra", "noctis://premium/../recovery", "noctis://premium#widgets", "noctis://premium?context=widgets#x", "noctis://user@premium",
+        "noctis://user:pw@premium",
+        "noctis://premium:8080", "noctis:premium", "noctis:///premium", "noctis://premium.evil.example", "noctis://PREMIUM.evil.example", "noctis://%70remium",
+        "noctis://premium%20",
+        "noctis://pr\u{0435}mium", "noctis://premiums", "noctis://premium//", "https://premium", "http://noctis/premium", "noctisx://premium",
+        "xnoctis://premium",
         "noctis://paywall", "noctis://upgrade", "noctis://subscribe", "noctis://purchase", "noctis://buy",
     ]
 

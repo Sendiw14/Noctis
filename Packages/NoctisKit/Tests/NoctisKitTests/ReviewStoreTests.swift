@@ -39,10 +39,14 @@ nonisolated enum ReviewTestRecords {
         return StoredReview(record: record(period), firstGeneratedAt: Date(timeIntervalSince1970: 1_790_000_000))
     }
 
-    static func record(_ period: ReviewPeriod, nights: Int = 7, generatedAt: Date = Date(timeIntervalSince1970: 1_790_000_000), version: Int = ReviewRecord.currentVersion, firstMorning: SleepNightKey? = nil) -> ReviewRecord {
+    static func record(
+        _ period: ReviewPeriod, nights: Int = 7, generatedAt: Date = Date(timeIntervalSince1970: 1_790_000_000), version: Int = ReviewRecord.currentVersion,
+        firstMorning: SleepNightKey? = nil
+    ) -> ReviewRecord {
         ReviewRecord(
             id: period.id, firstMorning: firstMorning ?? period.firstMorning, lastMorning: period.lastMorning, generatedAt: generatedAt, nightsRecorded: nights,
-            nightsInPeriod: period.morningCount, hasComparison: false, sleep: ReviewSleep(averageMinutes: 450, nightsReachedNeed: 3, needMinutes: 480, deltaMinutes: nil),
+            nightsInPeriod: period.morningCount, hasComparison: false,
+            sleep: ReviewSleep(averageMinutes: 450, nightsReachedNeed: 3, needMinutes: 480, deltaMinutes: nil),
             consistency: ReviewConsistency(bedtimeSD: 20, wakeSD: 15, bedtimeSDDelta: nil, wakeSDDelta: nil), recovery: nil,
             heart: ReviewHeart(hrvAverage: nil, hrvDelta: nil, restingHeartRateAverage: nil, restingHeartRateDelta: nil),
             timing: ReviewTiming(medianBedtimeMinutes: 660, medianWakeMinutes: 1140, bedtimeShift: nil, wakeShift: nil), nights: [],
@@ -196,7 +200,10 @@ struct ReviewStoreTests {
         let store = ReviewStore()
         let calls = Calls()
         let outcome = await ask(store, calls: calls) { .record(record(weekPeriod, nights: 6)) }
-        guard case .review(let review) = outcome else { Issue.record("a review"); return }
+        guard case .review(let review) = outcome else {
+            Issue.record("a review")
+            return
+        }
         #expect(review.state == .new && review.firstGeneratedAt == now && review.record.nightsRecorded == 6 && calls.value == 1)
         let kept = await store.stored(weekPeriod.id)
         #expect(kept == review)
@@ -210,7 +217,10 @@ struct ReviewStoreTests {
         #expect(outcome == .notEnoughNights(have: 4, need: 5) && library.all.isEmpty)
         // A night arrives: the next request makes it.
         let later = await ask(store, at: now.addingTimeInterval(3600), calls: calls) { .record(record(weekPeriod, nights: 5)) }
-        guard case .review(let review) = later else { Issue.record("it fills in"); return }
+        guard case .review(let review) = later else {
+            Issue.record("it fills in")
+            return
+        }
         #expect(review.record.nightsRecorded == 5 && calls.value == 2)
     }
 
@@ -230,7 +240,10 @@ struct ReviewStoreTests {
         // An hour later, a late night has arrived.
         let hour = now.addingTimeInterval(3600)
         let more = await ask(store, at: hour, calls: calls) { .record(record(weekPeriod, nights: 6, generatedAt: hour)) }
-        guard case .review(let replaced) = more else { Issue.record("a review"); return }
+        guard case .review(let replaced) = more else {
+            Issue.record("a review")
+            return
+        }
         #expect(replaced.record.nightsRecorded == 6 && replaced.state == .seen && replaced.firstGeneratedAt == now && calls.value == 2)
         // Two hours later, the same six nights: the kept record is untouched.
         let two = now.addingTimeInterval(7200)
@@ -244,7 +257,10 @@ struct ReviewStoreTests {
         _ = await ask(store, calls: calls) { .record(record(weekPeriod, nights: 5)) }
         let day = now.addingTimeInterval(24 * 3600)
         let outcome = await ask(store, at: day, calls: calls) { .record(record(weekPeriod, nights: 7)) }
-        guard case .review(let review) = outcome else { Issue.record("a review"); return }
+        guard case .review(let review) = outcome else {
+            Issue.record("a review")
+            return
+        }
         #expect(review.record.nightsRecorded == 5 && calls.value == 1, "what was read once stays what was read")
         _ = await ask(store, at: day.addingTimeInterval(40 * 86_400), calls: calls) { nil }
         #expect(calls.value == 1)
@@ -255,7 +271,10 @@ struct ReviewStoreTests {
         let calls = Calls()
         _ = await ask(store, calls: calls) { .record(record(weekPeriod, nights: 5)) }
         let outcome = await ask(store, at: now.addingTimeInterval(60), calls: calls) { nil }
-        guard case .review(let review) = outcome else { Issue.record("the kept one"); return }
+        guard case .review(let review) = outcome else {
+            Issue.record("the kept one")
+            return
+        }
         #expect(review.record.nightsRecorded == 5)
         let fewer = await ask(store, at: now.addingTimeInterval(120), calls: calls) { .notEnoughNights(have: 2, need: 5) }
         #expect(fewer == .review(review))
@@ -309,7 +328,10 @@ struct ReviewStoreTests {
         // And it is made again when asked for.
         let later = now.addingTimeInterval(86_400 * 3)
         let outcome = await ask(store, at: later, calls: calls) { .record(record(weekPeriod, nights: 7)) }
-        guard case .review(let review) = outcome else { Issue.record("made again"); return }
+        guard case .review(let review) = outcome else {
+            Issue.record("made again")
+            return
+        }
         #expect(review.state == .new && review.firstGeneratedAt == later)
     }
 
@@ -348,7 +370,8 @@ private func nights(_ scenario: MockScenario) async throws -> [ReviewNightInput]
     async let sleep = provider.fetchSleepSamples(from: start, to: now)
     async let hrv = provider.fetchHRVSamples(from: start, to: now)
     async let resting = provider.fetchRestingHeartRate(from: start, to: now)
-    return ReviewInputsBuilder.nights(sleep: try await sleep, hrv: try await hrv, restingHeartRate: try await resting, needMinutes: 480, now: now, timeZone: ny.timeZone)
+    return ReviewInputsBuilder.nights(
+        sleep: try await sleep, hrv: try await hrv, restingHeartRate: try await resting, needMinutes: 480, now: now, timeZone: ny.timeZone)
 }
 
 private func review(
@@ -372,7 +395,8 @@ struct ReviewScenarioTests {
     @Test func fullTriggersEveryPageOfAWeekAndOfAMonth() async throws {
         let weekResult = try await review(.full, insights: insight)
         let week = try #require(record(of: weekResult))
-        #expect(week.nightsRecorded == 7 && week.hasComparison && week.recovery != nil && week.heart.hrvAverage != nil && week.heart.restingHeartRateAverage != nil)
+        #expect(
+            week.nightsRecorded == 7 && week.hasComparison && week.recovery != nil && week.heart.hrvAverage != nil && week.heart.restingHeartRateAverage != nil)
         #expect(week.topInsightIDs == ["bedtimeShift-3fa9c2d1"] && week.monthly == nil)
         let weekKinds = Set(ReviewScreenBuilder.build(week).pages.map { $0.kind })
         #expect(weekKinds == Set(ReviewPageContent.Kind.allCases).subtracting([.records]), "every page a week has")
@@ -398,10 +422,15 @@ struct ReviewScenarioTests {
         #expect(delta < -15 && week.consistency.bedtimeSD < 10, "the week's bedtimes are tight and the week before's were scattered")
         // Something improved, by more than half the person's own variation. Recovery's model counts consistency among its factors, so recovery rises with it, and
         // whichever moved more is what the cover says.
-        guard case .change(let change) = week.biggestImprovement else { Issue.record("an improvement: \(week.biggestImprovement)"); return }
+        guard case .change(let change) = week.biggestImprovement else {
+            Issue.record("an improvement: \(week.biggestImprovement)")
+            return
+        }
         #expect(change.goodness > 0.5 && (change.metric == .bedtimeVariation || change.metric == .recovery))
         let headline = try #require(ReviewScreenBuilder.build(week).page(.cover)?.headline)
-        #expect(headline == "Compared with the week before, your bedtimes were steadier." || headline == "Compared with the week before, your recovery averaged higher.")
+        #expect(
+            headline == "Compared with the week before, your bedtimes were steadier."
+                || headline == "Compared with the week before, your recovery averaged higher.")
         // Sleep itself did not move: the story is about consistency.
         #expect(abs(try #require(week.sleep.deltaMinutes)) < 10)
     }
@@ -411,7 +440,10 @@ struct ReviewScenarioTests {
         let week = try #require(record(of: result))
         let shift = try #require(week.timing.bedtimeShift)
         #expect(shift > 55 && shift < 75)
-        guard case .gentleShiftBack = week.nextFocus else { Issue.record("a gentle shift back: \(week.nextFocus)"); return }
+        guard case .gentleShiftBack = week.nextFocus else {
+            Issue.record("a gentle shift back: \(week.nextFocus)")
+            return
+        }
         #expect(week.biggestImprovement == .steady, "nothing improved by a week going to bed later")
     }
 
@@ -460,7 +492,9 @@ struct ReviewScenarioTests {
 // MARK: - The repository
 
 struct ReviewRepositoryTests {
-    private func repository(_ scenario: MockScenario = .full, store: ReviewStore = ReviewStore(), moment: Date = now, authorized: Bool = true, fails: Bool = false) -> ReviewRepository {
+    private func repository(
+        _ scenario: MockScenario = .full, store: ReviewStore = ReviewStore(), moment: Date = now, authorized: Bool = true, fails: Bool = false
+    ) -> ReviewRepository {
         let provider = MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: ny, startAuthorized: authorized, failsQueries: fails)
         return ReviewRepository(provider: provider, store: store, insights: InsightStore(), timeZone: { nyZone }, clock: { moment })
     }
@@ -471,7 +505,10 @@ struct ReviewRepositoryTests {
         let period = await repository.latestWeekly(weekday: 1)
         #expect(period == weekPeriod)
         let outcome = await repository.review(period, profile: UserProfileSnapshot())
-        guard case .review(let review) = outcome else { Issue.record("a review: \(outcome)"); return }
+        guard case .review(let review) = outcome else {
+            Issue.record("a review: \(outcome)")
+            return
+        }
         #expect(review.state == .new && review.record.nightsRecorded == 7 && review.record.id == weekPeriod.id)
         let kept = await store.stored(weekPeriod.id)
         #expect(kept == review)
@@ -483,7 +520,10 @@ struct ReviewRepositoryTests {
 
     @Test func theRepositoryAndTheEngineAgree() async throws {
         let outcome = await repository(.improvedWeek).review(weekPeriod, profile: UserProfileSnapshot())
-        guard case .review(let kept) = outcome else { Issue.record("a review"); return }
+        guard case .review(let kept) = outcome else {
+            Issue.record("a review")
+            return
+        }
         let direct = try await review(.improvedWeek)
         #expect(direct == .record(kept.record))
     }
@@ -507,7 +547,8 @@ struct ReviewRepositoryTests {
     @Test func aTimeZoneThatMovesTheDayMovesTheLatestWeekAndNothingElse() async {
         let moment = at(2026, 9, 26, 23, 30)
         let tokyo = ReviewRepository(
-            provider: MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: ny, startAuthorized: true), store: ReviewStore(), insights: InsightStore(),
+            provider: MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: ny, startAuthorized: true), store: ReviewStore(),
+            insights: InsightStore(),
             timeZone: { tokyoZone }, clock: { moment }
         )
         // 23:30 on Saturday in New York is Sunday 12:30 in Tokyo: the review day has begun there.

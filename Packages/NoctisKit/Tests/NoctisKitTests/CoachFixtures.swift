@@ -1,5 +1,6 @@
 import Foundation
 import HealthProviding
+
 @testable import CoachKit
 @testable import HomeFeature
 @testable import InsightsKit
@@ -86,5 +87,7 @@ enum CoachFixture {
     }
 
     /// The scenarios Coach's answers are checked against.
-    static let scenarios: [MockScenario] = [.full, .sleepOnly, .learning, .gap, .recoveryDip, .earlyBird, .empty, .stale, .hrvDip, .weekendShift, .steady, .lateBedtime]
+    static let scenarios: [MockScenario] = [
+        .full, .sleepOnly, .learning, .gap, .recoveryDip, .earlyBird, .empty, .stale, .hrvDip, .weekendShift, .steady, .lateBedtime,
+    ]
 }

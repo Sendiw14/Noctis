@@ -22,7 +22,8 @@ struct WatchRootView: View {
                 RecoveryPageView(content: WatchPages.recovery(input)).tag(WatchPage.recovery)
                 SleepPageView(content: WatchPages.sleep(input)).tag(WatchPage.sleep)
                 HeartPageView(content: WatchPages.heart(input)).tag(WatchPage.heart)
-                TonightPageView(content: WatchPages.tonight(input), systemDate: model.systemDate(for:), breathe: { showsBreathing = true }).tag(WatchPage.tonight)
+                TonightPageView(content: WatchPages.tonight(input), systemDate: model.systemDate(for:), breathe: { showsBreathing = true }).tag(
+                    WatchPage.tonight)
                 SettingsPageView(
                     content: WatchPages.settings(input, version: model.versionText), isPhoneReachable: model.isPhoneReachable, askResult: askResult,
                     ask: { Task { askResult = await model.askPhone() } },

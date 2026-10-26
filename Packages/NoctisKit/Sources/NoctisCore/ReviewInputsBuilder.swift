@@ -22,7 +22,8 @@ public nonisolated enum ReviewInputsBuilder {
 
     public static func nights(history: SleepHistory, metrics: [NightMetrics], needMinutes: Double, now: Date) -> [ReviewNightInput] {
         let scores = Dictionary(
-            RecoveryHistoryEngine.scores(history: metrics, needMinutes: needMinutes, asOf: now).map { ($0.night, $0.score) }, uniquingKeysWith: { first, _ in first }
+            RecoveryHistoryEngine.scores(history: metrics, needMinutes: needMinutes, asOf: now).map { ($0.night, $0.score) },
+            uniquingKeysWith: { first, _ in first }
         )
         let sessions = Dictionary(history.nights.map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
         return metrics.filter { $0.wakeTime <= now }.map { night in

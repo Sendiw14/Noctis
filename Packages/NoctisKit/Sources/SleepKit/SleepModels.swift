@@ -33,7 +33,9 @@ public struct SleepTotals: Sendable, Equatable, Codable {
     public let rem: TimeInterval
     public let unspecified: TimeInterval
 
-    public init(asleep: TimeInterval, inBed: TimeInterval, awake: TimeInterval, core: TimeInterval, deep: TimeInterval, rem: TimeInterval, unspecified: TimeInterval) {
+    public init(
+        asleep: TimeInterval, inBed: TimeInterval, awake: TimeInterval, core: TimeInterval, deep: TimeInterval, rem: TimeInterval, unspecified: TimeInterval
+    ) {
         self.asleep = asleep
         self.inBed = inBed
         self.awake = awake

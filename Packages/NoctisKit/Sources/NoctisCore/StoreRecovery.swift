@@ -162,7 +162,8 @@ public nonisolated struct StoreRecovery: Sendable {
 
     private static func stamp(_ date: Date) -> String {
         let parts = Calendar(identifier: .gregorian).dateComponents(in: .gmt, from: date)
-        return String(format: "%04d%02d%02d-%02d%02d%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0, parts.hour ?? 0, parts.minute ?? 0, parts.second ?? 0)
+        return String(
+            format: "%04d%02d%02d-%02d%02d%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0, parts.hour ?? 0, parts.minute ?? 0, parts.second ?? 0)
     }
 }
 

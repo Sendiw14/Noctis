@@ -57,11 +57,13 @@ public final class AlarmConfigurationStore: AlarmSettingsStoring {
     }
 
     public func save(_ settings: AlarmSettings) async {
-        let record = (try? context.fetch(FetchDescriptor<AlarmConfiguration>()))?.first ?? {
-            let new = AlarmConfiguration()
-            context.insert(new)
-            return new
-        }()
+        let record =
+            (try? context.fetch(FetchDescriptor<AlarmConfiguration>()))?.first
+            ?? {
+                let new = AlarmConfiguration()
+                context.insert(new)
+                return new
+            }()
         record.apply(settings)
         try? context.save()
     }

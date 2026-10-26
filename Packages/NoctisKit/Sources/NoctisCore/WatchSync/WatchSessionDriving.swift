@@ -57,7 +57,8 @@ public nonisolated struct WatchConnectionStatus: Sendable, Equatable {
         self.lastSentAt = lastSentAt
     }
 
-    public static let unsupported = WatchConnectionStatus(isSupported: false, isPaired: false, isWatchAppInstalled: false, activation: .notActivated, isReachable: false)
+    public static let unsupported = WatchConnectionStatus(
+        isSupported: false, isPaired: false, isWatchAppInstalled: false, activation: .notActivated, isReachable: false)
 
     public var connection: Connection {
         guard isSupported else { return .notSupported }

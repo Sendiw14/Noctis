@@ -1,7 +1,7 @@
-@_exported import PremiumKit
 import DesignSystem
 import Foundation
 import Observation
+@_exported import PremiumKit
 import PremiumKit
 import SoundKit
 import SwiftUI
@@ -42,7 +42,8 @@ public final class FeatureGate {
 
     /// A gate with a fixed tier: a preview, a test, the DEBUG `-forceTier`.
     public init(
-        tier: Tier, quotaStore: CoachQuotaStore = .inMemory(), calendar: @escaping () -> Calendar = { .autoupdatingCurrent }, clock: @escaping () -> Date = { Date() }
+        tier: Tier, quotaStore: CoachQuotaStore = .inMemory(), calendar: @escaping () -> Calendar = { .autoupdatingCurrent },
+        clock: @escaping () -> Date = { Date() }
     ) {
         entitlements = nil
         fixedTier = tier

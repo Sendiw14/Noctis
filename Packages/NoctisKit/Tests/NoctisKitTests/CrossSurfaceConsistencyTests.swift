@@ -3,15 +3,15 @@ import Testing
 
 @testable import CoachKit
 @testable import DesignSystem
-@testable import InsightsKit
-@testable import ReviewKit
 @testable import HealthProviding
 @testable import HomeFeature
+@testable import InsightsKit
 @testable import NoctisCore
 @testable import NoctisWatchKit
 @testable import NoctisWidgetKit
 @testable import RecoveryFeature
 @testable import RecoveryKit
+@testable import ReviewKit
 @testable import SleepFeature
 @testable import SleepKit
 
@@ -40,7 +40,9 @@ struct SurfaceFacts: Equatable, CustomStringConvertible {
     var weekAverage: String?
     var weekAverageSpoken: String?
 
-    var description: String { "\(surface): score \(score.map(String.init) ?? "-"), delta \(delta ?? "-"), duration \(duration ?? "-"), times \(times ?? "-"), quality \(quality.map(String.init) ?? "-"), hrv \(hrv ?? "-"), rhr \(restingHeartRate ?? "-"), factors \(factorScores.sorted { $0.key < $1.key }), spoken \(spokenDuration ?? "-"), bedtime \(bedtime ?? "-"), planned \(plannedBedtime ?? "-"), week \(weekAverage ?? "-")" }
+    var description: String {
+        "\(surface): score \(score.map(String.init) ?? "-"), delta \(delta ?? "-"), duration \(duration ?? "-"), times \(times ?? "-"), quality \(quality.map(String.init) ?? "-"), hrv \(hrv ?? "-"), rhr \(restingHeartRate ?? "-"), factors \(factorScores.sorted { $0.key < $1.key }), spoken \(spokenDuration ?? "-"), bedtime \(bedtime ?? "-"), planned \(plannedBedtime ?? "-"), week \(weekAverage ?? "-")"
+    }
 }
 
 private func plain(_ text: String) -> String {
@@ -53,7 +55,9 @@ struct CrossSurfaceConsistencyTests {
     private let locale = Locale(identifier: "en_US")
     private var calendar: Calendar { Fixture.calendar() }
 
-    private nonisolated static let scenarios: [MockScenario] = [.full, .sleepOnly, .steady, .messyNight, .recoveryDip, .highs, .earlyBird, .weekendShift, .hrvDip, .lateBedtime]
+    private nonisolated static let scenarios: [MockScenario] = [
+        .full, .sleepOnly, .steady, .messyNight, .recoveryDip, .highs, .earlyBird, .weekendShift, .hrvDip, .lateBedtime,
+    ]
 
     private func provider(_ scenario: MockScenario) -> MockHealthKitProvider {
         MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: calendar, startAuthorized: true)
@@ -99,16 +103,18 @@ struct CrossSurfaceConsistencyTests {
         let sleepModel = SleepRenderModelBuilder.build(sleep, selection: selection)
         let sleepScreen = SleepScreenBuilder.build(sleep, model: sleepModel, selection: selection, now: now, calendar: calendar, locale: locale)
         if let day = sleepScreen.day {
-            all.append(SurfaceFacts(
-                surface: "sleep", duration: plain(day.duration.plain), times: plain(day.timeRange.replacingOccurrences(of: "slept ", with: "")),
-                quality: day.ring?.score
-            ))
+            all.append(
+                SurfaceFacts(
+                    surface: "sleep", duration: plain(day.duration.plain), times: plain(day.timeRange.replacingOccurrences(of: "slept ", with: "")),
+                    quality: day.ring?.score
+                ))
         }
 
         // Recovery Today.
         let recoverySelection = RecoverySelection(segment: .today)
         let recoveryModel = RecoveryRenderModelBuilder.build(recovery, selection: recoverySelection)
-        let recoveryScreen = RecoveryScreenBuilder.build(recovery, model: recoveryModel, selection: recoverySelection, now: now, calendar: calendar, locale: locale)
+        let recoveryScreen = RecoveryScreenBuilder.build(
+            recovery, model: recoveryModel, selection: recoverySelection, now: now, calendar: calendar, locale: locale)
         if let today = recoveryScreen.today {
             var recoveryFacts = SurfaceFacts(surface: "recovery", score: today.scored.score, delta: today.scored.chip.map { plain($0.text) })
             for cell in today.scored.factors { recoveryFacts.factorScores[cell.name] = cell.score }
@@ -120,7 +126,8 @@ struct CrossSurfaceConsistencyTests {
         }
 
         // Widget, Watch, Siri: all from the one snapshot Home's data makes.
-        guard let snapshot = WidgetSnapshotMaker.make(home: home, profile: profile, bedtime: nil, alarm: nil, now: now, calendar: calendar, tier: .premium) else { return all }
+        guard let snapshot = WidgetSnapshotMaker.make(home: home, profile: profile, bedtime: nil, alarm: nil, now: now, calendar: calendar, tier: .premium)
+        else { return all }
         let format = WidgetFormat(calendar: calendar, locale: locale)
         let entry = WidgetEntryModel(date: now, mode: .day, scene: .ready, snapshot: snapshot)
         let presentation = WidgetPresentationBuilder.build(entry, format: format)
@@ -142,7 +149,8 @@ struct CrossSurfaceConsistencyTests {
         let recoveryPage = WatchPages.recovery(input)
         let sleepPage = WatchPages.sleep(input)
         let heartPage = WatchPages.heart(input)
-        var watchFacts = SurfaceFacts(surface: "watch", score: recoveryPage.score, delta: recoveryPage.delta.map { plain($0.text).replacingOccurrences(of: " vs your usual", with: "") })
+        var watchFacts = SurfaceFacts(
+            surface: "watch", score: recoveryPage.score, delta: recoveryPage.delta.map { plain($0.text).replacingOccurrences(of: " vs your usual", with: "") })
         for row in recoveryPage.factors { watchFacts.factorScores[row.name] = row.score }
         watchFacts.duration = sleepPage.duration.map { plain($0.plain) }
         watchFacts.times = sleepPage.times.map(plain)
@@ -184,9 +192,14 @@ struct CrossSurfaceConsistencyTests {
         coachFacts.plannedBedtime = coach("bedtime.suggested").map { plain($0.display) }
         all.append(coachFacts)
         let template = TemplateCoachProvider(locale: locale)
-        if let draft = Optional(template.compose(intent: .recoveryChange, context: context)), let answer = CoachAnswerAssembler.assemble(draft, context: context, source: .fromYourData, locale: locale) {
+        if let draft = Optional(template.compose(intent: .recoveryChange, context: context)),
+            let answer = CoachAnswerAssembler.assemble(draft, context: context, source: .fromYourData, locale: locale)
+        {
             let words = plain([answer.summary, answer.whatChanged, answer.whatToNotice].compactMap { $0 }.joined(separator: " "))
-            if let score = homeFacts.score { coachFacts.score = score; if !words.contains("\(score)") { Issue.record("\(scenario): Coach's answer never says today's score \(score): \(words)") } }
+            if let score = homeFacts.score {
+                coachFacts.score = score
+                if !words.contains("\(score)") { Issue.record("\(scenario): Coach's answer never says today's score \(score): \(words)") }
+            }
         }
 
         // The share card Home makes for the same night.
@@ -209,7 +222,9 @@ struct CrossSurfaceConsistencyTests {
         let sleepSamples = (try? await provider(scenario).fetchSleepSamples(from: start, to: now)) ?? []
         let hrvSamples = (try? await provider(scenario).fetchHRVSamples(from: start, to: now)) ?? []
         let restingSamples = (try? await provider(scenario).fetchRestingHeartRate(from: start, to: now)) ?? []
-        let nights = ReviewInputsBuilder.nights(sleep: sleepSamples, hrv: hrvSamples, restingHeartRate: restingSamples, needMinutes: Double(profile.needMinutes), now: now, timeZone: Fixture.newYork)
+        let nights = ReviewInputsBuilder.nights(
+            sleep: sleepSamples, hrv: hrvSamples, restingHeartRate: restingSamples, needMinutes: Double(profile.needMinutes), now: now,
+            timeZone: Fixture.newYork)
         if let lastMorning = home.lastNight.map({ ReviewPeriod.morning(ofNight: $0.night) }) {
             let period = ReviewPeriod.weekly(reviewDate: lastMorning.adding(days: 1))
             if case .record(let record) = ReviewEngine.build(period: period, nights: nights, needMinutes: profile.needMinutes, now: now, calendar: calendar) {

@@ -141,12 +141,13 @@ public struct CoachContextBuilder: Sendable {
             let used = result.factorsUsed
             let missing = all.compactMap { kind -> CoachMissingFactor? in
                 guard !used.contains(kind) else { return nil }
-                let reason: CoachMissingReason = switch result.missingFactors[kind] {
-                case .unavailable?: .notProvided
-                case .notRecorded?: .notRecorded
-                case .buildingBaseline?: .needsMoreNights
-                case nil: .notRecorded
-                }
+                let reason: CoachMissingReason =
+                    switch result.missingFactors[kind] {
+                    case .unavailable?: .notProvided
+                    case .notRecorded?: .notRecorded
+                    case .buildingBaseline?: .needsMoreNights
+                    case nil: .notRecorded
+                    }
                 return CoachMissingFactor(factor: kind.rawValue, reason: reason)
             }
             return (all.filter(used.contains).map(\.rawValue), missing)
@@ -178,7 +179,8 @@ public struct CoachContextBuilder: Sendable {
 
         if let metrics {
             add("sleep.duration", "Time asleep last night", metrics.asleepMinutes, .duration, "SleepMetricsEngine")
-            let usual = result?.baselines.sleepDuration?.value
+            let usual =
+                result?.baselines.sleepDuration?.value
                 ?? BaselineEngine.baseline(window.map(\.metrics.asleepMinutes))?.value
             add("sleep.baseline", "Usual time asleep", usual, .duration, "BaselineEngine")
             add("sleep.deltaVsBaseline", "Time asleep against usual", usual.map { metrics.asleepMinutes - $0 }, .duration, "BaselineEngine", magnitude: true)
@@ -211,7 +213,9 @@ public struct CoachContextBuilder: Sendable {
         add("sleep.need", "Your sleep need", Double(profile.needMinutes), .duration, "Profile")
         add("wake.typical", "Your wake time", CoachFactFormatter.afterNoon(sinceMidnight: profile.typicalWakeMinutes), .clock, "Profile")
         let plan = s.home?.tonight ?? TonightPlan(profile: profile)
-        add("bedtime.suggested", "Bedtime that fits your sleep need", CoachFactFormatter.afterNoon(sinceMidnight: s.suggestedBedtimeMinutes ?? plan.bedtimeMinutes), .clock, "Profile")
+        add(
+            "bedtime.suggested", "Bedtime that fits your sleep need",
+            CoachFactFormatter.afterNoon(sinceMidnight: s.suggestedBedtimeMinutes ?? plan.bedtimeMinutes), .clock, "Profile")
         if let balance = s.sleep?.balance?.minutes {
             add("sleep.balance", "Sleep against your need, past week", balance, .duration, "SleepBalanceEngine", magnitude: true)
         }
@@ -279,16 +283,18 @@ public struct CoachContextBuilder: Sendable {
     /// the most confident first.
     static func chosenInsights(for intent: CoachIntent, _ snapshot: InsightsSnapshot?) -> [InsightRecord] {
         guard intent.usesData, let snapshot else { return [] }
-        let categories: Set<InsightCategory> = switch intent {
-        case .recoveryChange: [.recovery, .heart, .sleep]
-        case .sleepChange: [.sleep, .timing]
-        case .bedtimeAdvice: [.timing, .consistency]
-        case .consistencyHelp: [.consistency, .timing]
-        default: Set(InsightCategory.allCases)
-        }
+        let categories: Set<InsightCategory> =
+            switch intent {
+            case .recoveryChange: [.recovery, .heart, .sleep]
+            case .sleepChange: [.sleep, .timing]
+            case .bedtimeAdvice: [.timing, .consistency]
+            case .consistencyHelp: [.consistency, .timing]
+            default: Set(InsightCategory.allCases)
+            }
         var seen = Set<String>()
         let pool = ([snapshot.featured].compactMap { $0 } + snapshot.recent.map(\.record)).filter { seen.insert($0.id).inserted }
-        return pool
+        return
+            pool
             .filter { categories.contains($0.category) }
             .sorted { ($0.confidence, $0.relevance) > ($1.confidence, $1.relevance) }
             .prefix(CoachContext.maxInsights).map { $0 }
@@ -347,9 +353,15 @@ public struct CoachContextBuilder: Sendable {
     static func prefixes(for intent: CoachIntent) -> [String] {
         switch intent {
         case .recoveryChange:
-            ["recovery.", "hrv.", "rhr.", "sleep.duration", "sleep.deltaVsBaseline", "sleep.baseline", "sleep.quality", "bedtime.last", "bedtime.usual", "bedtime.deltaVsUsual", "insight.", "history."]
+            [
+                "recovery.", "hrv.", "rhr.", "sleep.duration", "sleep.deltaVsBaseline", "sleep.baseline", "sleep.quality", "bedtime.last", "bedtime.usual",
+                "bedtime.deltaVsUsual", "insight.", "history.",
+            ]
         case .sleepChange:
-            ["sleep.duration", "sleep.deltaVsBaseline", "sleep.baseline", "sleep.quality", "deep.", "rem.", "bedtime.last", "bedtime.usual", "bedtime.deltaVsUsual", "sleep.balance", "insight.", "history."]
+            [
+                "sleep.duration", "sleep.deltaVsBaseline", "sleep.baseline", "sleep.quality", "deep.", "rem.", "bedtime.last", "bedtime.usual",
+                "bedtime.deltaVsUsual", "sleep.balance", "insight.", "history.",
+            ]
         case .weekChange:
             ["week.", "sleep.balance", "consistency.", "recovery.score", "recovery.usual", "insight.", "history."]
         case .bedtimeAdvice:

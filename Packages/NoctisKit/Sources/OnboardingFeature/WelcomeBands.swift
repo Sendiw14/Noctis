@@ -37,7 +37,8 @@ struct WelcomeReveal: Equatable {
     var twinkle = false
     var controls = false
 
-    static let final = WelcomeReveal(band: [true, true, true, true], word: [true, true, true, true], icon: [true, true, true, true], twinkle: true, controls: true)
+    static let final = WelcomeReveal(
+        band: [true, true, true, true], word: [true, true, true, true], icon: [true, true, true, true], twinkle: true, controls: true)
 }
 
 struct WelcomeBands: View {
@@ -108,7 +109,8 @@ struct WelcomeBands: View {
 nonisolated struct CrescentShape: Shape {
     func path(in rect: CGRect) -> Path {
         let outer = Path(ellipseIn: rect)
-        let bite = Path(ellipseIn: CGRect(x: rect.minX + rect.width * 0.26, y: rect.minY - rect.height * 0.04, width: rect.width * 0.86, height: rect.height * 0.86))
+        let bite = Path(
+            ellipseIn: CGRect(x: rect.minX + rect.width * 0.26, y: rect.minY - rect.height * 0.04, width: rect.width * 0.86, height: rect.height * 0.86))
         return outer.subtracting(bite)
     }
 }
@@ -155,7 +157,8 @@ private struct WelcomeIcon: View {
             NoctisRingSegment(color: NoctisPaper.butter, weight: 1, fraction: 1),
         ]
         return NoctisRingLayout(maxDiameter: side) {
-            NoctisRecoveryRing(segments: segments, reveal: shown ? 1 : 0, highlight: nil, dim: 0, showsUsual: false, diameter: side, lineWidth: 22 * side / 260 * 2.2)
+            NoctisRecoveryRing(
+                segments: segments, reveal: shown ? 1 : 0, highlight: nil, dim: 0, showsUsual: false, diameter: side, lineWidth: 22 * side / 260 * 2.2)
         }
     }
 

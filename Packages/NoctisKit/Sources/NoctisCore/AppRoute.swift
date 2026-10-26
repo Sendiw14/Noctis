@@ -99,7 +99,10 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
         case "reviews": self = .reviews
         case "review":
             // "review", "review:monthly" or "review:weekly-2026-09-26" (a launch argument).
-            guard let argument else { self = .review(kind: .weekly); return }
+            guard let argument else {
+                self = .review(kind: .weekly)
+                return
+            }
             let route = ReviewKind(rawValue: argument.lowercased()) != nil ? Self.review(kind: argument, id: nil) : Self.review(kind: nil, id: argument)
             guard let route else { return nil }
             self = route
@@ -183,7 +186,11 @@ public nonisolated enum AppRoute: Sendable, Hashable, Codable {
             items.append(URLQueryItem(name: "id", value: id))
         case .review(let kind, let id):
             // The weekly review is the default, as Day is Sleep's: it is not spelled out.
-            if let id { items.append(URLQueryItem(name: "id", value: id.description)) } else if kind != .weekly { items.append(URLQueryItem(name: "kind", value: kind.rawValue)) }
+            if let id {
+                items.append(URLQueryItem(name: "id", value: id.description))
+            } else if kind != .weekly {
+                items.append(URLQueryItem(name: "kind", value: kind.rawValue))
+            }
         case .windDown(let autostart):
             if autostart { items.append(URLQueryItem(name: "autostart", value: "1")) }
         case .settings(let section):

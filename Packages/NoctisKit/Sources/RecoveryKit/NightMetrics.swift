@@ -50,10 +50,12 @@ public enum NightMetricsBuilder {
     }
 
     public static func metrics(for session: SleepSession, hrv: [HRVSample], restingHeartRate: [HeartRateSample]) -> NightMetrics {
-        let hrvValues = hrv
+        let hrvValues =
+            hrv
             .filter { $0.date >= session.bedtime && $0.date <= session.wakeTime.addingTimeInterval(hrvWindowAfterWake) }
             .map(\.sdnnMilliseconds)
-        let restingValues = restingHeartRate
+        let restingValues =
+            restingHeartRate
             .filter { $0.date >= session.bedtime && $0.date <= session.wakeTime.addingTimeInterval(restingWindowAfterWake) }
             .map(\.bpm)
         return NightMetrics(

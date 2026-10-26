@@ -100,14 +100,16 @@ struct SleepBarsCard: View {
         .accessibilityLabel(content.accessibilityLabel)
         .accessibilityValue(current.map { content.bars[$0].accessibilityLabel } ?? "")
         .accessibilityHint("Swipe up or down to go through the nights.")
-        .accessibilityChartDescriptor(NoctisAudioGraph(
-            title: content.accessibilityLabel, summary: "One bar a night; taller is longer asleep. Swipe up or down on the chart to go through the nights.",
-            xTitle: "Night", yTitle: "Time asleep, as a share of the tallest night",
-            points: content.bars.enumerated().map { index, bar in
-                NoctisGraphPoint(x: bar.label.isEmpty ? "Night \(index + 1)" : bar.label, y: bar.fraction, spoken: bar.accessibilityLabel)
-            },
-            yRange: 0...1, yDescription: { "\(Int(($0 * 100).rounded())) percent of the tallest night" }
-        ))
+        .accessibilityChartDescriptor(
+            NoctisAudioGraph(
+                title: content.accessibilityLabel, summary: "One bar a night; taller is longer asleep. Swipe up or down on the chart to go through the nights.",
+                xTitle: "Night", yTitle: "Time asleep, as a share of the tallest night",
+                points: content.bars.enumerated().map { index, bar in
+                    NoctisGraphPoint(x: bar.label.isEmpty ? "Night \(index + 1)" : bar.label, y: bar.fraction, spoken: bar.accessibilityLabel)
+                },
+                yRange: 0...1, yDescription: { "\(Int(($0 * 100).rounded())) percent of the tallest night" }
+            )
+        )
         .accessibilityAdjustableAction { direction in
             let last = content.bars.count - 1
             switch direction {
@@ -153,7 +155,11 @@ struct SleepBarsCard: View {
                     .transition(.opacity.animation(NoctisMotion.adaptive(NoctisMotion.fade, reduceMotion: reduceMotion)))
             }
         }
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { chartWidth = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.width
+        } action: {
+            chartWidth = $0
+        }
         .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: current)
     }
 
@@ -388,12 +394,17 @@ struct SleepQualityStripCard: View {
         .accessibilityLabel(content.accessibilityLabel)
         .accessibilityValue(current.map { content.dots[$0].accessibilityLabel } ?? "")
         .accessibilityHint("Swipe up or down to go through the nights.")
-        .accessibilityChartDescriptor(NoctisAudioGraph(
-            title: content.accessibilityLabel, summary: "One dot a night, its sleep quality from 0 to 100. Swipe up or down on the chart to go through the nights.",
-            xTitle: "Night", yTitle: "Sleep quality",
-            points: content.dots.enumerated().map { index, dot in NoctisGraphPoint(x: "Night \(index + 1)", y: dot.score.map(Double.init), spoken: dot.accessibilityLabel) },
-            yRange: 0...100, yDescription: { "quality \(Int($0.rounded()))" }
-        ))
+        .accessibilityChartDescriptor(
+            NoctisAudioGraph(
+                title: content.accessibilityLabel,
+                summary: "One dot a night, its sleep quality from 0 to 100. Swipe up or down on the chart to go through the nights.",
+                xTitle: "Night", yTitle: "Sleep quality",
+                points: content.dots.enumerated().map { index, dot in
+                    NoctisGraphPoint(x: "Night \(index + 1)", y: dot.score.map(Double.init), spoken: dot.accessibilityLabel)
+                },
+                yRange: 0...100, yDescription: { "quality \(Int($0.rounded()))" }
+            )
+        )
         .accessibilityAdjustableAction { direction in
             let last = content.dots.count - 1
             switch direction {
@@ -416,7 +427,11 @@ struct SleepQualityStripCard: View {
             }
         }
         .frame(height: 32)
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { chartWidth = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.width
+        } action: {
+            chartWidth = $0
+        }
         .animation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion), value: current)
     }
 
@@ -512,10 +527,12 @@ struct SleepSummaryStrip: View {
             Button {
                 NoctisHaptics.snapLight()
                 withAnimation(NoctisMotion.adaptive(NoctisMotion.select, reduceMotion: reduceMotion)) { select(marker.index) }
-            } label: { content.contentShape(Rectangle()) }
-                .buttonStyle(.plain)
-                .accessibilityLabel(marker.accessibilityLabel)
-                .accessibilityHint("Selects this night on the chart.")
+            } label: {
+                content.contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(marker.accessibilityLabel)
+            .accessibilityHint("Selects this night on the chart.")
         } else {
             content
                 .accessibilityElement(children: .ignore)

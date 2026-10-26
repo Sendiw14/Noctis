@@ -3,10 +3,10 @@ import Foundation
 import HealthProviding
 import HomeFeature
 import NoctisCore
+import NoctisText
 import RecoveryKit
 import SleepAnalysisKit
 import SleepKit
-import NoctisText
 
 // The Sleep tab's presentation model: every string and readable value,
 // built by `SleepScreenBuilder` from a `SleepSnapshot` and a render model.
@@ -402,28 +402,34 @@ public nonisolated enum SleepScreenBuilder {
         let metrics = record.metrics
         var tiles: [SleepDetailTile] = []
         if metrics.timeInBedMinutes > 0 {
-            tiles.append(SleepDetailTile(id: "inBed", title: "Time in bed", value: HomeFormat.durationMetric(Int(metrics.timeInBedMinutes.rounded())), note: nil))
+            tiles.append(
+                SleepDetailTile(id: "inBed", title: "Time in bed", value: HomeFormat.durationMetric(Int(metrics.timeInBedMinutes.rounded())), note: nil))
         }
         if let efficiency = metrics.efficiency {
             let percent = Int((efficiency * 100).rounded())
-            tiles.append(SleepDetailTile(
-                id: "efficiency", title: "Efficiency",
-                value: NoctisMetricValue(parts: [.number("\(percent)"), .unit(NoctisUnit.percent.symbol)], spoken: NoctisUnit.percent.spoken(percent)),
-                note: "asleep while in bed"
-            ))
+            tiles.append(
+                SleepDetailTile(
+                    id: "efficiency", title: "Efficiency",
+                    value: NoctisMetricValue(parts: [.number("\(percent)"), .unit(NoctisUnit.percent.symbol)], spoken: NoctisUnit.percent.spoken(percent)),
+                    note: "asleep while in bed"
+                ))
         }
-        tiles.append(SleepDetailTile(id: "bedtime", title: "Bedtime", value: format.clockMetric(format.clock(session.bedtime, in: session.timeZone)), note: nil))
-        tiles.append(SleepDetailTile(id: "wake", title: "Wake time", value: format.clockMetric(format.clock(session.wakeTime, in: session.timeZone)), note: nil))
+        tiles.append(
+            SleepDetailTile(id: "bedtime", title: "Bedtime", value: format.clockMetric(format.clock(session.bedtime, in: session.timeZone)), note: nil))
+        tiles.append(
+            SleepDetailTile(id: "wake", title: "Wake time", value: format.clockMetric(format.clock(session.wakeTime, in: session.timeZone)), note: nil))
         // Awakenings and time awake are only known when the source can show wakefulness.
         if metrics.awakeAfterOnsetMinutes != nil {
-            tiles.append(SleepDetailTile(
-                id: "awakenings", title: "Awakenings",
-                value: NoctisMetricValue(parts: [.number("\(metrics.awakenings)")], spoken: NoctisCount.awakenings(metrics.awakenings)),
-                note: nil
-            ))
+            tiles.append(
+                SleepDetailTile(
+                    id: "awakenings", title: "Awakenings",
+                    value: NoctisMetricValue(parts: [.number("\(metrics.awakenings)")], spoken: NoctisCount.awakenings(metrics.awakenings)),
+                    note: nil
+                ))
         }
         if let awake = metrics.awakeAfterOnsetMinutes {
-            tiles.append(SleepDetailTile(id: "awake", title: "Time awake", value: HomeFormat.durationMetric(Int(awake.rounded())), note: "after falling asleep"))
+            tiles.append(
+                SleepDetailTile(id: "awake", title: "Time awake", value: HomeFormat.durationMetric(Int(awake.rounded())), note: "after falling asleep"))
         }
         return tiles
     }
@@ -449,7 +455,8 @@ public nonisolated enum SleepScreenBuilder {
             case .stages:
                 sentence = stagesSentence(quality.stageBalance)
             }
-            return SleepFactorRowContent(kind: factor.kind, name: factorName(factor.kind), score: factor.score, fraction: Double(factor.score) / 100, sentence: sentence)
+            return SleepFactorRowContent(
+                kind: factor.kind, name: factorName(factor.kind), score: factor.score, fraction: Double(factor.score) / 100, sentence: sentence)
         }
         var omitted: [String] = []
         for kind in SleepQualityFactorKind.allCases {

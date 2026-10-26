@@ -137,7 +137,8 @@ private struct RhythmCards: View {
                     let hours = minutes / 60, rest = minutes % 60
                     return rest == 0 ? "\(hours) hours" : "\(hours) hours \(rest) minutes"
                 },
-                height: compact ? 32 : 46, compact: compact, minorTickMinutes: 30, pxPerMinute: 1.34, tone: .band, accessibilityStep: 30, identifier: "rhythm.need"
+                height: compact ? 32 : 46, compact: compact, minorTickMinutes: 30, pxPerMinute: 1.34, tone: .band, accessibilityStep: 30,
+                identifier: "rhythm.need"
             )
         }
     }
@@ -242,9 +243,12 @@ private struct NightStrip: View, Animatable {
     var body: some View {
         Canvas { context, size in
             let resolvedLabels = Self.labels.map { label in
-                (label, context.resolve(
-                    Text(label.text).font(.system(size: labelSize, design: .rounded)).foregroundStyle(NoctisPaper.ivory.opacity(0.65))
-                ))
+                (
+                    label,
+                    context.resolve(
+                        Text(label.text).font(.system(size: labelSize, design: .rounded)).foregroundStyle(NoctisPaper.ivory.opacity(0.65))
+                    )
+                )
             }
             // The track stays flush with the cards above unless the labels
             // centered on its ends (large text) would run off the canvas;
@@ -279,6 +283,8 @@ private struct NightStrip: View, Animatable {
         .frame(height: rowHeight + labelGap + labelHeight)
         .padding(.horizontal, -Self.edgeOverhang)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Night strip, bedtime \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes)) through wake \(noctisFormattedClock(minutesSinceMidnight: wakeMinutes))")
+        .accessibilityLabel(
+            "Night strip, bedtime \(noctisFormattedClock(minutesSinceMidnight: bedtimeMinutes)) through wake \(noctisFormattedClock(minutesSinceMidnight: wakeMinutes))"
+        )
     }
 }

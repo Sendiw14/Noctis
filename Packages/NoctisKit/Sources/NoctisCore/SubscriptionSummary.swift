@@ -64,7 +64,9 @@ public nonisolated struct SubscriptionSummary: Sendable, Equatable {
                 : "You can upgrade to Premium at any time."
         }
         if isFamilyShared { return "Premium is shared with you through Family Sharing." }
-        let date = endDate.map { $0.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).month(.abbreviated).day().year()) }
+        let date = endDate.map {
+            $0.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).month(.abbreviated).day().year())
+        }
         if isInGracePeriod {
             return "Your last payment didn't go through. Premium continues while the App Store tries again; check your payment method in Manage subscription."
         }

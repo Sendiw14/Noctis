@@ -1,7 +1,7 @@
 import Foundation
+import NoctisText
 import RecoveryKit
 import SleepKit
-import NoctisText
 
 // Every word of a review, built from its numbers (APP_RULES.md R39). One type: the screens only lay out what it returns, and one lint test runs every string it can
 // make, in every scenario, through the banned-language list. The voice is calm and plain: it says what the numbers say ("Compared with the week before...", "This has
@@ -57,10 +57,12 @@ public nonisolated enum ReviewScreenBuilder {
         if let page = heart(record, words) { pages.append(page) }
         pages.append(timing(record, words, format))
         if !record.topInsightIDs.isEmpty {
-            pages.append(ReviewPageContent(
-                kind: .insight, headline: record.kind == .weekly ? "An insight from this week." : "Insights from this month.", evidence: [], interpretation: nil,
-                insightIDs: record.topInsightIDs
-            ))
+            pages.append(
+                ReviewPageContent(
+                    kind: .insight, headline: record.kind == .weekly ? "An insight from this week." : "Insights from this month.", evidence: [],
+                    interpretation: nil,
+                    insightIDs: record.topInsightIDs
+                ))
         }
         if let page = records(record, format) { pages.append(page) }
         pages.append(nextFocus(record, words))
@@ -164,7 +166,8 @@ public nonisolated enum ReviewScreenBuilder {
         case .bedtimeVariation: return "Bedtime varied by \(ReviewFormat.minutes(change.value)), \(up) from \(ReviewFormat.minutes(change.previous))."
         case .recovery: return "Recovery averaged \(ReviewFormat.number(change.value)), \(up) from \(ReviewFormat.number(change.previous))."
         case .hrv: return "HRV averaged \(ReviewFormat.number(change.value)) ms, \(up) from \(ReviewFormat.number(change.previous)) ms."
-        case .restingHeartRate: return "Resting heart rate averaged \(ReviewFormat.number(change.value)) bpm, \(up) from \(ReviewFormat.number(change.previous)) bpm."
+        case .restingHeartRate:
+            return "Resting heart rate averaged \(ReviewFormat.number(change.value)) bpm, \(up) from \(ReviewFormat.number(change.previous)) bpm."
         }
     }
 
@@ -173,10 +176,13 @@ public nonisolated enum ReviewScreenBuilder {
         let higher = change.value > change.previous
         switch change.metric {
         case .duration: return "in average sleep, which was \(ReviewFormat.amount(change.delta)) \(higher ? "longer" : "shorter") than \(words.before)"
-        case .bedtimeVariation: return "in how much your bedtime varied, which was \(ReviewFormat.amount(change.delta)) \(higher ? "more" : "less") than \(words.before)"
-        case .recovery: return "in average recovery, which was \(ReviewFormat.number(abs(change.delta))) points \(higher ? "higher" : "lower") than \(words.before)"
+        case .bedtimeVariation:
+            return "in how much your bedtime varied, which was \(ReviewFormat.amount(change.delta)) \(higher ? "more" : "less") than \(words.before)"
+        case .recovery:
+            return "in average recovery, which was \(ReviewFormat.number(abs(change.delta))) points \(higher ? "higher" : "lower") than \(words.before)"
         case .hrv: return "in average HRV, which was \(ReviewFormat.number(abs(change.delta))) ms \(higher ? "higher" : "lower") than \(words.before)"
-        case .restingHeartRate: return "in average resting heart rate, which was \(ReviewFormat.number(abs(change.delta))) bpm \(higher ? "higher" : "lower") than \(words.before)"
+        case .restingHeartRate:
+            return "in average resting heart rate, which was \(ReviewFormat.number(abs(change.delta))) bpm \(higher ? "higher" : "lower") than \(words.before)"
         }
     }
 
@@ -184,9 +190,14 @@ public nonisolated enum ReviewScreenBuilder {
 
     private static func sleep(_ record: ReviewRecord, _ words: Words, _ format: ReviewFormat) -> ReviewPageContent {
         let sleep = record.sleep
-        var evidence = ["You reached your \(ReviewFormat.duration(Double(sleep.needMinutes))) sleep need on \(sleep.nightsReachedNeed) of \(record.nightsRecorded) nights."]
+        var evidence = [
+            "You reached your \(ReviewFormat.duration(Double(sleep.needMinutes))) sleep need on \(sleep.nightsReachedNeed) of \(record.nightsRecorded) nights."
+        ]
         if let delta = sleep.deltaMinutes {
-            evidence.append(abs(delta) < 1 ? "That is the same as \(words.before)." : "That is \(ReviewFormat.amount(delta)) \(delta > 0 ? "longer" : "shorter") than \(words.before).")
+            evidence.append(
+                abs(delta) < 1
+                    ? "That is the same as \(words.before)." : "That is \(ReviewFormat.amount(delta)) \(delta > 0 ? "longer" : "shorter") than \(words.before)."
+            )
         }
         let staged = record.nights.compactMap(\.stages)
         if staged.count >= ReviewModel.minimumValues {
@@ -194,7 +205,8 @@ public nonisolated enum ReviewScreenBuilder {
             let deep = Double(staged.reduce(0) { $0 + $1.deep }) / count
             let core = Double(staged.reduce(0) { $0 + $1.core }) / count
             let rem = Double(staged.reduce(0) { $0 + $1.rem }) / count
-            evidence.append("On average a night had \(ReviewFormat.duration(deep)) deep, \(ReviewFormat.duration(core)) core and \(ReviewFormat.duration(rem)) REM sleep.")
+            evidence.append(
+                "On average a night had \(ReviewFormat.duration(deep)) deep, \(ReviewFormat.duration(core)) core and \(ReviewFormat.duration(rem)) REM sleep.")
         }
         var interpretation: String?
         if let shift = record.timing.bedtimeShift, let delta = sleep.deltaMinutes {
@@ -205,7 +217,8 @@ public nonisolated enum ReviewScreenBuilder {
             }
         }
         return ReviewPageContent(
-            kind: .sleep, headline: "You slept \(ReviewFormat.duration(sleep.averageMinutes)) a night on average.", evidence: evidence, interpretation: interpretation, insightIDs: []
+            kind: .sleep, headline: "You slept \(ReviewFormat.duration(sleep.averageMinutes)) a night on average.", evidence: evidence,
+            interpretation: interpretation, insightIDs: []
         )
     }
 
@@ -215,18 +228,26 @@ public nonisolated enum ReviewScreenBuilder {
         let consistency = record.consistency
         var evidence: [String] = []
         if let delta = consistency.bedtimeSDDelta {
-            evidence.append(abs(delta) < 1 ? "Bedtime varied about as much as \(words.before)." : "Bedtime varied \(ReviewFormat.amount(delta)) \(delta < 0 ? "less" : "more") than \(words.before).")
+            evidence.append(
+                abs(delta) < 1
+                    ? "Bedtime varied about as much as \(words.before)."
+                    : "Bedtime varied \(ReviewFormat.amount(delta)) \(delta < 0 ? "less" : "more") than \(words.before).")
         }
         if let delta = consistency.wakeSDDelta {
-            evidence.append(abs(delta) < 1 ? "Wake time varied about as much as \(words.before)." : "Wake time varied \(ReviewFormat.amount(delta)) \(delta < 0 ? "less" : "more") than \(words.before).")
+            evidence.append(
+                abs(delta) < 1
+                    ? "Wake time varied about as much as \(words.before)."
+                    : "Wake time varied \(ReviewFormat.amount(delta)) \(delta < 0 ? "less" : "more") than \(words.before).")
         }
         let bedtimes = record.nights.map(\.bedtimeMinutes)
         if let earliest = bedtimes.min(), let latest = bedtimes.max() {
-            evidence.append("Your bedtimes ranged from \(format.clock(minutesAfterNoon: Double(earliest))) to \(format.clock(minutesAfterNoon: Double(latest))).")
+            evidence.append(
+                "Your bedtimes ranged from \(format.clock(minutesAfterNoon: Double(earliest))) to \(format.clock(minutesAfterNoon: Double(latest))).")
         }
         return ReviewPageContent(
             kind: .consistency,
-            headline: "Your bedtime varied by \(ReviewFormat.minutes(consistency.bedtimeSD)) and your wake time by \(ReviewFormat.minutes(consistency.wakeSD)).",
+            headline:
+                "Your bedtime varied by \(ReviewFormat.minutes(consistency.bedtimeSD)) and your wake time by \(ReviewFormat.minutes(consistency.wakeSD)).",
             evidence: evidence, interpretation: nil, insightIDs: []
         )
     }
@@ -249,7 +270,10 @@ public nonisolated enum ReviewScreenBuilder {
             }
         }
         if let delta = recovery.delta {
-            evidence.append(abs(delta) < 0.5 ? "That is about the same as \(words.before)." : "That is \(ReviewFormat.number(abs(delta))) points \(delta > 0 ? "higher" : "lower") than \(words.before).")
+            evidence.append(
+                abs(delta) < 0.5
+                    ? "That is about the same as \(words.before)."
+                    : "That is \(ReviewFormat.number(abs(delta))) points \(delta > 0 ? "higher" : "lower") than \(words.before).")
         }
         var interpretation: String?
         if let delta = recovery.delta, let sleep = record.sleep.deltaMinutes {
@@ -260,7 +284,8 @@ public nonisolated enum ReviewScreenBuilder {
             }
         }
         return ReviewPageContent(
-            kind: .recovery, headline: "Recovery averaged \(ReviewFormat.number(recovery.average)).", evidence: evidence, interpretation: interpretation, insightIDs: []
+            kind: .recovery, headline: "Recovery averaged \(ReviewFormat.number(recovery.average)).", evidence: evidence, interpretation: interpretation,
+            insightIDs: []
         )
     }
 
@@ -270,7 +295,9 @@ public nonisolated enum ReviewScreenBuilder {
         func line(_ name: String, _ unit: String, _ average: Double, _ delta: Double?) -> String {
             let base = "\(name) averaged \(ReviewFormat.number(average)) \(unit)"
             guard let delta else { return base + "." }
-            return abs(delta) < 0.5 ? base + ", about the same as \(words.before)." : base + ", \(ReviewFormat.number(abs(delta))) \(unit) \(delta > 0 ? "higher" : "lower") than \(words.before)."
+            return abs(delta) < 0.5
+                ? base + ", about the same as \(words.before)."
+                : base + ", \(ReviewFormat.number(abs(delta))) \(unit) \(delta > 0 ? "higher" : "lower") than \(words.before)."
         }
         var lines: [String] = []
         if let value = record.heart.hrvAverage { lines.append(line("HRV", "ms", value, record.heart.hrvDelta)) }
@@ -285,14 +312,21 @@ public nonisolated enum ReviewScreenBuilder {
         let timing = record.timing
         var evidence: [String] = []
         if let shift = timing.bedtimeShift {
-            evidence.append(abs(shift) < 1 ? "Your median bedtime was the same as \(words.before)." : "Your median bedtime was \(ReviewFormat.amount(shift)) \(shift > 0 ? "later" : "earlier") than \(words.before).")
+            evidence.append(
+                abs(shift) < 1
+                    ? "Your median bedtime was the same as \(words.before)."
+                    : "Your median bedtime was \(ReviewFormat.amount(shift)) \(shift > 0 ? "later" : "earlier") than \(words.before).")
         }
         if let shift = timing.wakeShift {
-            evidence.append(abs(shift) < 1 ? "Your median wake time was the same as \(words.before)." : "Your median wake time was \(ReviewFormat.amount(shift)) \(shift > 0 ? "later" : "earlier") than \(words.before).")
+            evidence.append(
+                abs(shift) < 1
+                    ? "Your median wake time was the same as \(words.before)."
+                    : "Your median wake time was \(ReviewFormat.amount(shift)) \(shift > 0 ? "later" : "earlier") than \(words.before).")
         }
         return ReviewPageContent(
             kind: .timing,
-            headline: "Your median bedtime was \(format.clock(minutesAfterNoon: timing.medianBedtimeMinutes)) and your median wake time \(format.clock(minutesAfterNoon: timing.medianWakeMinutes)).",
+            headline:
+                "Your median bedtime was \(format.clock(minutesAfterNoon: timing.medianBedtimeMinutes)) and your median wake time \(format.clock(minutesAfterNoon: timing.medianWakeMinutes)).",
             evidence: evidence, interpretation: nil, insightIDs: []
         )
     }
@@ -308,7 +342,8 @@ public nonisolated enum ReviewScreenBuilder {
             evidence.append("Your highest recovery was \(ReviewFormat.number(best.value)), on \(format.weekdayDay(best.morning))\(also(best)).")
         }
         return ReviewPageContent(
-            kind: .records, headline: "Your longest night was \(ReviewFormat.duration(longest.value)), on \(format.weekdayDay(longest.morning))\(also(longest)).",
+            kind: .records,
+            headline: "Your longest night was \(ReviewFormat.duration(longest.value)), on \(format.weekdayDay(longest.morning))\(also(longest)).",
             evidence: evidence, interpretation: nil, insightIDs: []
         )
     }
@@ -321,13 +356,19 @@ public nonisolated enum ReviewScreenBuilder {
         switch record.nextFocus {
         case .steadyBedtime(let minutes):
             headline = "One thing to try: a steadier bedtime."
-            evidence = ["Your bedtime varied by \(ReviewFormat.minutes(minutes)) \(words.this).", "Going to bed around the same time each night is one way to try."]
+            evidence = [
+                "Your bedtime varied by \(ReviewFormat.minutes(minutes)) \(words.this).", "Going to bed around the same time each night is one way to try.",
+            ]
         case .sleepNeed(let behind):
             headline = "One thing to try: an earlier night when it suits you."
-            evidence = ["Over the last 7 nights you slept \(ReviewFormat.amount(behind)) less than your \(ReviewFormat.duration(Double(record.sleep.needMinutes))) a night."]
+            evidence = [
+                "Over the last 7 nights you slept \(ReviewFormat.amount(behind)) less than your \(ReviewFormat.duration(Double(record.sleep.needMinutes))) a night."
+            ]
         case .gentleShiftBack(let later):
             headline = "One thing to try: moving your bedtime back a little."
-            evidence = ["Your median bedtime was \(ReviewFormat.amount(later)) later than \(words.before).", "A few minutes earlier each night is a gentle way to try."]
+            evidence = [
+                "Your median bedtime was \(ReviewFormat.amount(later)) later than \(words.before).", "A few minutes earlier each night is a gentle way to try.",
+            ]
         case .recentNights(let nights):
             headline = "One thing to try: keeping your next few bedtimes regular."
             evidence = ["Recovery was trending lower across these \(nights) scored nights."]

@@ -339,14 +339,19 @@ struct NightChartView: View {
         }
         .frame(height: plot.lanesHeight + heartBlock, alignment: .top)
         .overlay(alignment: .top) { if !reservesPillRow { pill } }
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.width
+        } action: {
+            width = $0
+        }
         .onChange(of: pathsKey, initial: true) { _, key in
             guard key.plot.width > 0 else { return }
             paths = NightPathBuilder.build(key)
         }
-        .gesture(HorizontalScrubGesture(isEnabled: onScrub != nil) { x in
-            onScrub?(x.map { plot.fraction(x: $0) })
-        })
+        .gesture(
+            HorizontalScrubGesture(isEnabled: onScrub != nil) { x in
+                onScrub?(x.map { plot.fraction(x: $0) })
+            })
     }
 
     private var laneLabels: some View {

@@ -53,16 +53,18 @@ public nonisolated enum NotificationPlan {
         let preferences = preferences.normalized()
         var plan: [ScheduledNotification] = []
         if preferences.morningIsOn {
-            plan.append(ScheduledNotification(
-                identifier: NoctisNotification.morningSummary, title: title, body: morningBody,
-                components: clock(wakeMinutes + preferences.morningMinutesAfterWake)
-            ))
+            plan.append(
+                ScheduledNotification(
+                    identifier: NoctisNotification.morningSummary, title: title, body: morningBody,
+                    components: clock(wakeMinutes + preferences.morningMinutesAfterWake)
+                ))
         }
         if preferences.windDownIsOn {
-            plan.append(ScheduledNotification(
-                identifier: NoctisNotification.windDown, title: title, body: windDownBody(leadMinutes: preferences.windDownLeadMinutes, tier: tier),
-                components: clock(bedtimeCenterMinutes - preferences.windDownLeadMinutes)
-            ))
+            plan.append(
+                ScheduledNotification(
+                    identifier: NoctisNotification.windDown, title: title, body: windDownBody(leadMinutes: preferences.windDownLeadMinutes, tier: tier),
+                    components: clock(bedtimeCenterMinutes - preferences.windDownLeadMinutes)
+                ))
         }
         if preferences.weeklyIsOn {
             var components = clock(preferences.weeklyMinutesSinceMidnight)
@@ -175,7 +177,8 @@ public actor NotificationScheduler {
 
     /// Rebuilds the reminders. Returns what it scheduled (empty when notifications aren't allowed).
     @discardableResult
-    public func rebuild(preferences: NotificationPreferences, wakeMinutes: Int, bedtimeCenterMinutes: Int, tier: Tier = .free) async -> [ScheduledNotification] {
+    public func rebuild(preferences: NotificationPreferences, wakeMinutes: Int, bedtimeCenterMinutes: Int, tier: Tier = .free) async -> [ScheduledNotification]
+    {
         await center.removePending(NotificationPlan.identifiers)
         guard await center.authorization().canSchedule else { return [] }
         let plan = NotificationPlan.make(preferences: preferences, wakeMinutes: wakeMinutes, bedtimeCenterMinutes: bedtimeCenterMinutes, tier: tier)

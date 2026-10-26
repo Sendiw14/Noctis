@@ -73,8 +73,9 @@ private final class NoctisSoundEngine: @unchecked Sendable {
 
         let frameCount = AVAudioFrameCount(duration * sampleRate)
         guard frameCount > 0,
-              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount),
-              let channelData = buffer.floatChannelData?[0] else { return }
+            let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount),
+            let channelData = buffer.floatChannelData?[0]
+        else { return }
         buffer.frameLength = frameCount
 
         let attack = sampleRate * (fadeIn ? 0.35 : 0.006)

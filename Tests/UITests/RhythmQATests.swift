@@ -66,6 +66,8 @@ final class RhythmQATests: XCTestCase {
         let app = rhythm()
         QA.pause(1.5)
         app.buttons["rhythm.continue"].tap()
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@", "Sample night")).firstMatch.waitForExistence(timeout: 8), "the Sample step follows")
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@", "Sample night")).firstMatch.waitForExistence(timeout: 8),
+            "the Sample step follows")
     }
 }

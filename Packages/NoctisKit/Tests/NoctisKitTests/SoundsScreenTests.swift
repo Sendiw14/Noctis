@@ -109,8 +109,14 @@ struct SoundsContentTests {
         #expect(SoundsCopy.summary == "Made on your iPhone. Nothing downloads.")
         #expect(SoundsCopy.caption == "STEADY SOUNDS FOR WINDING DOWN")
         #expect(SoundsCopy.sleepWell == "Sleep well.")
-        let banned = ["sleep better", "help", "cure", "treat", "heal", "anxiety", "insomnia", "stress", "deeper sleep", "faster", "proven", "clinical", "therap", "scientific", "improve"]
-        var strings = [SoundsCopy.caption, SoundsCopy.summary, SoundsCopy.sleepWell, SoundsCopy.timerTitle, SoundsCopy.timerNote, SoundsCopy.interrupted, SoundsCopy.paused, SoundsCopy.playing]
+        let banned = [
+            "sleep better", "help", "cure", "treat", "heal", "anxiety", "insomnia", "stress", "deeper sleep", "faster", "proven", "clinical", "therap",
+            "scientific", "improve",
+        ]
+        var strings = [
+            SoundsCopy.caption, SoundsCopy.summary, SoundsCopy.sleepWell, SoundsCopy.timerTitle, SoundsCopy.timerNote, SoundsCopy.interrupted,
+            SoundsCopy.paused, SoundsCopy.playing,
+        ]
         for phase in [SoundPlaybackPhase.playing, .paused, .interrupted] {
             let state = SoundPlayerState(kind: .rain, phase: phase, timer: SleepTimerPlan(start: Date(), choice: .minutes30))
             for tile in SoundsBuilder.tiles(state) { strings += [tile.title, tile.accessibilityLabel, tile.accessibilityHint, tile.stateText ?? ""] }

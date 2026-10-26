@@ -38,7 +38,8 @@ public struct NightHeartSeries: Sendable, Equatable, Codable {
     public static func build(samples: [HeartRateSample], from start: Date, to end: Date, maxPoints: Int = maxPoints) -> NightHeartSeries? {
         let span = end.timeIntervalSince(start)
         guard span > 0, maxPoints > 0 else { return nil }
-        let inside = samples
+        let inside =
+            samples
             .filter { $0.date >= start && $0.date <= end }
             .sorted { $0.date < $1.date }
             .map { Point(position: $0.date.timeIntervalSince(start) / span, bpm: $0.bpm) }
@@ -62,7 +63,8 @@ public struct NightHeartSeries: Sendable, Equatable, Codable {
     /// nil before the first point or after the last.
     public func bpm(at position: Double) -> Double? {
         guard let first = points.first, let last = points.last,
-              position >= first.position, position <= last.position else { return nil }
+            position >= first.position, position <= last.position
+        else { return nil }
         guard let upper = points.firstIndex(where: { $0.position >= position }) else { return last.bpm }
         guard upper > 0 else { return points[upper].bpm }
         let a = points[upper - 1], b = points[upper]

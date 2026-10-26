@@ -27,13 +27,16 @@ public nonisolated struct WatchSettingsContent: Equatable, Sendable {
     ]
 
     /// What the Watch does not do, said once under the list.
-    public static let readsNothing = "Your Watch shows a short summary sent from this iPhone. It reads nothing from Apple Health itself, and nothing else is sent."
+    public static let readsNothing =
+        "Your Watch shows a short summary sent from this iPhone. It reads nothing from Apple Health itself, and nothing else is sent."
     public static let deleteNote = "Deleting all NOCTIS data on this iPhone clears the Watch too, when it next connects."
     public static let sendButton = "Send update now"
     public static let sendHint = "Sends the latest summary to your Apple Watch."
     public static let installSteps = "Open the Watch app on your iPhone, find NOCTIS under Available Apps and tap Install."
 
-    public static func make(_ status: WatchConnectionStatus, now: Date, calendar: Calendar = .autoupdatingCurrent, locale: Locale = .autoupdatingCurrent) -> WatchSettingsContent {
+    public static func make(
+        _ status: WatchConnectionStatus, now: Date, calendar: Calendar = .autoupdatingCurrent, locale: Locale = .autoupdatingCurrent
+    ) -> WatchSettingsContent {
         let lastSent = lastSentLine(status.lastSentAt, now: now, calendar: calendar, locale: locale)
         switch status.connection {
         case .notSupported:
@@ -43,7 +46,8 @@ public nonisolated struct WatchSettingsContent: Equatable, Sendable {
             )
         case .noWatchPaired:
             return WatchSettingsContent(
-                statusTitle: "No Apple Watch paired", statusDetail: "Pair an Apple Watch with this iPhone to see NOCTIS on your wrist.", rowValue: "None paired",
+                statusTitle: "No Apple Watch paired", statusDetail: "Pair an Apple Watch with this iPhone to see NOCTIS on your wrist.",
+                rowValue: "None paired",
                 lastSent: nil, installInstruction: nil, canSend: false
             )
         case .notActivated:
@@ -63,7 +67,8 @@ public nonisolated struct WatchSettingsContent: Equatable, Sendable {
             )
         case .notReachable:
             return WatchSettingsContent(
-                statusTitle: "Not reachable", statusDetail: "Your Watch is out of range or asleep. It gets the latest update when it connects.", rowValue: "Not reachable",
+                statusTitle: "Not reachable", statusDetail: "Your Watch is out of range or asleep. It gets the latest update when it connects.",
+                rowValue: "Not reachable",
                 lastSent: lastSent, installInstruction: nil, canSend: true
             )
         }
@@ -74,7 +79,9 @@ public nonisolated struct WatchSettingsContent: Equatable, Sendable {
         guard let date else { return "Nothing sent yet" }
         let time = date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: locale, calendar: calendar, timeZone: calendar.timeZone))
         if calendar.isDate(date, inSameDayAs: now) { return "Last sent today at \(time)" }
-        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now), calendar.isDate(date, inSameDayAs: yesterday) { return "Last sent yesterday at \(time)" }
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now), calendar.isDate(date, inSameDayAs: yesterday) {
+            return "Last sent yesterday at \(time)"
+        }
         let day = date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).month(.abbreviated).day())
         return "Last sent \(day) at \(time)"
     }

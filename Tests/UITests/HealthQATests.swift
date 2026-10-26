@@ -28,7 +28,9 @@ final class HealthQATests: XCTestCase {
             if !scrolls { XCTAssertLessThanOrEqual(frame.maxY, connect.frame.minY + 0.5, "\(kind) is not under Connect", file: file, line: line) }
         }
         let cards = kinds.map { card(app, $0).frame }
-        for (above, below) in zip(cards, cards.dropFirst()) { XCTAssertLessThanOrEqual(above.maxY, below.minY + 0.5, "the cards do not overlap", file: file, line: line) }
+        for (above, below) in zip(cards, cards.dropFirst()) {
+            XCTAssertLessThanOrEqual(above.maxY, below.minY + 0.5, "the cards do not overlap", file: file, line: line)
+        }
     }
 
     func testTheCardsSayWhatTheyRead() {

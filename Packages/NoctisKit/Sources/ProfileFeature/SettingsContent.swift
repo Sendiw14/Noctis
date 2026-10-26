@@ -1,8 +1,8 @@
 import Foundation
-import NoctisText
 import HealthProviding
 import NightKit
 import NoctisCore
+import NoctisText
 import RecoveryKit
 import SleepAnalysisKit
 
@@ -84,7 +84,9 @@ public nonisolated enum NotificationsCopy {
     public static func banner(for authorization: NotificationAuthorization) -> Banner {
         switch authorization {
         case .notDetermined:
-            Banner(title: "Notifications aren't on yet", detail: "NOCTIS asks once, when you tap the button. Choose which reminders you want below.", action: .allow)
+            Banner(
+                title: "Notifications aren't on yet", detail: "NOCTIS asks once, when you tap the button. Choose which reminders you want below.",
+                action: .allow)
         case .denied:
             Banner(
                 title: "Notifications are off for NOCTIS",
@@ -130,24 +132,28 @@ public nonisolated enum HealthCopy {
     }
 
     /// Why a kind can be empty, in the one honest sentence: HealthKit never says whether read access was declined.
-    public static let emptyExplanation = "Nothing was recorded in the last \(HealthDataStatus.lookBackDays) days, or NOCTIS isn't allowed to read it. Apple Health doesn't tell apps which."
+    public static let emptyExplanation =
+        "Nothing was recorded in the last \(HealthDataStatus.lookBackDays) days, or NOCTIS isn't allowed to read it. Apple Health doesn't tell apps which."
 
     public static func sourceLine(_ source: String?) -> String? {
         source.map { "Last night's sleep came from \($0)." }
     }
 
     public static let noDataTitle = "No Health data found"
-    public static let noDataDetail = "NOCTIS found none of the kinds below in the last \(HealthDataStatus.lookBackDays) days. An iPhone on its own records no sleep or heart data: an Apple Watch or a sleep app does. If you have one, check that NOCTIS may read it."
+    public static let noDataDetail =
+        "NOCTIS found none of the kinds below in the last \(HealthDataStatus.lookBackDays) days. An iPhone on its own records no sleep or heart data: an Apple Watch or a sleep app does. If you have one, check that NOCTIS may read it."
     public static let unavailableDetail = "Apple Health isn't available on this device, so NOCTIS has nothing to read."
     public static let connectButton = "Connect Apple Health"
     public static let openHealthButton = "Open Health"
     public static let howAccessWorksButton = "How access works"
 
-    public static var howAccessWorks: [String] { [
-        "Apple Health lets you choose, for each kind of data, whether NOCTIS may read it. NOCTIS asks once; Apple never asks again, and never tells an app which kinds you declined. They just look empty.",
-        "To change what NOCTIS can read, open the Health app, tap your picture at the top, and look for NOCTIS under Apps.",
-        PrivacyStatements.healthKeeps(.shared) ?? "You can change what NOCTIS may read in the Health app at any time.",
-    ] }
+    public static var howAccessWorks: [String] {
+        [
+            "Apple Health lets you choose, for each kind of data, whether NOCTIS may read it. NOCTIS asks once; Apple never asks again, and never tells an app which kinds you declined. They just look empty.",
+            "To change what NOCTIS can read, open the Health app, tap your picture at the top, and look for NOCTIS under Apps.",
+            PrivacyStatements.healthKeeps(.shared) ?? "You can change what NOCTIS may read in the Health app at any time.",
+        ]
+    }
 }
 
 // MARK: - Subscription

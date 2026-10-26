@@ -66,7 +66,9 @@ final class OnboardingQATests: XCTestCase {
         XCTAssertTrue(sleep.isSelected && energy.isSelected, "third tap leaves the two chosen")
         XCTAssertFalse(recovery.isSelected, "third tap does not add a third")
         XCTAssertTrue(app.staticTexts["Pick up to two."].exists || app.otherElements["Pick up to two."].exists, "and says so")
-        QA.write("afterThird sleep=\(sleep.isSelected) energy=\(energy.isSelected) recovery=\(recovery.isSelected) continueEnabled=\(next.isEnabled)", to: "state-goal-3rd-tap.txt")
+        QA.write(
+            "afterThird sleep=\(sleep.isSelected) energy=\(energy.isSelected) recovery=\(recovery.isSelected) continueEnabled=\(next.isEnabled)",
+            to: "state-goal-3rd-tap.txt")
     }
 
     func testHealthUnavailable() {
@@ -213,7 +215,8 @@ final class OnboardingQATests: XCTestCase {
         let wakeSet = wake.value as? String ?? "?"
         let needSet = need.value as? String ?? "?"
         var log = "wake \(wakeBefore) -> \(wakeSet); need -> \(needSet)\n"
-        log += "wake type=\(wake.elementType == .slider ? "slider" : "\(wake.elementType.rawValue)") need type=\(need.elementType == .slider ? "slider" : "\(need.elementType.rawValue)")\n"
+        log +=
+            "wake type=\(wake.elementType == .slider ? "slider" : "\(wake.elementType.rawValue)") need type=\(need.elementType == .slider ? "slider" : "\(need.elementType.rawValue)")\n"
         XCTAssertNotEqual(wakeBefore, wakeSet, "wake ruler adjustable")
         QA.tap(QA.button(app, "Continue"), in: app)
 

@@ -102,8 +102,9 @@ public enum SleepMetricsEngine {
 
         var latency: Double?
         if let firstSegment = session.timeline.min(by: { $0.interval.start < $1.interval.start }),
-           firstSegment.stage == .awake,
-           let onset = asleepBlocks.first?.start {
+            firstSegment.stage == .awake,
+            let onset = asleepBlocks.first?.start
+        {
             latency = max(onset.timeIntervalSince(firstSegment.interval.start), 0) / 60
         }
 

@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import CoachKit
 @testable import HomeFeature
 @testable import InsightsKit
@@ -26,11 +27,15 @@ struct CoachTemplateTests {
         for scenario in CoachFixture.scenarios {
             let snapshots = await CoachFixture.snapshots(scenario)
             for (intent, direction) in Self.questions {
-                let context = CoachContextBuilder(format: CoachFixture.format).build(intent: intent, direction: direction, snapshots: snapshots, profile: CoachFixture.profile)
+                let context = CoachContextBuilder(format: CoachFixture.format).build(
+                    intent: intent, direction: direction, snapshots: snapshots, profile: CoachFixture.profile)
                 let draft = template.compose(intent: intent, context: context)
                 let name = "\(scenario.rawValue)/\(intent.rawValue)/\(direction?.rawValue ?? "-")"
-                #expect(CoachSafetyValidator.failures(draft, context: context).isEmpty, Comment(rawValue: "\(name): \(CoachSafetyValidator.failures(draft, context: context))"))
-                #expect(CoachAnswerAssembler.assemble(draft, context: context, source: .fromYourData, locale: CoachFixture.locale) != nil, Comment(rawValue: name))
+                #expect(
+                    CoachSafetyValidator.failures(draft, context: context).isEmpty,
+                    Comment(rawValue: "\(name): \(CoachSafetyValidator.failures(draft, context: context))"))
+                #expect(
+                    CoachAnswerAssembler.assemble(draft, context: context, source: .fromYourData, locale: CoachFixture.locale) != nil, Comment(rawValue: name))
             }
         }
     }
@@ -48,7 +53,8 @@ struct CoachTemplateTests {
                     #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: "\(name): \(text)"))
                 }
                 // The draft as the model would write it: no digit, percent sign or number word outside a token.
-                for text in [draft.summary, draft.whatChanged, draft.whatToNotice] + [draft.tonightSuggestion, draft.pattern, draft.caution].compactMap({ $0 }) {
+                for text in [draft.summary, draft.whatChanged, draft.whatToNotice] + [draft.tonightSuggestion, draft.pattern, draft.caution].compactMap({ $0 })
+                {
                     let written = CoachTokens.stripped(text)
                     #expect(!written.hasDigit && !written.contains("%"), Comment(rawValue: "\(name): \(text)"))
                     let words = written.lowercased().split(whereSeparator: { !$0.isLetter }).map(String.init)
@@ -110,7 +116,9 @@ struct CoachTemplateTests {
             for (intent, direction) in Self.questions {
                 let context = await CoachFixture.context(intent, direction, scenario: scenario)
                 let draft = template.compose(intent: intent, context: context)
-                let texts = [draft.summary, draft.whatChanged, draft.whatToNotice] + [draft.tonightSuggestion, draft.pattern, draft.caution].compactMap { $0 } + draft.contributors.map(\.label)
+                let texts =
+                    [draft.summary, draft.whatChanged, draft.whatToNotice] + [draft.tonightSuggestion, draft.pattern, draft.caution].compactMap { $0 }
+                    + draft.contributors.map(\.label)
                 for id in texts.flatMap(CoachTokens.ids(in:)) + draft.contributors.map(\.factID) {
                     #expect(context.has(id), Comment(rawValue: "\(scenario.rawValue)/\(intent.rawValue) names \(id)"))
                 }
@@ -225,8 +233,9 @@ struct CoachTemplateTests {
         let catalog = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "Sources/CoachKit/Resources/Coach.xcstrings")
         guard let data = try? Data(contentsOf: catalog),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let strings = root["strings"] as? [String: Any] else { return [] }
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let strings = root["strings"] as? [String: Any]
+        else { return [] }
         return strings.keys.sorted().filter { !$0.hasPrefix("coach.router.") }.map { ($0, CoachCopy.string($0)) }
     }
 }
@@ -244,8 +253,12 @@ struct CoachTemplateGoldenTests {
         // A regeneration aid, never a pass: with COACH_GOLDEN_OUT=<file> (as TEST_RUNNER_COACH_GOLDEN_OUT) the actual lines are written for review.
         if let out = ProcessInfo.processInfo.environment["COACH_GOLDEN_OUT"] {
             let key = [scenario.rawValue, intent.rawValue, direction?.rawValue].compactMap { $0 }.joined(separator: "/")
-            if let handle = FileHandle(forWritingAtPath: out) ?? (FileManager.default.createFile(atPath: out, contents: nil) ? FileHandle(forWritingAtPath: out) : nil) {
-                handle.seekToEndOfFile(); handle.write(Data("\(key)\t\(line)\n".utf8)); try? handle.close()
+            if let handle = FileHandle(forWritingAtPath: out)
+                ?? (FileManager.default.createFile(atPath: out, contents: nil) ? FileHandle(forWritingAtPath: out) : nil)
+            {
+                handle.seekToEndOfFile()
+                handle.write(Data("\(key)\t\(line)\n".utf8))
+                try? handle.close()
             }
         }
         return line
@@ -270,8 +283,9 @@ struct CoachTemplateGoldenTests {
     }
 
     @Test func thereIsAGoldenForEveryOneAndNoStrayOnes() {
-        let expected = Set(Self.scenarios.flatMap { scenario in CoachQuestionRouter.intentOrder.map { "\(scenario.rawValue)/\($0.rawValue)" } }
-            + CoachDirection.allCases.map { "full/recoveryChange/\($0.rawValue)" })
+        let expected = Set(
+            Self.scenarios.flatMap { scenario in CoachQuestionRouter.intentOrder.map { "\(scenario.rawValue)/\($0.rawValue)" } }
+                + CoachDirection.allCases.map { "full/recoveryChange/\($0.rawValue)" })
         #expect(Set(CoachGoldens.template.keys) == expected)
     }
 }

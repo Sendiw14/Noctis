@@ -24,7 +24,9 @@ final class ColorPassQATests: XCTestCase {
         let scrollView = app.scrollViews.firstMatch
         guard scrollView.exists else { return }
         scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.8))
-            .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.8 - fraction)), withVelocity: .slow, thenHoldForDuration: 0.4)
+            .press(
+                forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.8 - fraction)), withVelocity: .slow,
+                thenHoldForDuration: 0.4)
         QA.pause(0.7)
     }
 
@@ -70,11 +72,15 @@ final class ColorPassQATests: XCTestCase {
         for tab in [("sleep", "sleep"), ("rec", "recovery")] {
             capture("cp-\(tab.0)-empty2", route: tab.1, scenario: "empty", scrolls: [])
             capture("cp-\(tab.0)-learning2", route: tab.1, scenario: "learning", scrolls: [])
-            let app = QA.launch(extra: ["-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-homeMode", "day", "-noctisInitialRoute", tab.1, "-noctisHealthQueryFails"])
+            let app = QA.launch(extra: [
+                "-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-homeMode", "day", "-noctisInitialRoute", tab.1, "-noctisHealthQueryFails",
+            ])
             QA.pause(5)
             QA.shot("cp-\(tab.0)-error")
             app.terminate()
-            let denied = QA.launch(extra: ["-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-homeMode", "day", "-noctisInitialRoute", tab.1, "-mockUnauthorized"])
+            let denied = QA.launch(extra: [
+                "-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-homeMode", "day", "-noctisInitialRoute", tab.1, "-mockUnauthorized",
+            ])
             QA.pause(5)
             QA.shot("cp-\(tab.0)-unauthorized")
             denied.terminate()
@@ -91,7 +97,10 @@ final class ColorPassQATests: XCTestCase {
                 scroll(app, by: 0.5)
             }
             QA.pause(0.6)
-            guard card.exists, card.isHittable else { app.terminate(); continue }
+            guard card.exists, card.isHittable else {
+                app.terminate()
+                continue
+            }
             card.tap()
             if element(app, "recovery.factorScreen").waitForExistence(timeout: 6) {
                 QA.pause(1.4)

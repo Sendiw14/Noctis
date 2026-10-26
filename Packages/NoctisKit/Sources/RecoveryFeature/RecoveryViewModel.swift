@@ -134,11 +134,12 @@ public final class RecoveryViewModel {
 
     /// The Premium feature a segment needs while it is locked: 30D and 90D (Today and 7D are free). Nil when it can be shown (R57).
     public func lockedFeature(for segment: RecoverySegment) -> Feature? {
-        let feature: Feature? = switch segment {
-        case .today, .week: nil
-        case .month: .recovery30D
-        case .quarter: .recovery90D
-        }
+        let feature: Feature? =
+            switch segment {
+            case .today, .week: nil
+            case .month: .recovery30D
+            case .quarter: .recovery90D
+            }
         return feature.flatMap { isUnlocked($0) ? nil : $0 }
     }
 
@@ -204,7 +205,8 @@ public final class RecoveryViewModel {
         segmentSelection.factor = nil
         let segmentModel = target.factor == nil ? built : await repository.model(for: segmentSelection, in: snapshot)
         let content = RecoveryScreenBuilder.build(snapshot, model: segmentModel, selection: segmentSelection, now: clock(), calendar: calendar, locale: locale)
-        let factor = target.factor == nil
+        let factor =
+            target.factor == nil
             ? nil
             : RecoveryScreenBuilder.factorContent(snapshot, model: built, selection: target, calendar: calendar, locale: locale)
         let publish = {

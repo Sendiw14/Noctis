@@ -104,10 +104,12 @@ public actor WidgetPublisher {
         guard !suspended, let store, let home = latest else { return }
         let now = clock()
         let current = await inputs.current()
-        guard let snapshot = WidgetSnapshotMaker.make(
-            home: home, profile: current.profile, bedtime: current.bedtime, alarm: current.alarm, now: now, calendar: calendar, dataEpoch: epoch(),
-            tier: current.tier
-        ) else { return }
+        guard
+            let snapshot = WidgetSnapshotMaker.make(
+                home: home, profile: current.profile, bedtime: current.bedtime, alarm: current.alarm, now: now, calendar: calendar, dataEpoch: epoch(),
+                tier: current.tier
+            )
+        else { return }
         // Nothing the widgets draw has changed: leave the file, and the system's budget, alone.
         if let written, Self.sameContent(written, snapshot) { return }
         guard !suspended, store.save(snapshot) else { return }

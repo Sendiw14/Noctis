@@ -23,7 +23,9 @@ struct ReportHygieneTests {
         for line in ledger.split(separator: "\n") where line.hasPrefix("| QA-") {
             let cells = line.split(separator: "|", omittingEmptySubsequences: false).map { $0.trimmingCharacters(in: .whitespaces) }
             guard cells.count > 5, cells[5] == "OPEN" || cells[5] == "UNVERIFIED" else { continue }
-            #expect(report.contains("**\(cells[1])**"), Comment(rawValue: "\(cells[1]) is \(cells[5]) in the ledger and missing from QA_REPORT.md (run scripts/qa_report_lines.py)"))
+            #expect(
+                report.contains("**\(cells[1])**"),
+                Comment(rawValue: "\(cells[1]) is \(cells[5]) in the ledger and missing from QA_REPORT.md (run scripts/qa_report_lines.py)"))
         }
     }
 }

@@ -1,7 +1,7 @@
 import Foundation
+import NoctisText
 import RecoveryKit
 import SleepKit
-import NoctisText
 
 /// Makes a review story from a record (APP_RULES.md R63): every page, its numbers and its words, from the record alone. A page whose data does not exist is left out, never
 /// filled; "steady" is said only when something was compared and nothing moved. Calm, plain words: no cause, no medical wording, no streak, no shame, and nothing red.
@@ -21,7 +21,9 @@ public nonisolated enum ReviewStoryBuilder {
             if let page = recoveryWeek(record, words, format) { pages.append(ReviewStoryPage(kind: .recovery, tint: .lavender, content: .line(page))) }
             if let page = changes(record, words, major: false) { pages.append(ReviewStoryPage(kind: .changes, tint: .sand, content: .changes(page))) }
             if let id = record.topInsightIDs.first {
-                pages.append(ReviewStoryPage(kind: .insight, tint: .cocoa, content: .insights(ReviewInsightsPage(headline: "An insight from this week.", insightIDs: [id]))))
+                pages.append(
+                    ReviewStoryPage(
+                        kind: .insight, tint: .cocoa, content: .insights(ReviewInsightsPage(headline: "An insight from this week.", insightIDs: [id]))))
             }
             pages.append(ReviewStoryPage(kind: .focus, tint: .paper, content: .focus(focus(record, words))))
         case .monthly:
@@ -32,10 +34,13 @@ public nonisolated enum ReviewStoryBuilder {
             pages.append(ReviewStoryPage(kind: .timing, tint: .butter, content: .timing(timing(record, words, format))))
             if let page = changes(record, words, major: true) { pages.append(ReviewStoryPage(kind: .majorChanges, tint: .sand, content: .changes(page))) }
             if !record.topInsightIDs.isEmpty {
-                pages.append(ReviewStoryPage(
-                    kind: .insights, tint: .cocoa,
-                    content: .insights(ReviewInsightsPage(headline: NoctisCount.insightsFromThisMonth(record.topInsightIDs.count), insightIDs: Array(record.topInsightIDs.prefix(3))))
-                ))
+                pages.append(
+                    ReviewStoryPage(
+                        kind: .insights, tint: .cocoa,
+                        content: .insights(
+                            ReviewInsightsPage(
+                                headline: NoctisCount.insightsFromThisMonth(record.topInsightIDs.count), insightIDs: Array(record.topInsightIDs.prefix(3))))
+                    ))
             }
             if let page = records(record, format) { pages.append(ReviewStoryPage(kind: .records, tint: .paper, content: .records(page))) }
         }
@@ -46,7 +51,8 @@ public nonisolated enum ReviewStoryBuilder {
             fileName: "NOCTIS-\(record.kind == .weekly ? "week" : "month")-\(record.lastMorning.description)"
         )
         return ReviewStory(
-            id: record.id, title: title, dateRange: cover.dateRange, pages: pages, nightsRecorded: record.nightsRecorded, nightsInPeriod: record.nightsInPeriod, fullShare: share
+            id: record.id, title: title, dateRange: cover.dateRange, pages: pages, nightsRecorded: record.nightsRecorded, nightsInPeriod: record.nightsInPeriod,
+            fullShare: share
         )
     }
 
@@ -101,8 +107,10 @@ public nonisolated enum ReviewStoryBuilder {
             text = "Not enough nights in \(words.before) to compare"
         }
         return ReviewCoverPage(
-            title: record.kind == .weekly ? "Your week" : "Your month", dateRange: ReviewScreenBuilder.dateRange(record.period, format), averageMinutes: average, deltaText: text, deltaArrow: arrow,
-            context: "\(record.nightsRecorded) of \(record.nightsInPeriod) nights were recorded.", spokenAverage: "\(ReviewFormat.spoken(Double(average))) on average"
+            title: record.kind == .weekly ? "Your week" : "Your month", dateRange: ReviewScreenBuilder.dateRange(record.period, format),
+            averageMinutes: average, deltaText: text, deltaArrow: arrow,
+            context: "\(record.nightsRecorded) of \(record.nightsInPeriod) nights were recorded.",
+            spokenAverage: "\(ReviewFormat.spoken(Double(average))) on average"
         )
     }
 
@@ -114,7 +122,8 @@ public nonisolated enum ReviewStoryBuilder {
         return ReviewBarStages(deep: Double(stages.deep) / total, core: Double(stages.core) / total, rem: Double(stages.rem) / total)
     }
 
-    private static func bars(_ record: ReviewRecord, label: (SleepNightKey) -> String, spokenDay: (SleepNightKey) -> String) -> (bars: [ReviewBar], top: Double) {
+    private static func bars(_ record: ReviewRecord, label: (SleepNightKey) -> String, spokenDay: (SleepNightKey) -> String) -> (bars: [ReviewBar], top: Double)
+    {
         let need = Double(record.sleep.needMinutes)
         let byMorning = Dictionary(record.nights.map { ($0.morning, $0) }, uniquingKeysWith: { first, _ in first })
         let longest = record.nights.map { Double($0.asleepMinutes) }.max() ?? 0
@@ -122,11 +131,14 @@ public nonisolated enum ReviewStoryBuilder {
         let top = max((max(longest, need) * 1.1 / 30).rounded(.up) * 30, 60)
         let built = record.period.mornings.map { morning -> ReviewBar in
             guard let night = byMorning[morning] else {
-                return ReviewBar(morning: morning, label: label(morning), minutes: nil, fraction: nil, stages: nil, reachedNeed: false, spoken: "\(spokenDay(morning)): no sleep recorded")
+                return ReviewBar(
+                    morning: morning, label: label(morning), minutes: nil, fraction: nil, stages: nil, reachedNeed: false,
+                    spoken: "\(spokenDay(morning)): no sleep recorded")
             }
             let minutes = Double(night.asleepMinutes)
             return ReviewBar(
-                morning: morning, label: label(morning), minutes: minutes, fraction: minutes / top, stages: stageShares(night.stages), reachedNeed: minutes >= need,
+                morning: morning, label: label(morning), minutes: minutes, fraction: minutes / top, stages: stageShares(night.stages),
+                reachedNeed: minutes >= need,
                 spoken: "\(spokenDay(morning)): \(ReviewFormat.spoken(minutes))"
             )
         }
@@ -143,10 +155,12 @@ public nonisolated enum ReviewStoryBuilder {
             let deep = Double(staged.reduce(0) { $0 + $1.deep }) / count
             let core = Double(staged.reduce(0) { $0 + $1.core }) / count
             let rem = Double(staged.reduce(0) { $0 + $1.rem }) / count
-            lines.append("On average a night had \(ReviewFormat.duration(deep)) deep, \(ReviewFormat.duration(core)) core and \(ReviewFormat.duration(rem)) REM sleep.")
+            lines.append(
+                "On average a night had \(ReviewFormat.duration(deep)) deep, \(ReviewFormat.duration(core)) core and \(ReviewFormat.duration(rem)) REM sleep.")
         }
         return ReviewBarsPage(
-            headline: "Reached your need on \(record.sleep.nightsReachedNeed) of \(record.nightsRecorded) nights", lines: lines, bars: bars, topMinutes: top, needFraction: need / top,
+            headline: "Reached your need on \(record.sleep.nightsReachedNeed) of \(record.nightsRecorded) nights", lines: lines, bars: bars, topMinutes: top,
+            needFraction: need / top,
             needText: "\(ReviewFormat.duration(need)) need", averageFraction: nil, averageText: nil, slim: false
         )
     }
@@ -163,8 +177,10 @@ public nonisolated enum ReviewStoryBuilder {
             lines.append("Your shortest night was \(ReviewFormat.duration(Double(shortest.asleepMinutes))), on \(format.weekdayDay(shortest.morning)).")
         }
         return ReviewBarsPage(
-            headline: "Reached your need on \(record.sleep.nightsReachedNeed) of \(record.nightsRecorded) nights", lines: lines, bars: bars, topMinutes: top, needFraction: need / top,
-            needText: "\(ReviewFormat.duration(need)) need", averageFraction: record.sleep.averageMinutes / top, averageText: "\(ReviewFormat.duration(record.sleep.averageMinutes)) average", slim: true
+            headline: "Reached your need on \(record.sleep.nightsReachedNeed) of \(record.nightsRecorded) nights", lines: lines, bars: bars, topMinutes: top,
+            needFraction: need / top,
+            needText: "\(ReviewFormat.duration(need)) need", averageFraction: record.sleep.averageMinutes / top,
+            averageText: "\(ReviewFormat.duration(record.sleep.averageMinutes)) average", slim: true
         )
     }
 
@@ -195,17 +211,27 @@ public nonisolated enum ReviewStoryBuilder {
         let timing = record.timing
         func band(_ median: Double, _ spread: Double) -> ReviewBand { ReviewBand(start: position(median - spread), end: position(median + spread)) }
         let rows = nights.map {
-            ReviewTimingRow(morning: $0.morning, label: record.kind == .weekly ? format.narrowWeekday($0.morning) : format.dayNumber($0.morning), bedtime: position(Double($0.bedtimeMinutes)), wake: position(Double($0.wakeMinutes)))
+            ReviewTimingRow(
+                morning: $0.morning, label: record.kind == .weekly ? format.narrowWeekday($0.morning) : format.dayNumber($0.morning),
+                bedtime: position(Double($0.bedtimeMinutes)), wake: position(Double($0.wakeMinutes)))
         }
         var lines: [String] = []
         if let delta = consistency.bedtimeSDDelta {
-            lines.append(abs(delta) < 1 ? "Bedtime varied about as much as \(words.before)." : "Bedtime varied \(ReviewFormat.amount(delta)) \(delta < 0 ? "less" : "more") than \(words.before).")
+            lines.append(
+                abs(delta) < 1
+                    ? "Bedtime varied about as much as \(words.before)."
+                    : "Bedtime varied \(ReviewFormat.amount(delta)) \(delta < 0 ? "less" : "more") than \(words.before).")
         }
         lines.append("Wake time varied by \(ReviewFormat.minutes(consistency.wakeSD)).")
         if record.kind == .monthly, let shift = timing.bedtimeShift {
-            lines.append(abs(shift) < 1 ? "Your median bedtime was the same as \(words.before)." : "Your median bedtime was \(ReviewFormat.amount(shift)) \(shift > 0 ? "later" : "earlier") than \(words.before).")
+            lines.append(
+                abs(shift) < 1
+                    ? "Your median bedtime was the same as \(words.before)."
+                    : "Your median bedtime was \(ReviewFormat.amount(shift)) \(shift > 0 ? "later" : "earlier") than \(words.before).")
         }
-        lines.append("Your median bedtime was \(format.clock(minutesAfterNoon: timing.medianBedtimeMinutes)) and your median wake time \(format.clock(minutesAfterNoon: timing.medianWakeMinutes)).")
+        lines.append(
+            "Your median bedtime was \(format.clock(minutesAfterNoon: timing.medianBedtimeMinutes)) and your median wake time \(format.clock(minutesAfterNoon: timing.medianWakeMinutes))."
+        )
         let headline = "Bedtime varied by \(ReviewFormat.minutes(consistency.bedtimeSD))"
         return ReviewTimingPage(
             headline: headline, lines: lines, rows: rows, ticks: ticks, bedtimeBand: band(timing.medianBedtimeMinutes, consistency.bedtimeSD),
@@ -247,12 +273,15 @@ public nonisolated enum ReviewStoryBuilder {
         }
         var lines = [extremeText("Highest", recovery.high, format), extremeText("Lowest", recovery.low, format)]
         if let delta = recovery.delta {
-            lines.append(abs(delta) < 0.5 ? "About the same as \(words.before)." : "\(ReviewFormat.whole(abs(delta))) points \(delta > 0 ? "higher" : "lower") than \(words.before).")
+            lines.append(
+                abs(delta) < 0.5
+                    ? "About the same as \(words.before)." : "\(ReviewFormat.whole(abs(delta))) points \(delta > 0 ? "higher" : "lower") than \(words.before).")
         }
         let headline = "Recovery averaged \(ReviewFormat.whole(recovery.average))"
         return ReviewLinePage(
             headline: headline, lines: lines, points: values.map { $0.map { ($0 - axis.low) / span } },
-            axis: axis.ticks.map { ReviewAxisTick(position: ($0 - axis.low) / span, label: ReviewFormat.number($0)) }, direction: direction?.text, directionArrow: direction?.arrow,
+            axis: axis.ticks.map { ReviewAxisTick(position: ($0 - axis.low) / span, label: ReviewFormat.number($0)) }, direction: direction?.text,
+            directionArrow: direction?.arrow,
             spoken: ([headline + "."] + lines + [direction.map { $0.text + "." }].compactMap { $0 }).joined(separator: " ")
         )
     }
@@ -263,7 +292,10 @@ public nonisolated enum ReviewStoryBuilder {
         let values = record.period.mornings.map { byMorning[$0] }
         let axis = scoreAxis(values.compactMap { $0 })
         let span = axis.high - axis.low
-        let lines = [extremeText("Highest", recovery.high, format), extremeText("Lowest", recovery.low, format), "The line is the average of the 7 nights up to each morning."]
+        let lines = [
+            extremeText("Highest", recovery.high, format), extremeText("Lowest", recovery.low, format),
+            "The line is the average of the 7 nights up to each morning.",
+        ]
         let headline = "Recovery averaged \(ReviewFormat.whole(recovery.average))"
         return ReviewLinePage(
             headline: headline, lines: lines, points: values.map { $0.map { ($0 - axis.low) / span } },
@@ -351,15 +383,19 @@ public nonisolated enum ReviewStoryBuilder {
         func tie(_ extreme: ReviewExtreme) -> String? { extreme.alsoOn > 0 ? "Equalled on \(NoctisCount.otherNights(extreme.alsoOn))" : nil }
         var blocks: [ReviewRecordBlock] = []
         let longest = monthly.longestNight
-        blocks.append(ReviewRecordBlock(
-            kind: .longestNight, title: "Longest night", minutes: Int(longest.value.rounded()), score: nil, date: format.weekdayDay(longest.morning), tie: tie(longest),
-            spoken: "Longest night, \(ReviewFormat.spoken(longest.value)), on \(format.weekdayDay(longest.morning))"
-        ))
-        if let best = monthly.highestRecovery {
-            blocks.append(ReviewRecordBlock(
-                kind: .highestRecovery, title: "Highest recovery", minutes: nil, score: Int(best.value.rounded()), date: format.weekdayDay(best.morning), tie: tie(best),
-                spoken: "Highest recovery, \(ReviewFormat.whole(best.value)), on \(format.weekdayDay(best.morning))"
+        blocks.append(
+            ReviewRecordBlock(
+                kind: .longestNight, title: "Longest night", minutes: Int(longest.value.rounded()), score: nil, date: format.weekdayDay(longest.morning),
+                tie: tie(longest),
+                spoken: "Longest night, \(ReviewFormat.spoken(longest.value)), on \(format.weekdayDay(longest.morning))"
             ))
+        if let best = monthly.highestRecovery {
+            blocks.append(
+                ReviewRecordBlock(
+                    kind: .highestRecovery, title: "Highest recovery", minutes: nil, score: Int(best.value.rounded()), date: format.weekdayDay(best.morning),
+                    tie: tie(best),
+                    spoken: "Highest recovery, \(ReviewFormat.whole(best.value)), on \(format.weekdayDay(best.morning))"
+                ))
         }
         return ReviewRecordsPage(headline: "This month's records", blocks: blocks)
     }
@@ -371,7 +407,9 @@ public nonisolated enum ReviewStoryBuilder {
         var parts: [String] = []
         if let recovery = record.recovery { parts.append("Recovery \(ReviewFormat.whole(recovery.average))") }
         if let hrv = record.heart.hrvAverage { parts.append("HRV \(NoctisQuantityText.text(ReviewFormat.whole(hrv), .millisecond))") }
-        if let rate = record.heart.restingHeartRateAverage { parts.append("Resting heart rate \(NoctisQuantityText.text(ReviewFormat.whole(rate), .beatsPerMinute))") }
+        if let rate = record.heart.restingHeartRateAverage {
+            parts.append("Resting heart rate \(NoctisQuantityText.text(ReviewFormat.whole(rate), .beatsPerMinute))")
+        }
         return parts.isEmpty ? nil : parts.joined(separator: " \u{00B7} ")
     }
 }

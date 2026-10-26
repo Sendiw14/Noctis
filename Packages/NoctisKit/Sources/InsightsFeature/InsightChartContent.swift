@@ -2,8 +2,8 @@ import DesignSystem
 import Foundation
 import HomeFeature
 import InsightsKit
-import SleepKit
 import NoctisText
+import SleepKit
 
 // The evidence charts, in unit space (R23): every position is 0...1 across
 // the plot (x from the left, y from the bottom), so a view only scales and
@@ -151,13 +151,15 @@ public nonisolated enum InsightChartBuilder {
 
     static func durationBars(_ e: InsightEvidence) -> InsightChartData {
         let longest = max(e.value, e.baseline, 1)
-        return .bars(InsightBarsChart(
-            bars: [
-                InsightChartBar(label: "Last night", valueText: HomeFormat.compactDuration(Int(e.value.rounded())), fraction: e.value / longest, emphasized: true),
-                InsightChartBar(label: "Usual", valueText: HomeFormat.compactDuration(Int(e.baseline.rounded())), fraction: e.baseline / longest),
-            ],
-            reference: nil
-        ))
+        return .bars(
+            InsightBarsChart(
+                bars: [
+                    InsightChartBar(
+                        label: "Last night", valueText: HomeFormat.compactDuration(Int(e.value.rounded())), fraction: e.value / longest, emphasized: true),
+                    InsightChartBar(label: "Usual", valueText: HomeFormat.compactDuration(Int(e.baseline.rounded())), fraction: e.baseline / longest),
+                ],
+                reference: nil
+            ))
     }
 
     static func balanceBars(_ e: BalanceEvidence, _ format: HomeFormat) -> InsightChartData {
@@ -172,20 +174,22 @@ public nonisolated enum InsightChartBuilder {
                 emphasized: index == count - 1, reachesReference: minutes >= e.needMinutes
             )
         }
-        return .bars(InsightBarsChart(
-            bars: bars, reference: InsightAxisTick(label: "Need \(HomeFormat.compactDuration(Int(e.needMinutes.rounded())))", position: e.needMinutes / top)
-        ))
+        return .bars(
+            InsightBarsChart(
+                bars: bars, reference: InsightAxisTick(label: "Need \(HomeFormat.compactDuration(Int(e.needMinutes.rounded())))", position: e.needMinutes / top)
+            ))
     }
 
     static func stageBars(_ e: StageShareEvidence) -> InsightChartData {
         let top = max(e.share, e.usual, 0.01)
-        return .bars(InsightBarsChart(
-            bars: [
-                InsightChartBar(label: "Last night", valueText: "\(Int((e.share * 100).rounded()))%", fraction: e.share / top, emphasized: true),
-                InsightChartBar(label: "Usual", valueText: "\(Int((e.usual * 100).rounded()))%", fraction: e.usual / top),
-            ],
-            reference: nil
-        ))
+        return .bars(
+            InsightBarsChart(
+                bars: [
+                    InsightChartBar(label: "Last night", valueText: "\(Int((e.share * 100).rounded()))%", fraction: e.share / top, emphasized: true),
+                    InsightChartBar(label: "Usual", valueText: "\(Int((e.usual * 100).rounded()))%", fraction: e.usual / top),
+                ],
+                reference: nil
+            ))
     }
 
     static func recordBars(_ type: InsightType, _ e: RecordEvidence) -> InsightChartData {
@@ -198,13 +202,14 @@ public nonisolated enum InsightChartBuilder {
             }
         }
         let top = max(e.value, e.previousBest, 1)
-        return .bars(InsightBarsChart(
-            bars: [
-                InsightChartBar(label: "Now", valueText: text(e.value), fraction: e.value / top, emphasized: true),
-                InsightChartBar(label: "Previous best", valueText: text(e.previousBest), fraction: e.previousBest / top),
-            ],
-            reference: nil
-        ))
+        return .bars(
+            InsightBarsChart(
+                bars: [
+                    InsightChartBar(label: "Now", valueText: text(e.value), fraction: e.value / top, emphasized: true),
+                    InsightChartBar(label: "Previous best", valueText: text(e.previousBest), fraction: e.previousBest / top),
+                ],
+                reference: nil
+            ))
     }
 
     // MARK: Timelines
@@ -231,14 +236,17 @@ public nonisolated enum InsightChartBuilder {
         let span = max(axis.end - axis.start, 1)
         func position(_ minutes: Double) -> Double { (minutes - axis.start) / span }
         var marks = [InsightMark(label: usualLabel, timeText: format.clock(minutesAfterNoon: usual), position: position(usual), emphasized: false)]
-        marks += others.map { InsightMark(label: $0.label, timeText: format.clock(minutesAfterNoon: $0.minutes), position: position($0.minutes), emphasized: true) }
+        marks += others.map {
+            InsightMark(label: $0.label, timeText: format.clock(minutesAfterNoon: $0.minutes), position: position($0.minutes), emphasized: true)
+        }
         let tolerance = InsightEngine.streakToleranceMinutes
-        return .timeline(InsightTimelineChart(
-            ticks: axis.ticks,
-            band: position(usual - tolerance)...position(usual + tolerance),
-            bandLabel: "Usual ± \(Int(tolerance)) min",
-            marks: marks
-        ))
+        return .timeline(
+            InsightTimelineChart(
+                ticks: axis.ticks,
+                band: position(usual - tolerance)...position(usual + tolerance),
+                bandLabel: "Usual ± \(Int(tolerance)) min",
+                marks: marks
+            ))
     }
 
     static func bedtimeTimeline(_ e: InsightEvidence, _ format: HomeFormat) -> InsightChartData {
@@ -322,11 +330,12 @@ public nonisolated enum InsightChartBuilder {
         let y = scale(low: range.low, high: range.high)
         let text: (Double) -> String = { "\(Int($0.rounded()))" }
         let segs = segments(series, y: y, text: text)
-        return .line(InsightLineChart(
-            segments: segs, rolling: rolling(series, window: 3, y: y, text: text), rollingLabel: "3-day average", band: nil, bandLabel: nil,
-            yTicks: ticks(range, step: max((range.high - range.low) / 3, 1).rounded(), label: { "\(Int($0.rounded()))" }),
-            xTicks: dayTicks(count: series.count, ending: e.night, format), latest: segs.last?.last, divider: nil
-        ))
+        return .line(
+            InsightLineChart(
+                segments: segs, rolling: rolling(series, window: 3, y: y, text: text), rollingLabel: "3-day average", band: nil, bandLabel: nil,
+                yTicks: ticks(range, step: max((range.high - range.low) / 3, 1).rounded(), label: { "\(Int($0.rounded()))" }),
+                xTicks: dayTicks(count: series.count, ending: e.night, format), latest: segs.last?.last, divider: nil
+            ))
     }
 
     static func heartLine(_ e: HeartSignalEvidence, _ format: HomeFormat) -> InsightChartData {
@@ -335,12 +344,13 @@ public nonisolated enum InsightChartBuilder {
         let y = scale(low: range.low, high: range.high)
         let text: (Double) -> String = { "\(Int($0.rounded())) \(unit)" }
         let segs = segments(e.recentValues, y: y, text: text)
-        return .line(InsightLineChart(
-            segments: segs, rolling: rolling(e.recentValues, window: 3, y: y, text: text), rollingLabel: "3-night average",
-            band: y(e.rangeLow)...y(e.rangeHigh), bandLabel: "Normal range",
-            yTicks: ticks(range, step: e.signal == .hrv ? 10 : 5, label: { "\(Int($0.rounded()))" }),
-            xTicks: dayTicks(count: e.recentValues.count, ending: e.night, format), latest: segs.last?.last, divider: nil
-        ))
+        return .line(
+            InsightLineChart(
+                segments: segs, rolling: rolling(e.recentValues, window: 3, y: y, text: text), rollingLabel: "3-night average",
+                band: y(e.rangeLow)...y(e.rangeHigh), bandLabel: "Normal range",
+                yTicks: ticks(range, step: e.signal == .hrv ? 10 : 5, label: { "\(Int($0.rounded()))" }),
+                xTicks: dayTicks(count: e.recentValues.count, ending: e.night, format), latest: segs.last?.last, divider: nil
+            ))
     }
 
     static func consistencyLine(_ e: ConsistencyChangeEvidence, _ format: HomeFormat) -> InsightChartData {
@@ -348,11 +358,12 @@ public nonisolated enum InsightChartBuilder {
         let y = scale(low: range.low, high: range.high)
         let text: (Double) -> String = { format.clock(minutesAfterNoon: $0) }
         let segs = segments(e.bedtimes, y: y, text: text)
-        return .line(InsightLineChart(
-            segments: segs, rolling: rolling(e.bedtimes, window: 7, y: y, text: text), rollingLabel: "7-night average", band: nil, bandLabel: nil,
-            yTicks: ticks(range, step: 60, label: { format.hour(minutesSinceMidnight: Int($0) + 720) }),
-            xTicks: dayTicks(count: e.bedtimes.count, ending: e.night, format), latest: segs.last?.last, divider: 0.5
-        ))
+        return .line(
+            InsightLineChart(
+                segments: segs, rolling: rolling(e.bedtimes, window: 7, y: y, text: text), rollingLabel: "7-night average", band: nil, bandLabel: nil,
+                yTicks: ticks(range, step: 60, label: { format.hour(minutesSinceMidnight: Int($0) + 720) }),
+                xTicks: dayTicks(count: e.bedtimes.count, ending: e.night, format), latest: segs.last?.last, divider: 0.5
+            ))
     }
 
     /// The first, middle and last night of a series ending on `night`.
@@ -380,9 +391,10 @@ public nonisolated enum InsightChartBuilder {
                 meanText: "Average \(Int(mean.rounded()))", meanY: y(mean), dots: dots
             )
         }
-        return .groups(InsightGroupsChart(
-            groups: [group("Earlier nights", e.earlyValues, mean: e.earlyMean), group("Later nights", e.lateValues, mean: e.lateMean)],
-            yTicks: ticks(range, step: 10, label: { "\(Int($0.rounded()))" })
-        ))
+        return .groups(
+            InsightGroupsChart(
+                groups: [group("Earlier nights", e.earlyValues, mean: e.earlyMean), group("Later nights", e.lateValues, mean: e.lateMean)],
+                yTicks: ticks(range, step: 10, label: { "\(Int($0.rounded()))" })
+            ))
     }
 }

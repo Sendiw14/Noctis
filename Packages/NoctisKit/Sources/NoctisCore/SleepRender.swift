@@ -333,7 +333,8 @@ public nonisolated enum SleepRenderModelBuilder {
             shortest: shortest,
             rhythm: rhythm(snapshot, night: night),
             quality: nights.map { entry in
-                QualityDotRender(night: entry.night, score: entry.record?.quality.score, band: entry.record.map { QualityDotRender.band(for: $0.quality.score) })
+                QualityDotRender(
+                    night: entry.night, score: entry.record?.quality.score, band: entry.record.map { QualityDotRender.band(for: $0.quality.score) })
             }
         )
     }
@@ -362,7 +363,8 @@ public nonisolated enum SleepRenderModelBuilder {
         let window = snapshot.window(before: night).map(\.metrics)
         let bedBand = usualBand(window.map(\.bedtimeMinutes))
         let wakeBand = usualBand(window.map(\.wakeMinutes))
-        let values = nights.compactMap { $0.record }.flatMap { [$0.metrics.bedtimeMinutes, $0.metrics.wakeMinutes] }
+        let values =
+            nights.compactMap { $0.record }.flatMap { [$0.metrics.bedtimeMinutes, $0.metrics.wakeMinutes] }
             + [bedBand?.lowerBound, bedBand?.upperBound, wakeBand?.lowerBound, wakeBand?.upperBound].compactMap { $0 }
         let bounds = axis(values)
         let span = max(bounds.end - bounds.start, 1)
@@ -389,7 +391,9 @@ public nonisolated enum SleepRenderModelBuilder {
         let metrics = nights.compactMap { $0.record?.metrics }
         let bedBand = usualBand(metrics.map(\.bedtimeMinutes))
         let wakeBand = usualBand(metrics.map(\.wakeMinutes))
-        let bounds = axis(metrics.flatMap { [$0.bedtimeMinutes, $0.wakeMinutes] } + [bedBand?.lowerBound, bedBand?.upperBound, wakeBand?.lowerBound, wakeBand?.upperBound].compactMap { $0 })
+        let bounds = axis(
+            metrics.flatMap { [$0.bedtimeMinutes, $0.wakeMinutes] }
+                + [bedBand?.lowerBound, bedBand?.upperBound, wakeBand?.lowerBound, wakeBand?.upperBound].compactMap { $0 })
         let span = max(bounds.end - bounds.start, 1)
         func position(_ minutes: Double) -> Double { min(max((minutes - bounds.start) / span, 0), 1) }
         func band(_ range: ClosedRange<Double>?) -> ClosedRange<Double>? {

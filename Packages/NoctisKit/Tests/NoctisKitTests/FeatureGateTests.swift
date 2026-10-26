@@ -83,9 +83,12 @@ private nonisolated let monthly = StoreProductID.monthly
 private nonisolated let ids = Set(StoreProductID.all)
 
 private nonisolated func record(
-    _ product: String = yearly, verified: Bool = true, revoked: Date? = nil, expires: Date? = now.addingTimeInterval(86_400 * 30), family: Bool = false, trial: Bool = false
+    _ product: String = yearly, verified: Bool = true, revoked: Date? = nil, expires: Date? = now.addingTimeInterval(86_400 * 30), family: Bool = false,
+    trial: Bool = false
 ) -> EntitlementRecord {
-    EntitlementRecord(productID: product, isVerified: verified, revocationDate: revoked, expirationDate: expires, ownership: family ? .familyShared : .purchased, isFreeTrial: trial)
+    EntitlementRecord(
+        productID: product, isVerified: verified, revocationDate: revoked, expirationDate: expires, ownership: family ? .familyShared : .purchased,
+        isFreeTrial: trial)
 }
 
 private nonisolated func resolve(_ records: [EntitlementRecord], renewal: RenewalRecord? = nil, previous: CachedTier = .free) -> EntitlementState {
@@ -132,7 +135,9 @@ struct EntitlementResolverTests {
         #expect(resolve([expired], renewal: retryAfterGrace, previous: .premium) == .previouslyPremiumNowFree, "grace has ended")
         let retryNoGrace = RenewalRecord(state: .inBillingRetryPeriod, isInBillingRetry: true, gracePeriodExpirationDate: nil)
         #expect(resolve([expired], renewal: retryNoGrace) == .free, "billing retry on its own has no end date, so it is not Premium")
-        #expect(resolve([expired], renewal: RenewalRecord(state: .expired, gracePeriodExpirationDate: now.addingTimeInterval(9999))) == .free, "an expired state is not grace")
+        #expect(
+            resolve([expired], renewal: RenewalRecord(state: .expired, gracePeriodExpirationDate: now.addingTimeInterval(9999))) == .free,
+            "an expired state is not grace")
         #expect(resolve([], renewal: inGrace) == .free, "no transaction at all is not entitled")
         #expect(resolve([record(revoked: now)], renewal: inGrace) == .free, "a revoked one is never revived by grace")
     }
@@ -148,7 +153,9 @@ struct EntitlementResolverTests {
         for state in [EntitlementState.free, .premium(.trial), .premium(.grace), .premium(.familySharing), .previouslyPremiumNowFree] {
             #expect(CachedTier(state).provisionalState.tier == state.tier)
         }
-        #expect(CachedTier.free.provisionalState == .free && CachedTier.premium.provisionalState.tier == .premium && CachedTier.lapsed.provisionalState == .previouslyPremiumNowFree)
+        #expect(
+            CachedTier.free.provisionalState == .free && CachedTier.premium.provisionalState.tier == .premium
+                && CachedTier.lapsed.provisionalState == .previouslyPremiumNowFree)
     }
 }
 
@@ -185,7 +192,7 @@ struct EntitlementManagerTests {
         let client = FakeEntitlementClient()
         let manager = make(client, cache: cache)
         #expect(manager.tier == .premium && !manager.isResolved, "right before the store has answered")
-        client.set([])   // the subscription ended while the app was away
+        client.set([])  // the subscription ended while the app was away
         await manager.refresh()
         #expect(manager.isResolved && manager.state == .previouslyPremiumNowFree && manager.tier == .free)
         #expect(cache.read() == .lapsed, "the answer is what the next launch starts from")
@@ -214,7 +221,9 @@ struct EntitlementManagerTests {
         let cache = EntitlementCache(defaults: defaults())
         let client = FakeEntitlementClient()
         let manager = make(client, cache: cache)
-        client.set([record(expires: now.addingTimeInterval(-60))], renewal: RenewalRecord(state: .inGracePeriod, isInBillingRetry: true, gracePeriodExpirationDate: now.addingTimeInterval(86_400)))
+        client.set(
+            [record(expires: now.addingTimeInterval(-60))],
+            renewal: RenewalRecord(state: .inGracePeriod, isInBillingRetry: true, gracePeriodExpirationDate: now.addingTimeInterval(86_400)))
         await manager.refresh()
         #expect(manager.isInGracePeriod && manager.hasActivePremium && manager.summary.isInGracePeriod)
         client.set([record(family: true)])
@@ -293,8 +302,8 @@ struct CoachQuotaTests {
         #expect(CoachQuota.current(spring, now: date(ny, 2026, 3, 8, 23, 59), calendar: ny).used == 1, "the short day")
         #expect(CoachQuota.current(spring, now: date(ny, 2026, 3, 9, 0, 0), calendar: ny).used == 0)
         var fall = CoachQuotaState()
-        let firstOneThirty = Date(timeIntervalSince1970: date(ny, 2026, 11, 1, 0, 30).timeIntervalSince1970 + 3600)    // 1:30 EDT
-        let secondOneThirty = firstOneThirty.addingTimeInterval(3600)                                                // 1:30 EST
+        let firstOneThirty = Date(timeIntervalSince1970: date(ny, 2026, 11, 1, 0, 30).timeIntervalSince1970 + 3600)  // 1:30 EDT
+        let secondOneThirty = firstOneThirty.addingTimeInterval(3600)  // 1:30 EST
         fall = CoachQuota.recording(fall, now: firstOneThirty, calendar: ny)
         #expect(CoachQuota.dayKey(firstOneThirty, calendar: ny) == CoachQuota.dayKey(secondOneThirty, calendar: ny))
         #expect(CoachQuota.current(fall, now: secondOneThirty, calendar: ny).used == 1, "the repeated hour is the same day")
@@ -304,8 +313,9 @@ struct CoachQuotaTests {
 
     @Test func aChangeOfTimeZoneIsNeverAWayToMoreQuestions() {
         let ny = calendar("America/New_York"), tokyo = calendar("Asia/Tokyo"), la = calendar("America/Los_Angeles")
-        let evening = date(ny, 2026, 9, 24, 21)    // 9 PM in New York, already the 25th in Tokyo
-        let used = CoachQuota.recording(CoachQuota.recording(CoachQuota.recording(CoachQuotaState(), now: evening, calendar: ny), now: evening, calendar: ny), now: evening, calendar: ny)
+        let evening = date(ny, 2026, 9, 24, 21)  // 9 PM in New York, already the 25th in Tokyo
+        let used = CoachQuota.recording(
+            CoachQuota.recording(CoachQuota.recording(CoachQuotaState(), now: evening, calendar: ny), now: evening, calendar: ny), now: evening, calendar: ny)
         #expect(used.day == "2026-09-24" && used.used == 3)
         #expect(CoachQuota.remaining(used, now: evening, calendar: tokyo) == 3, "flying east into the next date is a new day")
         // Back west: the date is the 24th again in Los Angeles at 5 AM, but that day is already counted.
@@ -352,7 +362,8 @@ struct FeatureGateTests {
         let manager = EntitlementManager(client: client, cache: cache, clock: { now })
         var told = 0
         manager.onTierChange = { _, _ in told += 1 }
-        let gate = FeatureGate(entitlements: manager, quotaStore: CoachQuotaStore(defaults: UserDefaults(suiteName: "noctis.q.\(UUID().uuidString)") ?? .standard))
+        let gate = FeatureGate(
+            entitlements: manager, quotaStore: CoachQuotaStore(defaults: UserDefaults(suiteName: "noctis.q.\(UUID().uuidString)") ?? .standard))
         #expect(!gate.isUnlocked(.recovery90D) && gate.tier == .free)
         client.set([record()])
         await manager.refresh()
@@ -379,7 +390,9 @@ struct FeatureGateTests {
         let before = CoachQuotaStore(defaults: defaults).read()
         let premium = FeatureGate(tier: .premium, quotaStore: CoachQuotaStore(defaults: defaults), calendar: { ny }, clock: { clock })
         premium.recordCoachAnswer()
-        #expect(premium.coachQuestionsRemaining == nil && premium.canAskCoach && CoachQuotaStore(defaults: defaults).read() == before, "nothing is counted for Premium")
+        #expect(
+            premium.coachQuestionsRemaining == nil && premium.canAskCoach && CoachQuotaStore(defaults: defaults).read() == before,
+            "nothing is counted for Premium")
     }
 }
 
@@ -389,7 +402,9 @@ struct FeatureGateRegistrationTests {
     @Test func theTwoKeysAreInTheInventoryAndAreNotInThePreferencesThatResetClears() {
         let keys = DataInventory.shared[.appState].defaultsKeys
         #expect(keys.contains(PremiumKeys.cachedTier) && keys.contains(PremiumKeys.coachQuota))
-        #expect(!AppPreferences.allKeys.contains(PremiumKeys.cachedTier) && !AppPreferences.allKeys.contains(PremiumKeys.coachQuota), "Reset preferences must not grant free questions or lock Premium")
+        #expect(
+            !AppPreferences.allKeys.contains(PremiumKeys.cachedTier) && !AppPreferences.allKeys.contains(PremiumKeys.coachQuota),
+            "Reset preferences must not grant free questions or lock Premium")
         #expect(PremiumKeys.cachedTier.hasPrefix("noctis.") && PremiumKeys.coachQuota.hasPrefix("noctis."), "delete-all removes both")
     }
 
@@ -397,8 +412,8 @@ struct FeatureGateRegistrationTests {
         let tokens = ["forceTier", "debugForce", "debugForced"]
         var seen = 0
         for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets"]) {
-            var depth = 0                  // nesting of `#if DEBUG`
-            var other: [Bool] = []         // whether each open `#if` is the DEBUG one
+            var depth = 0  // nesting of `#if DEBUG`
+            var other: [Bool] = []  // whether each open `#if` is the DEBUG one
             for line in file.text.split(separator: "\n", omittingEmptySubsequences: false) {
                 let text = line.trimmingCharacters(in: .whitespaces)
                 if text.hasPrefix("#if ") {

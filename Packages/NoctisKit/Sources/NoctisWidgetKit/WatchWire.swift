@@ -37,7 +37,9 @@ public struct WatchContext: Equatable, Sendable {
     static let formatKey = "wire", epochKey = "epoch", sentAtKey = "sentAt", snapshotKey = "snapshot"
 
     public var dictionary: [String: Any] {
-        var result: [String: Any] = [Self.formatKey: Self.formatVersion, Self.epochKey: Int(epoch), Self.sentAtKey: Int(sentAt.timeIntervalSince1970.rounded())]
+        var result: [String: Any] = [
+            Self.formatKey: Self.formatVersion, Self.epochKey: Int(epoch), Self.sentAtKey: Int(sentAt.timeIntervalSince1970.rounded()),
+        ]
         if let snapshotData { result[Self.snapshotKey] = snapshotData }
         return result
     }

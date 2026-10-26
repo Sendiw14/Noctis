@@ -290,7 +290,9 @@ public struct NoctisSectionField<Content: View, Motif: View>: View {
             .opacity(growsFromControl ? 0.2 + 0.8 * min(arrival * 1.6, 1) : 1)
             .coordinateSpace(name: NoctisSectionFieldSpace.name)
             .onPreferenceChange(NoctisWashOriginKey.self) { origin = $0 }
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+            .onGeometryChange(for: CGFloat.self) {
+                $0.size.height
+            } action: {
                 height = $0
                 measured = $0
             }
@@ -353,7 +355,9 @@ extension NoctisSectionField where Motif == EmptyView {
         washes: [NoctisWash] = [],
         @ViewBuilder content: () -> Content
     ) {
-        self.init(section, bottomInset: bottomInset, height: height, entrance: entrance, onEntered: onEntered, maxWidth: maxWidth, washes: washes, content: content, motif: { EmptyView() })
+        self.init(
+            section, bottomInset: bottomInset, height: height, entrance: entrance, onEntered: onEntered, maxWidth: maxWidth, washes: washes, content: content,
+            motif: { EmptyView() })
     }
 }
 

@@ -3,8 +3,8 @@ import Foundation
 import HomeFeature
 import InsightsKit
 import NoctisCore
-import SleepKit
 import NoctisText
+import SleepKit
 
 /// The chip row's choices: All, then a category each.
 public nonisolated struct InsightChipContent: Sendable, Equatable, Identifiable {
@@ -123,7 +123,8 @@ extension InsightsScreenContent {
         let firstRow = groups.first?.rows.first
         let kept = groups.first.flatMap { group in firstRow.map { [InsightRowGroup(title: group.title, rows: [$0])] } } ?? []
         return InsightsScreenContent(
-            dateCaption: dateCaption, summary: summary, chips: chips, state: state, learning: learning, featured: featured, groups: kept, records: [], note: note
+            dateCaption: dateCaption, summary: summary, chips: chips, state: state, learning: learning, featured: featured, groups: kept, records: [],
+            note: note
         )
     }
 
@@ -146,8 +147,10 @@ public nonisolated enum InsightsScreenBuilder {
         let format = HomeFormat(calendar: calendar, locale: locale)
         let caption = format.longDate(now).uppercased(with: locale)
         let chips = [InsightChipContent(category: nil, title: "All")] + InsightCategory.allCases.map { InsightChipContent(category: $0, title: $0.title) }
-        func screen(summary: String, state: InsightsStateContent? = nil, learning: InsightsLearningContent? = nil, featured: InsightFeaturedContent? = nil,
-                    groups: [InsightRowGroup] = [], records: [InsightRecordTile] = [], note: InsightsNoteContent? = nil, showsChips: Bool = true) -> InsightsScreenContent {
+        func screen(
+            summary: String, state: InsightsStateContent? = nil, learning: InsightsLearningContent? = nil, featured: InsightFeaturedContent? = nil,
+            groups: [InsightRowGroup] = [], records: [InsightRecordTile] = [], note: InsightsNoteContent? = nil, showsChips: Bool = true
+        ) -> InsightsScreenContent {
             InsightsScreenContent(
                 dateCaption: caption, summary: summary, chips: showsChips ? chips : [], state: state, learning: learning, featured: featured,
                 groups: groups, records: records, note: note
@@ -278,16 +281,24 @@ public nonisolated enum InsightsScreenBuilder {
             tiles.append(tile(record, title: "Longest night", tone: .sage, value: HomeFormat.durationMetric(Int(record.value.rounded())), format: format))
         }
         if let record = byType[.recordBestConsistency] {
-            tiles.append(tile(record, title: "Best consistency", tone: .lavender, value: HomeFormat.quantityMetric(Int(record.value.rounded()), .minuteShort), format: format))
+            tiles.append(
+                tile(
+                    record, title: "Best consistency", tone: .lavender, value: HomeFormat.quantityMetric(Int(record.value.rounded()), .minuteShort),
+                    format: format))
         }
         if let record = byType[.recordHighestRecovery] {
             let score = Int(record.value.rounded())
-            tiles.append(tile(record, title: "Highest recovery", tone: .butter, value: NoctisMetricValue(parts: [.number("\(score)")], spoken: "\(score) out of 100"), format: format))
+            tiles.append(
+                tile(
+                    record, title: "Highest recovery", tone: .butter, value: NoctisMetricValue(parts: [.number("\(score)")], spoken: "\(score) out of 100"),
+                    format: format))
         }
         return tiles
     }
 
-    private static func tile(_ record: StandingRecord, title: String, tone: InsightRecordTile.Tone, value: NoctisMetricValue, format: HomeFormat) -> InsightRecordTile {
+    private static func tile(
+        _ record: StandingRecord, title: String, tone: InsightRecordTile.Tone, value: NoctisMetricValue, format: HomeFormat
+    ) -> InsightRecordTile {
         let date = format.monthDay(record.night)
         return InsightRecordTile(
             type: record.type, title: title, value: value, date: date, tone: tone,
@@ -400,7 +411,10 @@ extension InsightsScreenBuilder {
         if let current { months.append(InsightMonthGroup(title: current.title, rows: current.rows)) }
         var note: InsightsNoteContent?
         if months.isEmpty {
-            note = filter.map { InsightsNoteContent(title: "No \($0.title.lowercased()) insights yet", detail: "They appear when your data has something to say.") }
+            note =
+                filter.map {
+                    InsightsNoteContent(title: "No \($0.title.lowercased()) insights yet", detail: "They appear when your data has something to say.")
+                }
                 ?? InsightsNoteContent(title: "No insights yet", detail: "Every insight NOCTIS finds is kept here.")
         }
         let count = stored.count

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import InsightsKit
 @testable import RecoveryKit
 @testable import SleepAnalysisKit
@@ -26,7 +27,8 @@ struct InsightEngineV2Tests {
         // Last night's wake-up was 7:00 AM Sep 24: exactly 24 hours on is still last night, a second later isn't.
         let wake = Fixture.date(2026, 9, 24, 7)
         func generated(_ offset: TimeInterval) -> [InsightRecord] {
-            InsightEngineV2.generate(InsightFixture.inputs(count: 15, asOf: wake.addingTimeInterval(offset)) { index, _ in Row(asleep: index == 14 ? 330 : 420) })
+            InsightEngineV2.generate(
+                InsightFixture.inputs(count: 15, asOf: wake.addingTimeInterval(offset)) { index, _ in Row(asleep: index == 14 ? 330 : 420) })
         }
         #expect(!generated(24 * 3600).isEmpty)
         #expect(generated(24 * 3600 + 1).isEmpty)
@@ -43,7 +45,10 @@ struct InsightEngineV2Tests {
 
     @Test func durationShiftFiresAtExactlyThirtyMinutes() throws {
         let record = try #require(InsightFixture.records(baselineInputs(lastAsleep: 390), .sleepDurationShift).first)
-        guard case .baseline(let evidence) = record.evidence else { Issue.record("expected baseline evidence"); return }
+        guard case .baseline(let evidence) = record.evidence else {
+            Issue.record("expected baseline evidence")
+            return
+        }
         #expect(evidence.delta == -30)
         #expect(evidence.value == 390)
         #expect(evidence.baseline == 420)
@@ -87,7 +92,10 @@ struct InsightEngineV2Tests {
             }
         }
         let record = try #require(InsightFixture.records(inputs(streak: 5), .consistentBedtime).first)
-        guard case .baseline(let evidence) = record.evidence else { Issue.record("expected baseline evidence"); return }
+        guard case .baseline(let evidence) = record.evidence else {
+            Issue.record("expected baseline evidence")
+            return
+        }
         #expect(evidence.streakNights == 5)
         #expect(evidence.recentNights.count == InsightModelV2.streakDots, "the detail page's 14 dots")
         #expect(evidence.recentNights.last == true)
@@ -121,7 +129,10 @@ struct InsightEngineV2Tests {
 
     @Test func thePatternFiresWithFiveNightsInEachGroup() throws {
         let record = try #require(InsightFixture.records(patternInputs(early: 5, late: 5), .earlierBedtimePattern).first)
-        guard case .pattern(let evidence) = record.evidence else { Issue.record("expected pattern evidence"); return }
+        guard case .pattern(let evidence) = record.evidence else {
+            Issue.record("expected pattern evidence")
+            return
+        }
         #expect(evidence.earlyNights == 5 && evidence.lateNights == 5)
         #expect(evidence.medianBedtime == 660)
         #expect(evidence.difference > 15 && evidence.difference < 25)
@@ -235,7 +246,10 @@ struct InsightEngineV2Tests {
 
     @Test func bedtimeAndOutcomeMovingTogetherIsAlsoFoundTheOtherWayRound() throws {
         let record = try #require(InsightFixture.records(patternInputs(early: 8, late: 8, earlyScore: 60, lateScore: 85), .earlierBedtimePattern).first)
-        guard case .pattern(let evidence) = record.evidence else { Issue.record("expected pattern evidence"); return }
+        guard case .pattern(let evidence) = record.evidence else {
+            Issue.record("expected pattern evidence")
+            return
+        }
         #expect(evidence.difference < 0, "later nights scored higher")
     }
 
@@ -252,7 +266,10 @@ struct InsightEngineV2Tests {
 
     @Test func recoveryDirectionFiresAtFiveDaysInARow() throws {
         let record = try #require(InsightFixture.records(rampInputs(ramp: 5), .recoveryDirection).first)
-        guard case .recoveryDirection(let evidence) = record.evidence else { Issue.record("expected recovery evidence"); return }
+        guard case .recoveryDirection(let evidence) = record.evidence else {
+            Issue.record("expected recovery evidence")
+            return
+        }
         #expect(evidence.direction == .rising)
         #expect(evidence.consecutiveDays == 5)
         #expect(evidence.recentScores.count == 14)
@@ -266,7 +283,10 @@ struct InsightEngineV2Tests {
 
     @Test func aFallingTrendIsLower() throws {
         let record = try #require(InsightFixture.records(rampInputs(ramp: 6, falling: true), .recoveryDirection).first)
-        guard case .recoveryDirection(let evidence) = record.evidence else { Issue.record("expected recovery evidence"); return }
+        guard case .recoveryDirection(let evidence) = record.evidence else {
+            Issue.record("expected recovery evidence")
+            return
+        }
         #expect(evidence.direction == .lower)
         #expect(evidence.pointsPerWeek < 0)
     }
@@ -293,7 +313,10 @@ struct InsightEngineV2Tests {
 
     @Test func hrvBelowRangeFiresAtThreeNightsInARow() throws {
         let record = try #require(InsightFixture.records(heartInputs(signal: .hrv, usual: 50, tail: [40, 40, 40]), .hrvBelowRange).first)
-        guard case .heartSignal(let evidence) = record.evidence else { Issue.record("expected heart evidence"); return }
+        guard case .heartSignal(let evidence) = record.evidence else {
+            Issue.record("expected heart evidence")
+            return
+        }
         #expect(evidence.signal == .hrv)
         #expect(evidence.consecutiveNights == 3)
         #expect(evidence.value == 40)
@@ -319,8 +342,12 @@ struct InsightEngineV2Tests {
     }
 
     @Test func restingHeartRateAboveRangeFiresAtThreeNights() throws {
-        let record = try #require(InsightFixture.records(heartInputs(signal: .restingHeartRate, usual: 55, tail: [62, 62, 62]), .restingHeartRateAboveRange).first)
-        guard case .heartSignal(let evidence) = record.evidence else { Issue.record("expected heart evidence"); return }
+        let record = try #require(
+            InsightFixture.records(heartInputs(signal: .restingHeartRate, usual: 55, tail: [62, 62, 62]), .restingHeartRateAboveRange).first)
+        guard case .heartSignal(let evidence) = record.evidence else {
+            Issue.record("expected heart evidence")
+            return
+        }
         #expect(evidence.signal == .restingHeartRate)
         #expect(evidence.rangeHigh == evidence.baseline + 1 || evidence.rangeHigh > evidence.baseline, "resting heart rate's floor is 1 bpm")
         // A low resting heart rate is not a signal.
@@ -351,7 +378,10 @@ struct InsightEngineV2Tests {
     @Test func aSteadierFortnightFiresAtFifteenMinutes() throws {
         // Δ = 30·factor − 15·factor = 15·1.0377 = 15.57 → fires.
         let record = try #require(InsightFixture.records(spreadInputs(before: 30, after: 15), .consistencyChange).first)
-        guard case .consistencyChange(let evidence) = record.evidence else { Issue.record("expected consistency evidence"); return }
+        guard case .consistencyChange(let evidence) = record.evidence else {
+            Issue.record("expected consistency evidence")
+            return
+        }
         #expect(evidence.delta < 0)
         #expect(abs(evidence.recentSD - 15 * Self.sdFactor) < 1e-9)
         #expect(abs(evidence.previousSD - 30 * Self.sdFactor) < 1e-9)
@@ -369,7 +399,10 @@ struct InsightEngineV2Tests {
 
     @Test func aLessSteadyFortnightFiresToo() throws {
         let record = try #require(InsightFixture.records(spreadInputs(before: 5, after: 30), .consistencyChange).first)
-        guard case .consistencyChange(let evidence) = record.evidence else { Issue.record("expected consistency evidence"); return }
+        guard case .consistencyChange(let evidence) = record.evidence else {
+            Issue.record("expected consistency evidence")
+            return
+        }
         #expect(evidence.delta > 0)
     }
 
@@ -383,7 +416,10 @@ struct InsightEngineV2Tests {
 
     @Test func balanceFiresAtTwoHoursEitherWay() throws {
         let behind = try #require(InsightFixture.records(InsightFixture.inputs(count: 10, balance: InsightFixture.balance(minutes: -120)), .sleepBalance).first)
-        guard case .balance(let evidence) = behind.evidence else { Issue.record("expected balance evidence"); return }
+        guard case .balance(let evidence) = behind.evidence else {
+            Issue.record("expected balance evidence")
+            return
+        }
         #expect(evidence.minutes == -120)
         #expect(evidence.nightlyMinutes.count == 7)
         #expect(InsightFixture.records(InsightFixture.inputs(count: 10, balance: InsightFixture.balance(minutes: 120)), .sleepBalance).count == 1)
@@ -401,7 +437,8 @@ struct InsightEngineV2Tests {
 
     @Test func balanceConfidenceFollowsTheNightsRecorded() {
         func confidence(_ recorded: Int) -> InsightConfidence? {
-            InsightFixture.records(InsightFixture.inputs(count: 10, balance: InsightFixture.balance(minutes: -200, recorded: recorded)), .sleepBalance).first?.confidence
+            InsightFixture.records(InsightFixture.inputs(count: 10, balance: InsightFixture.balance(minutes: -200, recorded: recorded)), .sleepBalance).first?
+                .confidence
         }
         #expect(confidence(7) == .high)
         #expect(confidence(6) == .moderate)
@@ -419,7 +456,10 @@ struct InsightEngineV2Tests {
 
     @Test func weekendBedtimesFireAtFortyFiveMinutes() throws {
         let record = try #require(InsightFixture.records(weekendInputs(weekend: 705), .weekendShift).first)
-        guard case .weekend(let evidence) = record.evidence else { Issue.record("expected weekend evidence"); return }
+        guard case .weekend(let evidence) = record.evidence else {
+            Issue.record("expected weekend evidence")
+            return
+        }
         #expect(evidence.delta == 45)
         #expect(evidence.weekendNights == 8 && evidence.weekdayNights == 20)
         #expect(InsightFixture.records(weekendInputs(weekend: 615), .weekendShift).count == 1, "earlier weekends count too")
@@ -452,7 +492,10 @@ struct InsightEngineV2Tests {
 
     @Test func aStageShareFiresAtFivePoints() throws {
         let record = try #require(InsightFixture.records(stageInputs(deep: 0.22), .stageShare).first)
-        guard case .stageShare(let evidence) = record.evidence else { Issue.record("expected stage evidence"); return }
+        guard case .stageShare(let evidence) = record.evidence else {
+            Issue.record("expected stage evidence")
+            return
+        }
         #expect(evidence.stage == .deep)
         #expect(abs(evidence.deltaPoints - 5) < 1e-9)
         #expect(InsightFixture.records(stageInputs(deep: 0.12), .stageShare).count == 1, "less counts too")
@@ -463,7 +506,10 @@ struct InsightEngineV2Tests {
     @Test func remIsJudgedTheSameWay() throws {
         let inputs = InsightFixture.inputs(count: 15) { index, _ in Row(deep: 0.17, rem: index == 14 ? 0.27 : 0.21) }
         let record = try #require(InsightFixture.records(inputs, .stageShare).first)
-        guard case .stageShare(let evidence) = record.evidence else { Issue.record("expected stage evidence"); return }
+        guard case .stageShare(let evidence) = record.evidence else {
+            Issue.record("expected stage evidence")
+            return
+        }
         #expect(evidence.stage == .rem)
     }
 
@@ -484,7 +530,10 @@ struct InsightEngineV2Tests {
 
     @Test func aLongestNightBeatsEveryOtherNight() throws {
         let record = try #require(InsightFixture.records(recordInputs(count: 20, lastAsleep: 481), .recordLongestNight).first)
-        guard case .record(let evidence) = record.evidence else { Issue.record("expected record evidence"); return }
+        guard case .record(let evidence) = record.evidence else {
+            Issue.record("expected record evidence")
+            return
+        }
         #expect(evidence.value == 481)
         #expect(evidence.previousBest == 480)
         #expect(evidence.scope == 30, "under 45 nights: the 30-night scope")
@@ -501,7 +550,10 @@ struct InsightEngineV2Tests {
         #expect(InsightFixture.records(recordInputs(count: 13, lastAsleep: 500), .recordLongestNight).isEmpty)
         #expect(InsightFixture.records(recordInputs(count: 14, lastAsleep: 500), .recordLongestNight).first.map { $0.confidence } == .moderate)
         let ninety = try #require(InsightFixture.records(recordInputs(count: 45, lastAsleep: 500), .recordLongestNight).first)
-        guard case .record(let evidence) = ninety.evidence else { Issue.record("expected record evidence"); return }
+        guard case .record(let evidence) = ninety.evidence else {
+            Issue.record("expected record evidence")
+            return
+        }
         #expect(evidence.scope == 90)
         #expect(ninety.confidence == .high)
     }
@@ -512,7 +564,10 @@ struct InsightEngineV2Tests {
             index == 119 ? Row(asleep: 500) : Row(asleep: index == 5 ? 540 : 420)
         }
         let record = try #require(InsightFixture.records(inputs, .recordLongestNight).first)
-        guard case .record(let evidence) = record.evidence else { Issue.record("expected record evidence"); return }
+        guard case .record(let evidence) = record.evidence else {
+            Issue.record("expected record evidence")
+            return
+        }
         #expect(evidence.scope == 90)
         #expect(evidence.previousBest == 420)
     }
@@ -523,7 +578,10 @@ struct InsightEngineV2Tests {
             index == 119 ? Row(asleep: 500) : Row(asleep: index == 79 ? 540 : 420)
         }
         let record = try #require(InsightFixture.records(outside30, .recordLongestNight).first)
-        guard case .record(let evidence) = record.evidence else { Issue.record("expected record evidence"); return }
+        guard case .record(let evidence) = record.evidence else {
+            Issue.record("expected record evidence")
+            return
+        }
         #expect(evidence.scope == 30, "beaten in the last 30 nights, but not the last 90")
         #expect(record.confidence == .moderate)
         // 10 nights back: inside both windows, so no record at all.
@@ -536,7 +594,10 @@ struct InsightEngineV2Tests {
     @Test func theLowestRestingHeartRateIsARecord() throws {
         let inputs = InsightFixture.inputs(count: 20) { index, _ in Row(resting: index == 19 ? 50 : (index == 7 ? 51 : 56)) }
         let record = try #require(InsightFixture.records(inputs, .recordLowestRestingHeartRate).first)
-        guard case .record(let evidence) = record.evidence else { Issue.record("expected record evidence"); return }
+        guard case .record(let evidence) = record.evidence else {
+            Issue.record("expected record evidence")
+            return
+        }
         #expect(evidence.value == 50 && evidence.previousBest == 51)
         // A tie at 51 is not a record.
         let tie = InsightFixture.inputs(count: 20) { index, _ in Row(resting: index == 19 ? 51 : (index == 7 ? 51 : 56)) }
@@ -548,7 +609,10 @@ struct InsightEngineV2Tests {
             InsightFixture.inputs(count: 20, recovery: InsightFixture.recoveryScores(count: 20) { $0 == 19 ? last : ($0 == 4 ? 88 : 70) })
         }
         let record = try #require(InsightFixture.records(inputs(last: 89), .recordHighestRecovery).first)
-        guard case .record(let evidence) = record.evidence else { Issue.record("expected record evidence"); return }
+        guard case .record(let evidence) = record.evidence else {
+            Issue.record("expected record evidence")
+            return
+        }
         #expect(evidence.value == 89 && evidence.previousBest == 88)
         #expect(InsightFixture.records(inputs(last: 88), .recordHighestRecovery).isEmpty, "a tie is not a record")
     }
@@ -557,7 +621,10 @@ struct InsightEngineV2Tests {
         // Weeks of ±40 minute bedtimes, then a steady last week.
         let inputs = InsightFixture.inputs(count: 30) { index, _ in Row(bedtime: index >= 23 ? 660 + Double(index % 2) : 660 + (index % 2 == 0 ? 40 : -40)) }
         let record = try #require(InsightFixture.records(inputs, .recordBestConsistency).first)
-        guard case .record(let evidence) = record.evidence else { Issue.record("expected record evidence"); return }
+        guard case .record(let evidence) = record.evidence else {
+            Issue.record("expected record evidence")
+            return
+        }
         #expect(evidence.value < 1, "0.5-minute spread")
         #expect(evidence.previousBest > 10)
     }
@@ -588,7 +655,8 @@ struct InsightEngineV2Tests {
     @Test func milestonesUnlockAtSevenFourteenAndThirtyNights() throws {
         func milestone(_ count: Int) -> Int? {
             guard let record = InsightFixture.records(InsightFixture.inputs(count: count), .milestone).first,
-                  case .milestone(let evidence) = record.evidence else { return nil }
+                case .milestone(let evidence) = record.evidence
+            else { return nil }
             return evidence.milestone
         }
         #expect(milestone(6) == nil)

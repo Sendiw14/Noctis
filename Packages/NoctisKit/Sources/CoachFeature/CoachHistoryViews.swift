@@ -107,7 +107,9 @@ struct CoachHistoryScreen: View {
                 .listRowInsets(EdgeInsets())
             }
             Section {
-                Button(role: .destructive) { confirmingDeleteAll = true } label: {
+                Button(role: .destructive) {
+                    confirmingDeleteAll = true
+                } label: {
                     HStack(spacing: NoctisSpacing.xs) {
                         Image(systemName: "trash").noctisIcon(15, .semibold, relativeTo: .subheadline)
                         Text(CoachHistoryContent.deleteAllTitle).noctisFont(15, .semibold, relativeTo: .subheadline)

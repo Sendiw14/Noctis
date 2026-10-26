@@ -63,6 +63,8 @@ final class SampleQATests: XCTestCase {
         let app = sample()
         QA.pause(2)
         app.buttons["sample.continue"].tap()
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@", "Apple Health")).firstMatch.waitForExistence(timeout: 8), "the Health step follows")
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@", "Apple Health")).firstMatch.waitForExistence(timeout: 8),
+            "the Health step follows")
     }
 }

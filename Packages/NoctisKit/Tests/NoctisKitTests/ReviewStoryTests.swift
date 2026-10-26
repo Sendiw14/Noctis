@@ -41,8 +41,10 @@ private func record(_ scenario: MockScenario, _ period: ReviewPeriod = week, ins
     async let sleep = provider.fetchSleepSamples(from: start, to: now)
     async let hrv = provider.fetchHRVSamples(from: start, to: now)
     async let resting = provider.fetchRestingHeartRate(from: start, to: now)
-    let nights = ReviewInputsBuilder.nights(sleep: try await sleep, hrv: try await hrv, restingHeartRate: try await resting, needMinutes: 480, now: now, timeZone: nyZone)
-    guard case .record(let value) = ReviewEngine.build(period: period, nights: nights, needMinutes: 480, insights: insights, now: now, calendar: calendar()) else {
+    let nights = ReviewInputsBuilder.nights(
+        sleep: try await sleep, hrv: try await hrv, restingHeartRate: try await resting, needMinutes: 480, now: now, timeZone: nyZone)
+    guard case .record(let value) = ReviewEngine.build(period: period, nights: nights, needMinutes: 480, insights: insights, now: now, calendar: calendar())
+    else {
         throw StoryTestError.notEnough
     }
     return value
@@ -53,28 +55,35 @@ private enum StoryTestError: Error { case notEnough }
 /// A record made by hand, for the cases a scenario does not reach.
 private nonisolated func handmade(
     _ period: ReviewPeriod = week, average: Double = 470, delta: Double? = 22, hasComparison: Bool = true, recovery: ReviewRecovery? = nil,
-    improvement: ReviewHighlight = .steady, change: ReviewHighlight = .steady, top: [ReviewChange] = [], insights: [String] = [], focus: ReviewFocus = .keepGoing,
+    improvement: ReviewHighlight = .steady, change: ReviewHighlight = .steady, top: [ReviewChange] = [], insights: [String] = [],
+    focus: ReviewFocus = .keepGoing,
     monthly: ReviewMonthlyExtras? = nil, nights recorded: Int? = nil
 ) -> ReviewRecord {
     let mornings = period.mornings
     let nights = (recorded.map { Array(mornings.prefix($0)) } ?? mornings).enumerated().map { index, morning in
         ReviewNightValues(
-            morning: morning, asleepMinutes: 440 + index * 10, stages: ReviewStages(deep: 60, core: 250, rem: 100), bedtimeMinutes: 650 + index * 5, wakeMinutes: 1130 + index * 4,
+            morning: morning, asleepMinutes: 440 + index * 10, stages: ReviewStages(deep: 60, core: 250, rem: 100), bedtimeMinutes: 650 + index * 5,
+            wakeMinutes: 1130 + index * 4,
             recoveryScore: recovery == nil ? nil : 60 + index
         )
     }
     return ReviewRecord(
-        id: period.id, firstMorning: period.firstMorning, lastMorning: period.lastMorning, generatedAt: now, nightsRecorded: nights.count, nightsInPeriod: period.morningCount,
-        hasComparison: hasComparison, sleep: ReviewSleep(averageMinutes: average, nightsReachedNeed: 4, needMinutes: 480, deltaMinutes: hasComparison ? delta : nil),
+        id: period.id, firstMorning: period.firstMorning, lastMorning: period.lastMorning, generatedAt: now, nightsRecorded: nights.count,
+        nightsInPeriod: period.morningCount,
+        hasComparison: hasComparison,
+        sleep: ReviewSleep(averageMinutes: average, nightsReachedNeed: 4, needMinutes: 480, deltaMinutes: hasComparison ? delta : nil),
         consistency: ReviewConsistency(bedtimeSD: 32.2, wakeSD: 18, bedtimeSDDelta: hasComparison ? -10 : nil, wakeSDDelta: nil), recovery: recovery,
         heart: ReviewHeart(hrvAverage: 52.4, hrvDelta: nil, restingHeartRateAverage: 55, restingHeartRateDelta: nil),
         timing: ReviewTiming(medianBedtimeMinutes: 665, medianWakeMinutes: 1140, bedtimeShift: hasComparison ? 12 : nil, wakeShift: nil), nights: nights,
-        biggestImprovement: hasComparison ? improvement : .noComparison, biggestChange: hasComparison ? change : .noComparison, topChanges: top, topInsightIDs: insights, nextFocus: focus,
+        biggestImprovement: hasComparison ? improvement : .noComparison, biggestChange: hasComparison ? change : .noComparison, topChanges: top,
+        topInsightIDs: insights, nextFocus: focus,
         monthly: monthly
     )
 }
 
-private nonisolated func extreme(_ value: Double, _ morning: SleepNightKey, also: Int = 0) -> ReviewExtreme { ReviewExtreme(value: value, morning: morning, alsoOn: also) }
+private nonisolated func extreme(_ value: Double, _ morning: SleepNightKey, also: Int = 0) -> ReviewExtreme {
+    ReviewExtreme(value: value, morning: morning, alsoOn: also)
+}
 
 private nonisolated func recovery(_ direction: RecoveryTrendDirection?, scored: Int = 7) -> ReviewRecovery {
     ReviewRecovery(
@@ -103,7 +112,10 @@ struct WeeklyStoryTests {
 
     @Test func theCoverStatesTheAverageAndTheDeltaInTheWordsSpecified() {
         let story = ReviewStoryBuilder.build(handmade(average: 467, delta: 22), format: format)
-        guard case .cover(let cover) = story.pages[0].content else { Issue.record("a cover"); return }
+        guard case .cover(let cover) = story.pages[0].content else {
+            Issue.record("a cover")
+            return
+        }
         #expect(cover.title == "Your week" && cover.averageMinutes == 467 && cover.deltaText == "+22 min vs the week before" && cover.deltaArrow == .up)
         #expect(cover.context == "7 of 7 nights were recorded." && cover.spokenAverage == "7 hours 47 minutes on average")
         guard case .cover(let down) = ReviewStoryBuilder.build(handmade(delta: -14), format: format).pages[0].content else { return }
@@ -116,9 +128,14 @@ struct WeeklyStoryTests {
 
     @Test func theSleepPageHasSevenBarsALineAtTheNeedAndTheCount() {
         let story = ReviewStoryBuilder.build(handmade(nights: 6), format: format)
-        guard case .bars(let page) = story.pages[1].content else { Issue.record("bars"); return }
+        guard case .bars(let page) = story.pages[1].content else {
+            Issue.record("bars")
+            return
+        }
         #expect(page.bars.count == 7 && page.bars.map(\.label) == ["S", "M", "T", "W", "T", "F", "S"] && !page.slim)
-        #expect(page.bars.last?.fraction == nil && page.bars.last?.spoken == "\(format.weekdayDay(week.mornings[6])): no sleep recorded", "a night with no sleep is no bar")
+        #expect(
+            page.bars.last?.fraction == nil && page.bars.last?.spoken == "\(format.weekdayDay(week.mornings[6])): no sleep recorded",
+            "a night with no sleep is no bar")
         #expect(page.bars.dropLast().allSatisfy { $0.fraction != nil && $0.stages != nil })
         #expect(page.headline == "Reached your need on 4 of 6 nights" && page.needText == "8h need")
         #expect(page.needFraction > 0 && page.needFraction < 1 && page.topMinutes.truncatingRemainder(dividingBy: 30) == 0)
@@ -128,7 +145,10 @@ struct WeeklyStoryTests {
 
     @Test func theConsistencyPageSaysHowMuchTheBedtimeVariedAndTheChange() {
         let story = ReviewStoryBuilder.build(handmade(), format: format)
-        guard case .timing(let page) = story.pages[2].content else { Issue.record("timing"); return }
+        guard case .timing(let page) = story.pages[2].content else {
+            Issue.record("timing")
+            return
+        }
         #expect(page.headline == "Bedtime varied by 32 min" && page.lines.first == "Bedtime varied 10 min less than the week before.")
         #expect(page.rows.count == 7 && page.rows.allSatisfy { (0...1).contains($0.bedtime) && (0...1).contains($0.wake) && $0.wake > $0.bedtime })
         #expect(page.ticks.count >= 2 && page.ticks.count <= 4 && page.ticks.map(\.position) == page.ticks.map(\.position).sorted())
@@ -137,9 +157,14 @@ struct WeeklyStoryTests {
     }
 
     @Test func theRecoveryPageSaysTheDirectionInPlainWordsAndIsLeftOutWithoutScores() {
-        for (direction, words, arrow) in [(RecoveryTrendDirection.rising, "Rising", ReviewArrow.up), (.steady, "Steady", .flat), (.lower, "Lower than earlier", .down)] {
+        for (direction, words, arrow) in [
+            (RecoveryTrendDirection.rising, "Rising", ReviewArrow.up), (.steady, "Steady", .flat), (.lower, "Lower than earlier", .down),
+        ] {
             let story = ReviewStoryBuilder.build(handmade(recovery: recovery(direction)), format: format)
-            guard case .line(let page) = story.pages[3].content else { Issue.record("a line"); return }
+            guard case .line(let page) = story.pages[3].content else {
+                Issue.record("a line")
+                return
+            }
             #expect(page.direction == words && page.directionArrow == arrow && page.headline == "Recovery averaged 71", Comment(rawValue: words))
             #expect(page.lines.first == "Highest 82, on \(format.weekdayDay(week.mornings[2]))." && page.lines.last == "4 points higher than the week before.")
             #expect(page.lines[1] == "Lowest 60, on \(format.weekdayDay(week.mornings[4])), and equalled on 1 other night.")
@@ -147,7 +172,10 @@ struct WeeklyStoryTests {
             #expect(page.axis.map(\.label).allSatisfy { Int($0) != nil }, "whole numbers on the axis")
         }
         // Fewer than five scored nights: a score, but no direction to claim.
-        guard case .line(let unsure) = ReviewStoryBuilder.build(handmade(recovery: recovery(nil, scored: 4)), format: format).pages[3].content else { Issue.record("a line"); return }
+        guard case .line(let unsure) = ReviewStoryBuilder.build(handmade(recovery: recovery(nil, scored: 4)), format: format).pages[3].content else {
+            Issue.record("a line")
+            return
+        }
         #expect(unsure.direction == nil && unsure.directionArrow == nil)
         // No scores at all: no page.
         #expect(!kinds(ReviewStoryBuilder.build(handmade(recovery: nil), format: format)).contains(.recovery))
@@ -162,8 +190,11 @@ struct WeeklyStoryTests {
             }
         }
         let two = page(.change(hrv), .change(sleep))
-        #expect(two?.tiles.map(\.caption) == ["Biggest improvement", "Biggest change"] && two?.steadySentence == nil && two?.headline == "Compared with the week before")
-        #expect(two?.tiles.first?.metric == "Average HRV" && two?.tiles.first?.from == "49 ms" && two?.tiles.first?.to == "52 ms" && two?.tiles.first?.arrow == .up)
+        #expect(
+            two?.tiles.map(\.caption) == ["Biggest improvement", "Biggest change"] && two?.steadySentence == nil
+                && two?.headline == "Compared with the week before")
+        #expect(
+            two?.tiles.first?.metric == "Average HRV" && two?.tiles.first?.from == "49 ms" && two?.tiles.first?.to == "52 ms" && two?.tiles.first?.arrow == .up)
         #expect(two?.tiles.last?.from == "7h 25m" && two?.tiles.last?.to == "7h 47m")
         // The same metric is one tile: not padded into two.
         #expect(page(.change(sleep), .change(sleep))?.tiles.map(\.caption) == ["Biggest improvement"])
@@ -172,7 +203,9 @@ struct WeeklyStoryTests {
         #expect(fall?.tiles.map(\.caption) == ["Biggest change"] && fall?.tiles.first?.arrow == .down)
         // Compared, and nothing moved: one calm sentence and no highlight.
         let steady = page(.steady, .steady)
-        #expect(steady?.tiles.isEmpty == true && steady?.headline == "A steady week" && steady?.steadySentence == "Compared with the week before, nothing moved by much.")
+        #expect(
+            steady?.tiles.isEmpty == true && steady?.headline == "A steady week"
+                && steady?.steadySentence == "Compared with the week before, nothing moved by much.")
     }
 
     @Test func withNothingToCompareThereIsNoChangesPageAndNothingIsCalledSteady() {
@@ -185,7 +218,10 @@ struct WeeklyStoryTests {
     @Test func theInsightPageIsThereOnlyWithAnInsightAndTheFocusIsAlwaysLast() {
         #expect(!kinds(ReviewStoryBuilder.build(handmade(), format: format)).contains(.insight))
         let story = ReviewStoryBuilder.build(handmade(insights: ["a-1"]), format: format)
-        guard case .insights(let page) = story.pages[story.pages.count - 2].content else { Issue.record("insights"); return }
+        guard case .insights(let page) = story.pages[story.pages.count - 2].content else {
+            Issue.record("insights")
+            return
+        }
         #expect(page.insightIDs == ["a-1"] && story.pages.last?.kind == .focus)
         // A page whose insight has gone is left out, never filled.
         #expect(!kinds(story.keepingInsights([])).contains(.insight) && kinds(story.keepingInsights(["a-1"])).contains(.insight))
@@ -193,12 +229,16 @@ struct WeeklyStoryTests {
 
     @Test func theFocusIsOneSentenceAndAskCoachOnlyWhenThereIsSomethingToAsk() {
         let cases: [(ReviewFocus, ReviewCoachTopic?)] = [
-            (.steadyBedtime(minutes: 52), .consistency), (.sleepNeed(minutesBehind: 93), .bedtime), (.gentleShiftBack(minutesLater: 50), .bedtime), (.recentNights(nights: 6), .recovery),
+            (.steadyBedtime(minutes: 52), .consistency), (.sleepNeed(minutesBehind: 93), .bedtime), (.gentleShiftBack(minutesLater: 50), .bedtime),
+            (.recentNights(nights: 6), .recovery),
             (.keepGoing, nil),
         ]
         for (focus, topic) in cases {
             let story = ReviewStoryBuilder.build(handmade(focus: focus), format: format)
-            guard case .focus(let page) = story.pages.last?.content else { Issue.record("a focus"); return }
+            guard case .focus(let page) = story.pages.last?.content else {
+                Issue.record("a focus")
+                return
+            }
             #expect(page.coachTopic == topic && !page.headline.isEmpty)
         }
         // Coach is handed its own question and nothing from the review.
@@ -216,7 +256,10 @@ struct WeeklyStoryTests {
             }
         }
         #expect(strings.count > 300)
-        let extra = ["streak", "miss", "fail", "lazy", "guilt", "shame", "worse", "wrong", "!", "should", "because", "caused", "due to", "led to", "diagnos", "symptom", "disorder", "red"]
+        let extra = [
+            "streak", "miss", "fail", "lazy", "guilt", "shame", "worse", "wrong", "!", "should", "because", "caused", "due to", "led to", "diagnos", "symptom",
+            "disorder", "red",
+        ]
         for text in strings {
             #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: text))
             // "red" only as a whole word ("reduced" is fine).
@@ -235,13 +278,19 @@ struct MonthlyStoryTests {
         #expect(kinds(story) == [.cover, .sleepPattern, .recoveryPattern, .timing, .majorChanges, .insights, .records])
         #expect(story.pages.map { $0.tint } == [.apricot, .sage, .lavender, .butter, .sand, .cocoa, .paper])
         #expect(story.title == "Your month" && story.dateRange == "August 2026")
-        guard case .insights(let page) = story.pages[5].content else { Issue.record("insights"); return }
+        guard case .insights(let page) = story.pages[5].content else {
+            Issue.record("insights")
+            return
+        }
         #expect(page.insightIDs == ["insight-3", "insight-2", "insight-1"], "the three best")
     }
 
     @Test func theSleepPatternHasASlimBarForEveryDayTheAverageAndTheExtremes() async throws {
         let story = ReviewStoryBuilder.build(try await record(.full, month), format: format)
-        guard case .bars(let page) = story.pages[1].content else { Issue.record("bars"); return }
+        guard case .bars(let page) = story.pages[1].content else {
+            Issue.record("bars")
+            return
+        }
         #expect(page.slim && page.bars.count == 31 && page.bars.allSatisfy { $0.stages == nil || $0.fraction != nil })
         #expect(page.averageFraction != nil && page.averageText?.hasSuffix("average") == true)
         #expect(page.bars.contains { $0.reachedNeed } && page.bars.contains { !$0.reachedNeed && $0.fraction != nil }, "reached-need coloring has both colors")
@@ -251,19 +300,35 @@ struct MonthlyStoryTests {
 
     @Test func theRollingRecoveryLineAndTheTimingRhythmHaveAGapWhereTheresNoData() async throws {
         let story = ReviewStoryBuilder.build(try await record(.full, month), format: format)
-        guard case .line(let line) = story.pages[2].content, case .timing(let timing) = story.pages[3].content else { Issue.record("pages"); return }
-        #expect(line.points.count == 31 && line.points.contains { $0 == nil } && line.points.contains { $0 != nil }, "the first mornings have no 7-night average yet")
+        guard case .line(let line) = story.pages[2].content, case .timing(let timing) = story.pages[3].content else {
+            Issue.record("pages")
+            return
+        }
+        #expect(
+            line.points.count == 31 && line.points.contains { $0 == nil } && line.points.contains { $0 != nil },
+            "the first mornings have no 7-night average yet")
         #expect(line.direction == nil && line.headline.hasPrefix("Recovery averaged "))
-        #expect(timing.rows.count == 31 && timing.headline.hasPrefix("Bedtime varied by ") && timing.lines.contains { $0.hasPrefix("Your median bedtime was") && $0.contains("than the month before") })
+        #expect(
+            timing.rows.count == 31 && timing.headline.hasPrefix("Bedtime varied by ")
+                && timing.lines.contains { $0.hasPrefix("Your median bedtime was") && $0.contains("than the month before") })
     }
 
     @Test func majorChangesAreUpToThreeWithBothNumbersOrASteadyMonth() {
         let many = [change(.duration, 460, 430, 1.4), change(.recovery, 74, 70, 0.9), change(.hrv, 55, 52, 0.6)]
         let story = ReviewStoryBuilder.build(handmade(month, top: many), format: format)
-        guard case .changes(let page) = story.pages.first(where: { $0.kind == .majorChanges })?.content else { Issue.record("changes"); return }
+        guard case .changes(let page) = story.pages.first(where: { $0.kind == .majorChanges })?.content else {
+            Issue.record("changes")
+            return
+        }
         #expect(page.tiles.count == 3 && page.tiles.map(\.caption) == ["Change", "Change", "Change"] && page.tiles[1].from == "70" && page.tiles[1].to == "74")
         #expect(page.headline == "Compared with the month before" && page.tiles[0].summary.hasSuffix("in the month before."))
-        guard case .changes(let steady) = ReviewStoryBuilder.build(handmade(month, top: []), format: format).pages.first(where: { $0.kind == .majorChanges })?.content else { Issue.record("steady"); return }
+        guard
+            case .changes(let steady) = ReviewStoryBuilder.build(handmade(month, top: []), format: format).pages.first(where: { $0.kind == .majorChanges })?
+                .content
+        else {
+            Issue.record("steady")
+            return
+        }
         #expect(steady.headline == "A steady month" && steady.steadySentence == "Compared with the month before, nothing moved by much.")
         #expect(!kinds(ReviewStoryBuilder.build(handmade(month, hasComparison: false), format: format)).contains(.majorChanges))
     }
@@ -271,8 +336,13 @@ struct MonthlyStoryTests {
     @Test func recordsAreOnlyTheOnesThatExistWithTheirDatesAndTies() {
         let extras = ReviewMonthlyExtras(recoveryRolling: [], longestNight: extreme(521, month.mornings[11], also: 2), highestRecovery: nil)
         let story = ReviewStoryBuilder.build(handmade(month, monthly: extras), format: format)
-        guard case .records(let page) = story.pages.last?.content else { Issue.record("records"); return }
-        #expect(page.blocks.map(\.kind) == [.longestNight] && page.blocks[0].minutes == 521 && page.blocks[0].date == format.weekdayDay(month.mornings[11]) && page.blocks[0].tie == "Equalled on 2 other nights")
+        guard case .records(let page) = story.pages.last?.content else {
+            Issue.record("records")
+            return
+        }
+        #expect(
+            page.blocks.map(\.kind) == [.longestNight] && page.blocks[0].minutes == 521 && page.blocks[0].date == format.weekdayDay(month.mornings[11])
+                && page.blocks[0].tie == "Equalled on 2 other nights")
         let both = ReviewMonthlyExtras(recoveryRolling: [], longestNight: extreme(521, month.mornings[11]), highestRecovery: extreme(91, month.mornings[20]))
         guard case .records(let more) = ReviewStoryBuilder.build(handmade(month, monthly: both), format: format).pages.last?.content else { return }
         #expect(more.blocks.map(\.kind) == [.longestNight, .highestRecovery] && more.blocks[1].score == 91 && more.blocks[1].tie == nil)
@@ -282,7 +352,9 @@ struct MonthlyStoryTests {
 
     @Test func thePatternsBuildFromWholeNumbers() async throws {
         let story = ReviewStoryBuilder.build(try await record(.full, month), format: format)
-        for text in ReviewStoryBuilder.allStrings(story) where text.contains("averaged") { #expect(text.range(of: #"\d\.\d"#, options: .regularExpression) == nil, Comment(rawValue: text)) }
+        for text in ReviewStoryBuilder.allStrings(story) where text.contains("averaged") {
+            #expect(text.range(of: #"\d\.\d"#, options: .regularExpression) == nil, Comment(rawValue: text))
+        }
     }
 }
 
@@ -334,8 +406,11 @@ struct StoryPlanTests {
         #expect(plain != detailed)
         if let directory = ProcessInfo.processInfo.environment["NOCTIS_RENDER_OUT"] {
             try? FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
-            for (name, scheme, includeDetails) in [("review-share-light", ColorScheme.light, false), ("review-share-dark", .dark, false), ("review-share-details", .light, true)] {
-                try? ReviewShareRenderer.render(share, includeDetails: includeDetails, colorScheme: scheme)?.pngData()?.write(to: URL(fileURLWithPath: directory).appendingPathComponent("\(name).png"))
+            for (name, scheme, includeDetails) in [
+                ("review-share-light", ColorScheme.light, false), ("review-share-dark", .dark, false), ("review-share-details", .light, true),
+            ] {
+                try? ReviewShareRenderer.render(share, includeDetails: includeDetails, colorScheme: scheme)?.pngData()?.write(
+                    to: URL(fileURLWithPath: directory).appendingPathComponent("\(name).png"))
             }
         }
     }
@@ -345,11 +420,14 @@ struct StoryPlanTests {
 
 @MainActor
 struct StoryViewModelTests {
-    private func model(unlocked: Box = Box(true), kind: ReviewKind = .weekly, startPage: String? = nil, reference: Date = now) async -> (ReviewStoryViewModel, Box) {
+    private func model(
+        unlocked: Box = Box(true), kind: ReviewKind = .weekly, startPage: String? = nil, reference: Date = now
+    ) async -> (ReviewStoryViewModel, Box) {
         let provider = MockHealthKitProvider(scenario: .full, referenceDate: reference, calendar: calendar(), startAuthorized: true)
         let repository = ReviewRepository(provider: provider, store: ReviewStore(), insights: InsightStore(), timeZone: { nyZone }, clock: { reference })
         let model = ReviewStoryViewModel(
-            kind: kind, id: nil, repository: repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, isUnlocked: { _ in unlocked.value }, clock: { reference },
+            kind: kind, id: nil, repository: repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, isUnlocked: { _ in unlocked.value },
+            clock: { reference },
             locale: Locale(identifier: "en_US"), startPage: startPage
         )
         await model.load()
@@ -474,7 +552,9 @@ struct StoryColorTests {
             switch tint {
             case .cocoa: quiet = noctisBlendHex(palette.nightInk, over: fill, alpha: 0.7)
             case .paper: quiet = palette.ink2
-            default: quiet = noctisBlendHex(palette.blockInk, over: fill, alpha: tint.section?.quietOpacity(target: NoctisFieldInkStyle.summaryOpacity, dark: dark) ?? 0.8)
+            default:
+                quiet = noctisBlendHex(
+                    palette.blockInk, over: fill, alpha: tint.section?.quietOpacity(target: NoctisFieldInkStyle.summaryOpacity, dark: dark) ?? 0.8)
             }
             #expect(ratio(quiet, fill) >= 4.5, "\(mode) \(tint): quieter ink \(ratio(quiet, fill))")
             // Next and Done: the page's own color on its ink.
@@ -489,7 +569,9 @@ struct StoryColorTests {
     @Test func everyColorIsOneOfTheAppsTokensAndAFlatFill() {
         // The page colors are the field tokens the tab scaffold names (R27), so their contrast is held by the field tests; no page has a color of its own.
         #expect(ReviewPageTint.apricot.section == .home && ReviewPageTint.sage.section == .sleep && ReviewPageTint.lavender.section == .recovery)
-        #expect(ReviewPageTint.butter.section == .insights && ReviewPageTint.sand.section == .profile && ReviewPageTint.cocoa.section == nil && ReviewPageTint.paper.section == nil)
+        #expect(
+            ReviewPageTint.butter.section == .insights && ReviewPageTint.sand.section == .profile && ReviewPageTint.cocoa.section == nil
+                && ReviewPageTint.paper.section == nil)
     }
 }
 
@@ -498,7 +580,9 @@ struct StoryColorTests {
 struct StoryMetricTests {
     @Test func aWrittenValueIsReadAsPartsSoItsUnitsAreSetTheWayEveryUnitIs() {
         #expect(NoctisMetricValue(reading: "6h 42m").parts == [.number("6"), .unit("h"), .space, .number("42"), .unit("m")])
-        #expect(NoctisMetricValue(reading: "32 min").parts == [.number("32"), .space, .unit("min")] || NoctisMetricValue(reading: "32 min").parts == [.number("32"), .unit("min")])
+        #expect(
+            NoctisMetricValue(reading: "32 min").parts == [.number("32"), .space, .unit("min")]
+                || NoctisMetricValue(reading: "32 min").parts == [.number("32"), .unit("min")])
         #expect(NoctisMetricValue(reading: "52 ms").plain.contains("52") && NoctisMetricValue(reading: "71").parts == [.number("71")])
         #expect(NoctisMetricValue(reading: "73.5 ms").parts.first == .number("73.5") && NoctisMetricValue(reading: "6h 42m").spoken == "6h 42m")
     }
@@ -518,7 +602,10 @@ struct ReviewListBuilderTests {
         let weeks = list.filter { $0.kind == .weekly }, months = list.filter { $0.kind == .monthly }
         #expect(weeks.count <= ReviewListBuilder.weeklyLimit && months.count <= ReviewListBuilder.monthlyLimit && weeks.first == week)
         #expect(zip(weeks, weeks.dropFirst()).allSatisfy { $0.previous == $1 }, "weeks tile with no gap")
-        #expect(list.allSatisfy { $0.isComplete(at: now, calendar: ny) && $0.firstMorning >= ReviewPeriod.today(now, calendar: ny).adding(days: -ReviewListBuilder.lookbackDays) })
+        #expect(
+            list.allSatisfy {
+                $0.isComplete(at: now, calendar: ny) && $0.firstMorning >= ReviewPeriod.today(now, calendar: ny).adding(days: -ReviewListBuilder.lookbackDays)
+            })
         #expect(months.first == month && ReviewListBuilder.lookbackDays < ReviewInputsBuilder.historyDays)
         // A different review day moves the weeks.
         #expect(ReviewListBuilder.candidates(now: now, weekday: 4, calendar: ny).first?.lastMorning == key(2026, 9, 22))
@@ -532,28 +619,37 @@ struct ReviewListBuilderTests {
         library.put(stored(month, average: 475, state: .new))
         let list = ReviewListBuilder.build(library: library, counts: [:], now: now, weekday: 1, calendar: calendar(), format: format)
         #expect(list.weekly.map(\.id) == [week.id, older.id] && list.monthly.map(\.id) == [month.id])
-        #expect(list.weekly.map(\.status) == [.new, .opened] && list.weekly.map(\.title) == ["Sep 20 \u{2013} 26", "Sep 13 \u{2013} 19"] && list.monthly.first?.title == "August 2026")
+        #expect(
+            list.weekly.map(\.status) == [.new, .opened] && list.weekly.map(\.title) == ["Sep 20 \u{2013} 26", "Sep 13 \u{2013} 19"]
+                && list.monthly.first?.title == "August 2026")
         #expect(list.weekly.map(\.headline) == ["7h 47m a night", "7h 30m a night"] && !list.isEmpty)
-        #expect(list.weekly[0].spoken == "Sep 20 \u{2013} 26, 7 hours 47 minutes a night on average, not opened yet" && list.weekly[1].spoken.hasSuffix("opened"))
+        #expect(
+            list.weekly[0].spoken == "Sep 20 \u{2013} 26, 7 hours 47 minutes a night on average, not opened yet" && list.weekly[1].spoken.hasSuffix("opened"))
     }
 
     @Test func aPastPeriodWithTooFewNightsIsItsOwnRowAndAnEmptyOrCompleteOneIsNot() {
         let two = week.previous, none = week.previous.previous, enough = week.previous.previous.previous
         let counts: [ReviewID: Int] = [week.id: 4, two.id: 1, none.id: 0, enough.id: 6, month.id: 19]
         let list = ReviewListBuilder.build(library: ReviewLibrary(), counts: counts, now: now, weekday: 1, calendar: calendar(), format: format)
-        #expect(list.weekly.map(\.id) == [week.id, two.id], "4 of 5 and 1 of 5 are listed; 0 nights is no row, and 6 nights is a review that was not made, not a gap")
+        #expect(
+            list.weekly.map(\.id) == [week.id, two.id],
+            "4 of 5 and 1 of 5 are listed; 0 nights is no row, and 6 nights is a review that was not made, not a gap")
         #expect(list.weekly.map(\.headline) == ["4 of 5 nights", "1 of 5 nights"] && list.weekly.first?.status == .notEnough(have: 4, need: 5))
         #expect(list.monthly.map(\.headline) == ["19 of 20 nights"] && list.monthly.first?.spoken == "August 2026, not enough nights, 19 of 20")
         // A made review is never also a gap, and nothing is listed with nothing to list.
         var library = ReviewLibrary()
         library.put(stored(week))
-        #expect(ReviewListBuilder.build(library: library, counts: counts, now: now, weekday: 1, calendar: calendar(), format: format).weekly.map(\.status) == [.new, .notEnough(have: 1, need: 5)])
+        #expect(
+            ReviewListBuilder.build(library: library, counts: counts, now: now, weekday: 1, calendar: calendar(), format: format).weekly.map(\.status) == [
+                .new, .notEnough(have: 1, need: 5),
+            ])
         #expect(ReviewListBuilder.build(library: ReviewLibrary(), counts: [:], now: now, weekday: 1, calendar: calendar(), format: format).isEmpty)
     }
 
     @Test func everyWordOfTheListIsFreeOfTheBannedLanguageAndNeverACountOrABadge() {
         var library = ReviewLibrary()
-        library.put(stored(week)); library.put(stored(month, state: .seen))
+        library.put(stored(week))
+        library.put(stored(month, state: .seen))
         let list = ReviewListBuilder.build(library: library, counts: [week.previous.id: 3], now: now, weekday: 1, calendar: calendar(), format: format)
         let strings = (list.weekly + list.monthly).flatMap { [$0.title, $0.headline, $0.spoken] }
         #expect(strings.count >= 9)
@@ -572,14 +668,19 @@ struct ReviewsListViewModelTests {
     }
 
     private func model(_ repository: ReviewRepository?, unlocked: Bool = true) -> ReviewsListViewModel {
-        ReviewsListViewModel(repository: repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, isUnlocked: { _ in unlocked }, clock: { now }, locale: Locale(identifier: "en_US"))
+        ReviewsListViewModel(
+            repository: repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, isUnlocked: { _ in unlocked }, clock: { now },
+            locale: Locale(identifier: "en_US"))
     }
 
     @Test func aFreshInstallHasNothingListedExceptTheGapsThatHaveSomeNights() async {
         let model = model(repository(.sparseWeek))
         #expect(model.phase == .loading)
         await model.load()
-        guard case .content(let list) = model.phase else { Issue.record("content: \(model.phase)"); return }
+        guard case .content(let list) = model.phase else {
+            Issue.record("content: \(model.phase)")
+            return
+        }
         #expect(list.weekly.first?.headline == "4 of 5 nights", "the week with four nights is a gap row")
         #expect(list.weekly.first?.status == .notEnough(have: 4, need: 5) && list.weekly.allSatisfy { if case .notEnough = $0.status { true } else { false } })
     }
@@ -587,12 +688,16 @@ struct ReviewsListViewModelTests {
     @Test func aReviewThatWasMadeIsListedAndOpenedOnceItIsRead() async throws {
         let repository = repository()
         let story = ReviewStoryViewModel(
-            kind: .weekly, id: nil, repository: repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, clock: { now }, locale: Locale(identifier: "en_US")
+            kind: .weekly, id: nil, repository: repository, profile: { UserProfileSnapshot() }, weekday: { 1 }, clock: { now },
+            locale: Locale(identifier: "en_US")
         )
         await story.load()
         let model = model(repository)
         await model.load()
-        guard case .content(let list) = model.phase else { Issue.record("content"); return }
+        guard case .content(let list) = model.phase else {
+            Issue.record("content")
+            return
+        }
         #expect(list.weekly.first?.id == week.id && list.weekly.first?.status == .opened, "opening the story marked it opened")
         #expect(list.monthly.isEmpty, "the month was never made, and a made month is all that is listed")
     }
@@ -615,7 +720,8 @@ struct ReviewNightCountTests {
         let counts = try #require(await repository.nightCounts(for: [week, week.previous, month], profile: UserProfileSnapshot()))
         #expect(counts[week.id] == 4 && counts[week.previous.id] == 7 && counts[month.id] == 31)
         let denied = ReviewRepository(
-            provider: MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: calendar(), startAuthorized: false), store: ReviewStore(), insights: InsightStore(),
+            provider: MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: calendar(), startAuthorized: false), store: ReviewStore(),
+            insights: InsightStore(),
             timeZone: { nyZone }, clock: { now }
         )
         let none = await denied.nightCounts(for: [week], profile: UserProfileSnapshot())

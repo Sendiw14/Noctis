@@ -49,11 +49,12 @@ struct BreathHapticPlannerTests {
         let events = BreathHapticPlanner.events(for: schedule(.calm, minutes: 2))
         // 4-2-6 is twelve seconds: ten breaths of three phases fill two minutes.
         #expect(events.count == 31)
-        #expect(Array(events.prefix(7)) == [
-            BreathHapticEvent(time: 0, haptic: .inhale), BreathHapticEvent(time: 4, haptic: .hold), BreathHapticEvent(time: 6, haptic: .exhale),
-            BreathHapticEvent(time: 12, haptic: .inhale), BreathHapticEvent(time: 16, haptic: .hold), BreathHapticEvent(time: 18, haptic: .exhale),
-            BreathHapticEvent(time: 24, haptic: .inhale),
-        ])
+        #expect(
+            Array(events.prefix(7)) == [
+                BreathHapticEvent(time: 0, haptic: .inhale), BreathHapticEvent(time: 4, haptic: .hold), BreathHapticEvent(time: 6, haptic: .exhale),
+                BreathHapticEvent(time: 12, haptic: .inhale), BreathHapticEvent(time: 16, haptic: .hold), BreathHapticEvent(time: 18, haptic: .exhale),
+                BreathHapticEvent(time: 24, haptic: .inhale),
+            ])
         #expect(events.last == BreathHapticEvent(time: 120, haptic: .done))
     }
 
@@ -74,13 +75,15 @@ struct BreathHapticPlannerTests {
             for minutes in BreathingSchedule.durations {
                 let plan = schedule(id, minutes: minutes)
                 let events = BreathHapticPlanner.events(for: plan)
-                #expect(events.map(\.time) == events.map(\.time).sorted() && Set(events.map(\.time)).count == events.count, Comment(rawValue: "\(id) \(minutes)"))
+                #expect(
+                    events.map(\.time) == events.map(\.time).sorted() && Set(events.map(\.time)).count == events.count, Comment(rawValue: "\(id) \(minutes)"))
                 #expect(events.count == plan.cycles * plan.phasesPerCycle + 1 && events.first?.time == 0 && events.last?.time == Double(plan.totalSeconds))
                 #expect(events.filter { $0.haptic == .done }.count == 1)
                 // Each event falls exactly where a phase begins.
                 for event in events.dropLast() {
                     let moment = plan.moment(at: event.time)
-                    #expect(moment.secondsIntoPhase == 0 && BreathHapticPlanner.haptic(for: moment.kind) == event.haptic, Comment(rawValue: "\(id) \(event.time)"))
+                    #expect(
+                        moment.secondsIntoPhase == 0 && BreathHapticPlanner.haptic(for: moment.kind) == event.haptic, Comment(rawValue: "\(id) \(event.time)"))
                 }
             }
         }
@@ -303,7 +306,9 @@ struct WatchBreathFrameTests {
         func frame(_ seconds: Double) -> WatchBreathFrame { WatchBreathFrame(moment: plan.moment(at: seconds)) }
         #expect(frame(0).phase == "Breathe in" && frame(0).seconds == 4 && frame(0).level == 0 && abs(frame(0).circleScale - 0.4) < 1e-9)
         #expect(frame(2).level == 0.5 && abs(frame(2).circleScale - 0.7) < 1e-9, "the middle of an inhale is half full")
-        #expect(frame(4).phase == "Hold" && frame(4).seconds == 2 && frame(4).level == 1 && abs(frame(4).circleScale - 1) < 1e-9, "the boundary belongs to the phase that begins")
+        #expect(
+            frame(4).phase == "Hold" && frame(4).seconds == 2 && frame(4).level == 1 && abs(frame(4).circleScale - 1) < 1e-9,
+            "the boundary belongs to the phase that begins")
         #expect(frame(3.999).phase == "Breathe in" && frame(3.999).seconds == 1)
         #expect(frame(6).phase == "Breathe out" && frame(6).seconds == 6 && frame(6).level == 1)
         #expect(frame(9).level == 0.5 && frame(11.99).seconds == 1 && frame(11.99).level < 0.01)
@@ -330,8 +335,10 @@ struct WatchBreathFrameTests {
 
     @Test func theWordsMakeNoHealthClaim() {
         let words = [
-            WatchBreathCopy.tagline, WatchBreathCopy.button, WatchBreathCopy.raiseWrist, WatchBreathCopy.done, WatchBreathCopy.again, WatchBreathCopy.close, WatchBreathCopy.start,
-            WatchBreathCopy.end, WatchBreathCopy.hapticsToggle, WatchBreathCopy.inhale, WatchBreathCopy.hold, WatchBreathCopy.exhale, WatchBreathCopy.minutes(5),
+            WatchBreathCopy.tagline, WatchBreathCopy.button, WatchBreathCopy.raiseWrist, WatchBreathCopy.done, WatchBreathCopy.again, WatchBreathCopy.close,
+            WatchBreathCopy.start,
+            WatchBreathCopy.end, WatchBreathCopy.hapticsToggle, WatchBreathCopy.inhale, WatchBreathCopy.hold, WatchBreathCopy.exhale,
+            WatchBreathCopy.minutes(5),
         ]
         #expect(WatchBreathCopy.tagline == "A slow breathing exercise.")
         for text in words {

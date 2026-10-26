@@ -32,11 +32,12 @@ public struct SoundsScreen: View {
             contentTop: .overlapsField,
             scrollPosition: $scrollPosition,
             configureScroll: { scroll in
-                AnyView(scroll.onScrollGeometryChange(for: Bool.self) { geometry in
-                    geometry.contentOffset.y + geometry.containerSize.height < geometry.contentSize.height + geometry.contentInsets.bottom - 1
-                } action: { _, below in
-                    contentBelow = below
-                })
+                AnyView(
+                    scroll.onScrollGeometryChange(for: Bool.self) { geometry in
+                        geometry.contentOffset.y + geometry.containerSize.height < geometry.contentSize.height + geometry.contentInsets.bottom - 1
+                    } action: { _, below in
+                        contentBelow = below
+                    })
             }
         ) {
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
@@ -100,7 +101,7 @@ private struct SoundGrid: View {
                         viewModel.tap(tile.kind)
                     }
                 }
-                    .noctisRise(index: index)
+                .noctisRise(index: index)
             }
         }
     }
@@ -222,7 +223,8 @@ struct NowPlayingBar: View {
             VStack(alignment: .leading, spacing: NoctisSpacing.sm) {
                 // The tile and the name above, the timer and play under them, at accessibility sizes: in one row the name took a 40pt column
                 // ("Oce / an", "Paus / ed by / iPho / ne" on an SE at AX5) and the timer's pill ran over the play button.
-                let layout = dynamicTypeSize.isAccessibilitySize
+                let layout =
+                    dynamicTypeSize.isAccessibilitySize
                     ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.sm))
                     : AnyLayout(HStackLayout(spacing: NoctisSpacing.sm))
                 layout {
@@ -405,7 +407,9 @@ struct SoundTimerSheet: View {
                         VStack(spacing: 0) {
                             ForEach(Array(viewModel.timerChoices.enumerated()), id: \.element.choice.id) { index, item in
                                 if index > 0 { Rectangle().fill(NoctisAppColor.hairline).frame(height: 1) }
-                                Button { viewModel.selectTimer(item.choice) } label: {
+                                Button {
+                                    viewModel.selectTimer(item.choice)
+                                } label: {
                                     HStack {
                                         Text(item.choice.title)
                                             .noctisFont(17, relativeTo: .body)

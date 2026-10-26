@@ -86,7 +86,10 @@ final class WatchBreathModel {
     }
 
     var hapticsOn: Bool {
-        get { access(keyPath: \.hapticsOn); return preferences.breathHaptics }
+        get {
+            access(keyPath: \.hapticsOn)
+            return preferences.breathHaptics
+        }
         set { withMutation(keyPath: \.hapticsOn) { preferences.breathHaptics = newValue } }
     }
 
@@ -229,8 +232,10 @@ struct BreathPickerView: View {
                     .accessibilityAddTraits(.isHeader)
                 HStack(spacing: 4) {
                     ForEach(BreathingPattern.all) { pattern in
-                        BreathChip(title: pattern.title, detail: pattern.rhythm, selected: model.choice.pattern == pattern.id) { model.choice.pattern = pattern.id }
-                            .accessibilityLabel("\(pattern.title), \(pattern.rhythm)")
+                        BreathChip(title: pattern.title, detail: pattern.rhythm, selected: model.choice.pattern == pattern.id) {
+                            model.choice.pattern = pattern.id
+                        }
+                        .accessibilityLabel("\(pattern.title), \(pattern.rhythm)")
                     }
                 }
                 HStack(spacing: 4) {

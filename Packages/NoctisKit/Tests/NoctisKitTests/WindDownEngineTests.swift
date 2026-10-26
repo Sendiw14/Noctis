@@ -481,7 +481,9 @@ struct WindDownViewModelTests {
         #expect(defaults.integer(forKey: WindDownViewModel.minutesKey) == 30)
         #expect(defaults.string(forKey: WindDownViewModel.soundKey) == "fireplace")
         let player = PlayerBench.make()
-        let again = WindDownViewModel(player: player.player, alarm: AlarmService(backend: MockAlarmBackend(), store: MemoryAlarmStore(), defaultMinutes: { 420 }), store: FakeSessionStore(), idle: FakeIdleTimer(), preferences: AppPreferences(defaults: defaults))
+        let again = WindDownViewModel(
+            player: player.player, alarm: AlarmService(backend: MockAlarmBackend(), store: MemoryAlarmStore(), defaultMinutes: { 420 }),
+            store: FakeSessionStore(), idle: FakeIdleTimer(), preferences: AppPreferences(defaults: defaults))
         #expect(again.plannedMinutes == 30 && again.sound == .fireplace)
         defaults.removePersistentDomain(forName: suite)
     }

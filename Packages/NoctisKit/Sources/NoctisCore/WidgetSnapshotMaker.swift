@@ -1,7 +1,7 @@
 import Foundation
 import NightKit
-import PremiumKit
 import NoctisWidgetKit
+import PremiumKit
 import RecoveryKit
 import SleepKit
 
@@ -30,7 +30,8 @@ public nonisolated enum WidgetSnapshotMaker {
         if state.showsScore, case .scored(let result)? = home.recovery {
             recovery = WidgetRecovery(
                 score: min(max(result.score, 0), 100), delta: result.comparison.delta, confidence: confidence(result.confidence),
-                ring: home.render.ring.compactMap { arc in factorKind(arc.kind).map { WidgetRingSegment(kind: $0, weight: arc.weight, fraction: arc.fraction) } }
+                ring: home.render.ring.compactMap { arc in factorKind(arc.kind).map { WidgetRingSegment(kind: $0, weight: arc.weight, fraction: arc.fraction) }
+                }
             )
             let heart = WidgetFactors(
                 hrv: result.factor(.hrv).map { Int($0.value.rounded()) }, restingHeartRate: result.factor(.restingHeartRate).map { Int($0.value.rounded()) }

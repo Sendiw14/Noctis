@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import DesignSystem
 @testable import HealthProviding
 @testable import HomeFeature
@@ -94,7 +95,8 @@ struct SleepDayContentTests {
         #expect(tiles == ["inBed", "bedtime", "wake"])
         #expect(day?.details.allSatisfy { !$0.value.parts.isEmpty } == true)
         // With an in-bed record and awake time: all six.
-        let full = SleepFixture.night(SleepNightKey(year: 2026, month: 9, day: 23), blocks: [(.awake, 8), (.core, 250), (.awake, 12), (.deep, 80), (.rem, 100)], inBed: true)
+        let full = SleepFixture.night(
+            SleepNightKey(year: 2026, month: 9, day: 23), blocks: [(.awake, 8), (.core, 250), (.awake, 12), (.deep, 80), (.rem, 100)], inBed: true)
         #expect(screen(snapshot(samples: full)).day?.details.map(\.id) == ["inBed", "efficiency", "bedtime", "wake", "awakenings", "awake"])
     }
 
@@ -177,13 +179,19 @@ struct SleepPickerTests {
 
 struct SleepStateContentTests {
     @Test func everyDataStateHasHomesCopy() {
-        #expect(SleepScreenBuilder.stateContent(.permissionRequired) == .connect(
-            title: "Your first night starts here.", message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
-        #expect(SleepScreenBuilder.stateContent(.healthDataUnavailable) == .connect(
-            title: "Your first night starts here.", message: "Apple Health isn't available on this device.", showsButton: false))
-        #expect(SleepScreenBuilder.stateContent(.empty) == .noSleepData(
-            title: "No sleep data yet",
-            message: "NOCTIS reads sleep from Apple Health. Track sleep with Apple Watch or set up Sleep in the Health app."))
+        #expect(
+            SleepScreenBuilder.stateContent(.permissionRequired)
+                == .connect(
+                    title: "Your first night starts here.", message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
+        #expect(
+            SleepScreenBuilder.stateContent(.healthDataUnavailable)
+                == .connect(
+                    title: "Your first night starts here.", message: "Apple Health isn't available on this device.", showsButton: false))
+        #expect(
+            SleepScreenBuilder.stateContent(.empty)
+                == .noSleepData(
+                    title: "No sleep data yet",
+                    message: "NOCTIS reads sleep from Apple Health. Track sleep with Apple Watch or set up Sleep in the Health app."))
         #expect(SleepScreenBuilder.stateContent(.failed) == .failed(message: "We couldn't read your latest sleep data."))
         for state in [HomeDataState.ready, .noSleepLastNight, .learning(nightsSoFar: 2), .stale(newestSample: now)] {
             #expect(SleepScreenBuilder.stateContent(state) == nil, "\(state) still shows the nights")
@@ -220,16 +228,20 @@ struct SleepWordingTests {
 
     @Test func stageSentencesNameTheStageFurthestOutsideItsRange() {
         func balance(_ basis: StageBalance.Basis, deep: Double, core: Double, rem: Double) -> StageBalance {
-            StageBalance(basis: basis, rows: [
-                StageBalanceRow(stage: .deep, share: deep, low: 0.13, high: 0.23, score: 100),
-                StageBalanceRow(stage: .core, share: core, low: 0.45, high: 0.55, score: 100),
-                StageBalanceRow(stage: .rem, share: rem, low: 0.20, high: 0.25, score: 100),
-            ], score: 100)
+            StageBalance(
+                basis: basis,
+                rows: [
+                    StageBalanceRow(stage: .deep, share: deep, low: 0.13, high: 0.23, score: 100),
+                    StageBalanceRow(stage: .core, share: core, low: 0.45, high: 0.55, score: 100),
+                    StageBalanceRow(stage: .rem, share: rem, low: 0.20, high: 0.25, score: 100),
+                ], score: 100)
         }
         #expect(SleepScreenBuilder.stagesSentence(balance(.typical, deep: 0.18, core: 0.53, rem: 0.22)).hasSuffix("all within the typical range."))
         #expect(SleepScreenBuilder.stagesSentence(balance(.personal(nights: 9), deep: 0.18, core: 0.53, rem: 0.22)).hasSuffix("all within your usual range."))
         #expect(SleepScreenBuilder.stagesSentence(balance(.typical, deep: 0.08, core: 0.56, rem: 0.22)) == "Deep was 8%, under the typical range of 13–23%.")
-        #expect(SleepScreenBuilder.stagesSentence(balance(.personal(nights: 9), deep: 0.30, core: 0.50, rem: 0.20)) == "Deep was 30%, above your usual range of 13–23%.")
+        #expect(
+            SleepScreenBuilder.stagesSentence(balance(.personal(nights: 9), deep: 0.30, core: 0.50, rem: 0.20))
+                == "Deep was 30%, above your usual range of 13–23%.")
         #expect(SleepScreenBuilder.stagesSentence(nil) == "Stages aren't available from your current sources.")
     }
 
@@ -238,7 +250,8 @@ struct SleepWordingTests {
             SleepQualityResult(
                 night: SleepNightKey(year: 2026, month: 9, day: 23), score: 70, factors: [], confidence: .high, baselineNights: baselineNights,
                 modelVersion: "sleep-quality-v1", missingFactors: [:], stageBalance: nil,
-                topContributor: SleepQualityContributor(factor: .duration, measure: measure, difference: difference, standardDeviations: 3, weightedDeviation: 1)
+                topContributor: SleepQualityContributor(
+                    factor: .duration, measure: measure, difference: difference, standardDeviations: 3, weightedDeviation: 1)
             )
         }
         #expect(SleepScreenBuilder.whatChanged(result(.duration, difference: -70)) == "Sleep was 1h 10m shorter than usual.")
@@ -248,7 +261,9 @@ struct SleepWordingTests {
         #expect(SleepScreenBuilder.whatChanged(result(.awakeTime, difference: 25)) == "You were awake 25 min longer than usual after falling asleep.")
         #expect(SleepScreenBuilder.whatChanged(result(.deepShare, difference: -0.05)) == "Deep sleep was a smaller share of the night than usual.")
         #expect(SleepScreenBuilder.whatChanged(result(.remShare, difference: 0.05)) == "REM sleep was a larger share of the night than usual.")
-        #expect(SleepScreenBuilder.whatChanged(result(.duration, difference: -70, baselineNights: 3)) == "There aren't enough nights yet to compare with your usual.")
+        #expect(
+            SleepScreenBuilder.whatChanged(result(.duration, difference: -70, baselineNights: 3))
+                == "There aren't enough nights yet to compare with your usual.")
         let steady = SleepQualityResult(
             night: SleepNightKey(year: 2026, month: 9, day: 23), score: 90, factors: [], confidence: .high, baselineNights: 14,
             modelVersion: "sleep-quality-v1", missingFactors: [:], stageBalance: nil, topContributor: nil
@@ -258,8 +273,9 @@ struct SleepWordingTests {
 
     @Test func confidenceLinesUseRecoverysTierNames() {
         func result(_ confidence: RecoveryConfidence, nights: Int) -> SleepQualityResult {
-            SleepQualityResult(night: SleepNightKey(year: 2026, month: 9, day: 23), score: 80, factors: [], confidence: confidence, baselineNights: nights,
-                               modelVersion: "sleep-quality-v1", missingFactors: [:], stageBalance: nil, topContributor: nil)
+            SleepQualityResult(
+                night: SleepNightKey(year: 2026, month: 9, day: 23), score: 80, factors: [], confidence: confidence, baselineNights: nights,
+                modelVersion: "sleep-quality-v1", missingFactors: [:], stageBalance: nil, topContributor: nil)
         }
         #expect(SleepScreenBuilder.confidenceLine(result(.high, nights: 14)) == "High confidence · built on 14 nights of your own sleep")
         #expect(SleepScreenBuilder.confidenceLine(result(.moderate, nights: 9)) == "Moderate confidence · built on 9 nights of your own sleep")
@@ -291,7 +307,8 @@ struct SleepViewModelTests {
         return SleepViewModel(
             repository: SleepRepository(provider: provider, timeZone: Fixture.newYork, clock: { now }),
             profile: { UserProfileSnapshot() },
-            introGate: HomeIntroGate(defaults: defaults ?? UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? .standard, key: SleepViewModel.introKey),
+            introGate: HomeIntroGate(
+                defaults: defaults ?? UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)") ?? .standard, key: SleepViewModel.introKey),
             reduceMotion: { reduceMotion }, lowPower: { false }, clock: { now }, calendar: Fixture.calendar(), locale: locale
         )
     }

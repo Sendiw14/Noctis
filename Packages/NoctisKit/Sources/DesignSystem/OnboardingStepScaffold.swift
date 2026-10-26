@@ -41,7 +41,9 @@ public struct OnboardingStepScaffold<Content: View, Actions: View>: View {
 
     /// `step` is 0-based (nil: no progress, no segments); `title` is one string per line.
     public init(
-        section: NoctisSection, step: Int?, totalSteps: Int = 6, title: [String], subtitle: String? = nil, bandHeight: CGFloat = 262, bandSymbol: String? = nil, bandBadge: String? = nil, bandAccessory: AnyView? = nil, topTrailingSymbol: String? = nil, topTrailingAccessory: AnyView? = nil, titleSize: CGFloat = 38, titleLeading: CGFloat = 0, onBack: (() -> Void)? = nil,
+        section: NoctisSection, step: Int?, totalSteps: Int = 6, title: [String], subtitle: String? = nil, bandHeight: CGFloat = 262, bandSymbol: String? = nil,
+        bandBadge: String? = nil, bandAccessory: AnyView? = nil, topTrailingSymbol: String? = nil, topTrailingAccessory: AnyView? = nil,
+        titleSize: CGFloat = 38, titleLeading: CGFloat = 0, onBack: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content, @ViewBuilder actions: () -> Actions
     ) {
         self.section = section
@@ -104,57 +106,57 @@ public struct OnboardingStepScaffold<Content: View, Actions: View>: View {
         return ZStack(alignment: .topLeading) {
             // The title sits at the band's bottom-left; the band is as tall as the design says, and taller only when the words need it.
             HStack(alignment: bandAccessory != nil ? .bottom : (bandBadge == nil ? .center : .top), spacing: 12) {
-            VStack(alignment: .leading, spacing: 0) {
-                // `titleLeading` pulls the lines together (negative) for the 42 pt titles, which are set tight.
-                VStack(alignment: .leading, spacing: titleLeading * clamped) {
-                    ForEach(Array(title.enumerated()), id: \.offset) { _, line in
-                        Text(line)
-                            .noctisFont(titleSize * clamped, .heavy, relativeTo: .largeTitle, maxScale: 1.3)
-                            .tracking(-1.2)
-                            .foregroundStyle(NoctisPaper.ink)
-                            // One line each up to the larger sizes (a line shrinks a little rather than wrap); wraps from there.
-                            .lineLimit(dynamicTypeSize > .large ? 2 : 1)
-                            .minimumScaleFactor(0.7)
+                VStack(alignment: .leading, spacing: 0) {
+                    // `titleLeading` pulls the lines together (negative) for the 42 pt titles, which are set tight.
+                    VStack(alignment: .leading, spacing: titleLeading * clamped) {
+                        ForEach(Array(title.enumerated()), id: \.offset) { _, line in
+                            Text(line)
+                                .noctisFont(titleSize * clamped, .heavy, relativeTo: .largeTitle, maxScale: 1.3)
+                                .tracking(-1.2)
+                                .foregroundStyle(NoctisPaper.ink)
+                                // One line each up to the larger sizes (a line shrinks a little rather than wrap); wraps from there.
+                                .lineLimit(dynamicTypeSize > .large ? 2 : 1)
+                                .minimumScaleFactor(0.7)
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isHeader)
+                    if let subtitle {
+                        Text(subtitle)
+                            .noctisFont(14, relativeTo: .footnote)
+                            .foregroundStyle(NoctisPaper.ink.opacity(0.75))
+                            .padding(.top, 6)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityElement(children: .combine)
-                .accessibilityAddTraits(.isHeader)
-                if let subtitle {
-                    Text(subtitle)
-                        .noctisFont(14, relativeTo: .footnote)
-                        .foregroundStyle(NoctisPaper.ink.opacity(0.75))
-                        .padding(.top, 6)
-                        .fixedSize(horizontal: false, vertical: true)
+                if let bandAccessory {
+                    Spacer(minLength: 0)
+                    // A small drawing beside the title's last line; hidden from VoiceOver by the caller.
+                    bandAccessory
                 }
-            }
-            if let bandAccessory {
-                Spacer(minLength: 0)
-                // A small drawing beside the title's last line; hidden from VoiceOver by the caller.
-                bandAccessory
-            }
-            if let bandBadge {
-                Spacer(minLength: 0)
-                // A small tag at the top of the title block, level with its first line ("SAMPLE").
-                Text(bandBadge)
-                    .noctisFont(13, .heavy, relativeTo: .footnote, maxScale: 1.2)
-                    .tracking(0.8)
-                    .foregroundStyle(NoctisPaper.ink)
-                    .padding(.horizontal, 12)
-                    .frame(height: 28)
-                    .background(Capsule().fill(NoctisPaper.butter))
-                    .fixedSize()
-                    .padding(.top, 6)
-            }
-            if let bandSymbol {
-                Spacer(minLength: 0)
-                Image(systemName: bandSymbol)
-                    .font(.system(size: 24 * clamped, weight: .semibold))
-                    .foregroundStyle(NoctisPaper.ink)
-                    .frame(width: 58 * clamped, height: 58 * clamped)
-                    .background(Circle().fill(NoctisPaper.ivory))
-                    .accessibilityHidden(true)
-            }
+                if let bandBadge {
+                    Spacer(minLength: 0)
+                    // A small tag at the top of the title block, level with its first line ("SAMPLE").
+                    Text(bandBadge)
+                        .noctisFont(13, .heavy, relativeTo: .footnote, maxScale: 1.2)
+                        .tracking(0.8)
+                        .foregroundStyle(NoctisPaper.ink)
+                        .padding(.horizontal, 12)
+                        .frame(height: 28)
+                        .background(Capsule().fill(NoctisPaper.butter))
+                        .fixedSize()
+                        .padding(.top, 6)
+                }
+                if let bandSymbol {
+                    Spacer(minLength: 0)
+                    Image(systemName: bandSymbol)
+                        .font(.system(size: 24 * clamped, weight: .semibold))
+                        .foregroundStyle(NoctisPaper.ink)
+                        .frame(width: 58 * clamped, height: 58 * clamped)
+                        .background(Circle().fill(NoctisPaper.ivory))
+                        .accessibilityHidden(true)
+                }
             }
             .padding(.horizontal, 24)
             .padding(.top, rowTop + 44 + 12)
@@ -249,12 +251,12 @@ public struct OnboardingPrimaryButton: View {
                 .noctisFont(18, .semibold, relativeTo: .body)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
-            .foregroundStyle(colorScheme == .dark ? NoctisPaper.cocoa : NoctisPaper.ivory)
-            .frame(maxWidth: .infinity, minHeight: scale < 0.85 ? 52 : 60)
-            .background(Capsule().fill(colorScheme == .dark ? NoctisPaper.ivory : NoctisPaper.cocoa))
-            .contentShape(Capsule())
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .foregroundStyle(colorScheme == .dark ? NoctisPaper.cocoa : NoctisPaper.ivory)
+                .frame(maxWidth: .infinity, minHeight: scale < 0.85 ? 52 : 60)
+                .background(Capsule().fill(colorScheme == .dark ? NoctisPaper.ivory : NoctisPaper.cocoa))
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

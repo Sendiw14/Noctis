@@ -295,7 +295,9 @@ struct HealthKindRow: View {
 
     var body: some View {
         // At accessibility sizes the tile sits above the words: beside it "Respiratory Rate" had a 120 pt column and broke mid-word (QA part 4, AX5).
-        let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.xs)) : AnyLayout(HStackLayout(alignment: .top, spacing: NoctisSpacing.sm))
+        let layout =
+            dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.xs)) : AnyLayout(HStackLayout(alignment: .top, spacing: NoctisSpacing.sm))
         layout {
             NoctisIconTile(
                 systemImage: status.hasData ? "checkmark" : "minus", fill: status.hasData ? NoctisAppColor.blockSage : NoctisAppColor.track,
@@ -501,7 +503,8 @@ struct WindDownSettingsView: View {
                 )
                 NoctisRowDivider()
                 SettingsMenuRow(
-                    systemImage: "speaker.wave.2", fill: NoctisAppColor.blockSage, title: "Sound", options: [SoundKind?.none] + SoundKind.allCases.map { Optional($0) },
+                    systemImage: "speaker.wave.2", fill: NoctisAppColor.blockSage, title: "Sound",
+                    options: [SoundKind?.none] + SoundKind.allCases.map { Optional($0) },
                     selection: preferences.values.windDownSound, label: { $0?.title ?? "None" }, identifier: "settings.windDown.sound",
                     choose: { sound in preferences.update { $0.windDownSound = sound } }
                 )

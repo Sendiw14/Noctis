@@ -162,18 +162,20 @@ struct ColumnScrub: ViewModifier {
                     pick(column)
                 }
             }
-            .gesture(HorizontalScrubGesture { x in
-                guard let x else {
-                    if scrubbing { NoctisSignpost.end(.scrub) }
-                    scrubbing = false
-                    return
+            .gesture(
+                HorizontalScrubGesture { x in
+                    guard let x else {
+                        if scrubbing { NoctisSignpost.end(.scrub) }
+                        scrubbing = false
+                        return
+                    }
+                    if !scrubbing {
+                        scrubbing = true
+                        NoctisSignpost.begin(.scrub)
+                    }
+                    pick(column(at: x))
                 }
-                if !scrubbing {
-                    scrubbing = true
-                    NoctisSignpost.begin(.scrub)
-                }
-                pick(column(at: x))
-            })
+            )
             .padding(.horizontal, -outset)
     }
 

@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Testing
+
 @testable import HealthProviding
 @testable import HomeFeature
 @testable import InsightsKit
@@ -158,7 +159,10 @@ struct InsightFatigueTests {
         let card = HomeScreenBuilder.insightCard(InsightRecordFixture.pattern(), format: format)
         #expect(card.id == InsightRecordFixture.pattern().id)
         #expect(card.title == "Earlier bedtimes, higher sleep scores")
-        guard case .figures(let numbers, let join) = card.chart else { Issue.record("expected figures"); return }
+        guard case .figures(let numbers, let join) = card.chart else {
+            Issue.record("expected figures")
+            return
+        }
         #expect(numbers.map(\.value.plain) == ["92pts", "66pts"])
         #expect(join == .versus)
         #expect(!card.accessibilityLabel.isEmpty)
@@ -167,11 +171,17 @@ struct InsightFatigueTests {
     @Test func aBaselineRuleKeepsItsSmallChart() throws {
         let format = HomeFormat(calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
         let duration = HomeScreenBuilder.insightCard(InsightRecordFixture.duration(delta: -70), format: format)
-        guard case .comparison = duration.chart else { Issue.record("expected the two bars"); return }
+        guard case .comparison = duration.chart else {
+            Issue.record("expected the two bars")
+            return
+        }
         #expect(duration.title == "Shorter night than usual")
         // The streak's page draws two weeks; the card draws one.
         let streak = HomeScreenBuilder.insightCard(InsightRecordFixture.streak(nights: 6), format: format)
-        guard case .nights(let dots, let caption) = streak.chart else { Issue.record("expected dots"); return }
+        guard case .nights(let dots, let caption) = streak.chart else {
+            Issue.record("expected dots")
+            return
+        }
         #expect(dots.count == 7 && caption == "Last 7 nights")
     }
 
@@ -179,17 +189,19 @@ struct InsightFatigueTests {
         let now = Fixture.date(2026, 9, 24, 10)
         let provider = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
         let repository = HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { now })
-        let model = HomeViewModel(repository: repository, profile: { UserProfileSnapshot() }, clock: { now },
-                                  calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
+        let model = HomeViewModel(
+            repository: repository, profile: { UserProfileSnapshot() }, clock: { now },
+            calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
         await model.refresh()
         #expect(model.screen?.insight != nil)
         model.dismissInsight()
         #expect(model.screen?.insight == nil)
         // The write goes through the repository actor: a rebuild after it keeps the insight away.
-        #expect(await waitFor {
-            await model.refresh()
-            return model.screen?.insight == nil
-        })
+        #expect(
+            await waitFor {
+                await model.refresh()
+                return model.screen?.insight == nil
+            })
     }
 }
 
@@ -209,8 +221,9 @@ struct NightScrubTests {
                 Fixture.sample(Fixture.date(2026, 9, 24, 2), Fixture.date(2026, 9, 24, 3), .rem),
                 Fixture.sample(Fixture.date(2026, 9, 24, 3), Fixture.date(2026, 9, 24, 7, 27), .core),
             ]
-            let snapshot = HomeSnapshotBuilder.build(HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: []),
-                                                     profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
+            let snapshot = HomeSnapshotBuilder.build(
+                HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: []),
+                profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
             let screen = HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
             return try #require(screen.lastNight?.chart)
         }
@@ -237,13 +250,14 @@ struct NightScrubTests {
     @Test func steppingReadsEachSegmentFromItsStart() throws {
         let chart = try chart
         let texts = chart.spans.indices.compactMap { chart.reading(segment: $0).map { plain($0.text) } }
-        #expect(texts == [
-            "11:02 PM · Awake · 3 min",
-            "11:05 PM · Core · 1h 55m",
-            "1:00 AM · Deep · 1h",
-            "2:00 AM · REM · 1h",
-            "3:00 AM · Core · 4h 27m",
-        ])
+        #expect(
+            texts == [
+                "11:02 PM · Awake · 3 min",
+                "11:05 PM · Core · 1h 55m",
+                "1:00 AM · Deep · 1h",
+                "2:00 AM · REM · 1h",
+                "3:00 AM · Core · 4h 27m",
+            ])
         #expect(chart.reading(segment: 5) == nil)
     }
 
@@ -260,8 +274,9 @@ struct NightScrubTests {
 
     @Test func withoutStagesThereIsNothingToScrub() {
         let samples = [Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 7), .unspecified)]
-        let snapshot = HomeSnapshotBuilder.build(HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: []),
-                                                 profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
+        let snapshot = HomeSnapshotBuilder.build(
+            HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: []),
+            profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
         let chart = HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US")).lastNight?.chart
         #expect(chart?.reading(at: 0.5) == nil)
         #expect(chart?.laneTotals.isEmpty == true)
@@ -300,8 +315,9 @@ struct HomeWeekAndShareTests {
     @Test func barsWithoutASleepOrStagesSaySo() {
         // Sep 21: 6h, Sep 22: none, Sep 23: 8h — unstaged nights.
         let samples = Fixture.plainNight(september: 21, hours: 6) + [Fixture.sample(Fixture.date(2026, 9, 23, 23), Fixture.date(2026, 9, 24, 7), .unspecified)]
-        let snapshot = HomeSnapshotBuilder.build(HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: []),
-                                                 profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
+        let snapshot = HomeSnapshotBuilder.build(
+            HomeHealthInputs(sleep: samples, hrv: [], restingHeartRate: [], heartRate: []),
+            profile: UserProfileSnapshot(), now: now, timeZone: Fixture.newYork)
         let bars = HomeScreenBuilder.build(snapshot, now: now, calendar: Fixture.calendar(), locale: locale).week?.bars ?? []
         // A staged night names its Deep and REM even at zero; an unstaged one can't.
         #expect(bars.suffix(3).map(\.detail) == ["Tue · 6h · Deep 0m · REM 0m", "Wed · No data", "Thu · 8h · No stages"])
@@ -375,8 +391,9 @@ struct HomeLiveUpdateTests {
     @Test func aNewNightFromHealthShowsTheBanner() async throws {
         let provider = ArrivingNightProvider()
         let clock = Fixture.morningAfter
-        let model = HomeViewModel(repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }),
-                                  profile: { UserProfileSnapshot() }, clock: { clock })
+        let model = HomeViewModel(
+            repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }),
+            profile: { UserProfileSnapshot() }, clock: { clock })
         await model.onAppear()
         #expect(!model.showsNewNight)
         provider.nightArrives()
@@ -389,8 +406,9 @@ struct HomeLiveUpdateTests {
     @Test func aChangeWithoutANewNightStaysQuiet() async throws {
         let provider = ControlledHealthProvider()
         let clock = Fixture.morningAfter
-        let model = HomeViewModel(repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }),
-                                  profile: { UserProfileSnapshot() }, clock: { clock })
+        let model = HomeViewModel(
+            repository: HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }),
+            profile: { UserProfileSnapshot() }, clock: { clock })
         await model.onAppear()
         provider.emitChange()
         _ = await waitFor { !(provider.sleepFetches < 2) }

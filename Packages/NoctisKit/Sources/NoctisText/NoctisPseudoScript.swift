@@ -16,12 +16,15 @@ enum NoctisPseudoScript {
 
     private static let words: [String: [String: String]] = [
         "si": [
-            "pseudo.hour": "පැය", "pseudo.minute": "මිනිත්තු", "pseudo.second": "තත්පර", "pseudo.night": "රාත්‍රි", "pseudo.day": "දින", "pseudo.month": "මාස", "pseudo.year": "වසර",
-            "pseudo.insight": "අවබෝධ", "pseudo.question": "ප්‍රශ්න", "pseudo.awakening": "අවදි වීම්", "pseudo.value": "අගය", "pseudo.reminder": "මතක් කිරීම්", "pseudo.point": "ලකුණු",
+            "pseudo.hour": "පැය", "pseudo.minute": "මිනිත්තු", "pseudo.second": "තත්පර", "pseudo.night": "රාත්‍රි", "pseudo.day": "දින", "pseudo.month": "මාස",
+            "pseudo.year": "වසර",
+            "pseudo.insight": "අවබෝධ", "pseudo.question": "ප්‍රශ්න", "pseudo.awakening": "අවදි වීම්", "pseudo.value": "අගය", "pseudo.reminder": "මතක් කිරීම්",
+            "pseudo.point": "ලකුණු",
             "pseudo.percent": "ප්‍රතිශතය", "pseudo.beat": "හෘද ස්පන්දන", "pseudo.week": "සතියකට",
         ],
         "ta": [
-            "pseudo.hour": "மணி நேரம்", "pseudo.minute": "நிமிடங்கள்", "pseudo.second": "வினாடிகள்", "pseudo.night": "இரவுகள்", "pseudo.day": "நாட்கள்", "pseudo.month": "மாதங்கள்", "pseudo.year": "ஆண்டுகள்",
+            "pseudo.hour": "மணி நேரம்", "pseudo.minute": "நிமிடங்கள்", "pseudo.second": "வினாடிகள்", "pseudo.night": "இரவுகள்", "pseudo.day": "நாட்கள்",
+            "pseudo.month": "மாதங்கள்", "pseudo.year": "ஆண்டுகள்",
             "pseudo.insight": "நுண்ணறிவுகள்", "pseudo.question": "கேள்விகள்", "pseudo.awakening": "விழிப்புகள்", "pseudo.value": "மதிப்புகள்", "pseudo.reminder": "நினைவூட்டல்கள்",
             "pseudo.point": "புள்ளிகள்", "pseudo.percent": "சதவீதம்", "pseudo.beat": "துடிப்புகள்", "pseudo.week": "வாரத்திற்கு",
         ],

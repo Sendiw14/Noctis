@@ -177,7 +177,11 @@ struct PlanBuildingView: View {
             .padding(.horizontal, 20)
             .padding(.top, 44 * c)
         }
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.height
+        } action: {
+            contentHeight = $0
+        }
     }
 
     private func stars(width: CGFloat, scale: CGFloat) -> some View {

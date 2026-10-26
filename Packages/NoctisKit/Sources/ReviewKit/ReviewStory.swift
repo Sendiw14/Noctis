@@ -222,7 +222,8 @@ public nonisolated struct ReviewShareContent: Sendable, Equatable {
 
     /// Everything the card says, for a test and for VoiceOver: the details only when asked for.
     public func spokenLines(includeDetails: Bool) -> [String] {
-        [title, dateRange, cover.spokenAverage, cover.deltaText] + (bars.map { [$0.headline] } ?? []) + [detailsText(includeDetails: includeDetails)].compactMap { $0 }
+        [title, dateRange, cover.spokenAverage, cover.deltaText] + (bars.map { [$0.headline] } ?? [])
+            + [detailsText(includeDetails: includeDetails)].compactMap { $0 }
     }
 }
 
@@ -251,7 +252,8 @@ public nonisolated struct ReviewStory: Sendable, Equatable {
             if ids.isEmpty { continue }
             kept.append(ReviewStoryPage(kind: page.kind, tint: page.tint, content: .insights(ReviewInsightsPage(headline: content.headline, insightIDs: ids))))
         }
-        return ReviewStory(id: id, title: title, dateRange: dateRange, pages: kept, nightsRecorded: nightsRecorded, nightsInPeriod: nightsInPeriod, fullShare: fullShare)
+        return ReviewStory(
+            id: id, title: title, dateRange: dateRange, pages: kept, nightsRecorded: nightsRecorded, nightsInPeriod: nightsInPeriod, fullShare: fullShare)
     }
 
     /// The pages a person sees: all of them for Premium; the weekly cover alone for the free plan (the cover ends with one locked card), and for a month one calm
@@ -267,7 +269,11 @@ public nonisolated struct ReviewStory: Sendable, Equatable {
     /// The share card: from the cover and the sleep page where they are shown. A free person's weekly card has the cover only; a month's locked page has nothing to share.
     public func share(unlocked: Bool) -> ReviewShareContent? {
         if kind == .monthly, !unlocked { return nil }
-        return unlocked ? fullShare : ReviewShareContent(title: fullShare.title, dateRange: fullShare.dateRange, cover: fullShare.cover, bars: nil, details: fullShare.details, fileName: fullShare.fileName)
+        return unlocked
+            ? fullShare
+            : ReviewShareContent(
+                title: fullShare.title, dateRange: fullShare.dateRange, cover: fullShare.cover, bars: nil, details: fullShare.details,
+                fileName: fullShare.fileName)
     }
 }
 
@@ -328,22 +334,29 @@ public nonisolated enum ReviewListBuilder {
     }
 
     /// `counts` are the nights Health holds for each of `candidates` that was not made (nil where they could not be read).
-    public static func build(library: ReviewLibrary, counts: [ReviewID: Int], now: Date, weekday: Int, calendar: Calendar, format: ReviewFormat = ReviewFormat()) -> ReviewListContent {
+    public static func build(
+        library: ReviewLibrary, counts: [ReviewID: Int], now: Date, weekday: Int, calendar: Calendar, format: ReviewFormat = ReviewFormat()
+    ) -> ReviewListContent {
         var rows: [ReviewListRow] = library.all.map { stored in
             let record = stored.record
             let average = ReviewFormat.duration(record.sleep.averageMinutes)
             return ReviewListRow(
-                id: stored.id, title: ReviewScreenBuilder.dateRange(record.period, format), headline: "\(average) a night", status: stored.state == .new ? .new : .opened,
-                spoken: "\(ReviewScreenBuilder.dateRange(record.period, format)), \(ReviewFormat.spoken(record.sleep.averageMinutes)) a night on average, \(stored.state == .new ? "not opened yet" : "opened")"
+                id: stored.id, title: ReviewScreenBuilder.dateRange(record.period, format), headline: "\(average) a night",
+                status: stored.state == .new ? .new : .opened,
+                spoken:
+                    "\(ReviewScreenBuilder.dateRange(record.period, format)), \(ReviewFormat.spoken(record.sleep.averageMinutes)) a night on average, \(stored.state == .new ? "not opened yet" : "opened")"
             )
         }
-        for period in candidates(now: now, weekday: weekday, calendar: calendar) where library[period.id] == nil && period.isComplete(at: now, calendar: calendar) {
+        for period in candidates(now: now, weekday: weekday, calendar: calendar)
+        where library[period.id] == nil && period.isComplete(at: now, calendar: calendar) {
             let need = period.kind.minimumNights
             guard let have = counts[period.id], have > 0, have < need else { continue }
             let range = ReviewScreenBuilder.dateRange(period, format)
-            rows.append(ReviewListRow(
-                id: period.id, title: range, headline: "\(have) of \(need) nights", status: .notEnough(have: have, need: need), spoken: "\(range), not enough nights, \(have) of \(need)"
-            ))
+            rows.append(
+                ReviewListRow(
+                    id: period.id, title: range, headline: "\(have) of \(need) nights", status: .notEnough(have: have, need: need),
+                    spoken: "\(range), not enough nights, \(have) of \(need)"
+                ))
         }
         // Newest first within a kind: by the last morning, then the id.
         rows.sort { $0.id.lastMorning != $1.id.lastMorning ? $0.id.lastMorning > $1.id.lastMorning : $0.id > $1.id }

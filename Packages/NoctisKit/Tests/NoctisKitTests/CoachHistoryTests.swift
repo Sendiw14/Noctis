@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
+
 @testable import CoachKit
 @testable import NoctisCore
 
@@ -12,7 +13,9 @@ struct CoachHistoryTests {
     }
 
     private func answer(_ summary: String = "Your recovery is 72 today.", intent: CoachIntent = .recoveryChange) -> CoachAnswer {
-        CoachAnswer(sourceKind: .fromYourData, intent: intent, summary: summary, confidence: .high, footer: "Coach shares patterns from your data. It isn't medical advice.")
+        CoachAnswer(
+            sourceKind: .fromYourData, intent: intent, summary: summary, confidence: .high,
+            footer: "Coach shares patterns from your data. It isn't medical advice.")
     }
 
     // MARK: - Storing

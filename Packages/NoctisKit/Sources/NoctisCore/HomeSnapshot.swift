@@ -140,13 +140,15 @@ public nonisolated struct HomeSnapshot: Sendable, Equatable {
         self.lastNightSleepQuality = lastNightSleepQuality
         self.newestSample = newestSample
         self.lastUpdated = lastUpdated
-        self.render = render ?? HomeRenderModelBuilder.build(
-            recovery: recovery,
-            lastNight: lastNight,
-            heart: lastNightHeart,
-            recentNights: recentNights,
-            needMinutes: tonight.needMinutes
-        )
+        self.render =
+            render
+            ?? HomeRenderModelBuilder.build(
+                recovery: recovery,
+                lastNight: lastNight,
+                heart: lastNightHeart,
+                recentNights: recentNights,
+                needMinutes: tonight.needMinutes
+            )
     }
 }
 

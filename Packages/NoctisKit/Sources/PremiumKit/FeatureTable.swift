@@ -79,7 +79,8 @@ public nonisolated enum FeatureTable {
     public static func area(of feature: Feature) -> FeatureArea {
         switch feature {
         case .recoveryToday, .recovery7D, .recovery30D, .recovery90D, .recoveryFactorDetail: .recovery
-        case .sleepLast3Nights, .sleepWeek, .sleepMonth, .sleepNightPicker14, .sleepQualityScore, .sleepQualityFactors, .sleepConsistencyBalanceTimingDetails: .sleep
+        case .sleepLast3Nights, .sleepWeek, .sleepMonth, .sleepNightPicker14, .sleepQualityScore, .sleepQualityFactors, .sleepConsistencyBalanceTimingDetails:
+            .sleep
         case .insightFeatured, .insightRecentOne, .insightAll, .insightRecords, .insightHistory, .insightCategoryFilters: .insights
         case .weeklyReviewCover, .weeklyReviewFull, .monthlyReview: .reviews
         case .coachQuestions, .coachHistory, .coachUnlimited: .coach
@@ -173,7 +174,12 @@ public nonisolated enum FeatureTable {
     /// The comparison, by area, in the table's order; every feature is in it exactly once.
     public static func comparison() -> [(area: FeatureArea, rows: [Row])] {
         FeatureArea.allCases.map { area in
-            (area, Feature.allCases.filter { self.area(of: $0) == area }.map { Row(feature: $0, title: title(of: $0), symbol: symbol(of: $0), free: tier(of: $0) == .free) })
+            (
+                area,
+                Feature.allCases.filter { self.area(of: $0) == area }.map {
+                    Row(feature: $0, title: title(of: $0), symbol: symbol(of: $0), free: tier(of: $0) == .free)
+                }
+            )
         }
     }
 }

@@ -1,4 +1,5 @@
 import Testing
+
 @testable import DesignSystem
 @testable import NoctisCore
 
@@ -61,7 +62,7 @@ struct NightStripMathTests {
                 let bedtime = noctisBedtimeMinutes(wakeMinutes: wake, needMinutes: need)
                 let bedFraction = noctisNightStripFraction(minutesSinceMidnight: bedtime)
                 let wakeFraction = noctisNightStripFraction(minutesSinceMidnight: wake)
-                guard bedFraction > 0 else { continue } // bedtime before 6 PM clamps
+                guard bedFraction > 0 else { continue }  // bedtime before 6 PM clamps
                 #expect(abs((wakeFraction - bedFraction) - Double(need) / Double(18 * 60)) < 0.0001)
             }
         }
@@ -86,8 +87,8 @@ struct NightStripMathTests {
         let width = 400.0
         let bedX = width * noctisNightStripFraction(minutesSinceMidnight: bedtime, startMinutes: window.startMinutes, spanMinutes: window.spanMinutes)
         let wakeX = width * noctisNightStripFraction(minutesSinceMidnight: 3 * 60, startMinutes: window.startMinutes, spanMinutes: window.spanMinutes)
-        #expect(abs(bedX - width / 20) < 0.0001) // 1h into a 20h strip, not 0
-        #expect(abs((wakeX - bedX) - width * 10 / 20) < 0.0001) // bar is exactly the 10h need
+        #expect(abs(bedX - width / 20) < 0.0001)  // 1h into a 20h strip, not 0
+        #expect(abs((wakeX - bedX) - width * 10 / 20) < 0.0001)  // bar is exactly the 10h need
 
         // The labels re-space on the new scale.
         let sixPM = noctisNightStripFraction(minutesSinceMidnight: 18 * 60, startMinutes: window.startMinutes, spanMinutes: window.spanMinutes)
@@ -100,7 +101,7 @@ struct NightStripMathTests {
         #expect(noctisNightStripWindow(bedtimeMinutes: 18 * 60 + 30).startMinutes == 17 * 60)
         #expect(noctisNightStripWindow(bedtimeMinutes: 19 * 60).startMinutes == 18 * 60)
         #expect(noctisNightStripWindow(bedtimeMinutes: 23 * 60).startMinutes == 18 * 60)
-        #expect(noctisNightStripWindow(bedtimeMinutes: 1 * 60).startMinutes == 18 * 60) // after midnight
+        #expect(noctisNightStripWindow(bedtimeMinutes: 1 * 60).startMinutes == 18 * 60)  // after midnight
         #expect(noctisNightStripWindow(bedtimeMinutes: 23 * 60).spanMinutes == 18 * 60)
     }
 }

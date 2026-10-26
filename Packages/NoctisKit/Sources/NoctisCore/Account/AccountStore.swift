@@ -129,7 +129,8 @@ public nonisolated struct SystemAccountKeychain: AccountKeychain {
 
     public func read() -> String? {
         var item: CFTypeRef?
-        let status = SecItemCopyMatching(query.merging([kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]) { $1 } as CFDictionary, &item)
+        let status = SecItemCopyMatching(
+            query.merging([kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]) { $1 } as CFDictionary, &item)
         guard status == errSecSuccess, let data = item as? Data else { return nil }
         return String(data: data, encoding: .utf8)
     }
@@ -185,7 +186,10 @@ public final class MemoryAccountKeychain: AccountKeychain, @unchecked Sendable {
     public init(userID: String? = nil) { self.userID = userID }
 
     public func read() -> String? { lock.withLock { userID } }
-    public func write(_ userID: String) -> Bool { lock.withLock { self.userID = userID }; return true }
+    public func write(_ userID: String) -> Bool {
+        lock.withLock { self.userID = userID }
+        return true
+    }
     public func delete() { lock.withLock { userID = nil } }
 }
 

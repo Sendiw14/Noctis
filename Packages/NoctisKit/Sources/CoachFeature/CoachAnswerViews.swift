@@ -356,7 +356,9 @@ struct CoachFeedbackRow: View {
 
     private func button(_ feedback: CoachFeedback, title: String, symbol: String) -> some View {
         let isSelected = selected == feedback
-        return Button { choose(feedback) } label: {
+        return Button {
+            choose(feedback)
+        } label: {
             HStack(spacing: NoctisSpacing.xs) {
                 Image(systemName: symbol).noctisIcon(14, .semibold, relativeTo: .subheadline)
                 Text(title).noctisFont(15, .semibold, relativeTo: .subheadline)
@@ -452,7 +454,9 @@ struct CoachFollowUpChips: View {
         if stacked {
             VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
                 ForEach(questions, id: \.self) { question in
-                    Button { ask(question) } label: {
+                    Button {
+                        ask(question)
+                    } label: {
                         Text(CoachQuestionText.text(question))
                             .noctisFont(15, .semibold, relativeTo: .subheadline)
                             .foregroundStyle(NoctisAppColor.ink)
@@ -478,7 +482,9 @@ struct CoachFollowUpChips: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: NoctisSpacing.xs) {
                 ForEach(questions, id: \.self) { question in
-                    Button { ask(question) } label: {
+                    Button {
+                        ask(question)
+                    } label: {
                         Text(CoachQuestionText.text(question))
                             .noctisFont(15, .semibold, relativeTo: .subheadline)
                             .foregroundStyle(NoctisAppColor.ink)

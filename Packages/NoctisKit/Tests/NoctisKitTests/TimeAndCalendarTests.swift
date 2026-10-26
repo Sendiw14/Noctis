@@ -18,7 +18,8 @@ import Testing
 // day, counted on the phone's calendar at the moment it is asked: the period moves with the clock, and a night is never counted twice or dropped
 // because the zone changed (it is keyed by date, not instant).
 
-private nonisolated let zones: [TimeZone] = ["America/New_York", "Europe/London", "Australia/Sydney", "Australia/Lord_Howe"].compactMap(TimeZone.init(identifier:))
+private nonisolated let zones: [TimeZone] = ["America/New_York", "Europe/London", "Australia/Sydney", "Australia/Lord_Howe"].compactMap(
+    TimeZone.init(identifier:))
 
 private func calendar(_ zone: TimeZone, firstWeekday: Int = 1) -> Calendar {
     var calendar = Calendar(identifier: .gregorian)
@@ -34,7 +35,7 @@ private func date(_ calendar: Calendar, _ y: Int, _ m: Int, _ d: Int, _ h: Int =
 /// Each zone's two clock changes in the year 2026, found from the rules, with a few days either side.
 private func transitionWindows(_ zone: TimeZone) -> [Date] {
     var found: [Date] = []
-    var cursor = Date(timeIntervalSince1970: 1_767_225_600) // 2026-01-01
+    var cursor = Date(timeIntervalSince1970: 1_767_225_600)  // 2026-01-01
     let end = cursor.addingTimeInterval(366 * 86_400)
     while let next = zone.nextDaylightSavingTimeTransition(after: cursor), next < end {
         found.append(next)
@@ -55,7 +56,10 @@ struct TimeAndCalendarTests {
             var days: [DateComponents] = []
             var previous = cursor
             for _ in 0..<400 {
-                guard let fire = NotificationPlan.nextFire(of: reminder, after: cursor, calendar: cal) else { Issue.record("no next fire after \(cursor)"); return }
+                guard let fire = NotificationPlan.nextFire(of: reminder, after: cursor, calendar: cal) else {
+                    Issue.record("no next fire after \(cursor)")
+                    return
+                }
                 #expect(fire > previous, "fire \(fire) is not after \(previous) in \(zone.identifier) at \(hour):\(minute)")
                 #expect(fire.timeIntervalSince(cursor) <= 25.5 * 3600, "a gap of more than a day and a half-hour")
                 days.append(cal.dateComponents([.year, .month, .day], from: fire))
@@ -76,7 +80,9 @@ struct TimeAndCalendarTests {
             var moment = transition.addingTimeInterval(-3 * 86_400)
             let stop = transition.addingTimeInterval(3 * 86_400)
             while moment < stop {
-                #expect(HomeScreenBuilder.mode(now: moment, plan: plan, calendar: cal).rawValue == WidgetClock.mode(at: moment, plan: widgetPlan, calendar: cal).rawValue, "\(moment) in \(zone.identifier)")
+                #expect(
+                    HomeScreenBuilder.mode(now: moment, plan: plan, calendar: cal).rawValue
+                        == WidgetClock.mode(at: moment, plan: widgetPlan, calendar: cal).rawValue, "\(moment) in \(zone.identifier)")
                 // Never a countdown to a moment that has passed: the next mode change is strictly in the future.
                 #expect(HomeScreenBuilder.nextModeChange(after: moment, plan: plan, calendar: cal) > moment)
                 moment = moment.addingTimeInterval(900)
@@ -106,7 +112,9 @@ struct TimeAndCalendarTests {
         for transition in transitionWindows(zone) {
             var moment = transition.addingTimeInterval(-86_400)
             while moment < transition.addingTimeInterval(86_400) {
-                if WidgetClock.mode(at: moment, plan: plan, calendar: cal) == .day, let bedtime = WidgetClock.bedtime(at: moment, mode: .day, plan: plan, calendar: cal) {
+                if WidgetClock.mode(at: moment, plan: plan, calendar: cal) == .day,
+                    let bedtime = WidgetClock.bedtime(at: moment, mode: .day, plan: plan, calendar: cal)
+                {
                     #expect(bedtime >= moment, "a negative countdown at \(moment) in \(zone.identifier)")
                 }
                 moment = moment.addingTimeInterval(1800)
@@ -155,7 +163,9 @@ struct TimeAndCalendarTests {
     }
 
     @Test func monthsKnowTheirLengthsIncludingTheLeapDay() {
-        let counts: [(Int, Int, Int)] = [(2026, 2, 28), (2027, 2, 28), (2028, 2, 29), (2100, 2, 28), (2000, 2, 29), (2026, 4, 30), (2026, 12, 31), (2026, 1, 31)]
+        let counts: [(Int, Int, Int)] = [
+            (2026, 2, 28), (2027, 2, 28), (2028, 2, 29), (2100, 2, 28), (2000, 2, 29), (2026, 4, 30), (2026, 12, 31), (2026, 1, 31),
+        ]
         for (year, month, days) in counts {
             let period = ReviewPeriod.monthly(year: year, month: month)
             #expect(period.mornings.count == days, "\(year)-\(month)")
@@ -250,7 +260,9 @@ struct TimeAndCalendarTests {
         let plan = NotificationPlan.make(preferences: preferences, wakeMinutes: 7 * 60, bedtimeCenterMinutes: 23 * 60)
         for notification in plan {
             #expect(notification.components.hour != nil && notification.components.minute != nil)
-            #expect(notification.components.timeZone == nil && notification.components.day == nil && notification.components.month == nil && notification.components.year == nil)
+            #expect(
+                notification.components.timeZone == nil && notification.components.day == nil && notification.components.month == nil
+                    && notification.components.year == nil)
             #expect(notification.repeats)
         }
         // No two reminders share an identifier, and the plan has at most three.

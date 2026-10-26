@@ -72,7 +72,9 @@ struct ConfigAuditTests {
 
     @Test func noAvailabilityGuardAsksForASystemTheAppAlreadyRequires() {
         // A guard for 26.0 or 26.1 is a dead branch: it hides a fallback nobody can reach. iOS 27 guards stay (the swipe actions, with the long press beside them).
-        let guards = ShippedSource.lines.filter { $0.code.hasMatch(#"#available\(\s*iOS\s+26(\.[01])?\s*,"#) || $0.code.hasMatch(#"@available\(\s*iOS\s+26(\.[01])?\s*,"#) }
+        let guards = ShippedSource.lines.filter {
+            $0.code.hasMatch(#"#available\(\s*iOS\s+26(\.[01])?\s*,"#) || $0.code.hasMatch(#"@available\(\s*iOS\s+26(\.[01])?\s*,"#)
+        }
         #expect(guards.isEmpty, Comment(rawValue: guards.map { "\($0.path):\($0.number)" }.joined(separator: "\n")))
         let iOS27 = ShippedSource.lines.filter { $0.code.hasMatch(#"#available\(\s*iOS\s+27\s*,"#) }
         #expect(iOS27.count == 2, "the Home swipe actions container and the insight card's swipe actions, each beside a plain iOS 26 behavior")
@@ -91,22 +93,27 @@ struct ConfigAuditTests {
 
     @Test func theGeneratedKeysAreTheOnesTheAppNeeds() throws {
         let yml = try text("project.yml")
-        let keys = Set(yml.split(separator: "\n").compactMap { line -> String? in
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            guard trimmed.hasPrefix("INFOPLIST_KEY_"), let colon = trimmed.firstIndex(of: ":") else { return nil }
-            return String(trimmed[..<colon])
-        })
-        #expect(keys == [
-            "INFOPLIST_KEY_CFBundleDisplayName", "INFOPLIST_KEY_UILaunchStoryboardName", "INFOPLIST_KEY_NSSupportsLiveActivities",
-            "INFOPLIST_KEY_NSHealthShareUsageDescription", "INFOPLIST_KEY_UIApplicationSceneManifest_Generation", "INFOPLIST_KEY_UIStatusBarStyle",
-            "INFOPLIST_KEY_UISupportedInterfaceOrientations",
-            // Export compliance (QA-016): no encryption of its own; PrivacyEnforcementTests holds the claim to the code.
-            "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption",
-        ], Comment(rawValue: "\(keys.sorted())"))
+        let keys = Set(
+            yml.split(separator: "\n").compactMap { line -> String? in
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                guard trimmed.hasPrefix("INFOPLIST_KEY_"), let colon = trimmed.firstIndex(of: ":") else { return nil }
+                return String(trimmed[..<colon])
+            })
+        #expect(
+            keys == [
+                "INFOPLIST_KEY_CFBundleDisplayName", "INFOPLIST_KEY_UILaunchStoryboardName", "INFOPLIST_KEY_NSSupportsLiveActivities",
+                "INFOPLIST_KEY_NSHealthShareUsageDescription", "INFOPLIST_KEY_UIApplicationSceneManifest_Generation", "INFOPLIST_KEY_UIStatusBarStyle",
+                "INFOPLIST_KEY_UISupportedInterfaceOrientations",
+                // Export compliance (QA-016): no encryption of its own; PrivacyEnforcementTests holds the claim to the code.
+                "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption",
+            ], Comment(rawValue: "\(keys.sorted())"))
         // Reads Health and says it never writes: there is no update description, because nothing is written.
         #expect(!yml.contains("NSHealthUpdateUsageDescription") && !yml.contains("NSHealthClinicalHealthRecords"))
         // Nothing the app never does is asked for: no camera, microphone, location, contacts, photos, tracking, speech, Bluetooth or local network.
-        for key in ["NSCamera", "NSMicrophone", "NSLocation", "NSContacts", "NSPhotoLibrary", "NSUserTracking", "NSSpeechRecognition", "NSBluetooth", "NSLocalNetwork", "NSFaceID", "NSMotion", "NSCalendars"] {
+        for key in [
+            "NSCamera", "NSMicrophone", "NSLocation", "NSContacts", "NSPhotoLibrary", "NSUserTracking", "NSSpeechRecognition", "NSBluetooth", "NSLocalNetwork",
+            "NSFaceID", "NSMotion", "NSCalendars",
+        ] {
             #expect(!yml.contains(key), Comment(rawValue: "project.yml asks for \(key)"))
         }
     }
@@ -127,10 +134,15 @@ struct ConfigAuditTests {
     }
 
     @Test func noPlistOrManifestOpensTheNetwork() throws {
-        let files = ["App/Info.plist", "Widgets/Alarm/Info.plist", "Widgets/Home/Info.plist", "Watch/App/Info.plist", "Watch/Widgets/Info.plist", "project.yml"]
+        let files = [
+            "App/Info.plist", "Widgets/Alarm/Info.plist", "Widgets/Home/Info.plist", "Watch/App/Info.plist", "Watch/Widgets/Info.plist", "project.yml",
+        ]
         for path in files {
             let content = try text(path)
-            for key in ["NSAppTransportSecurity", "NSAllowsArbitraryLoads", "NSExceptionDomains", "NSAllowsLocalNetworking", "NSBonjourServices", "NSExceptionAllowsInsecureHTTPLoads"] {
+            for key in [
+                "NSAppTransportSecurity", "NSAllowsArbitraryLoads", "NSExceptionDomains", "NSAllowsLocalNetworking", "NSBonjourServices",
+                "NSExceptionAllowsInsecureHTTPLoads",
+            ] {
                 #expect(!content.contains(key), Comment(rawValue: "\(path) has \(key)"))
             }
         }
@@ -160,13 +172,18 @@ struct ConfigAuditTests {
         #expect((app["com.apple.developer.healthkit.access"] as? [Any])?.isEmpty == true, "no clinical records")
         #expect(app["com.apple.developer.healthkit.background-delivery"] as? Bool == true, "R46: the morning wake")
         #expect(app["com.apple.developer.applesignin"] as? [String] == ["Default"], "R69: Sign in with Apple, optional and local")
-        #expect(Set(app.keys) == ["com.apple.developer.applesignin", "com.apple.developer.healthkit", "com.apple.developer.healthkit.access", "com.apple.developer.healthkit.background-delivery", "com.apple.security.application-groups"])
+        #expect(
+            Set(app.keys) == [
+                "com.apple.developer.applesignin", "com.apple.developer.healthkit", "com.apple.developer.healthkit.access",
+                "com.apple.developer.healthkit.background-delivery", "com.apple.security.application-groups",
+            ])
 
         let group = WidgetSnapshotStore.appGroupIdentifier
         #expect(app["com.apple.security.application-groups"] as? [String] == [group])
         for path in ["Config/NoctisWidgets.entitlements", "Config/NOCTISWatch.entitlements", "Config/NOCTISWatchWidgets.entitlements"] {
             let entitlements = try plist(path)
-            #expect(Set(entitlements.keys) == ["com.apple.security.application-groups"], Comment(rawValue: "\(path): the App Group and nothing else (R34, R44)"))
+            #expect(
+                Set(entitlements.keys) == ["com.apple.security.application-groups"], Comment(rawValue: "\(path): the App Group and nothing else (R34, R44)"))
             #expect(entitlements["com.apple.security.application-groups"] as? [String] == [group], Comment(rawValue: path))
         }
         // The alarm extension has none: it reads what AlarmKit hands it.

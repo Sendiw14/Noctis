@@ -66,7 +66,8 @@ public nonisolated enum WindDownActivityState {
         phase: WindDownActivityAttributes.ContentState.Phase, startedAt: Date, pausedTotal: TimeInterval, plannedSeconds: TimeInterval, pausedAt: Date? = nil
     ) -> WindDownActivityAttributes.ContentState {
         let start = startedAt.addingTimeInterval(pausedTotal)
-        return WindDownActivityAttributes.ContentState(phase: phase, windowStart: start, windowEnd: start.addingTimeInterval(plannedSeconds), pausedAt: phase == .paused ? pausedAt : nil)
+        return WindDownActivityAttributes.ContentState(
+            phase: phase, windowStart: start, windowEnd: start.addingTimeInterval(plannedSeconds), pausedAt: phase == .paused ? pausedAt : nil)
     }
 
     /// The system marks the activity stale at this moment, so a session that ran out while the app was away says so instead of "0:00".

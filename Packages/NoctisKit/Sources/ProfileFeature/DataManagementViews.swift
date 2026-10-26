@@ -126,7 +126,8 @@ struct DataManagementView: View {
         .task { viewModel.refreshPrivacy() }
         .onDisappear { manager.discardExport() }
         .confirmationDialog(
-            pending?.question ?? "", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }), titleVisibility: .visible, presenting: pending
+            pending?.question ?? "", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }), titleVisibility: .visible,
+            presenting: pending
         ) { group in
             Button(group.confirm, role: .destructive) { Task { await delete(group) } }
             Button(DataManagementCopy.cancel, role: .cancel) {}
@@ -284,9 +285,11 @@ struct DeleteAllSheet: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(step.title).noctisFont(15, relativeTo: .subheadline).foregroundStyle(NoctisAppColor.ink)
                                 if case .failed(let message) = step.state {
-                                    Text(message).noctisFont(13, relativeTo: .footnote).foregroundStyle(NoctisAppColor.destructive).fixedSize(horizontal: false, vertical: true)
+                                    Text(message).noctisFont(13, relativeTo: .footnote).foregroundStyle(NoctisAppColor.destructive).fixedSize(
+                                        horizontal: false, vertical: true)
                                 } else if let note = manager.stepNotes[step.id] {
-                                    Text(note).noctisFont(13, relativeTo: .footnote).foregroundStyle(NoctisAppColor.ink2).fixedSize(horizontal: false, vertical: true)
+                                    Text(note).noctisFont(13, relativeTo: .footnote).foregroundStyle(NoctisAppColor.ink2).fixedSize(
+                                        horizontal: false, vertical: true)
                                 }
                             }
                         }

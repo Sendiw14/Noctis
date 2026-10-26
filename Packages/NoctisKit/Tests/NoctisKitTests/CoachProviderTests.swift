@@ -1,13 +1,15 @@
 import Foundation
 import Testing
-@testable import InsightsKit
-#if canImport(FoundationModels)
-import FoundationModels
-#endif
+
 @testable import AppRoot
 @testable import CoachKit
 @testable import HomeFeature
+@testable import InsightsKit
 @testable import NoctisCore
+
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
 
 /// A stand-in for the system model: records each call, answers as told.
 nonisolated private final class FakeBackend: CoachModelBackend, @unchecked Sendable {
@@ -179,10 +181,12 @@ struct CoachFoundationModelsProviderTests {
             summary: "s", contributors: [GeneratedContributor(label: "HRV", factID: "hrv.today")], whatChanged: "c", whatToNotice: "n",
             tonightSuggestion: "t", pattern: "p", confidence: .moderate, caution: "k", destinations: ["sleep"]
         )
-        #expect(generated.draft == CoachAnswerDraft(
-            summary: "s", contributors: [CoachDraftContributor(label: "HRV", factID: "hrv.today")], whatChanged: "c", whatToNotice: "n",
-            tonightSuggestion: "t", pattern: "p", confidence: .moderate, caution: "k", destinations: ["sleep"]
-        ))
+        #expect(
+            generated.draft
+                == CoachAnswerDraft(
+                    summary: "s", contributors: [CoachDraftContributor(label: "HRV", factID: "hrv.today")], whatChanged: "c", whatToNotice: "n",
+                    tonightSuggestion: "t", pattern: "p", confidence: .moderate, caution: "k", destinations: ["sleep"]
+                ))
     }
 
     @Test func theSystemModelsAvailabilityMapsToOneOfTheCases() {
@@ -212,7 +216,9 @@ struct CoachFoundationModelsProviderTests {
         let result = await service.answer(to: "Why is my recovery lower today?")
         print("COACH-FM availability=\(backend.availability.rawValue) outcome=\(result.outcome.code) source=\(result.answer.sourceKind.rawValue)")
         // The app's own pattern note ("not proof of a cause") is written by the app, not the model, and is the one sentence that has to say "cause".
-        for text in result.answer.allText where text != result.answer.patternNote { #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: text)) }
+        for text in result.answer.allText where text != result.answer.patternNote {
+            #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: text))
+        }
         #expect(!result.answer.allText.joined().contains("{{"))
         switch result.outcome {
         case .model: #expect(result.answer.sourceKind == .appleIntelligence)
@@ -258,7 +264,8 @@ struct CoachRemoteTests {
         let insight = CoachFixture.fact("insight.bedtimeShift.delta", 55, .duration, magnitude: true)
         let leaks = [
             CoachFixture.fact("user.name", 1, .count), CoachFixture.fact("profile.email", 1, .count), CoachFixture.fact("health.rawSamples", 1, .count),
-            CoachFixture.fact("insight.", 1, .count), CoachFixture.fact("insight", 1, .count), CoachFixture.fact("sample.heartRate.2026-09-24T03:12", 1, .count),
+            CoachFixture.fact("insight.", 1, .count), CoachFixture.fact("insight", 1, .count),
+            CoachFixture.fact("sample.heartRate.2026-09-24T03:12", 1, .count),
             CoachFixture.fact("device.name", 1, .count), CoachFixture.fact("recovery.scoreRaw", 1, .count), CoachFixture.fact("RECOVERY.SCORE", 1, .count),
         ]
         let context = CoachFixture.handmade(facts: [allowed, insight] + leaks)
@@ -371,8 +378,12 @@ struct CoachMockAITests {
         let context = CoachFixture.handmade()
         let unavailable = MockAIProvider(mode: .unavailable)
         #expect(unavailable.availability == .deviceNotEligible)
-        await #expect(throws: CoachProviderError.unavailable(.deviceNotEligible)) { try await unavailable.draft(question: "q", intent: .recoveryChange, context: context) }
-        await #expect(throws: CoachProviderError.failed) { try await MockAIProvider(mode: .throwing).draft(question: "q", intent: .recoveryChange, context: context) }
+        await #expect(throws: CoachProviderError.unavailable(.deviceNotEligible)) {
+            try await unavailable.draft(question: "q", intent: .recoveryChange, context: context)
+        }
+        await #expect(throws: CoachProviderError.failed) {
+            try await MockAIProvider(mode: .throwing).draft(question: "q", intent: .recoveryChange, context: context)
+        }
         #expect(MockAIProvider(mode: .good).availability == .available)
     }
 }

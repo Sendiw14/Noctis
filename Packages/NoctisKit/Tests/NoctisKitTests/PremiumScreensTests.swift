@@ -196,7 +196,8 @@ struct InsightsGatingTests {
         let suite = scratchDefaults()
         return InsightsViewModel(
             repository: repository, profile: { UserProfileSnapshot() },
-            introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey), washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
+            introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey),
+            washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
             reduceMotion: { true }, lowPower: { false }, clock: { time }, calendar: Fixture.calendar(), locale: gatingLocale,
             revealSleep: held, isUnlocked: unlocked(tier)
         )
@@ -241,8 +242,10 @@ struct InsightsGatingTests {
         let provider = MockHealthKitProvider(scenario: .full, referenceDate: gatingNow, calendar: Fixture.calendar(), startAuthorized: true)
         let suite = scratchDefaults()
         let model = InsightsViewModel(
-            repository: InsightsRepository(provider: provider, store: InsightStore(), timeZone: Fixture.newYork, clock: { time }), profile: { UserProfileSnapshot() },
-            introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey), washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
+            repository: InsightsRepository(provider: provider, store: InsightStore(), timeZone: Fixture.newYork, clock: { time }),
+            profile: { UserProfileSnapshot() },
+            introGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.introKey),
+            washGate: HomeIntroGate(defaults: suite, key: InsightsViewModel.washKey),
             reduceMotion: { true }, lowPower: { false }, clock: { time }, calendar: Fixture.calendar(), locale: gatingLocale,
             revealSleep: held, isUnlocked: { FeatureTable.isIncluded($0, in: tier) }
         )
@@ -277,7 +280,9 @@ struct CoachGatingTests {
     }
 
     private static let scripted = CoachResult(
-        answer: CoachAnswer(sourceKind: .scripted, intent: .medicalOutOfScope, summary: "That's a question for a clinician.", confidence: .high, footer: "Coach isn't medical advice."),
+        answer: CoachAnswer(
+            sourceKind: .scripted, intent: .medicalOutOfScope, summary: "That's a question for a clinician.", confidence: .high,
+            footer: "Coach isn't medical advice."),
         outcome: .scripted(.medical)
     )
 
@@ -466,7 +471,8 @@ struct TonightGatingTests {
         let times = HomeScreenBuilder.tonightTimes(now: gatingEvening, plan: plan, format: gatingFormat)
         #expect(plain(times.bedtimeText) == "10:30 PM")
         #expect(times.wake.timeIntervalSince(times.bedtime) == 8.5 * 3600, "from 10:30 PM to 7:00 AM")
-        let own = HomeScreenBuilder.tonightTimes(now: gatingEvening, plan: TonightPlan(profile: UserProfileSnapshot(typicalWakeMinutes: 7 * 60, needMinutes: 8 * 60)), format: gatingFormat)
+        let own = HomeScreenBuilder.tonightTimes(
+            now: gatingEvening, plan: TonightPlan(profile: UserProfileSnapshot(typicalWakeMinutes: 7 * 60, needMinutes: 8 * 60)), format: gatingFormat)
         #expect(own.wake.timeIntervalSince(own.bedtime) == 8 * 3600, "unchanged without a window")
     }
 
@@ -506,7 +512,8 @@ struct SoundsGatingTests {
     private func model(_ tier: Tier) -> (SoundsViewModel, PlayerBench) {
         let bench = PlayerBench.make()
         let gate = FeatureGate(tier: tier)
-        let model = SoundsViewModel(player: bench.player, now: { bench.time.now }, haptic: {}, isIncluded: { gate.isUnlocked($0) }, sleeper: { await bench.time.sleep($0) })
+        let model = SoundsViewModel(
+            player: bench.player, now: { bench.time.now }, haptic: {}, isIncluded: { gate.isUnlocked($0) }, sleeper: { await bench.time.sleep($0) })
         return (model, bench)
     }
 
@@ -535,7 +542,9 @@ struct SoundsGatingTests {
     @Test func aSoundPlayingWhenThePlanLapsKeepsPlayingUntilItIsStopped() {
         let bench = PlayerBench.make()
         var tier = Tier.premium
-        let model = SoundsViewModel(player: bench.player, now: { bench.time.now }, haptic: {}, isIncluded: { FeatureGate.sounds(for: tier).contains($0) }, sleeper: { await bench.time.sleep($0) })
+        let model = SoundsViewModel(
+            player: bench.player, now: { bench.time.now }, haptic: {}, isIncluded: { FeatureGate.sounds(for: tier).contains($0) },
+            sleeper: { await bench.time.sleep($0) })
         model.tap(.fireplace)
         #expect(model.state.kind == .fireplace && model.state.phase == .playing)
         tier = .free
@@ -595,7 +604,9 @@ struct WindDownGatingTests {
         #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .premium) == .windDown(autostart: false))
         #expect(NoctisNotification.route(for: NoctisNotification.windDown, tier: .free) == .tonight)
         for tier in [Tier.free, .premium] {
-            #expect(NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == .review(kind: .weekly), "the weekly reminder opens the latest weekly review on either plan")
+            #expect(
+                NoctisNotification.route(for: NoctisNotification.weeklyReview, tier: tier) == .review(kind: .weekly),
+                "the weekly reminder opens the latest weekly review on either plan")
             #expect(NoctisNotification.route(for: NoctisNotification.morningSummary, tier: tier) == nil)
         }
     }
@@ -639,9 +650,11 @@ struct WindDownGatingTests {
     }
 
     @Test func theContainerRebuildsTheRemindersOnAChangeOfTierAndTheRouterAsksTheModelForIt() throws {
-        let container = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
+        let container = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
         #expect(container.contains("onTierChange") && container.contains("coordinator.reschedule()") && container.contains("tier: { gate.tier }"))
-        let router = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/NotificationRouter.swift"), encoding: .utf8)
+        let router = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/NotificationRouter.swift"), encoding: .utf8)
         #expect(router.contains("route(for: identifier, tier: model.tier)"))
     }
 }

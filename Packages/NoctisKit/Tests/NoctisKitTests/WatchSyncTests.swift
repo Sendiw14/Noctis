@@ -61,7 +61,8 @@ struct SnapshotV2Tests {
 
     @Test func theWorstSnapshotStillFitsUnderThreeKilobytes() throws {
         var worst = snapshot(.stale(hours: 99), epoch: Int64.max / 4)
-        worst.lastNight = WidgetNight(asleepMinutes: 1439, stages: WidgetStages(deep: 999, core: 999, rem: 999), bedtimeMinutes: 1439, wakeMinutes: 1439, quality: 100)
+        worst.lastNight = WidgetNight(
+            asleepMinutes: 1439, stages: WidgetStages(deep: 999, core: 999, rem: 999), bedtimeMinutes: 1439, wakeMinutes: 1439, quality: 100)
         worst.factors = WidgetFactors(hrv: 999, restingHeartRate: 199)
         worst.recoveryFactors = WidgetFactorKind.allCases.map { WidgetRecoveryFactor(kind: $0, score: 100, value: 1439.9, baseline: 1439.9, range: .below) }
         #expect(try worst.encoded().count < WidgetSnapshot.maximumBytes)
@@ -70,9 +71,9 @@ struct SnapshotV2Tests {
     @Test func aVersionOneFileIsNotReadAndEveryReaderSaysOpenNOCTIS() throws {
         // What the iPhone wrote before the Watch: no factors, no history, no epoch, version 1.
         let version1 = """
-        {"al":{"m":420,"on":true},"at":1790000000,"day":"2026-09-24","f":{"hrv":54,"rhr":52},"n":{"a":402,"b":1384,"q":81,"st":{"deep":74,"core":236,"rem":92},"w":412},\
-        "p":{"b":1380,"n":480,"w":420},"rec":{"c":2,"d":6,"r":[{"f":0.82,"k":0,"w":0.4}],"s":70},"st":"full","v":1}
-        """
+            {"al":{"m":420,"on":true},"at":1790000000,"day":"2026-09-24","f":{"hrv":54,"rhr":52},"n":{"a":402,"b":1384,"q":81,"st":{"deep":74,"core":236,"rem":92},"w":412},\
+            "p":{"b":1380,"n":480,"w":420},"rec":{"c":2,"d":6,"r":[{"f":0.82,"k":0,"w":0.4}],"s":70},"st":"full","v":1}
+            """
         let data = Data(version1.utf8)
         #expect(WidgetSnapshot.decode(data) == nil, "another version: nothing is shown from it")
         let directory = try WidgetFixture.directory()
@@ -99,15 +100,25 @@ struct SnapshotV2Tests {
         let factor = WidgetRecoveryFactor(kind: .hrv, score: 140, value: 53.96, baseline: 61.449, range: .within)
         #expect(factor.score == 100 && factor.value == 54.0 && factor.baseline == 61.4)
         #expect(WidgetRecoveryFactor(kind: .hrv, score: -3, value: 1, baseline: nil).score == 0)
-        #expect(WidgetSnapshot(forDay: WidgetDay(year: 2026, month: 9, day: 24), generatedAt: now, plan: snapshot().plan, state: .empty, nightsOfHistory: 99).nightsOfHistory == 14)
+        #expect(
+            WidgetSnapshot(forDay: WidgetDay(year: 2026, month: 9, day: 24), generatedAt: now, plan: snapshot().plan, state: .empty, nightsOfHistory: 99)
+                .nightsOfHistory == 14)
     }
 
     @Test func theMakerCarriesTheFourFactorsTheHistoryAndTheEpochOnlyForWhatWasScored() async throws {
-        let provider = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: calendar, startAuthorized: true, isHealthDataAvailable: true, failsQueries: false)
+        let provider = MockHealthKitProvider(
+            scenario: .full, referenceDate: now, calendar: calendar, startAuthorized: true, isHealthDataAvailable: true, failsQueries: false)
         let home = await HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot())
-        let made = try #require(WidgetSnapshotMaker.make(home: home, profile: UserProfileSnapshot(), bedtime: nil, alarm: nil, now: now, calendar: calendar, dataEpoch: 1_790_000_123))
-        guard case .scored(let result)? = home.recovery else { Issue.record("scored"); return }
-        #expect(made.recoveryFactors.map(\.kind) == WidgetFactorKind.allCases.filter { kind in result.factors.contains { WidgetSnapshotMaker.factorKind($0.kind) == kind } })
+        let made = try #require(
+            WidgetSnapshotMaker.make(
+                home: home, profile: UserProfileSnapshot(), bedtime: nil, alarm: nil, now: now, calendar: calendar, dataEpoch: 1_790_000_123))
+        guard case .scored(let result)? = home.recovery else {
+            Issue.record("scored")
+            return
+        }
+        #expect(
+            made.recoveryFactors.map(\.kind)
+                == WidgetFactorKind.allCases.filter { kind in result.factors.contains { WidgetSnapshotMaker.factorKind($0.kind) == kind } })
         for factor in made.recoveryFactors {
             let source = try #require(result.factors.first { WidgetSnapshotMaker.factorKind($0.kind) == factor.kind })
             #expect(factor.score == source.score && abs(factor.value - source.value) < 0.06)
@@ -117,10 +128,12 @@ struct SnapshotV2Tests {
         #expect(try made.encoded().count < WidgetSnapshot.maximumBytes)
 
         let learning = await HomeRepository(
-            provider: MockHealthKitProvider(scenario: .learning, referenceDate: now, calendar: calendar, startAuthorized: true, isHealthDataAvailable: true, failsQueries: false),
+            provider: MockHealthKitProvider(
+                scenario: .learning, referenceDate: now, calendar: calendar, startAuthorized: true, isHealthDataAvailable: true, failsQueries: false),
             timeZone: Fixture.newYork, clock: { now }
         ).refresh(profile: UserProfileSnapshot())
-        let nothing = try #require(WidgetSnapshotMaker.make(home: learning, profile: UserProfileSnapshot(), bedtime: nil, alarm: nil, now: now, calendar: calendar))
+        let nothing = try #require(
+            WidgetSnapshotMaker.make(home: learning, profile: UserProfileSnapshot(), bedtime: nil, alarm: nil, now: now, calendar: calendar))
         #expect(nothing.recoveryFactors.isEmpty && nothing.nightsOfHistory == 0 && nothing.dataEpoch == 0, "no score: no factors")
     }
 }
@@ -339,7 +352,8 @@ struct WatchInboxTests {
             #expect(FileManager.default.fileExists(atPath: url.path), Comment(rawValue: name))
             #expect(try url.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup == true, Comment(rawValue: "\(name) is in backups"))
         }
-        let source = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWatchKit/WatchInbox.swift"), encoding: .utf8)
+        let source = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWatchKit/WatchInbox.swift"), encoding: .utf8)
         #expect(source.contains("completeFileProtectionUntilFirstUserAuthentication"), "readable once the Watch has been unlocked: a complication reads it")
     }
 }
@@ -354,7 +368,12 @@ struct WatchBackgroundDrainTests {
         private let lock = NSLock()
         private var remaining: Int
         init(checks: Int) { remaining = checks }
-        func check() -> Bool { lock.withLock { remaining -= 1; return remaining >= 0 } }
+        func check() -> Bool {
+            lock.withLock {
+                remaining -= 1
+                return remaining >= 0
+            }
+        }
     }
 
     @Test func itReturnsAsSoonAsNothingIsPending() async {
@@ -403,14 +422,38 @@ nonisolated final class FakeWatchSession: WatchSessionDriving, @unchecked Sendab
     private func read<T>(_ get: (State) -> T) -> T { lock.withLock { get(state) } }
     private func write(_ change: (inout State) -> Void) { lock.withLock { change(&state) } }
 
-    var isSupported: Bool { get { read(\.supported) } set { write { $0.supported = newValue } } }
-    var isPaired: Bool { get { read(\.paired) } set { write { $0.paired = newValue } } }
-    var isWatchAppInstalled: Bool { get { read(\.installed) } set { write { $0.installed = newValue } } }
-    var isComplicationEnabled: Bool { get { read(\.complication) } set { write { $0.complication = newValue } } }
-    var isReachable: Bool { get { read(\.reachable) } set { write { $0.reachable = newValue } } }
-    var activation: WatchActivation { get { read(\.activation) } set { write { $0.activation = newValue } } }
-    var remainingComplicationTransfers: Int { get { read(\.remaining) } set { write { $0.remaining = newValue } } }
-    var failUpdates: Bool { get { read(\.failUpdates) } set { write { $0.failUpdates = newValue } } }
+    var isSupported: Bool {
+        get { read(\.supported) }
+        set { write { $0.supported = newValue } }
+    }
+    var isPaired: Bool {
+        get { read(\.paired) }
+        set { write { $0.paired = newValue } }
+    }
+    var isWatchAppInstalled: Bool {
+        get { read(\.installed) }
+        set { write { $0.installed = newValue } }
+    }
+    var isComplicationEnabled: Bool {
+        get { read(\.complication) }
+        set { write { $0.complication = newValue } }
+    }
+    var isReachable: Bool {
+        get { read(\.reachable) }
+        set { write { $0.reachable = newValue } }
+    }
+    var activation: WatchActivation {
+        get { read(\.activation) }
+        set { write { $0.activation = newValue } }
+    }
+    var remainingComplicationTransfers: Int {
+        get { read(\.remaining) }
+        set { write { $0.remaining = newValue } }
+    }
+    var failUpdates: Bool {
+        get { read(\.failUpdates) }
+        set { write { $0.failUpdates = newValue } }
+    }
     var contexts: [[String: Any]] { read(\.contexts) }
     var complicationInfos: [[String: Any]] { read(\.infos) }
     var activations: Int { read(\.activations) }
@@ -601,7 +644,10 @@ struct WatchSyncServiceTests {
         defaults.lastSentAt = now
         defaults.complicationMark = "2026-09-24:1"
         defaults.dataEpoch = 123
-        #expect(suite.dictionaryRepresentation().keys.filter { $0.hasPrefix("noctis.watch.") }.sorted() == [WatchSyncDefaults.complicationMarkKey, WatchSyncDefaults.lastSentAtKey])
+        #expect(
+            suite.dictionaryRepresentation().keys.filter { $0.hasPrefix("noctis.watch.") }.sorted() == [
+                WatchSyncDefaults.complicationMarkKey, WatchSyncDefaults.lastSentAtKey,
+            ])
         #expect(!WatchSyncDefaults.dataEpochKey.hasPrefix("noctis."), "so the clear-everything step leaves it")
         // What delete-all does to the defaults: every key under the prefix.
         for key in suite.dictionaryRepresentation().keys where key.hasPrefix("noctis.") { suite.removeObject(forKey: key) }
@@ -685,7 +731,10 @@ struct WatchInventoryTests {
 
     @Test func theSummaryLeavesTheIPhoneOnlyToTheUsersOwnWatchAndSaysSo() {
         let summary = inventory[.widgetSnapshot]
-        guard case .pairedWatch(let detail) = summary.destination else { Issue.record("the destination is the paired Watch"); return }
+        guard case .pairedWatch(let detail) = summary.destination else {
+            Issue.record("the destination is the paired Watch")
+            return
+        }
         #expect(detail.contains("paired Apple Watch") && detail.contains("never sent to a server"))
         #expect(!summary.holdsUserContent && summary.summary.contains("Apple Watch"))
         let flow = inventory.flows.first { $0.id == "appleWatch" }
@@ -779,14 +828,18 @@ struct WatchTargetStructureTests {
         let widgets = try block("NOCTISWatchWidgets", in: project)
         #expect(watch.contains("platform: watchOS") && watch.contains("deploymentTarget: \"26.0\"") && watch.contains("type: application"))
         #expect(watch.contains("PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.watchkitapp") && watch.contains("WKCompanionAppBundleIdentifier: com.noctis.app"))
-        #expect(widgets.contains("PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.watchkitapp.widgets") && widgets.contains("type: app-extension") && widgets.contains("platform: watchOS"))
+        #expect(
+            widgets.contains("PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.watchkitapp.widgets") && widgets.contains("type: app-extension")
+                && widgets.contains("platform: watchOS"))
         #expect(watch.contains("target: NOCTISWatchWidgets"), "the complications are embedded in the Watch app")
         let app = try block("Noctis", in: project)
         #expect(app.contains("- target: NOCTISWatch"), "the Watch app is embedded in the iPhone app")
         // The same App Group identifier on both sides (separate containers on separate devices).
         for entitlement in ["Config/NOCTISWatch.entitlements", "Config/NOCTISWatchWidgets.entitlements"] {
             let text = try read(entitlement)
-            #expect(text.contains("<string>\(WidgetSnapshotStore.appGroupIdentifier)</string>") && text.components(separatedBy: "<string>").count - 1 == 1, Comment(rawValue: entitlement))
+            #expect(
+                text.contains("<string>\(WidgetSnapshotStore.appGroupIdentifier)</string>") && text.components(separatedBy: "<string>").count - 1 == 1,
+                Comment(rawValue: entitlement))
         }
     }
 
@@ -794,7 +847,10 @@ struct WatchTargetStructureTests {
         let project = try read("project.yml")
         for name in ["NOCTISWatch", "NOCTISWatchWidgets"] {
             let text = try block(name, in: project)
-            for token in ["HealthKit", "healthkit", "NSHealth", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "InsightsKit", "NoctisCore", "HomeFeature"] {
+            for token in [
+                "HealthKit", "healthkit", "NSHealth", "HealthProviding", "SleepKit", "RecoveryKit", "SleepAnalysisKit", "InsightsKit", "NoctisCore",
+                "HomeFeature",
+            ] {
                 #expect(!text.contains(token), Comment(rawValue: "\(name) mentions \(token)"))
             }
         }
@@ -803,10 +859,13 @@ struct WatchTargetStructureTests {
             #expect(!text.lowercased().contains("healthkit") && !text.contains("NSHealth"), Comment(rawValue: path))
         }
         // The code: no import of HealthKit or anything that reads Health, and no engine.
-        for file in RawDefaultsTests.swiftFiles(under: ["Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit"]) {
+        for file in RawDefaultsTests.swiftFiles(under: [
+            "Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit",
+        ]) {
             let code = RawDefaultsTests.code(file.text)
             for token in [
-                "import HealthKit", "HKHealthStore", "import HealthProviding", "import SleepKit", "import RecoveryKit", "import SleepAnalysisKit", "import InsightsKit",
+                "import HealthKit", "HKHealthStore", "import HealthProviding", "import SleepKit", "import RecoveryKit", "import SleepAnalysisKit",
+                "import InsightsKit",
                 "import NoctisCore", "import SwiftData", "import CoachKit", "import JournalKit",
             ] { #expect(!code.contains(token), Comment(rawValue: "\(file.path) has \(token)")) }
         }
@@ -843,8 +902,14 @@ struct WatchTargetStructureTests {
     }
 
     @Test func theWatchCodeUsesNoRequiredReasonAPIBeyondTheOneItsManifestDeclares() throws {
-        let tokens = ["@AppStorage", "creationDate", "modificationDate", "contentModificationDate", "systemUptime", "mach_absolute_time", "volumeAvailableCapacity", "systemFreeSize", "activeInputModes", "fstat(", "lstat("]
-        let files = RawDefaultsTests.swiftFiles(under: ["Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/DesignSystem"])
+        let tokens = [
+            "@AppStorage", "creationDate", "modificationDate", "contentModificationDate", "systemUptime", "mach_absolute_time", "volumeAvailableCapacity",
+            "systemFreeSize", "activeInputModes", "fstat(", "lstat(",
+        ]
+        let files = RawDefaultsTests.swiftFiles(under: [
+            "Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit",
+            "Packages/NoctisKit/Sources/DesignSystem",
+        ])
         #expect(files.count > 20)
         var usesDefaults: Set<String> = []
         for file in files {

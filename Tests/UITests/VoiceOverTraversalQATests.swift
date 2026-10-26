@@ -54,12 +54,16 @@ final class VoiceOverTraversalQATests: XCTestCase {
                 case .tapTab(let label): app.tabBars.buttons[label].tap()
                 case .waitFor(let identifier): _ = app.descendants(matching: .any)[identifier].waitForExistence(timeout: 20)
                 case .waitForPrefix(let prefix):
-                    _ = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix)).firstMatch.waitForExistence(timeout: 20)
+                    _ = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix)).firstMatch.waitForExistence(
+                        timeout: 20)
                 case .back: app.navigationBars.buttons.firstMatch.tap()
                 case .scrollToTop: app.swipeDown()
                 case .type(let text):
                     let field = app.textFields.firstMatch
-                    if field.waitForExistence(timeout: 10) { field.tap(); field.typeText(text) }
+                    if field.waitForExistence(timeout: 10) {
+                        field.tap()
+                        field.typeText(text)
+                    }
                 case .wait(let seconds): QA.pause(seconds)
                 }
                 QA.pause(1)
@@ -90,7 +94,9 @@ final class VoiceOverTraversalQATests: XCTestCase {
             try voiceOver.disable()
             QA.pause(0.5)
 
-            let text = (["# \(screen.id)", "problems: \(problems.isEmpty ? "none" : problems.joined(separator: "; "))", ""] + spoken.enumerated().map { "\($0.offset + 1). \($0.element)" })
+            let text =
+                (["# \(screen.id)", "problems: \(problems.isEmpty ? "none" : problems.joined(separator: "; "))", ""]
+                + spoken.enumerated().map { "\($0.offset + 1). \($0.element)" })
                 .joined(separator: "\n")
             try? text.write(to: directory.appendingPathComponent("\(screen.id).txt"), atomically: true, encoding: .utf8)
             summary.append("\(screen.id)\t\(spoken.count)\t\(problems.isEmpty ? "ok" : problems.joined(separator: "; "))")

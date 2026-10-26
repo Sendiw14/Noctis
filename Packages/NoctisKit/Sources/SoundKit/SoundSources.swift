@@ -94,8 +94,14 @@ struct RainSource {
         var quietest: Float = .greatestFiniteMagnitude
         var i = 0
         while i < Self.dropCount {
-            if drops[i].env <= 0 { slot = i; break }
-            if drops[i].env < quietest { quietest = drops[i].env; slot = i }
+            if drops[i].env <= 0 {
+                slot = i
+                break
+            }
+            if drops[i].env < quietest {
+                quietest = drops[i].env
+                slot = i
+            }
             i += 1
         }
         let seconds = rng.range(0.006, 0.018)
@@ -130,7 +136,8 @@ struct OceanSource {
 
     init(seed: UInt64) {
         var r = SoundRandom(seed: seed)
-        drift = SlowWander(low: -140, high: 140, minSeconds: 5, maxSeconds: 10, glideSeconds: 3, tickRate: SoundDSP.sampleRate / Float(soundControlInterval), rng: &r)
+        drift = SlowWander(
+            low: -140, high: 140, minSeconds: 5, maxSeconds: 10, glideSeconds: 3, tickRate: SoundDSP.sampleRate / Float(soundControlInterval), rng: &r)
         phase = r.unit()
         period = r.range(9, 12)
         rng = r
@@ -244,7 +251,8 @@ struct FireSource {
 
     init(seed: UInt64, crackles: UnsafeMutablePointer<Crackle>) {
         var r = SoundRandom(seed: seed)
-        flicker = SlowWander(low: 0.55, high: 1, minSeconds: 0.4, maxSeconds: 1.6, glideSeconds: 0.25, tickRate: SoundDSP.sampleRate / Float(soundControlInterval), rng: &r)
+        flicker = SlowWander(
+            low: 0.55, high: 1, minSeconds: 0.4, maxSeconds: 1.6, glideSeconds: 0.25, tickRate: SoundDSP.sampleRate / Float(soundControlInterval), rng: &r)
         self.crackles = crackles
         crackles.initialize(repeating: Crackle(), count: Self.crackleCount)
         countdown = r.gap(rate: Self.cracklesPerSecond, sampleRate: SoundDSP.sampleRate)
@@ -265,7 +273,8 @@ struct FireSource {
         if countdown <= 0 {
             spawn()
             // Sometimes the next one follows at once, as a stick settles.
-            countdown = rng.unit() < 0.3 ? rng.gap(rate: 55, sampleRate: SoundDSP.sampleRate) : rng.gap(rate: Self.cracklesPerSecond, sampleRate: SoundDSP.sampleRate)
+            countdown =
+                rng.unit() < 0.3 ? rng.gap(rate: 55, sampleRate: SoundDSP.sampleRate) : rng.gap(rate: Self.cracklesPerSecond, sampleRate: SoundDSP.sampleRate)
         }
         let n = rng.bipolar()
         var i = 0
@@ -282,8 +291,14 @@ struct FireSource {
         var quietest: Float = .greatestFiniteMagnitude
         var i = 0
         while i < Self.crackleCount {
-            if crackles[i].env <= 0 { slot = i; break }
-            if crackles[i].env < quietest { quietest = crackles[i].env; slot = i }
+            if crackles[i].env <= 0 {
+                slot = i
+                break
+            }
+            if crackles[i].env < quietest {
+                quietest = crackles[i].env
+                slot = i
+            }
             i += 1
         }
         let u = rng.unit()
@@ -334,19 +349,21 @@ struct AmbientSource {
         for note in Self.notes {
             for detune in Self.detune {
                 let seconds = r.range(8, 20)
-                (oscillators + index).initialize(to: PadOscillator(
-                    phasor: Phasor(frequency: note.frequency * (1 + detune), phase: r.range(0, SoundDSP.twoPi)),
-                    lfoPhase: r.unit(), lfoStep: Float(soundControlInterval) / (seconds * SoundDSP.sampleRate), weight: note.weight / 3
-                ))
+                (oscillators + index).initialize(
+                    to: PadOscillator(
+                        phasor: Phasor(frequency: note.frequency * (1 + detune), phase: r.range(0, SoundDSP.twoPi)),
+                        lfoPhase: r.unit(), lfoStep: Float(soundControlInterval) / (seconds * SoundDSP.sampleRate), weight: note.weight / 3
+                    ))
                 index += 1
             }
         }
         // A low D underneath, alone.
         let seconds = r.range(14, 22)
-        (oscillators + index).initialize(to: PadOscillator(
-            phasor: Phasor(frequency: 73.42, phase: r.range(0, SoundDSP.twoPi)),
-            lfoPhase: r.unit(), lfoStep: Float(soundControlInterval) / (seconds * SoundDSP.sampleRate), weight: 0.45
-        ))
+        (oscillators + index).initialize(
+            to: PadOscillator(
+                phasor: Phasor(frequency: 73.42, phase: r.range(0, SoundDSP.twoPi)),
+                lfoPhase: r.unit(), lfoStep: Float(soundControlInterval) / (seconds * SoundDSP.sampleRate), weight: 0.45
+            ))
         cutoffPhase = r.unit()
         rng = r
     }

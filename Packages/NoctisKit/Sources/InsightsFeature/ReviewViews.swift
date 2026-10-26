@@ -14,7 +14,8 @@ struct InsightsReviewsRow: View {
     var body: some View {
         NoctisRowCard {
             NoctisLinkRow(
-                systemImage: "calendar", fill: NoctisAppColor.blockLavender, title: "Reviews", detail: "Your weekly and monthly reviews", hint: "Opens your reviews.",
+                systemImage: "calendar", fill: NoctisAppColor.blockLavender, title: "Reviews", detail: "Your weekly and monthly reviews",
+                hint: "Opens your reviews.",
                 identifier: "insights.reviews", action: open
             )
         }

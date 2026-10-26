@@ -215,7 +215,8 @@ struct WidgetGalleryPanel: View {
         switch appearance {
         case .light: Color(red: 0.89, green: 0.87, blue: 0.84)
         case .dark: Color(red: 0.06, green: 0.05, blue: 0.05)
-        case .accented: LinearGradient(colors: [Color(red: 0.2, green: 0.12, blue: 0.3), Color(red: 0.08, green: 0.06, blue: 0.12)], startPoint: .top, endPoint: .bottom)
+        case .accented:
+            LinearGradient(colors: [Color(red: 0.2, green: 0.12, blue: 0.3), Color(red: 0.08, green: 0.06, blue: 0.12)], startPoint: .top, endPoint: .bottom)
         }
     }
 }

@@ -140,8 +140,11 @@ final class PaywallQATests: XCTestCase {
             XCTAssertLessThanOrEqual(app.buttons["paywall.cta"].frame.maxY, element(app, "paywall.renewal").frame.minY + 0.5, file: file, line: line)
             XCTAssertLessThanOrEqual(element(app, "paywall.renewal").frame.maxY, app.buttons["paywall.free"].frame.minY + 0.5, file: file, line: line)
             XCTAssertLessThanOrEqual(app.buttons["paywall.free"].frame.maxY, window.maxY, "the way out is on the screen", file: file, line: line)
-            XCTAssertTrue(app.links["Terms"].firstMatch.isHittable && app.links["Privacy"].firstMatch.isHittable && app.buttons["paywall.restore"].isHittable, "the links are on the screen", file: file, line: line)
-            XCTAssertLessThanOrEqual(element(app, "paywall.benefits").frame.maxY, yearly(app).frame.minY, "the benefits are above the plans", file: file, line: line)
+            XCTAssertTrue(
+                app.links["Terms"].firstMatch.isHittable && app.links["Privacy"].firstMatch.isHittable && app.buttons["paywall.restore"].isHittable,
+                "the links are on the screen", file: file, line: line)
+            XCTAssertLessThanOrEqual(
+                element(app, "paywall.benefits").frame.maxY, yearly(app).frame.minY, "the benefits are above the plans", file: file, line: line)
         }
     }
 

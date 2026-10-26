@@ -143,7 +143,9 @@ public actor WatchSyncService {
         let now = clock()
         // The snapshot carries the epoch it was made with; never send one older than the epoch the iPhone holds now.
         let stamped = snapshot.dataEpoch >= defaults.dataEpoch ? snapshot : snapshot.stamped(epoch: defaults.dataEpoch)
-        guard let context = try? WatchContext(snapshot: stamped, sentAt: now), context.byteCount <= WatchContext.maximumBytes else { return .failed("The summary could not be prepared.") }
+        guard let context = try? WatchContext(snapshot: stamped, sentAt: now), context.byteCount <= WatchContext.maximumBytes else {
+            return .failed("The summary could not be prepared.")
+        }
         return queueContext(context)
     }
 

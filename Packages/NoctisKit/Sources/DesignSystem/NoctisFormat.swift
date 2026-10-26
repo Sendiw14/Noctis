@@ -20,7 +20,8 @@ public nonisolated struct NoctisFormat: Sendable, Equatable {
 
     /// "Wed, Sep 23".
     public func shortDate(_ date: Date, in timeZone: TimeZone? = nil) -> String {
-        date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: timeZone ?? calendar.timeZone).weekday(.abbreviated).month(.abbreviated).day())
+        date.formatted(
+            Date.FormatStyle(locale: locale, calendar: calendar, timeZone: timeZone ?? calendar.timeZone).weekday(.abbreviated).month(.abbreviated).day())
     }
 
     /// "Wed 7:02 AM", kept on one line (no-break spaces).

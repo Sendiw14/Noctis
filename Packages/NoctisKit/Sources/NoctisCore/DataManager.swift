@@ -143,7 +143,8 @@ public final class DataManager {
             guard let eraser = erasers[id] else { return nil }
             return DeleteStep(id: id.rawValue, title: inventory[id].name, run: eraser)
         }
-        let report = steps.isEmpty
+        let report =
+            steps.isEmpty
             ? DeletionReport(entries: [.init(id: group.id, title: group.title, failure: "Nothing is wired to delete it.")])
             : await DeletionRunner.run(steps)
         lastReport = report

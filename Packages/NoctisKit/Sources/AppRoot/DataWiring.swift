@@ -59,12 +59,14 @@ public struct DataWiringInputs {
         model: AppModel, preferences: AppPreferences, defaults: UserDefaults, profileStore: ProfileStore, alarmService: AlarmService,
         alarmStore: AlarmConfigurationStore, windDownStore: WindDownSessionStore, journal: any JournalStoring, coachHistory: CoachHistoryStore?,
         insightFile: InsightFileStore, snapshotStore: HomeSnapshotStore?, notifications: NotificationScheduler, roots: DataRoots = DataRoots(),
-        appVersion: @escaping () -> String = { "NOCTIS" }, stopAudio: @escaping @MainActor () -> Void = {}, endWindDown: @escaping @MainActor () -> Void = {}, signOutOfApple: @escaping @MainActor () -> Void = {},
+        appVersion: @escaping () -> String = { "NOCTIS" }, stopAudio: @escaping @MainActor () -> Void = {}, endWindDown: @escaping @MainActor () -> Void = {},
+        signOutOfApple: @escaping @MainActor () -> Void = {},
         silenceReminders: @escaping @MainActor () -> Void = {}, settleReminders: @escaping @MainActor () async -> Void = {},
         afterJournalDeleted: @escaping @MainActor () -> Void = {}, afterCoachDeleted: @escaping @MainActor () async -> Void = {},
         clearMemory: @escaping @MainActor () async -> Void = {}, forgetSoundChoices: @escaping @MainActor () -> Void = {},
         widgets: WidgetPublisher? = nil, reloadWidgets: @escaping @MainActor () -> Void = {},
-        watch: WatchSyncService? = nil, sleepSounds: SleepSoundsPublisher? = nil, reloadControls: @escaping @MainActor () -> Void = {}, endLiveActivities: @escaping @MainActor () async -> Void = {},
+        watch: WatchSyncService? = nil, sleepSounds: SleepSoundsPublisher? = nil, reloadControls: @escaping @MainActor () -> Void = {},
+        endLiveActivities: @escaping @MainActor () async -> Void = {},
         stopBackgroundUpdates: @escaping @MainActor () async -> Void = {}, reviewFile: ReviewFileStore? = nil,
         afterReviewsDeleted: @escaping @MainActor () async -> Void = {}
     ) {
@@ -116,7 +118,8 @@ public enum DataWiring {
     public static func manager(_ i: DataWiringInputs, inventory: DataInventory = .shared) -> DataManager {
         let erasers = erasers(i, inventory: inventory)
         return DataManager(
-            inventory: inventory, roots: i.roots, erasers: erasers, providers: providers(i), deleteAllSteps: deleteAllSteps(i, erasers: erasers, inventory: inventory),
+            inventory: inventory, roots: i.roots, erasers: erasers, providers: providers(i),
+            deleteAllSteps: deleteAllSteps(i, erasers: erasers, inventory: inventory),
             appVersion: i.appVersion
         )
     }
@@ -214,40 +217,46 @@ public enum DataWiring {
         // The Apple Watch: the data epoch becomes now (the one value that stays) and the Watch is sent it with nothing else, so it wipes its copy; if it is
         // away, it wipes when it connects. The sheet says which.
         let watchLine = WatchLineBox()
-        steps.append(DeleteStep(id: "watch", title: "Telling your Apple Watch", note: { watchLine.text }) {
-            watchLine.text = await i.watch?.wipe().line
-        })
+        steps.append(
+            DeleteStep(id: "watch", title: "Telling your Apple Watch", note: { watchLine.text }) {
+                watchLine.text = await i.watch?.wipe().line
+            })
         // The database files themselves, so what the rows held is not left behind in a file's free pages.
-        steps.append(DeleteStep(id: "databases", title: "Removing database files") {
-            for category in inventory.categories {
-                for case .database(let directory, let path) in category.locations {
-                    let store = i.roots.url(directory).appending(path: path, directoryHint: .notDirectory)
-                    let folder = store.deletingLastPathComponent()
-                    let relativeFolder = (path as NSString).deletingLastPathComponent
-                    for entry in (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? [] {
-                        let relative = relativeFolder.isEmpty ? entry : relativeFolder + "/" + entry
-                        if inventory.category(forFile: relative, in: directory) == category.id {
-                            try? FileManager.default.removeItem(at: folder.appending(path: entry))
+        steps.append(
+            DeleteStep(id: "databases", title: "Removing database files") {
+                for category in inventory.categories {
+                    for case .database(let directory, let path) in category.locations {
+                        let store = i.roots.url(directory).appending(path: path, directoryHint: .notDirectory)
+                        let folder = store.deletingLastPathComponent()
+                        let relativeFolder = (path as NSString).deletingLastPathComponent
+                        for entry in (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? [] {
+                            let relative = relativeFolder.isEmpty ? entry : relativeFolder + "/" + entry
+                            if inventory.category(forFile: relative, in: directory) == category.id {
+                                try? FileManager.default.removeItem(at: folder.appending(path: entry))
+                            }
                         }
                     }
                 }
-            }
-        })
+            })
         // The widgets redraw without their summary, and no Live Activity is left running.
-        steps.append(DeleteStep(id: "widgets", title: "Updating widgets") {
-            i.reloadWidgets()
-            i.reloadControls()
-            await i.endLiveActivities()
-        })
+        steps.append(
+            DeleteStep(id: "widgets", title: "Updating widgets") {
+                i.reloadWidgets()
+                i.reloadControls()
+                await i.endLiveActivities()
+            })
         // Health stops waking the app, so a deleted app does not start itself in the night.
         steps.append(DeleteStep(id: "backgroundUpdates", title: "Stopping background updates") { await i.stopBackgroundUpdates() })
-        steps.append(DeleteStep(id: "preferences", title: "Clearing preferences") {
-            i.preferences.reset()
-            for id in [DataCategoryID.preferences, .soundSettings, .appState] { for key in inventory[id].defaultsKeys { i.defaults.removeObject(forKey: key) } }
-            // Anything else NOCTIS has left under its own prefix.
-            for key in i.defaults.dictionaryRepresentation().keys where key.hasPrefix("noctis.") { i.defaults.removeObject(forKey: key) }
-            i.forgetSoundChoices()
-        })
+        steps.append(
+            DeleteStep(id: "preferences", title: "Clearing preferences") {
+                i.preferences.reset()
+                for id in [DataCategoryID.preferences, .soundSettings, .appState] {
+                    for key in inventory[id].defaultsKeys { i.defaults.removeObject(forKey: key) }
+                }
+                // Anything else NOCTIS has left under its own prefix.
+                for key in i.defaults.dictionaryRepresentation().keys where key.hasPrefix("noctis.") { i.defaults.removeObject(forKey: key) }
+                i.forgetSoundChoices()
+            })
         steps.append(DeleteStep(id: "setup", title: "Resetting setup") { i.model.forgetProfileInMemory() })
         return steps
     }
@@ -292,7 +301,9 @@ public enum DataWiring {
                 if !profile.name.isEmpty { object["name"] = profile.name }
                 return object
             },
-            .preferences: { DataExport.defaultsObject(keys: i.defaults.dictionaryRepresentation().keys.filter { AppPreferences.allKeys.contains($0) }, defaults: i.defaults) },
+            .preferences: {
+                DataExport.defaultsObject(keys: i.defaults.dictionaryRepresentation().keys.filter { AppPreferences.allKeys.contains($0) }, defaults: i.defaults)
+            },
             .soundSettings: { DataExport.defaultsObject(keys: inventory(.soundSettings).defaultsKeys, defaults: i.defaults) },
             .appState: { DataExport.defaultsObject(keys: inventory(.appState).defaultsKeys, defaults: i.defaults) },
             .alarm: {
@@ -301,7 +312,9 @@ public enum DataWiring {
             },
             .windDownHistory: {
                 let format = ISO8601DateFormatter()
-                return i.windDownStore.sessions().map { ["start": format.string(from: $0.start), "plannedMinutes": $0.plannedMinutes, "completed": $0.completed] as [String: Any] }
+                return i.windDownStore.sessions().map {
+                    ["start": format.string(from: $0.start), "plannedMinutes": $0.plannedMinutes, "completed": $0.completed] as [String: Any]
+                }
             },
             .journal: { try JournalExport.object(from: i.journal) },
             .coachHistory: {

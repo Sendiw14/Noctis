@@ -123,7 +123,10 @@ private struct RhythmEditor: View {
                         .foregroundStyle(NoctisAppColor.ink)
                         .monospacedDigit()
                         .contentTransition(.numericText())
-                        .animation(NoctisMotion.adaptive(.easeInOut(duration: 0.15), reduceMotion: reduceMotion), value: kind == .need ? viewModel.needDraft : viewModel.wakeDraft)
+                        .animation(
+                            NoctisMotion.adaptive(.easeInOut(duration: 0.15), reduceMotion: reduceMotion),
+                            value: kind == .need ? viewModel.needDraft : viewModel.wakeDraft
+                        )
                         .accessibilityIdentifier("profile.editor.value")
                     ruler
                         .padding(.top, NoctisSpacing.xs)

@@ -100,7 +100,8 @@ enum QA {
         var issues: [String] = []
         try? app.performAccessibilityAudit(for: .all) { issue in
             let element = issue.element
-            issues.append("\(issue.auditType.rawValue)\t\(issue.compactDescription)\t\(element?.label ?? "-")\t\(element.map { NSCoder.string(for: $0.frame) } ?? "-")")
+            issues.append(
+                "\(issue.auditType.rawValue)\t\(issue.compactDescription)\t\(element?.label ?? "-")\t\(element.map { NSCoder.string(for: $0.frame) } ?? "-")")
             return true
         }
         write(issues.joined(separator: "\n"), to: "\(name)-audit.txt")
@@ -158,14 +159,19 @@ extension QA {
         var insideTabBar = false
         func walk(_ node: XCUIElementSnapshot) {
             let wasInside = insideTabBar
-            if node.elementType == .tabBar { tabBar = node; insideTabBar = true }
+            if node.elementType == .tabBar {
+                tabBar = node
+                insideTabBar = true
+            }
             if node.children.isEmpty, !insideTabBar { leaves.append(node) }
             for child in node.children { walk(child) }
             insideTabBar = wasInside
         }
         walk(root)
 
-        let interactive: Set<XCUIElement.ElementType> = [.button, .link, .switch, .slider, .stepper, .textField, .secureTextField, .searchField, .segmentedControl, .menuItem, .checkBox]
+        let interactive: Set<XCUIElement.ElementType> = [
+            .button, .link, .switch, .slider, .stepper, .textField, .secureTextField, .searchField, .segmentedControl, .menuItem, .checkBox,
+        ]
         func describe(_ s: XCUIElementSnapshot) -> String {
             let name = s.label.isEmpty ? (s.identifier.isEmpty ? "-" : "#\(s.identifier)") : "'\(s.label.prefix(40))'"
             return "\(s.elementType.rawValue) \(name) \(Int(s.frame.width))x\(Int(s.frame.height)) at \(Int(s.frame.minX)),\(Int(s.frame.minY))"
@@ -204,17 +210,20 @@ extension QA {
             }
             previousLabel = s.label
         }
-        for s in all where onScreen(s.frame) && s.elementType != .window && s.elementType != .other && s.elementType != .scrollView && s.elementType != .application {
+        for s in all
+        where onScreen(s.frame) && s.elementType != .window && s.elementType != .other && s.elementType != .scrollView && s.elementType != .application {
             // An element that is mostly on screen and cut by the edge (a chip peeking in from a scroller is less than a half).
             let visible = s.frame.intersection(window).width / max(s.frame.width, 1)
-            if (s.frame.minX < window.minX - 0.5 || s.frame.maxX > window.maxX + 0.5), s.frame.width < window.width * 1.5, visible >= 0.5, visible < 0.99 {
+            if s.frame.minX < window.minX - 0.5 || s.frame.maxX > window.maxX + 0.5, s.frame.width < window.width * 1.5, visible >= 0.5, visible < 0.99 {
                 found.append("\(position): reaches past the screen's edge: \(describe(s))")
             }
         }
         for s in leaves where onScreen(s.frame) && (s.elementType == .staticText || interactive.contains(s.elementType)) && s.frame.maxY > 0 {
             // At the top of a page; scrolled content passes under the status bar by design.
             if position == "top", s.frame.minY < inset.top - 1, s.frame.maxY > 4 { found.append("\(position): inside the status bar: \(describe(s))") }
-            if inset.bottom > 0, s.frame.maxY > window.height - inset.bottom + 1, s.frame.minY < window.height { found.append("\(position): inside the home indicator's area: \(describe(s))") }
+            if inset.bottom > 0, s.frame.maxY > window.height - inset.bottom + 1, s.frame.minY < window.height {
+                found.append("\(position): inside the home indicator's area: \(describe(s))")
+            }
         }
         if position == "bottom", let tabBar {
             for s in leaves where s.elementType == .staticText || interactive.contains(s.elementType) {

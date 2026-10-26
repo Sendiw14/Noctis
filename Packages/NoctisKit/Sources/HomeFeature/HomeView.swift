@@ -523,7 +523,11 @@ struct HomeContent: View {
                 .transition(.opacity.combined(with: .offset(y: 24)))
             }
         }
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(HomeView.contentSpace)) } action: { onHeroFrame($0) }
+        .onGeometryChange(for: CGRect.self) {
+            $0.frame(in: .named(HomeView.contentSpace))
+        } action: {
+            onHeroFrame($0)
+        }
     }
 
     /// Evening's compact Recovery card, then the night panel.
@@ -547,11 +551,12 @@ struct HomeContent: View {
                 .accessibilityRotorEntry(id: HomeSection.insight, in: rotor)
                 // It fades faster than the spring that closes the gap, so
                 // the block below never slides over its text.
-                .transition(.asymmetric(
-                    insertion: .opacity,
-                    removal: AnyTransition.scale(scale: 0.94, anchor: .top)
-                        .combined(with: AnyTransition.opacity.animation(NoctisMotion.select))
-                ))
+                .transition(
+                    .asymmetric(
+                        insertion: .opacity,
+                        removal: AnyTransition.scale(scale: 0.94, anchor: .top)
+                            .combined(with: AnyTransition.opacity.animation(NoctisMotion.select))
+                    ))
         }
         // Your weekly review (and, for the first days of a month, your monthly one): a calm card, there only while a review exists, is unopened and is recent.
         ForEach(viewModel.reviewCards) { card in

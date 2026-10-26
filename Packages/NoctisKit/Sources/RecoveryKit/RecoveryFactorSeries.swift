@@ -89,7 +89,8 @@ public enum RecoveryFactorSeriesBuilder {
         let complete = history.filter { $0.wakeTime <= now }
         let byNight = Dictionary(complete.map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
         guard let end = night ?? complete.map(\.night).max() else {
-            return RecoveryFactorSeries(kind: kind, range: range, points: [], usual: nil, standardDeviation: nil, today: nil, minimum: nil, maximum: nil, isDownsampled: false)
+            return RecoveryFactorSeries(
+                kind: kind, range: range, points: [], usual: nil, standardDeviation: nil, today: nil, minimum: nil, maximum: nil, isDownsampled: false)
         }
         let keys = (0..<range.nights).reversed().map { end.adding(days: -$0) }
         let points = keys.map { key -> RecoveryFactorPoint in

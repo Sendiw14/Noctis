@@ -48,7 +48,9 @@ final class ScriptedHealth: HealthDataProviding, @unchecked Sendable {
         }
     }
     func fetchHeartRateSamples(from start: Date, to end: Date) async throws -> [HeartRateSample] { [] }
-    func fetchRestingHeartRate(from start: Date, to end: Date) async throws -> [HeartRateSample] { lock.withLock { resting.filter { $0.date >= start && $0.date <= end } } }
+    func fetchRestingHeartRate(from start: Date, to end: Date) async throws -> [HeartRateSample] {
+        lock.withLock { resting.filter { $0.date >= start && $0.date <= end } }
+    }
     func fetchHRVSamples(from start: Date, to end: Date) async throws -> [HRVSample] { lock.withLock { hrv.filter { $0.date >= start && $0.date <= end } } }
     func fetchRespiratorySamples(from start: Date, to end: Date) async throws -> [RespiratoryRateSample] { [] }
     func sampleChanges() -> AsyncStream<Void> { AsyncStream { $0.finish() } }
@@ -163,24 +165,29 @@ struct HealthBehaviourTests {
         var sleep: SleepSnapshot?
         await time("sleep refresh") { sleep = await SleepRepository(provider: mock(), timeZone: Fixture.newYork, clock: { now }).refresh(profile: profile) }
         var recovery: RecoverySnapshot?
-        await time("recovery refresh") { recovery = await RecoveryRepository(provider: mock(), timeZone: Fixture.newYork, clock: { now }).refresh(profile: profile) }
+        await time("recovery refresh") {
+            recovery = await RecoveryRepository(provider: mock(), timeZone: Fixture.newYork, clock: { now }).refresh(profile: profile)
+        }
         let sleepSnapshot = try #require(sleep)
         let recoverySnapshot = try #require(recovery)
         await time("sleep month render") {
             let selection = SleepSelection(night: sleepSnapshot.defaultNight, range: .month)
             let model = SleepRenderModelBuilder.build(sleepSnapshot, selection: selection)
-            _ = SleepScreenBuilder.build(sleepSnapshot, model: model, selection: selection, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
+            _ = SleepScreenBuilder.build(
+                sleepSnapshot, model: model, selection: selection, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
         }
         await time("recovery 90D render") {
             let selection = RecoverySelection(segment: .quarter)
             let model = RecoveryRenderModelBuilder.build(recoverySnapshot, selection: selection)
-            _ = RecoveryScreenBuilder.build(recoverySnapshot, model: model, selection: selection, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
+            _ = RecoveryScreenBuilder.build(
+                recoverySnapshot, model: model, selection: selection, now: now, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US"))
         }
         await time("monthly review x24") {
             let inputs: [ReviewNightInput] = (0..<730).map { offset in
                 let morning = SleepNightKey(year: 2026, month: 9, day: 24).adding(days: -offset)
                 return ReviewNightInput(
-                    night: ReviewPeriod.night(endingOn: morning), asleepMinutes: 420 + Double(offset % 60), stages: nil, bedtimeMinutes: 660 + Double(offset % 40),
+                    night: ReviewPeriod.night(endingOn: morning), asleepMinutes: 420 + Double(offset % 60), stages: nil,
+                    bedtimeMinutes: 660 + Double(offset % 40),
                     wakeMinutes: 1140, recoveryScore: 60 + offset % 30, hrv: 55, restingHeartRate: 55
                 )
             }

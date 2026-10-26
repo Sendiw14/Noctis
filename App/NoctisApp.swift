@@ -1,6 +1,6 @@
-import SwiftUI
 import AppRoot
 import NoctisCore
+import SwiftUI
 
 @main
 struct NoctisApp: App {

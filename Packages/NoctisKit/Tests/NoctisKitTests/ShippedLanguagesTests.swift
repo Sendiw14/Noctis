@@ -10,7 +10,9 @@ struct ShippedLanguagesTests {
         let rightToLeft: Set<String> = ["ar", "he", "fa", "ur", "ps", "sd", "ug", "yi", "dv", "ckb"]
         let pbx = try String(contentsOf: root.appendingPathComponent("Noctis.xcodeproj/project.pbxproj"), encoding: .utf8)
         let regions = try #require(pbx.range(of: #"knownRegions = \(([^)]*)\)"#, options: .regularExpression)).lowerBound
-        let list = pbx[regions...].prefix(while: { $0 != ")" }).components(separatedBy: CharacterSet(charactersIn: ",\n\t ;=()")).filter { !$0.isEmpty && $0 != "knownRegions" }
+        let list = pbx[regions...].prefix(while: { $0 != ")" }).components(separatedBy: CharacterSet(charactersIn: ",\n\t ;=()")).filter {
+            !$0.isEmpty && $0 != "knownRegions"
+        }
         #expect(Set(list) == ["Base", "en"], "knownRegions: \(list)")
         var languages = Set<String>()
         let base = root.appendingPathComponent("Packages/NoctisKit/Sources")
@@ -26,12 +28,15 @@ struct ShippedLanguagesTests {
         let appCatalog = root.appendingPathComponent("App/AppShortcuts.xcstrings")
         if let data = try? Data(contentsOf: appCatalog), let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
             languages.insert(json["sourceLanguage"] as? String ?? "?")
-            for (_, entry) in json["strings"] as? [String: Any] ?? [:] { for key in ((entry as? [String: Any])?["localizations"] as? [String: Any])?.keys ?? [:].keys { languages.insert(key) } }
+            for (_, entry) in json["strings"] as? [String: Any] ?? [:] {
+                for key in ((entry as? [String: Any])?["localizations"] as? [String: Any])?.keys ?? [:].keys { languages.insert(key) }
+            }
         }
         #expect(languages == ["en"], "string catalogs hold: \(languages.sorted())")
         #expect(languages.isDisjoint(with: rightToLeft))
         // No .lproj folder for another language.
-        let lprojs = (FileManager.default.enumerator(at: root.appendingPathComponent("App"), includingPropertiesForKeys: nil)?.allObjects as? [URL] ?? []).filter { $0.pathExtension == "lproj" }.map(\.lastPathComponent)
+        let lprojs = (FileManager.default.enumerator(at: root.appendingPathComponent("App"), includingPropertiesForKeys: nil)?.allObjects as? [URL] ?? [])
+            .filter { $0.pathExtension == "lproj" }.map(\.lastPathComponent)
         #expect(Set(lprojs).isSubset(of: ["en.lproj", "Base.lproj"]), "\(lprojs)")
     }
 }

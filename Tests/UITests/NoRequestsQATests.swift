@@ -26,17 +26,30 @@ final class NoRequestsQATests: XCTestCase {
         // Coach answers a question on the device.
         app.tabBars.buttons["Coach"].tap()
         let question = app.descendants(matching: .any)["coach.question.recovery.lower"]
-        if question.waitForExistence(timeout: 6) { question.tap(); QA.pause(4) }
+        if question.waitForExistence(timeout: 6) {
+            question.tap()
+            QA.pause(4)
+        }
         app.tabBars.buttons["Home"].tap()
         QA.pause(1)
         // The profile, Settings and the Privacy Center.
         let avatar = app.buttons.matching(identifier: "home.profile").firstMatch
-        if avatar.waitForExistence(timeout: 5) { avatar.tap(); QA.pause(1.5) }
+        if avatar.waitForExistence(timeout: 5) {
+            avatar.tap()
+            QA.pause(1.5)
+        }
         for label in ["Settings", "Privacy", "Data management"] {
             let row = QA.button(app, label)
-            if row.waitForExistence(timeout: 3) { row.tap(); QA.pause(1.2); if app.navigationBars.buttons.firstMatch.exists { app.navigationBars.buttons.firstMatch.tap() } }
+            if row.waitForExistence(timeout: 3) {
+                row.tap()
+                QA.pause(1.2)
+                if app.navigationBars.buttons.firstMatch.exists { app.navigationBars.buttons.firstMatch.tap() }
+            }
         }
-        while !app.tabBars.buttons["Home"].isHittable, app.navigationBars.buttons.firstMatch.exists { app.navigationBars.buttons.firstMatch.tap(); QA.pause(0.6) }
+        while !app.tabBars.buttons["Home"].isHittable, app.navigationBars.buttons.firstMatch.exists {
+            app.navigationBars.buttons.firstMatch.tap()
+            QA.pause(0.6)
+        }
         app.tabBars.buttons["Home"].tap()
         XCTAssertEqual(requests(app), 0, "after the profile, Settings, Privacy and Data management")
     }

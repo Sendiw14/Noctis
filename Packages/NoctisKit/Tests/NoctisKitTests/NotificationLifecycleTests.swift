@@ -11,7 +11,8 @@ import Testing
 
 @MainActor
 struct NotificationLifecycleTests {
-    private let trial = ScheduledNotification(identifier: "noctis.trial.ending", title: "NOCTIS", body: "Your trial ends tomorrow.", components: DateComponents(hour: 9), repeats: false)
+    private let trial = ScheduledNotification(
+        identifier: "noctis.trial.ending", title: "NOCTIS", body: "Your trial ends tomorrow.", components: DateComponents(hour: 9), repeats: false)
 
     private func expected(_ preferences: NotificationPreferences, wake: Int, bedtime: Int, tier: Tier) -> [ScheduledNotification] {
         NotificationPlan.make(preferences: preferences, wakeMinutes: wake, bedtimeCenterMinutes: bedtime, tier: tier)
@@ -62,7 +63,9 @@ struct NotificationLifecycleTests {
         #expect(free.keys == premium.keys && premium.count == 3)
         #expect(free[NoctisNotification.windDown]?.body != premium[NoctisNotification.windDown]?.body)
         #expect(free[NoctisNotification.windDown]?.components == premium[NoctisNotification.windDown]?.components)
-        #expect(free[NoctisNotification.morningSummary] == premium[NoctisNotification.morningSummary] && free[NoctisNotification.weeklyReview] == premium[NoctisNotification.weeklyReview])
+        #expect(
+            free[NoctisNotification.morningSummary] == premium[NoctisNotification.morningSummary]
+                && free[NoctisNotification.weeklyReview] == premium[NoctisNotification.weeklyReview])
     }
 
     /// Every wording NOCTIS can send, over every plan, lead and offset: generic, one title, no number except the minutes the person chose.
@@ -78,9 +81,16 @@ struct NotificationLifecycleTests {
                         #expect(item.title == "NOCTIS")
                         bodies.insert(item.body)
                         let digits = item.body.filter(\.isNumber)
-                        if item.identifier == NoctisNotification.windDown { #expect(digits == String(lead), Comment(rawValue: item.body)) } else { #expect(digits.isEmpty, Comment(rawValue: item.body)) }
+                        if item.identifier == NoctisNotification.windDown {
+                            #expect(digits == String(lead), Comment(rawValue: item.body))
+                        } else {
+                            #expect(digits.isEmpty, Comment(rawValue: item.body))
+                        }
                         let lower = item.body.lowercased()
-                        for banned in ["score", "streak", "hrv", "bpm", "recovery", "slept", "hours", "%", "heart", "quality", "last night", "you missed", "don't forget", "behind", "tired", "worse", "better"] {
+                        for banned in [
+                            "score", "streak", "hrv", "bpm", "recovery", "slept", "hours", "%", "heart", "quality", "last night", "you missed", "don't forget",
+                            "behind", "tired", "worse", "better",
+                        ] {
                             #expect(!lower.contains(banned), Comment(rawValue: "\(banned) in \(item.body)"))
                         }
                         #expect(item.body.count <= 60 && item.body.hasSuffix("."), Comment(rawValue: item.body))
@@ -127,13 +137,17 @@ struct NotificationLifecycleTests {
             let weekly = try model()
             if warm { weekly.selectedTab = .recovery }
             NotificationRouter(model: weekly).handle(identifier: NoctisNotification.weeklyReview)
-            #expect(weekly.selectedTab == AppRoute.review(kind: .weekly).tab && weekly.insightsPath == [.review(kind: .weekly, id: nil)], "weekly, warm \(warm), \(tier)")
+            #expect(
+                weekly.selectedTab == AppRoute.review(kind: .weekly).tab && weekly.insightsPath == [.review(kind: .weekly, id: nil)],
+                "weekly, warm \(warm), \(tier)")
 
             let evening = try model()
             if warm { evening.selectedTab = .sleep }
             NotificationRouter(model: evening).handle(identifier: NoctisNotification.windDown)
             #expect(evening.selectedTab == .home)
-            #expect(evening.homePath == (tier == .premium ? [.tonight, .windDown(autostart: false)] : [.tonight]), "evening, warm \(warm), \(tier): \(evening.homePath)")
+            #expect(
+                evening.homePath == (tier == .premium ? [.tonight, .windDown(autostart: false)] : [.tonight]),
+                "evening, warm \(warm), \(tier): \(evening.homePath)")
 
             let morning = try model()
             if warm { morning.selectedTab = .insights }

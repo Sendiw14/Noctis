@@ -25,9 +25,10 @@ nonisolated struct AnimatableVector: VectorArithmetic, Equatable {
 
     private static func combine(_ lhs: AnimatableVector, _ rhs: AnimatableVector, _ operation: (Double, Double) -> Double) -> AnimatableVector {
         let count = max(lhs.values.count, rhs.values.count)
-        return AnimatableVector(values: (0..<count).map { index in
-            operation(index < lhs.values.count ? lhs.values[index] : 0, index < rhs.values.count ? rhs.values[index] : 0)
-        })
+        return AnimatableVector(
+            values: (0..<count).map { index in
+                operation(index < lhs.values.count ? lhs.values[index] : 0, index < rhs.values.count ? rhs.values[index] : 0)
+            })
     }
 
     mutating func scale(by rhs: Double) {
@@ -212,10 +213,11 @@ nonisolated struct SeriesLine: Shape {
                 flush()
                 continue
             }
-            run.append(CGPoint(
-                x: rect.minX + rect.width * (Double(index) + 0.5) / count,
-                y: rect.minY + rect.height * (1 - min(max(value, 0), 1))
-            ))
+            run.append(
+                CGPoint(
+                    x: rect.minX + rect.width * (Double(index) + 0.5) / count,
+                    y: rect.minY + rect.height * (1 - min(max(value, 0), 1))
+                ))
         }
         flush()
         return path

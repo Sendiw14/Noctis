@@ -89,10 +89,14 @@ struct WatchLockedPageTests {
         for state in [WidgetDataState.full, .sleepOnly, .stale(hours: 14), .learning(nightsSoFar: 3), .empty, .gap] {
             let snapshot = gateSnapshot(state, tier: .free)
             let heart = WatchPages.heart(input(snapshot))
-            #expect(heart.locked == WatchLockedContent(.heart) && heart.tiles.isEmpty && heart.message == nil && heart.staleLine == nil, Comment(rawValue: "\(state)"))
+            #expect(
+                heart.locked == WatchLockedContent(.heart) && heart.tiles.isEmpty && heart.message == nil && heart.staleLine == nil,
+                Comment(rawValue: "\(state)"))
             #expect(heart.accessibilityLabel == WatchLockedContent(.heart).accessibilityLabel && heart.sensitivity == .plan)
             let tonight = WatchPages.tonight(input(snapshot))
-            #expect(tonight.locked == WatchLockedContent(.tonight) && tonight.bedtime == nil && tonight.windowText == nil && tonight.wakeLine == nil && tonight.alarmLine == nil)
+            #expect(
+                tonight.locked == WatchLockedContent(.tonight) && tonight.bedtime == nil && tonight.windowText == nil && tonight.wakeLine == nil
+                    && tonight.alarmLine == nil)
             #expect(tonight.countdown == .none && tonight.message == nil && tonight.sensitivity == .plan)
             #expect(digitFree(heart.accessibilityLabel) && digitFree(tonight.accessibilityLabel), "no number can reach a locked page")
         }
@@ -122,7 +126,9 @@ struct WatchLockedPageTests {
         let start = try #require(views.range(of: "struct WatchLockedView: View {"))
         let end = try #require(views.range(of: "private struct WatchQuietLine", range: start.upperBound..<views.endIndex))
         let locked = String(views[start.lowerBound..<end.lowerBound])
-        for word in ["snapshot", "StoreKit", "NoctisMetric", "score", "Button"] { #expect(!locked.contains(word), Comment(rawValue: "the locked card uses \(word)")) }
+        for word in ["snapshot", "StoreKit", "NoctisMetric", "score", "Button"] {
+            #expect(!locked.contains(word), Comment(rawValue: "the locked card uses \(word)"))
+        }
         for size in locked.components(separatedBy: "noctisFont(").dropFirst().compactMap({ Int($0.prefix { $0.isNumber }) }) { #expect(size >= 12) }
         // Locked or not, the Tonight page ends with the Breathe button (free, and it needs nothing from the iPhone).
         let tonight = try #require(views.range(of: "struct TonightPageView: View {"))
@@ -207,15 +213,21 @@ struct WatchLockedComplicationTests {
             let premiumWindow = WatchComplicationSchedule.window(kind, snapshot: gateSnapshot(.full, tier: .premium), from: gateNow, calendar: gateCalendar)
             #expect(lockedKind ? window == nil : window == premiumWindow, Comment(rawValue: kind.rawValue))
             let eveningRelevance = WatchComplicationSchedule.relevance(kind, at: gateEvening, snapshot: evening, calendar: gateCalendar)
-            let eveningPremium = WatchComplicationSchedule.relevance(kind, at: gateEvening, snapshot: gateSnapshot(.full, tier: .premium, at: gateEvening), calendar: gateCalendar)
+            let eveningPremium = WatchComplicationSchedule.relevance(
+                kind, at: gateEvening, snapshot: gateSnapshot(.full, tier: .premium, at: gateEvening), calendar: gateCalendar)
             #expect(lockedKind ? eveningRelevance == .idle : eveningRelevance == eveningPremium, Comment(rawValue: kind.rawValue))
         }
     }
 
     @Test func theComplicationViewsAndTheGalleryDrawTheLockedStateFromTheContent() throws {
-        let views = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWatchKit/WatchComplicationViews.swift"), encoding: .utf8))
+        let views = RawDefaultsTests.code(
+            try String(
+                contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWatchKit/WatchComplicationViews.swift"),
+                encoding: .utf8))
         #expect(views.contains("content.isLocked"))
-        for file in ["Watch/Widgets/NOCTISWatchWidgets.swift", "Watch/App/ComplicationGallery.swift", "Watch/App/WatchModel.swift", "Watch/App/WatchRootView.swift"] {
+        for file in [
+            "Watch/Widgets/NOCTISWatchWidgets.swift", "Watch/App/ComplicationGallery.swift", "Watch/App/WatchModel.swift", "Watch/App/WatchRootView.swift",
+        ] {
             let code = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent(file), encoding: .utf8))
             #expect(!code.contains("StoreKit") && !code.contains("FeatureTable"), Comment(rawValue: "\(file) decides the plan itself"))
         }

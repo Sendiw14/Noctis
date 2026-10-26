@@ -48,8 +48,8 @@ public nonisolated struct ReviewID: Hashable, Sendable, Codable, CustomStringCon
         guard parts.count == 2, let kind = ReviewKind(rawValue: parts[0]) else { return nil }
         let numbers = parts[1].split(separator: "-", omittingEmptySubsequences: false).map(String.init)
         guard numbers.count == 3, numbers[0].count == 4, numbers[1].count == 2, numbers[2].count == 2,
-              let year = Int(numbers[0]), let month = Int(numbers[1]), let day = Int(numbers[2]),
-              (1...12).contains(month), (1...31).contains(day), (2000...2200).contains(year)
+            let year = Int(numbers[0]), let month = Int(numbers[1]), let day = Int(numbers[2]),
+            (1...12).contains(month), (1...31).contains(day), (2000...2200).contains(year)
         else { return nil }
         let key = SleepNightKey(year: year, month: month, day: day)
         // A date that does not exist (the 31st of a short month) is no id.
@@ -118,7 +118,9 @@ public nonisolated struct ReviewPeriod: Sendable, Equatable, Codable {
     public var previous: ReviewPeriod {
         switch kind {
         case .weekly: Self.weekly(reviewDate: firstMorning)
-        case .monthly: Self.monthly(year: firstMorning.month == 1 ? firstMorning.year - 1 : firstMorning.year, month: firstMorning.month == 1 ? 12 : firstMorning.month - 1)
+        case .monthly:
+            Self.monthly(
+                year: firstMorning.month == 1 ? firstMorning.year - 1 : firstMorning.year, month: firstMorning.month == 1 ? 12 : firstMorning.month - 1)
         }
     }
 

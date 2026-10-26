@@ -73,10 +73,11 @@ final class MemoryQATests: XCTestCase {
 
     /// One warm-up cycle, the baseline, twenty cycles, the footprint again. The numbers go to `memory-<name>.txt`.
     private func openAndCloseTwenty(_ name: String, extra: [String] = [], measured: Bool = false, cycle: (XCUIApplication) -> Void) {
-        let app = QA.launch(extra: [
-            "-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-homeMode", "day", "-noctisDebugProbe", "-forceTier", "premium",
-            "-seedReviews",
-        ] + extra)
+        let app = QA.launch(
+            extra: [
+                "-useMockHealth", "-mockScenario", "full", "-noctisSkipOnboarding", "-homeMode", "day", "-noctisDebugProbe", "-forceTier", "premium",
+                "-seedReviews",
+            ] + extra)
         XCTAssertTrue(hero(app).waitForExistence(timeout: 20), "Home")
         cycle(app)
         let baseline = probeMegabytes(app)

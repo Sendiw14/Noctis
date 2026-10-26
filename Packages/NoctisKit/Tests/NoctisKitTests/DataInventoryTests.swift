@@ -58,7 +58,9 @@ struct DataInventoryShapeTests {
             if case .button(let title) = category.deletion { #expect(titles.contains(title), Comment(rawValue: "\(category.id): no group named \(title)")) }
         }
         for group in inventory.groups {
-            #expect(!group.categories.isEmpty && !group.removes.isEmpty && group.keeps.contains("not affected") || group.keeps.contains("kept") || group.keeps.contains("untouched"))
+            #expect(
+                !group.categories.isEmpty && !group.removes.isEmpty && group.keeps.contains("not affected") || group.keeps.contains("kept")
+                    || group.keeps.contains("untouched"))
             for id in group.categories { _ = inventory[id] }
         }
     }
@@ -121,7 +123,9 @@ struct DataInventoryEntityTests {
             var searchRange = file.code.startIndex..<file.code.endIndex
             while let found = file.code.range(of: "ModelConfiguration(", range: searchRange) {
                 let call = file.code[found.lowerBound...].prefix(260)
-                #expect(call.contains("cloudKitDatabase: .none") || call.contains("isStoredInMemoryOnly: true, cloudKitDatabase"), Comment(rawValue: "\(file.path) opens a store that might sync"))
+                #expect(
+                    call.contains("cloudKitDatabase: .none") || call.contains("isStoredInMemoryOnly: true, cloudKitDatabase"),
+                    Comment(rawValue: "\(file.path) opens a store that might sync"))
                 // And none lands in the App Group container: with an App Group entitlement SwiftData's default store moves there
                 // (found by listing the group's container after the entitlement was added, 2026-10-04), where the widgets could
                 // open it and an existing person's data would no longer be found. A store is in memory, at a URL, or opts out.
@@ -175,7 +179,8 @@ struct DataInventoryKeyTests {
     }
 
     @Test func theTypedPreferencesWrapperKeysAreAllRegistered() throws {
-        let wrapper = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/AppPreferences.swift"), encoding: .utf8)
+        let wrapper = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/AppPreferences.swift"), encoding: .utf8)
         let keys = Self.keys(in: wrapper)
         #expect(keys.count == 16, "the wrapper has sixteen keys")
         let registered = Set(inventory[.preferences].defaultsKeys)
@@ -338,7 +343,11 @@ struct DataInventoryFileTests {
         #expect(inventory.size(of: inventory[.journal], roots: roots) == .bytes(0), "nothing there yet")
         #expect(inventory.size(of: inventory[.appleHealth], roots: roots) == .notStored)
         #expect(inventory.size(of: inventory[.memorySummaries], roots: roots) == .notStored)
-        if case .bytes(let preferences) = inventory.size(of: inventory[.preferences], roots: roots) { #expect(preferences > 0 && preferences < 200) } else { Issue.record("preferences have a size") }
+        if case .bytes(let preferences) = inventory.size(of: inventory[.preferences], roots: roots) {
+            #expect(preferences > 0 && preferences < 200)
+        } else {
+            Issue.record("preferences have a size")
+        }
         #expect(inventory.totalBytes(roots: roots) >= 2048 + 5120, "the shared store is counted once")
         #expect(DataInventory.describe(bytes: 0) == "Nothing stored" && DataInventory.describe(bytes: 300) == "Less than 1 KB")
         #expect(DataInventory.describe(bytes: 2048).contains("KB"))
@@ -364,7 +373,9 @@ struct DataInventoryNetworkTests {
         let debugOnly: Set<String> = ["HomeFeature/HomeDebug.swift"]
         for file in sources() where !relative(file.path).hasPrefix("NoctisCore/DataInventory") && !relative(file.path).hasPrefix("NoctisCore/Privacy") {
             if debugOnly.contains(relative(file.path)) {
-                #expect(file.code.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("#if DEBUG") && file.code.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("#endif"), "\(relative(file.path)) must be wholly #if DEBUG")
+                #expect(
+                    file.code.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("#if DEBUG")
+                        && file.code.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("#endif"), "\(relative(file.path)) must be wholly #if DEBUG")
                 continue
             }
             for token in Self.tokens where file.code.contains(token) { usedBy[token, default: []].insert(relative(file.path)) }
@@ -386,24 +397,37 @@ struct DataInventoryNetworkTests {
             switch category.destination {
             case .never: continue
             case .apple:
-                #expect(inventory.networkUses.contains { $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) goes to Apple with no API listed"))
+                #expect(
+                    inventory.networkUses.contains { $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) goes to Apple with no API listed")
+                )
             case .onlyIfYouSend:
-                #expect(inventory.flows.contains { $0.trigger == .onlyWhenYouChoose && $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) is sent by the person, with no flow listed"))
+                #expect(
+                    inventory.flows.contains { $0.trigger == .onlyWhenYouChoose && $0.categories.contains(category.id) },
+                    Comment(rawValue: "\(category.id) is sent by the person, with no flow listed"))
             case .pairedWatch:
-                #expect(inventory.networkUses.contains { $0.token == "import WatchConnectivity" && $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) goes to the Watch with no API listed"))
-                #expect(inventory.flows.contains { $0.trigger == .toYourWatch && $0.categories.contains(category.id) }, Comment(rawValue: "\(category.id) goes to the Watch with no flow listed"))
+                #expect(
+                    inventory.networkUses.contains { $0.token == "import WatchConnectivity" && $0.categories.contains(category.id) },
+                    Comment(rawValue: "\(category.id) goes to the Watch with no API listed"))
+                #expect(
+                    inventory.flows.contains { $0.trigger == .toYourWatch && $0.categories.contains(category.id) },
+                    Comment(rawValue: "\(category.id) goes to the Watch with no flow listed"))
             case .thirdParty:
                 Issue.record(Comment(rawValue: "\(category.id) goes to a third party: NOCTIS has no such destination"))
             }
         }
         // And nothing syncs.
         #expect(inventory.categories.allSatisfy { !$0.syncs })
-        for use in inventory.networkUses { for id in use.categories { #expect(inventory[id].destination != .never, Comment(rawValue: "\(use.token) carries \(id), which is said to stay")) } }
+        for use in inventory.networkUses {
+            for id in use.categories { #expect(inventory[id].destination != .never, Comment(rawValue: "\(use.token) carries \(id), which is said to stay")) }
+        }
     }
 
     @Test func theAppHasNoICloudOrNetworkEntitlements() throws {
         let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/Noctis.entitlements"), encoding: .utf8)
-        for key in ["com.apple.developer.icloud", "com.apple.developer.ubiquity", "com.apple.security.network", "aps-environment", "com.apple.developer.associated-domains"] {
+        for key in [
+            "com.apple.developer.icloud", "com.apple.developer.ubiquity", "com.apple.security.network", "aps-environment",
+            "com.apple.developer.associated-domains",
+        ] {
             #expect(!entitlements.contains(key), Comment(rawValue: "the entitlements hold \(key)"))
         }
         #expect(entitlements.contains("com.apple.developer.healthkit"))
@@ -412,8 +436,12 @@ struct DataInventoryNetworkTests {
     @Test func healthIsOnlyEverRead() {
         for file in sources() where relative(file.path).hasPrefix("HealthProviding/") {
             #expect(file.code.range(of: #"toShare:\s*\[[^\]]"#, options: .regularExpression) == nil, Comment(rawValue: "\(file.path) asks to share"))
-            #expect(!file.code.contains(".save(") && !file.code.contains("saveObject") && !file.code.contains("HKQuantitySample("), Comment(rawValue: "\(file.path) writes to Health"))
-            if file.code.contains("toShare:") { #expect(file.code.contains("toShare: []") || file.code.contains("toShare: nil") || file.code.contains("toShare: Set()")) }
+            #expect(
+                !file.code.contains(".save(") && !file.code.contains("saveObject") && !file.code.contains("HKQuantitySample("),
+                Comment(rawValue: "\(file.path) writes to Health"))
+            if file.code.contains("toShare:") {
+                #expect(file.code.contains("toShare: []") || file.code.contains("toShare: nil") || file.code.contains("toShare: Set()"))
+            }
         }
         let project = (try? String(contentsOf: RawDefaultsTests.root.appendingPathComponent("project.yml"), encoding: .utf8)) ?? ""
         #expect(project.contains("com.apple.developer.healthkit.access: []"))
@@ -422,12 +450,18 @@ struct DataInventoryNetworkTests {
 
     /// R69: the only sign-in is Apple's, optional, asking for the name alone; nothing else signs anyone in, and no source asks for the email.
     @Test func theOnlySignInIsAppleOptionalAndAsksForTheNameOnly() {
-        let allowed: Set<String> = ["NoctisCore/Account/AccountStore.swift", "OnboardingFeature/WelcomeScreen.swift", "ProfileFeature/ProfileScreen.swift", "AppRoot/RootView.swift"]
+        let allowed: Set<String> = [
+            "NoctisCore/Account/AccountStore.swift", "OnboardingFeature/WelcomeScreen.swift", "ProfileFeature/ProfileScreen.swift", "AppRoot/RootView.swift",
+        ]
         var users: Set<String> = []
         for file in sources() {
-            for token in ["Auth0", "import FirebaseAuth", "GIDSignIn", "FBSDKLogin"] { #expect(!file.code.contains(token), Comment(rawValue: "\(file.path) has \(token)")) }
+            for token in ["Auth0", "import FirebaseAuth", "GIDSignIn", "FBSDKLogin"] {
+                #expect(!file.code.contains(token), Comment(rawValue: "\(file.path) has \(token)"))
+            }
             if file.code.contains("ASAuthorization") || file.code.contains("SignInWithAppleButton") { users.insert(relative(file.path)) }
-            #expect(!file.code.contains("requestedScopes = [.email") && !file.code.contains(".email]") && !file.code.contains(".email,"), Comment(rawValue: "\(file.path) asks for the email"))
+            #expect(
+                !file.code.contains("requestedScopes = [.email") && !file.code.contains(".email]") && !file.code.contains(".email,"),
+                Comment(rawValue: "\(file.path) asks for the email"))
         }
         #expect(users.isSubset(of: allowed), Comment(rawValue: "sign-in code outside \(allowed): \(users.subtracting(allowed))"))
         #expect(!users.isEmpty)
@@ -435,7 +469,9 @@ struct DataInventoryNetworkTests {
 
     @Test func theOnlyLogIsTheDevicesOwnAndHoldsNoHealthValue() {
         for file in sources() {
-            #expect(!file.code.contains("print(\"") || file.path.contains("Debug") || file.path.contains("Probe") || file.code.contains("#if DEBUG"), Comment(rawValue: "\(file.path) prints"))
+            #expect(
+                !file.code.contains("print(\"") || file.path.contains("Debug") || file.path.contains("Probe") || file.code.contains("#if DEBUG"),
+                Comment(rawValue: "\(file.path) prints"))
         }
         let events = NoctisAnalyticsEvent.rawValue("paywall_viewed")
         #expect(events != nil)

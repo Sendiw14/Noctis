@@ -219,29 +219,31 @@ public struct JournalListView: View {
     }
 
     private var deleteAllButton: some View {
-        Button { confirmingDeleteAll = true } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "trash").font(.system(size: 14, weight: .semibold)).accessibilityHidden(true)
-                    Text(ReflectCopy.deleteAll)
-                        .noctisFont(15, .medium, relativeTo: .subheadline)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .foregroundStyle(NoctisNight.ivory2)
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
+        Button {
+            confirmingDeleteAll = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "trash").font(.system(size: 14, weight: .semibold)).accessibilityHidden(true)
+                Text(ReflectCopy.deleteAll)
+                    .noctisFont(15, .medium, relativeTo: .subheadline)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .buttonStyle(.plain)
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, NoctisSpacing.md)
-            .accessibilityIdentifier("journal.deleteAll")
-            // On the button itself, so the dialog is anchored to what asked for it.
-            .confirmationDialog(ReflectCopy.deleteAllTitle, isPresented: $confirmingDeleteAll, titleVisibility: .visible) {
-                Button(ReflectCopy.deleteAll, role: .destructive) { viewModel.deleteAll() }
-                Button(ReflectCopy.cancel, role: .cancel) {}
-            } message: {
-                Text(ReflectCopy.deleteAllMessage)
-            }
+            .foregroundStyle(NoctisNight.ivory2)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, NoctisSpacing.md)
+        .accessibilityIdentifier("journal.deleteAll")
+        // On the button itself, so the dialog is anchored to what asked for it.
+        .confirmationDialog(ReflectCopy.deleteAllTitle, isPresented: $confirmingDeleteAll, titleVisibility: .visible) {
+            Button(ReflectCopy.deleteAll, role: .destructive) { viewModel.deleteAll() }
+            Button(ReflectCopy.cancel, role: .cancel) {}
+        } message: {
+            Text(ReflectCopy.deleteAllMessage)
+        }
     }
 
     @ViewBuilder

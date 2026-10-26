@@ -72,7 +72,8 @@ private enum IntentRunnerScenes {
         yesterday.forDay = WidgetDay.today(at: now.addingTimeInterval(-86_400), calendar: calendar)
         let cases: [(String, String, WidgetSnapshot?)] = [
             ("data", "Full data", snapshot(.full)), ("sleepOnly", "Sleep only", snapshot(.sleepOnly)),
-            ("learning", "Learning (3 of 5 nights)", snapshot(.learning(nightsSoFar: 3))), ("empty", "Empty, or Apple Health not connected", snapshot(.noPermission)),
+            ("learning", "Learning (3 of 5 nights)", snapshot(.learning(nightsSoFar: 3))),
+            ("empty", "Empty, or Apple Health not connected", snapshot(.noPermission)),
             ("stale", "Stale (14 hours)", snapshot(.stale(hours: 14))), ("gap", "No sleep last night", snapshot(.gap)),
             ("waiting", "Waiting: the snapshot is for yesterday", yesterday), ("none", "No snapshot yet", nil),
         ].map { ($0.0, "\($0.1) · \(tier.rawValue)", $0.2) }
@@ -84,11 +85,15 @@ private enum IntentRunnerScenes {
             func run<I: AppIntent>(_ phrase: String, _ intent: I, _ spoken: String, policy: IntentAuthenticationPolicy) async {
                 host.done = []
                 _ = try? await IntentRuntime.$override.withValue(runtime) { try await intent.perform() }
-                rows.append(RunnerRow(phrase: phrase, spoken: spoken, did: host.done, policy: policy == .alwaysAllowed ? "no unlock needed" : "asks to unlock first"))
+                rows.append(
+                    RunnerRow(phrase: phrase, spoken: spoken, did: host.done, policy: policy == .alwaysAllowed ? "no unlock needed" : "asks to unlock first"))
             }
-            await run("Show my recovery in NOCTIS", ShowMyRecoveryIntent(), ShowMyRecoveryIntent.answer(runtime), policy: ShowMyRecoveryIntent.authenticationPolicy)
+            await run(
+                "Show my recovery in NOCTIS", ShowMyRecoveryIntent(), ShowMyRecoveryIntent.answer(runtime), policy: ShowMyRecoveryIntent.authenticationPolicy)
             await run("Show my sleep in NOCTIS", ShowMySleepIntent(), ShowMySleepIntent.answer(runtime), policy: ShowMySleepIntent.authenticationPolicy)
-            await run("What time should I sleep in NOCTIS", ShowRecommendedBedtimeIntent(), ShowRecommendedBedtimeIntent.answer(runtime), policy: ShowRecommendedBedtimeIntent.authenticationPolicy)
+            await run(
+                "What time should I sleep in NOCTIS", ShowRecommendedBedtimeIntent(), ShowRecommendedBedtimeIntent.answer(runtime),
+                policy: ShowRecommendedBedtimeIntent.authenticationPolicy)
             scenes.append(RunnerScene(id: id, title: title, rows: rows))
         }
         // The intents that do something, with their sentences.
@@ -107,13 +112,21 @@ private enum IntentRunnerScenes {
             IntentGate.includesStartWindDown(in: tier) ? StartWindDownIntent.dialog(length: .twentyMinutes) : IntentGate.startWindDownLocked
         )
         await act("Start my sleep sounds in NOCTIS", PlaySleepSoundsIntent(sound: SoundEntity(.ocean)), PlaySleepSoundsIntent.dialog(kind: .ocean))
-        await act("Play Wind in NOCTIS", PlaySleepSoundsIntent(sound: SoundEntity(.wind)), tier == .premium ? PlaySleepSoundsIntent.dialog(kind: .wind) : IntentGate.premiumSoundDialog(.wind))
+        await act(
+            "Play Wind in NOCTIS", PlaySleepSoundsIntent(sound: SoundEntity(.wind)),
+            tier == .premium ? PlaySleepSoundsIntent.dialog(kind: .wind) : IntentGate.premiumSoundDialog(.wind))
         host.lastSleepSound = .fireplace
-        await act("Play sleep sounds in NOCTIS (the last one was Fireplace)", PlaySleepSoundsIntent(sound: nil), tier == .premium ? PlaySleepSoundsIntent.dialog(kind: .fireplace) : PlaySleepSoundsIntent.dialog(kind: .brown))
+        await act(
+            "Play sleep sounds in NOCTIS (the last one was Fireplace)", PlaySleepSoundsIntent(sound: nil),
+            tier == .premium ? PlaySleepSoundsIntent.dialog(kind: .fireplace) : PlaySleepSoundsIntent.dialog(kind: .brown))
         host.lastSleepSound = nil
-        await act("Set tonight's alarm for 6:30 AM", SetTonightAlarmIntent(time: DateComponents(hour: 6, minute: 30)), SetTonightAlarmIntent.dialog(.set(minutes: 390)))
+        await act(
+            "Set tonight's alarm for 6:30 AM", SetTonightAlarmIntent(time: DateComponents(hour: 6, minute: 30)),
+            SetTonightAlarmIntent.dialog(.set(minutes: 390)))
         host.alarmAllowed = false
-        await act("Set tonight's alarm (alarms not allowed yet)", SetTonightAlarmIntent(time: DateComponents(hour: 6, minute: 30)), SetTonightAlarmIntent.dialog(.needsAuthorization))
+        await act(
+            "Set tonight's alarm (alarms not allowed yet)", SetTonightAlarmIntent(time: DateComponents(hour: 6, minute: 30)),
+            SetTonightAlarmIntent.dialog(.needsAuthorization))
         await act("Ask Coach in NOCTIS: why was my sleep short?", AskCoachIntent(question: "Why was my sleep short?"), AskCoachIntent.opening)
         host.coachLimited = true
         await act("Ask Coach (today's free questions used up)", AskCoachIntent(question: "Why was my sleep short?"), IntentGate.coachLimitReached)

@@ -31,11 +31,13 @@ public final class ProfileStore {
 
     public func save(_ snapshot: UserProfileSnapshot) {
         let descriptor = FetchDescriptor<UserProfileRecord>()
-        let record = (try? context.fetch(descriptor).first) ?? {
-            let new = UserProfileRecord()
-            context.insert(new)
-            return new
-        }()
+        let record =
+            (try? context.fetch(descriptor).first)
+            ?? {
+                let new = UserProfileRecord()
+                context.insert(new)
+                return new
+            }()
         record.apply(snapshot)
         try? context.save()
     }

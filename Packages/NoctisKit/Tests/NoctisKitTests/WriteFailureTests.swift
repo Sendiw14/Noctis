@@ -3,10 +3,10 @@ import Testing
 
 @testable import HealthProviding
 @testable import InsightsKit
-@testable import ReviewKit
-@testable import SleepKit
 @testable import NoctisCore
 @testable import NoctisWidgetKit
+@testable import ReviewKit
+@testable import SleepKit
 
 // QA part 3, step 5 (lifecycle): a disk that refuses a write. Every file NOCTIS keeps is written atomically; a write that fails (the volume is full, the
 // folder is read-only, the phone is locked with complete protection) must lose nothing already saved, say so where the caller can (false), and never crash.
@@ -25,7 +25,10 @@ struct WriteFailureTests {
 
     @Test func theWidgetsSummaryKeepsTheOldFileWhenTheWriteFails() throws {
         let directory = try folder()
-        defer { unlock(directory); try? FileManager.default.removeItem(at: directory) }
+        defer {
+            unlock(directory)
+            try? FileManager.default.removeItem(at: directory)
+        }
         let calendar = Fixture.calendar()
         let store = WidgetSnapshotStore(directory: directory)
         let first = WidgetSamples.snapshot(.full, now: Fixture.date(2026, 9, 24, 10), calendar: calendar)
@@ -42,7 +45,10 @@ struct WriteFailureTests {
 
     @Test func theSoundsControlKeepsTheOldFileWhenTheWriteFails() throws {
         let directory = try folder()
-        defer { unlock(directory); try? FileManager.default.removeItem(at: directory) }
+        defer {
+            unlock(directory)
+            try? FileManager.default.removeItem(at: directory)
+        }
         let store = SleepSoundsStore(directory: directory)
         #expect(store.save(SleepSoundsState(endsAt: Date(timeIntervalSince1970: 1_790_000_000))))
         let before = try Data(contentsOf: store.fileURL)
@@ -54,7 +60,10 @@ struct WriteFailureTests {
 
     @Test func reviewsKeepTheirLibraryWhenTheWriteFails() throws {
         let directory = try folder()
-        defer { unlock(directory); try? FileManager.default.removeItem(at: directory) }
+        defer {
+            unlock(directory)
+            try? FileManager.default.removeItem(at: directory)
+        }
         let store = ReviewFileStore(directory: directory)
         var library = ReviewLibrary()
         library.put(ReviewTestRecords.stored())
@@ -63,7 +72,7 @@ struct WriteFailureTests {
         try lock(directory)
         var changed = library
         changed.put(ReviewTestRecords.stored())
-        store.save(changed)   // must not crash or throw
+        store.save(changed)  // must not crash or throw
         unlock(directory)
         #expect(try Data(contentsOf: store.fileURL) == before)
         #expect(store.load() != nil)
@@ -71,7 +80,10 @@ struct WriteFailureTests {
 
     @Test func insightsKeepTheirLibraryWhenTheWriteFails() throws {
         let directory = try folder()
-        defer { unlock(directory); try? FileManager.default.removeItem(at: directory) }
+        defer {
+            unlock(directory)
+            try? FileManager.default.removeItem(at: directory)
+        }
         let store = InsightFileStore(directory: directory)
         store.save(InsightLibrary())
         let before = try Data(contentsOf: store.fileURL)
@@ -83,7 +95,10 @@ struct WriteFailureTests {
 
     @Test func aFirstWriteThatFailsLeavesNoFileAndTheNextLoadIsEmptyNotACrash() throws {
         let directory = try folder()
-        defer { unlock(directory); try? FileManager.default.removeItem(at: directory) }
+        defer {
+            unlock(directory)
+            try? FileManager.default.removeItem(at: directory)
+        }
         try lock(directory)
         let store = WidgetSnapshotStore(directory: directory.appending(path: "inner", directoryHint: .isDirectory))
         #expect(!store.save(WidgetSamples.snapshot(.full, now: Fixture.date(2026, 9, 24, 10), calendar: Fixture.calendar())))

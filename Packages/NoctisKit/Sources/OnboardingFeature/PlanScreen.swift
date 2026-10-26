@@ -1,7 +1,7 @@
 import DesignSystem
 import NoctisCore
-import SwiftUI
 import NoctisText
+import SwiftUI
 
 private enum PlanPhase: Equatable {
     case building

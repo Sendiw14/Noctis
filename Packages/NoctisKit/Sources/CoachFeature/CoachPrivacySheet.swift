@@ -21,7 +21,8 @@ struct CoachPrivacySheet: View {
 
     static var stored: String { PrivacyStatements.coachStored(.shared) }
 
-    static let notAdvice = "Coach shares patterns from your data. It isn't medical advice, and it can't diagnose anything. If something about your sleep or health worries you, a doctor is the right person to ask."
+    static let notAdvice =
+        "Coach shares patterns from your data. It isn't medical advice, and it can't diagnose anything. If something about your sleep or health worries you, a doctor is the right person to ask."
 
     var body: some View {
         NavigationStack {

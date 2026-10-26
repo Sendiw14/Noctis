@@ -295,10 +295,11 @@ public enum SleepQualityEngine {
             for (stage, share) in today {
                 let range = typicalRange(stage)
                 let outside = max(range.lowerBound - share, share - range.upperBound, 0)
-                rows.append(StageBalanceRow(
-                    stage: stage, share: share, low: range.lowerBound, high: range.upperBound,
-                    score: clamp(100 * (1 - outside / Model.typicalToleranceShare))
-                ))
+                rows.append(
+                    StageBalanceRow(
+                        stage: stage, share: share, low: range.lowerBound, high: range.upperBound,
+                        score: clamp(100 * (1 - outside / Model.typicalToleranceShare))
+                    ))
             }
         }
         let score = rows.reduce(0) { $0 + $1.score } / Double(rows.count)
@@ -339,12 +340,15 @@ public enum SleepQualityEngine {
         }
 
         var candidates: [SleepQualityContributor?] = [
-            measure(.duration, .duration, value: metrics.asleepMinutes, values: windowMetrics.map(\.asleepMinutes),
-                    floor: RecoveryNormalRange.sleepDurationStandardDeviationFloor),
-            measure(.consistency, .bedtime, value: metrics.bedtimeMinutes, values: windowMetrics.map(\.bedtimeMinutes),
-                    floor: RecoveryNormalRange.timingStandardDeviationFloor),
-            measure(.continuity, .awakeTime, value: metrics.awakeAfterOnsetMinutes, values: windowMetrics.compactMap(\.awakeAfterOnsetMinutes),
-                    floor: Model.wasoStandardDeviationFloor),
+            measure(
+                .duration, .duration, value: metrics.asleepMinutes, values: windowMetrics.map(\.asleepMinutes),
+                floor: RecoveryNormalRange.sleepDurationStandardDeviationFloor),
+            measure(
+                .consistency, .bedtime, value: metrics.bedtimeMinutes, values: windowMetrics.map(\.bedtimeMinutes),
+                floor: RecoveryNormalRange.timingStandardDeviationFloor),
+            measure(
+                .continuity, .awakeTime, value: metrics.awakeAfterOnsetMinutes, values: windowMetrics.compactMap(\.awakeAfterOnsetMinutes),
+                floor: Model.wasoStandardDeviationFloor),
         ]
         // Stage shares only against your own: a typical range isn't a usual.
         if case .personal? = balance?.basis, let shares = metrics.stages?.asleepShares {
@@ -353,7 +357,8 @@ public enum SleepQualityEngine {
             candidates.append(measure(.stages, .remShare, value: shares.rem, values: history.map(\.rem), floor: Model.personalShareFloor))
         }
         // `reduce` keeps the first of equals, so ties go to the measure listed first.
-        return candidates
+        return
+            candidates
             .compactMap { $0 }
             .filter { !RecoveryNormalRange.contains(standardDeviations: $0.standardDeviations) }
             .reduce(nil) { best, next in

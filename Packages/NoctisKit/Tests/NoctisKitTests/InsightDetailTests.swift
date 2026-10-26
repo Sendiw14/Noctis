@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import HomeFeature
 @testable import InsightsFeature
 @testable import InsightsKit
@@ -52,7 +53,10 @@ struct InsightDetailTests {
         #expect(page.method.nights == "16 earlier and 17 later nights (effect size 2.4).")
         #expect(page.method.rule.contains("60 nights"))
         // The chart carries both groups' sample sizes.
-        guard case .groups(let groups)? = page.chart else { Issue.record("expected groups"); return }
+        guard case .groups(let groups)? = page.chart else {
+            Issue.record("expected groups")
+            return
+        }
         #expect(groups.groups.map(\.countText) == ["16 nights", "17 nights"])
     }
 
@@ -137,7 +141,8 @@ struct InsightHistoryViewModelTests {
         let defaults = UserDefaults(suiteName: "noctis.tests.\(UUID().uuidString)")!
         return InsightsViewModel(
             repository: repository, profile: { UserProfileSnapshot() },
-            introGate: HomeIntroGate(defaults: defaults, key: InsightsViewModel.introKey), washGate: HomeIntroGate(defaults: defaults, key: InsightsViewModel.washKey),
+            introGate: HomeIntroGate(defaults: defaults, key: InsightsViewModel.introKey),
+            washGate: HomeIntroGate(defaults: defaults, key: InsightsViewModel.washKey),
             reduceMotion: { true }, lowPower: { false }, clock: { clock }, calendar: Fixture.calendar(), locale: Locale(identifier: "en_US")
         )
     }

@@ -148,8 +148,9 @@ public struct NoctisStageRing: View, Animatable {
             }
         }
         if mergedSpans.count > 1, revealedDegrees >= 360,
-           let first = mergedSpans.first, let last = mergedSpans.last, first.stage == last.stage,
-           (360 - last.end) + first.start < 6 {
+            let first = mergedSpans.first, let last = mergedSpans.last, first.stage == last.stage,
+            (360 - last.end) + first.start < 6
+        {
             let wrapped = (stage: first.stage, start: last.start, end: first.end + 360)
             mergedSpans.removeFirst()
             mergedSpans.removeLast()

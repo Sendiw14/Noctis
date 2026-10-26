@@ -104,9 +104,13 @@ enum PaywallBenefits {
     static let all: [PaywallBenefit] = [
         PaywallBenefit(id: 0, icon: "heart.fill", text: "Recovery over 30 and 90 days", features: [.recovery30D, .recovery90D]),
         PaywallBenefit(id: 1, icon: "moon.zzz.fill", text: "A month of sleep, and what went into it", features: [.sleepMonth, .sleepQualityFactors]),
-        PaywallBenefit(id: 2, icon: "chart.line.uptrend.xyaxis", text: "Every insight, your records and history", features: [.insightAll, .insightRecords, .insightHistory]),
+        PaywallBenefit(
+            id: 2, icon: "chart.line.uptrend.xyaxis", text: "Every insight, your records and history",
+            features: [.insightAll, .insightRecords, .insightHistory]),
         PaywallBenefit(id: 3, icon: "sparkles", text: "Unlimited Coach questions", features: [.coachUnlimited]),
-        PaywallBenefit(id: 4, icon: "speaker.wave.2.fill", text: "Wind-down, meditation and all six sounds", features: [.windDownSession, .meditation, .soundsFree, .soundsPremium]),
+        PaywallBenefit(
+            id: 4, icon: "speaker.wave.2.fill", text: "Wind-down, meditation and all six sounds",
+            features: [.windDownSession, .meditation, .soundsFree, .soundsPremium]),
     ]
 
     /// The colour of each icon's circle, in the order above: orange, sage, lavender, ivory and butter.
@@ -137,11 +141,21 @@ struct PaywallMetrics: Equatable {
     /// "Sleep deeper." on one line, for a short screen.
     var oneLineTitle: Bool = false
 
-    static let regular = PaywallMetrics(bandContent: 190, titleSize: 40, ring: 92, ringLine: 10, benefitRowHeight: 32, benefitsShown: 5, cardPadding: 10, tileHeight: 118, buttonHeight: 60, gap: 16)
+    static let regular = PaywallMetrics(
+        bandContent: 190, titleSize: 40, ring: 92, ringLine: 10, benefitRowHeight: 32, benefitsShown: 5, cardPadding: 10, tileHeight: 118, buttonHeight: 60,
+        gap: 16)
     /// Between the two: what the design's page gives up to make room for the trial reminder's switch (shown once notifications are allowed).
-    static let relaxed = PaywallMetrics(bandContent: 160, titleSize: 38, ring: 80, ringLine: 9, benefitRowHeight: 30, benefitsShown: 5, cardPadding: 9, tileHeight: 112, buttonHeight: 56, gap: 12)
-    static let compact = PaywallMetrics(bandContent: 150, titleSize: 34, ring: 72, ringLine: 8, benefitRowHeight: 28, benefitsShown: 5, cardPadding: 8, tileHeight: 108, buttonHeight: 54, gap: 10)
-    static let tight = PaywallMetrics(bandContent: 124, titleSize: 30, ring: 58, ringLine: 7, benefitRowHeight: 26, benefitsShown: 5, cardPadding: 6, tileHeight: 100, buttonHeight: 50, gap: 8, oneLineTitle: true)
+    static let relaxed = PaywallMetrics(
+        bandContent: 160, titleSize: 38, ring: 80, ringLine: 9, benefitRowHeight: 30, benefitsShown: 5, cardPadding: 9, tileHeight: 112, buttonHeight: 56,
+        gap: 12)
+    static let compact = PaywallMetrics(
+        bandContent: 150, titleSize: 34, ring: 72, ringLine: 8, benefitRowHeight: 28, benefitsShown: 5, cardPadding: 8, tileHeight: 108, buttonHeight: 54,
+        gap: 10)
+    static let tight = PaywallMetrics(
+        bandContent: 124, titleSize: 30, ring: 58, ringLine: 7, benefitRowHeight: 26, benefitsShown: 5, cardPadding: 6, tileHeight: 100, buttonHeight: 50,
+        gap: 8, oneLineTitle: true)
     /// Only if the five rows cannot fit: the first three and "and more".
-    static let tightMore = PaywallMetrics(bandContent: 124, titleSize: 30, ring: 58, ringLine: 7, benefitRowHeight: 26, benefitsShown: 3, cardPadding: 6, tileHeight: 100, buttonHeight: 50, gap: 8, oneLineTitle: true)
+    static let tightMore = PaywallMetrics(
+        bandContent: 124, titleSize: 30, ring: 58, ringLine: 7, benefitRowHeight: 26, benefitsShown: 3, cardPadding: 6, tileHeight: 100, buttonHeight: 50,
+        gap: 8, oneLineTitle: true)
 }

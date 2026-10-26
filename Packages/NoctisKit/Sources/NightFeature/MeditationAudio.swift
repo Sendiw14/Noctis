@@ -127,7 +127,8 @@ public final class SystemMeditationAudio: MeditationAudioPlaying {
             return player
         } catch {
             let reported = error as NSError
-            Self.log.error("could not make the \(kind.rawValue, privacy: .public) chime: \(reported.domain, privacy: .public) \(reported.code, privacy: .public)")
+            Self.log.error(
+                "could not make the \(kind.rawValue, privacy: .public) chime: \(reported.domain, privacy: .public) \(reported.code, privacy: .public)")
             return nil
         }
     }

@@ -224,7 +224,8 @@ public final class WindDownViewModel {
     /// The Live Activity's state for the session as its clock holds it: one place works the window out (`WindDownActivityState`).
     private func activityState(_ phase: WindDownActivityAttributes.ContentState.Phase) -> WindDownActivityAttributes.ContentState? {
         guard let startedAt = clock.startedAt else { return nil }
-        return WindDownActivityState.make(phase: phase, startedAt: startedAt, pausedTotal: clock.pausedTotal, plannedSeconds: clock.plannedSeconds, pausedAt: clock.pausedAt)
+        return WindDownActivityState.make(
+            phase: phase, startedAt: startedAt, pausedTotal: clock.pausedTotal, plannedSeconds: clock.plannedSeconds, pausedAt: clock.pausedAt)
     }
 
     private func runTicker() {

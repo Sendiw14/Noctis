@@ -50,7 +50,10 @@ struct WindDownScene: View {
             var pick = next()
             var band = skyBands[skyBands.count - 1]
             for candidate in skyBands {
-                if pick < candidate.weight { band = candidate; break }
+                if pick < candidate.weight {
+                    band = candidate
+                    break
+                }
                 pick -= candidate.weight
             }
             let x = 0.04 + 0.92 * next()

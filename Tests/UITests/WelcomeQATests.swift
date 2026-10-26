@@ -38,7 +38,9 @@ final class WelcomeQATests: XCTestCase {
         QA.pause(2.5)
         assertFitsAndTappable(app, scrolls: false)
         // The four bands read as one header.
-        XCTAssertTrue(app.staticTexts["Better nights. A brighter you."].exists || app.otherElements["Better nights. A brighter you."].exists, "the bands are one VoiceOver element")
+        XCTAssertTrue(
+            app.staticTexts["Better nights. A brighter you."].exists || app.otherElements["Better nights. A brighter you."].exists,
+            "the bands are one VoiceOver element")
         QA.shot("welcome-default")
     }
 

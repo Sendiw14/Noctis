@@ -59,7 +59,9 @@ public struct HealthDataStatusReader {
 
     public func read(now: Date = Date(), calendar: Calendar = .autoupdatingCurrent) async -> HealthDataStatus {
         guard provider.isHealthDataAvailable else {
-            return HealthDataStatus(kinds: HealthDataKind.allCases.map { HealthKindStatus(kind: $0, lastSample: nil, couldNotCheck: true) }, lastNightSource: nil, isUnavailable: true)
+            return HealthDataStatus(
+                kinds: HealthDataKind.allCases.map { HealthKindStatus(kind: $0, lastSample: nil, couldNotCheck: true) }, lastNightSource: nil,
+                isUnavailable: true)
         }
         let start = calendar.date(byAdding: .day, value: -HealthDataStatus.lookBackDays, to: now) ?? now.addingTimeInterval(-30 * 86_400)
         var statuses: [HealthKindStatus] = []
@@ -77,7 +79,8 @@ public struct HealthDataStatusReader {
                 case .hrv:
                     statuses.append(HealthKindStatus(kind: kind, lastSample: try await provider.fetchHRVSamples(from: start, to: now).map(\.date).max()))
                 case .respiratoryRate:
-                    statuses.append(HealthKindStatus(kind: kind, lastSample: try await provider.fetchRespiratorySamples(from: start, to: now).map(\.date).max()))
+                    statuses.append(
+                        HealthKindStatus(kind: kind, lastSample: try await provider.fetchRespiratorySamples(from: start, to: now).map(\.date).max()))
                 }
             } catch HealthProviderError.unauthorized {
                 // The system's question has not been asked (a read that was declined returns nothing instead):

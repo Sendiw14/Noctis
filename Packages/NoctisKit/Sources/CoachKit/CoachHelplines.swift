@@ -25,11 +25,16 @@ public nonisolated enum CoachHelplines {
     private static func line(_ name: String, _ number: String) -> CoachHelpline { CoachHelpline(name: name, number: number) }
 
     public static let regions: [CoachHelpRegion] = [
-        CoachHelpRegion(code: "LK", name: "Sri Lanka", emergency: line("Police emergency", "119"),
-                        lines: [line("Ambulance (Suwa Seriya)", "1990"), line("National Mental Health Helpline", "1926"), line("Sumithrayo (emotional support)", "011 2682535")]),
+        CoachHelpRegion(
+            code: "LK", name: "Sri Lanka", emergency: line("Police emergency", "119"),
+            lines: [
+                line("Ambulance (Suwa Seriya)", "1990"), line("National Mental Health Helpline", "1926"), line("Sumithrayo (emotional support)", "011 2682535"),
+            ]),
         CoachHelpRegion(code: "US", name: "United States", emergency: line("Emergency", "911"), lines: [line("988 Suicide & Crisis Lifeline", "988")]),
         CoachHelpRegion(code: "CA", name: "Canada", emergency: line("Emergency", "911"), lines: [line("9-8-8 Suicide Crisis Helpline", "988")]),
-        CoachHelpRegion(code: "GB", name: "United Kingdom", emergency: line("Emergency", "999"), lines: [line("Samaritans", "116 123"), line("NHS urgent mental health help", "111")]),
+        CoachHelpRegion(
+            code: "GB", name: "United Kingdom", emergency: line("Emergency", "999"),
+            lines: [line("Samaritans", "116 123"), line("NHS urgent mental health help", "111")]),
         CoachHelpRegion(code: "IE", name: "Ireland", emergency: line("Emergency", "112"), lines: [line("Samaritans", "116 123")]),
         CoachHelpRegion(code: "AU", name: "Australia", emergency: line("Emergency", "000"), lines: [line("Lifeline", "13 11 14")]),
         CoachHelpRegion(code: "NZ", name: "New Zealand", emergency: line("Emergency", "111"), lines: [line("Need to talk? (call or text)", "1737")]),

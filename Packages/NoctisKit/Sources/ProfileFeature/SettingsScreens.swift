@@ -172,7 +172,8 @@ struct SettingsRootView: View {
                         NoctisRowDivider()
                         NoctisLinkRow(
                             systemImage: "globe", fill: NoctisAppColor.blockButter, title: "Language",
-                            detail: "Choose NOCTIS's language in Settings.", value: viewModel.languageName, hint: "Opens NOCTIS in the Settings app.", identifier: "settings.row.language"
+                            detail: "Choose NOCTIS's language in Settings.", value: viewModel.languageName, hint: "Opens NOCTIS in the Settings app.",
+                            identifier: "settings.row.language"
                         ) { viewModel.openSystemSettings() }
                     }
                 }
@@ -213,9 +214,13 @@ struct SettingsRootView: View {
                         hint: "Starts an email to support.", identifier: "settings.row.contact"
                     ) { contactSupport() }
                     NoctisRowDivider()
-                    ExternalLinkRow(systemImage: "doc.text", fill: NoctisAppColor.blockButter, title: "Terms of Use", url: StoreLegalLinks.terms, identifier: "settings.row.terms")
+                    ExternalLinkRow(
+                        systemImage: "doc.text", fill: NoctisAppColor.blockButter, title: "Terms of Use", url: StoreLegalLinks.terms,
+                        identifier: "settings.row.terms")
                     NoctisRowDivider()
-                    ExternalLinkRow(systemImage: "hand.raised", fill: NoctisAppColor.blockLavender, title: "Privacy Policy", url: StoreLegalLinks.privacy, identifier: "settings.row.privacyPolicy")
+                    ExternalLinkRow(
+                        systemImage: "hand.raised", fill: NoctisAppColor.blockLavender, title: "Privacy Policy", url: StoreLegalLinks.privacy,
+                        identifier: "settings.row.privacyPolicy")
                 }
             }
             .noctisRise(index: 4)

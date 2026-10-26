@@ -1,7 +1,7 @@
 import DesignSystem
 import Foundation
-import NoctisText
 import HomeFeature
+import NoctisText
 
 /// Turns a number into a `CoachFact`, formatted the way the rest of the app
 /// formats it (`HomeFormat`: the person's locale and calendar), so the number

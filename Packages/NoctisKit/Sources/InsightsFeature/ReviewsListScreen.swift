@@ -26,7 +26,8 @@ public final class ReviewsListViewModel {
     private let locale: Locale
 
     public init(
-        repository: ReviewRepository?, profile: @escaping () -> UserProfileSnapshot, weekday: @escaping () -> Int = { 1 }, isUnlocked: @escaping (Feature) -> Bool = { _ in true },
+        repository: ReviewRepository?, profile: @escaping () -> UserProfileSnapshot, weekday: @escaping () -> Int = { 1 },
+        isUnlocked: @escaping (Feature) -> Bool = { _ in true },
         clock: @escaping () -> Date = { Date() }, locale: Locale = .autoupdatingCurrent
     ) {
         self.repository = repository
@@ -48,10 +49,13 @@ public final class ReviewsListViewModel {
         let library = await repository.library()
         let now = clock()
         let calendar = await repository.calendar()
-        let candidates = ReviewListBuilder.candidates(now: now, weekday: weekday(), calendar: calendar).filter { library[$0.id] == nil && $0.isComplete(at: now, calendar: calendar) }
+        let candidates = ReviewListBuilder.candidates(now: now, weekday: weekday(), calendar: calendar).filter {
+            library[$0.id] == nil && $0.isComplete(at: now, calendar: calendar)
+        }
         // One read of Apple Health, only if there is a period that was not made to ask about.
         let counts = candidates.isEmpty ? [:] : await repository.nightCounts(for: candidates, profile: profile()) ?? [:]
-        let content = ReviewListBuilder.build(library: library, counts: counts, now: now, weekday: weekday(), calendar: calendar, format: ReviewFormat(locale: locale))
+        let content = ReviewListBuilder.build(
+            library: library, counts: counts, now: now, weekday: weekday(), calendar: calendar, format: ReviewFormat(locale: locale))
         phase = .content(content)
     }
 }
@@ -97,11 +101,14 @@ struct ReviewsListScreen: View {
         case .loading:
             InsightsSkeletonView()
         case .noAccess:
-            ReviewMessageCard(caption: "APPLE HEALTH", headline: "No Health data", detail: "NOCTIS can't read Apple Health yet. Connect it in Settings and your reviews will appear here.", identifier: "reviews.noAccess")
+            ReviewMessageCard(
+                caption: "APPLE HEALTH", headline: "No Health data",
+                detail: "NOCTIS can't read Apple Health yet. Connect it in Settings and your reviews will appear here.", identifier: "reviews.noAccess")
         case .content(let list):
             if list.isEmpty {
                 ReviewMessageCard(
-                    caption: "REVIEWS", headline: "Nothing here yet", detail: "Your weekly review appears once a week has at least 5 nights of sleep.", identifier: "reviews.empty"
+                    caption: "REVIEWS", headline: "Nothing here yet", detail: "Your weekly review appears once a week has at least 5 nights of sleep.",
+                    identifier: "reviews.empty"
                 )
             } else {
                 VStack(alignment: .leading, spacing: NoctisSpacing.lg) {
@@ -177,21 +184,23 @@ struct ReviewListRowView: View {
     }
 
     private var inline: some View {
-                HStack(spacing: NoctisSpacing.sm) {
-                    NoctisIconTile(systemImage: "calendar", fill: row.kind == .weekly ? NoctisAppColor.blockLavender : NoctisAppColor.blockSage, foreground: NoctisAppColor.blockInk, size: 40)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(row.title)
-                            .noctisFont(17, .semibold, relativeTo: .body)
-                            .foregroundStyle(NoctisAppColor.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(row.headline)
-                            .noctisFont(15, relativeTo: .subheadline)
-                            .foregroundStyle(.noctisInk2)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer(minLength: NoctisSpacing.xs)
-                    trailing
-                }
+        HStack(spacing: NoctisSpacing.sm) {
+            NoctisIconTile(
+                systemImage: "calendar", fill: row.kind == .weekly ? NoctisAppColor.blockLavender : NoctisAppColor.blockSage,
+                foreground: NoctisAppColor.blockInk, size: 40)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(row.title)
+                    .noctisFont(17, .semibold, relativeTo: .body)
+                    .foregroundStyle(NoctisAppColor.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(row.headline)
+                    .noctisFont(15, relativeTo: .subheadline)
+                    .foregroundStyle(.noctisInk2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: NoctisSpacing.xs)
+            trailing
+        }
     }
 
     @ViewBuilder

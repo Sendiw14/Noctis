@@ -11,7 +11,8 @@ public nonisolated enum DataExportError: Error, Equatable {
 /// holds a raw Apple Health reading, because NOCTIS keeps none.
 public nonisolated enum DataExport {
     public static let fileName = "NOCTIS-export.json"
-    public static let about = "A copy of what NOCTIS stores on this iPhone: your profile, preferences, goals, alarm settings, wind-down history, journal, Coach conversations and the numbers NOCTIS worked out from Apple Health. It never holds raw Apple Health readings, because NOCTIS does not keep them."
+    public static let about =
+        "A copy of what NOCTIS stores on this iPhone: your profile, preferences, goals, alarm settings, wind-down history, journal, Coach conversations and the numbers NOCTIS worked out from Apple Health. It never holds raw Apple Health readings, because NOCTIS does not keep them."
 
     public typealias Provider = @MainActor () async throws -> Any
 

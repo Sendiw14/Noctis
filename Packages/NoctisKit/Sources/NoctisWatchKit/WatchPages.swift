@@ -1,7 +1,7 @@
 import DesignSystem
 import Foundation
-import NoctisWidgetKit
 import NoctisText
+import NoctisWidgetKit
 
 // What each page of the Apple Watch app says, for every state (APP_RULES.md R50, R51): pure, built from the snapshot the iPhone sent and the clock, so
 // every sentence is a unit test and the views only lay them out. The Watch works nothing out: a number on a page is a number in the snapshot, and a
@@ -225,7 +225,9 @@ public nonisolated enum WatchPages {
 
     public static func recovery(_ input: WatchPageInput) -> WatchRecoveryPage {
         guard input.state.showsNumbers, let snapshot = input.snapshot, let recovery = snapshot.recovery else {
-            let message = input.message(for: .recovery) ?? (input.state == .sleepOnly || input.state.isStale ? WatchMessage(glyph: "heart.text.square", title: "No recovery score yet") : nil)
+            let message =
+                input.message(for: .recovery)
+                ?? (input.state == .sleepOnly || input.state.isStale ? WatchMessage(glyph: "heart.text.square", title: "No recovery score yet") : nil)
             return WatchRecoveryPage(
                 message: message, score: nil, delta: nil, ring: [], factors: [], confidence: nil, staleLine: nil, sensitivity: .health,
                 accessibilityLabel: message?.title ?? "Recovery"
@@ -237,7 +239,8 @@ public nonisolated enum WatchPages {
             delta = .init(text: "\(WidgetCopy.signed(value)) vs your usual", tone: tone)
         }
         // The four factors that were scored, in ring order; a v1-style snapshot with no factor list falls back to the ring's own arcs.
-        let rows: [WatchRecoveryPage.Row] = snapshot.recoveryFactors.isEmpty
+        let rows: [WatchRecoveryPage.Row] =
+            snapshot.recoveryFactors.isEmpty
             ? recovery.ring.map { .init(kind: $0.kind, name: WatchCopy.factorName($0.kind), score: Int(($0.fraction * 100).rounded())) }
             : snapshot.recoveryFactors.map { .init(kind: $0.kind, name: WatchCopy.factorName($0.kind), score: $0.score) }
         let stale = input.staleLine
@@ -256,7 +259,9 @@ public nonisolated enum WatchPages {
     public static func sleep(_ input: WatchPageInput) -> WatchSleepPage {
         guard input.state.showsNumbers, let night = input.snapshot?.lastNight else {
             let message = input.message(for: .sleep) ?? WatchMessage(glyph: "moon.zzz", title: WatchCopy.noSleep)
-            return WatchSleepPage(message: message, caption: "Last night", duration: nil, times: nil, stages: nil, quality: nil, staleLine: nil, sensitivity: .health, accessibilityLabel: message.title)
+            return WatchSleepPage(
+                message: message, caption: "Last night", duration: nil, times: nil, stages: nil, quality: nil, staleLine: nil, sensitivity: .health,
+                accessibilityLabel: message.title)
         }
         let format = input.format
         let stale = input.staleLine
@@ -266,7 +271,8 @@ public nonisolated enum WatchPages {
         if let stale { spoken.append(stale) }
         return WatchSleepPage(
             message: nil, caption: stale == nil ? "Last night" : "Last recorded", duration: WidgetFormat.durationMetric(night.asleepMinutes), times: times,
-            stages: night.stages, quality: night.quality.map { "Sleep quality \($0)" }, staleLine: stale, sensitivity: .health, accessibilityLabel: spoken.joined(separator: ". ")
+            stages: night.stages, quality: night.quality.map { "Sleep quality \($0)" }, staleLine: stale, sensitivity: .health,
+            accessibilityLabel: spoken.joined(separator: ". ")
         )
     }
 
@@ -309,13 +315,16 @@ public nonisolated enum WatchPages {
         if WatchGate.isLocked(.tonight, tier: input.snapshot?.tier) {
             let locked = WatchLockedContent(.tonight)
             return WatchTonightPage(
-                message: nil, bedtime: nil, windowText: nil, wakeLine: nil, countdown: .none, alarmLine: nil, sensitivity: .plan, accessibilityLabel: locked.accessibilityLabel,
+                message: nil, bedtime: nil, windowText: nil, wakeLine: nil, countdown: .none, alarmLine: nil, sensitivity: .plan,
+                accessibilityLabel: locked.accessibilityLabel,
                 locked: locked
             )
         }
         guard let snapshot = input.snapshot else {
             let message = WatchMessage(glyph: "iphone", title: WatchCopy.getStarted)
-            return WatchTonightPage(message: message, bedtime: nil, windowText: nil, wakeLine: nil, countdown: .none, alarmLine: nil, sensitivity: .plan, accessibilityLabel: message.title)
+            return WatchTonightPage(
+                message: message, bedtime: nil, windowText: nil, wakeLine: nil, countdown: .none, alarmLine: nil, sensitivity: .plan,
+                accessibilityLabel: message.title)
         }
         let format = input.format
         // The plan is the person's own settings, not Health: it is shown whenever the Watch has a snapshot, as the widgets do.
@@ -345,7 +354,9 @@ public nonisolated enum WatchPages {
         switch input.state {
         case .ok: status = "Recovery and sleep"
         case .sleepOnly: status = "Sleep only"
-        case .stale(let since): status = "Last numbers, \(WidgetCopy.updated(hours: max(Int(input.now.timeIntervalSince(since) / 3600), 0)).replacingOccurrences(of: "Updated ", with: ""))"
+        case .stale(let since):
+            status =
+                "Last numbers, \(WidgetCopy.updated(hours: max(Int(input.now.timeIntervalSince(since) / 3600), 0)).replacingOccurrences(of: "Updated ", with: ""))"
         case .learning(let nights): status = WidgetCopy.learningLine(nights)
         case .waitingForToday: status = WatchCopy.waiting
         case .gap: status = WatchCopy.noSleep

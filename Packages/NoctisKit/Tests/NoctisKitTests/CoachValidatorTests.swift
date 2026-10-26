@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import CoachKit
 @testable import InsightsKit
 @testable import NoctisCore
@@ -159,7 +160,9 @@ struct CoachValidatorTests {
 
     // MARK: - Numbers
 
-    @Test(arguments: ["You slept 7 hours.", "Recovery was 72.", "Up 3 points.", "About 7.5 hours.", "Room 101", "\u{0663} points", "\u{00BD} an hour", "about ٧ hours"])
+    @Test(arguments: [
+        "You slept 7 hours.", "Recovery was 72.", "Up 3 points.", "About 7.5 hours.", "Room 101", "\u{0663} points", "\u{00BD} an hour", "about ٧ hours",
+    ])
     func aDigitOutsideATokenIsRejected(_ text: String) {
         var draft = good()
         draft.summary = text
@@ -283,7 +286,10 @@ struct CoachValidatorTests {
 
     // MARK: - Patterns
 
-    @Test(arguments: ["Your data suggests earlier bedtimes go with better nights.", "Earlier bedtimes have coincided with higher recovery.", "Late nights have coincided with lower recovery.", "Compared with your recent baseline, early nights scored higher.", "SUGGESTS a link"])
+    @Test(arguments: [
+        "Your data suggests earlier bedtimes go with better nights.", "Earlier bedtimes have coincided with higher recovery.",
+        "Late nights have coincided with lower recovery.", "Compared with your recent baseline, early nights scored higher.", "SUGGESTS a link",
+    ])
     func aPatternThatHedgesPasses(_ text: String) {
         var draft = good()
         draft.pattern = text
@@ -321,7 +327,10 @@ struct CoachValidatorTests {
         #expect(failures(draft).contains(.unknownDestination(name)), Comment(rawValue: name))
     }
 
-    @Test(arguments: ["home", "sleep", "sleep:week", "sleep:month", "recovery", "recovery:30d", "insights", "insights:sleep", "coach", "profile", "insight:bedtimeShift-3fa9c2d1"])
+    @Test(arguments: [
+        "home", "sleep", "sleep:week", "sleep:month", "recovery", "recovery:30d", "insights", "insights:sleep", "coach", "profile",
+        "insight:bedtimeShift-3fa9c2d1",
+    ])
     func everyRouteTheAppHasIsAllowed(_ name: String) {
         var draft = good()
         draft.destinations = [name]

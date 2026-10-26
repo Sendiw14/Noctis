@@ -16,7 +16,6 @@ private func clock(_ date: Date) -> (Int, Int) {
     return (parts.hour ?? -1, parts.minute ?? -1)
 }
 
-
 /// The clock writes a narrow no-break space before AM and PM; the tests spell it as a plain space.
 private func sp(_ text: String) -> String { text.replacingOccurrences(of: "\u{202F}", with: " ") }
 private func sp(_ piece: WidgetLockPiece) -> WidgetLockPiece {
@@ -43,7 +42,9 @@ private func snapshot(
 
 struct WidgetClockTests {
     @Test func theModeIsHomesModeAtEveryQuarterHourForManyPlans() {
-        for (wake, need) in [(7 * 60, 8 * 60), (6 * 60 + 30, 7 * 60 + 30), (5 * 60, 9 * 60), (9 * 60, 6 * 60), (3 * 60, 8 * 60), (12 * 60, 8 * 60), (7 * 60, 4 * 60)] {
+        for (wake, need) in [
+            (7 * 60, 8 * 60), (6 * 60 + 30, 7 * 60 + 30), (5 * 60, 9 * 60), (9 * 60, 6 * 60), (3 * 60, 8 * 60), (12 * 60, 8 * 60), (7 * 60, 4 * 60),
+        ] {
             var profile = UserProfileSnapshot()
             profile.typicalWakeMinutes = wake
             profile.needMinutes = need
@@ -52,7 +53,9 @@ struct WidgetClockTests {
             for step in 0..<96 {
                 let date = at(24, step / 4, (step % 4) * 15)
                 let home = HomeScreenBuilder.mode(now: date, plan: tonight, calendar: calendar)
-                #expect(WidgetClock.mode(at: date, plan: plan, calendar: calendar).rawValue == home.rawValue, Comment(rawValue: "wake \(wake) need \(need) at \(step * 15) minutes"))
+                #expect(
+                    WidgetClock.mode(at: date, plan: plan, calendar: calendar).rawValue == home.rawValue,
+                    Comment(rawValue: "wake \(wake) need \(need) at \(step * 15) minutes"))
             }
         }
         #expect(WidgetClock.eveningLeadMinutes == HomeScreenBuilder.eveningLeadMinutes && WidgetClock.eveningEndMinutes == HomeScreenBuilder.eveningEndMinutes)
@@ -132,7 +135,9 @@ struct WidgetTimelineTests {
                 let value = snapshot(wake: plan.0, bedtime: plan.1)
                 let built = WidgetTimelineBuilder.build(snapshot: value, now: now, calendar: calendar)
                 #expect(built.entries.first?.date == now)
-                #expect(built.entries.map(\.date) == built.entries.map(\.date).sorted() && Set(built.entries.map(\.date)).count == built.entries.count, "sorted, no repeats")
+                #expect(
+                    built.entries.map(\.date) == built.entries.map(\.date).sorted() && Set(built.entries.map(\.date)).count == built.entries.count,
+                    "sorted, no repeats")
                 #expect(built.entries.allSatisfy { $0.date < now.addingTimeInterval(WidgetTimelineBuilder.horizon) })
                 #expect(built.reloadAfter > (built.entries.last?.date ?? now), "asks again after the last entry")
                 #expect(built.reloadAfter <= now.addingTimeInterval(WidgetTimelineBuilder.horizon), "never beyond twelve hours")
@@ -192,8 +197,12 @@ struct WidgetTimelineTests {
     }
 
     @Test func sampleNumbersAreOnlyEverNamedWhereAPreviewIsMade() throws {
-        let allowed = ["NoctisWidgetKit/WidgetSamples.swift", "AppRoot/WidgetGallery.swift", "AppRoot/IntentRunner.swift", "Widgets/Home/NoctisWidgets.swift", "Watch/App/WatchMock.swift"]
-        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets"]) where file.text.contains("WidgetSamples") {
+        let allowed = [
+            "NoctisWidgetKit/WidgetSamples.swift", "AppRoot/WidgetGallery.swift", "AppRoot/IntentRunner.swift", "Widgets/Home/NoctisWidgets.swift",
+            "Watch/App/WatchMock.swift",
+        ]
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets"])
+        where file.text.contains("WidgetSamples") {
             #expect(allowed.contains { file.path.hasSuffix($0) }, Comment(rawValue: "\(file.path) uses sample numbers"))
         }
         // In the extension, only the placeholder and the gallery preview make one; the timeline is built from the store.
@@ -305,7 +314,9 @@ struct WidgetDisplayTests {
         #expect(stale.accessibilityLabel.contains("Updated 14h ago") && stale.accessibilityLabel.contains("Last recorded sleep"))
         // Older as the day goes on, and in days from two days.
         #expect(present(snapshot(.stale(hours: 14), generated: at(24, 10)), at: at(24, 13)).footer == "Updated 17h ago")
-        #expect(WidgetCopy.updated(hours: 47) == "Updated 47h ago" && WidgetCopy.updated(hours: 48) == "Updated 2d ago" && WidgetCopy.updated(hours: 75) == "Updated 3d ago")
+        #expect(
+            WidgetCopy.updated(hours: 47) == "Updated 47h ago" && WidgetCopy.updated(hours: 48) == "Updated 2d ago"
+                && WidgetCopy.updated(hours: 75) == "Updated 3d ago")
     }
 
     // MARK: Evening
@@ -340,7 +351,9 @@ struct WidgetDisplayTests {
 
     @Test func everyHealthValueIsFlaggedAndNoPlanValueIs() throws {
         let body = try #require(day(present(snapshot(), at: at(24, 10))))
-        for line in body.rows + [body.night?.duration, body.night?.quality].compactMap({ $0 }) { #expect(line.sensitivity == .health, Comment(rawValue: line.label)) }
+        for line in body.rows + [body.night?.duration, body.night?.quality].compactMap({ $0 }) {
+            #expect(line.sensitivity == .health, Comment(rawValue: line.label))
+        }
         let evening = try #require(evening(present(snapshot(), at: at(24, 21))))
         for line in [evening.wake, evening.need] + [evening.alarm].compactMap({ $0 }) { #expect(line.sensitivity == .plan, Comment(rawValue: line.label)) }
     }
@@ -354,7 +367,9 @@ struct WidgetDisplayTests {
                 for line in locked.rectangular + [locked.inline] {
                     for piece in line {
                         if case .health = piece { Issue.record("a Health word survives the lock") }
-                        if case .text(let text) = piece { #expect(!text.contains("70") && !text.contains("6h 42m") && !text.contains("Recovery 7"), Comment(rawValue: text)) }
+                        if case .text(let text) = piece {
+                            #expect(!text.contains("70") && !text.contains("6h 42m") && !text.contains("Recovery 7"), Comment(rawValue: text))
+                        }
                     }
                 }
             }
@@ -371,19 +386,25 @@ struct WidgetDisplayTests {
     }
 
     @Test func theViewsWrapEveryHealthValueAndNoTextIsUnderTwelvePoints() throws {
-        let views = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetViews.swift"), encoding: .utf8)
+        let views = try String(
+            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetViews.swift"), encoding: .utf8)
         let code = RawDefaultsTests.code(views)
         #expect(code.contains(".privacySensitive()"))
         #expect(code.components(separatedBy: "WidgetPrivate {").count - 1 >= 4, "the ring, the rows, the delta and the night are wrapped")
         // The evening hero, the Tonight row and the plan rows are the person's plan, not Health: nothing there is wrapped.
         let eveningStart = try #require(code.range(of: "struct WidgetEveningView"))
         let lockStart = try #require(code.range(of: "public struct NoctisLockWidgetView"))
-        #expect(!code[eveningStart.lowerBound..<lockStart.lowerBound].contains("WidgetPrivate {") || code[eveningStart.lowerBound..<lockStart.lowerBound].contains("WidgetRecoveryRing"))
+        #expect(
+            !code[eveningStart.lowerBound..<lockStart.lowerBound].contains("WidgetPrivate {")
+                || code[eveningStart.lowerBound..<lockStart.lowerBound].contains("WidgetRecoveryRing"))
         for file in ["WidgetViews.swift", "WidgetShapes.swift"] {
-            let text = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/\(file)"), encoding: .utf8))
+            let text = RawDefaultsTests.code(
+                try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/\(file)"), encoding: .utf8))
             for match in text.matches(of: /noctisFont\((\d+(?:\.\d+)?)/) { #expect(Double(match.1) ?? 0 >= 12, Comment(rawValue: "\(file): text under 12pt")) }
             for match in text.matches(of: /noctisIcon\((\d+(?:\.\d+)?)/) { #expect(Double(match.1) ?? 0 >= 12, Comment(rawValue: "\(file): icon under 12pt")) }
-            #expect(!text.contains(".font(.system(size:") && !text.contains(".position(") && !text.contains(".border(") && !text.contains("DEBUG") && !text.contains("Canvas"), Comment(rawValue: file))
+            #expect(
+                !text.contains(".font(.system(size:") && !text.contains(".position(") && !text.contains(".border(") && !text.contains("DEBUG")
+                    && !text.contains("Canvas"), Comment(rawValue: file))
         }
     }
 
@@ -402,9 +423,13 @@ struct WidgetDisplayTests {
         }
         #expect(WidgetFormat.quantityMetric(54, .millisecond) == HomeFormat.quantityMetric(54, .millisecond))
         #expect(format.windowText(startMinutes: 22 * 60 + 45, endMinutes: 23 * 60 + 15) == "10:45 – 11:15 PM")
-        #expect(format.windowText(startMinutes: 23 * 60 + 45, endMinutes: 15).replacingOccurrences(of: "\u{202F}", with: " ") == "11:45 PM – 12:15 AM", "across midnight, both periods")
+        #expect(
+            format.windowText(startMinutes: 23 * 60 + 45, endMinutes: 15).replacingOccurrences(of: "\u{202F}", with: " ") == "11:45 PM – 12:15 AM",
+            "across midnight, both periods")
         let h24 = WidgetFormat(calendar: calendar, locale: Locale(identifier: "de_DE"))
-        #expect(h24.clockMetric(minutesSinceMidnight: 23 * 60).plain == "23:00" && h24.windowText(startMinutes: 22 * 60 + 45, endMinutes: 23 * 60 + 15) == "22:45 – 23:15")
+        #expect(
+            h24.clockMetric(minutesSinceMidnight: 23 * 60).plain == "23:00"
+                && h24.windowText(startMinutes: 22 * 60 + 45, endMinutes: 23 * 60 + 15) == "22:45 – 23:15")
     }
 
     @Test func eachSurfaceOpensTheRightScreen() {

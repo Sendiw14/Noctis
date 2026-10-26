@@ -142,7 +142,8 @@ nonisolated struct BreathingScheduleTests {
     static let lengths: [Length] = [
         Length(pattern: .calm, minutes: 2, seconds: 120), Length(pattern: .calm, minutes: 5, seconds: 300), Length(pattern: .calm, minutes: 10, seconds: 600),
         Length(pattern: .box, minutes: 2, seconds: 128), Length(pattern: .box, minutes: 5, seconds: 304), Length(pattern: .box, minutes: 10, seconds: 608),
-        Length(pattern: .relax, minutes: 2, seconds: 133), Length(pattern: .relax, minutes: 5, seconds: 304), Length(pattern: .relax, minutes: 10, seconds: 608),
+        Length(pattern: .relax, minutes: 2, seconds: 133), Length(pattern: .relax, minutes: 5, seconds: 304),
+        Length(pattern: .relax, minutes: 10, seconds: 608),
     ]
 
     @Test(arguments: lengths)

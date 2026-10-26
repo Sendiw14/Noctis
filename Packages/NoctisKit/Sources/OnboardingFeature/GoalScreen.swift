@@ -16,7 +16,9 @@ private let goalItems: [GoalItem] = [
     GoalItem(goal: .betterSleep, title: "Better sleep", subtitle: "Calmer wind-down", fill: NoctisPaper.lavender, glyph: "moon.stars.fill", isWide: false),
     GoalItem(goal: .moreEnergy, title: "More energy", subtitle: "Sharper all day", fill: NoctisPaper.orange, glyph: "bolt.fill", isWide: false),
     GoalItem(goal: .betterRecovery, title: "Faster recovery", subtitle: "Bounce back", fill: NoctisPaper.sage, glyph: "heart.fill", isWide: false),
-    GoalItem(goal: .betterConsistency, title: "Steady routine", subtitle: "Consistent days", fill: NoctisPaper.butter, glyph: "clock.arrow.2.circlepath", isWide: false),
+    GoalItem(
+        goal: .betterConsistency, title: "Steady routine", subtitle: "Consistent days", fill: NoctisPaper.butter, glyph: "clock.arrow.2.circlepath",
+        isWide: false),
     GoalItem(goal: .betterFocus, title: "Clearer focus", subtitle: "Stay sharp when it matters", fill: NoctisPaper.cocoa, glyph: "scope", isWide: true),
 ]
 

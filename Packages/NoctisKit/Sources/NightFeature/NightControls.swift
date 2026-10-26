@@ -128,4 +128,3 @@ struct NightIconButton: View {
         .accessibilityIdentifier(identifier)
     }
 }
-

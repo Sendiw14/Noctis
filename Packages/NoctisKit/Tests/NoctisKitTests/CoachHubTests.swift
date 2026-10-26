@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import CoachFeature
 @testable import CoachKit
 @testable import HomeFeature
@@ -22,7 +23,9 @@ nonisolated final class StubAnswering: CoachAnswering, @unchecked Sendable {
 
     static func answered(_ summary: String, intent: CoachIntent = .recoveryChange, messageID: UUID? = nil) -> CoachResult {
         CoachResult(
-            answer: CoachAnswer(sourceKind: .fromYourData, intent: intent, summary: summary, confidence: .high, footer: "Coach shares patterns from your data. It isn't medical advice."),
+            answer: CoachAnswer(
+                sourceKind: .fromYourData, intent: intent, summary: summary, confidence: .high,
+                footer: "Coach shares patterns from your data. It isn't medical advice."),
             outcome: .template(.modelUnavailable(.notConfigured)),
             messageID: messageID
         )
@@ -108,13 +111,20 @@ struct CoachHubBuilderTests {
 
     @Test func withoutPermissionTheHubAsksToConnectAndTheCardsAreOff() {
         let content = hub(.permissionRequired)
-        #expect(content.state == .connect(title: "Coach needs a few nights to explain your patterns", message: "Connect Apple Health so NOCTIS can read your nights.", showsButton: true))
+        #expect(
+            content.state
+                == .connect(
+                    title: "Coach needs a few nights to explain your patterns", message: "Connect Apple Health so NOCTIS can read your nights.",
+                    showsButton: true))
         #expect(content.cards.allSatisfy { !$0.isEnabled })
         #expect(!content.questionsAreEnabled)
     }
 
     @Test func withoutAHealthStoreThereIsNoButton() {
-        #expect(hub(.healthDataUnavailable).state == .connect(title: "Coach needs a few nights to explain your patterns", message: "Apple Health isn't available on this device.", showsButton: false))
+        #expect(
+            hub(.healthDataUnavailable).state
+                == .connect(
+                    title: "Coach needs a few nights to explain your patterns", message: "Apple Health isn't available on this device.", showsButton: false))
     }
 
     @Test func withNoSleepTheHubSaysSoAndTheCardsAreOff() {

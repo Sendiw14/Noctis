@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import RecoveryKit
 @testable import SleepKit
 
@@ -11,8 +12,9 @@ struct RecoveryModelV2Tests {
     private let lastNightKey = SleepNightKey(year: 2026, month: 9, day: 23)
 
     private func night(asleep: Double = 450, bedtime: Double = 660, wake: Double = 1140, hrv: Double? = 50, resting: Double? = 55) -> NightMetrics {
-        NightMetrics(night: lastNightKey, wakeTime: Fixture.date(2026, 9, 24, 7), asleepMinutes: asleep,
-                     bedtimeMinutes: bedtime, wakeMinutes: wake, hrv: hrv, restingHeartRate: resting)
+        NightMetrics(
+            night: lastNightKey, wakeTime: Fixture.date(2026, 9, 24, 7), asleepMinutes: asleep,
+            bedtimeMinutes: bedtime, wakeMinutes: wake, hrv: hrv, restingHeartRate: resting)
     }
 
     /// Baselines with realistic spread: HRV 50 ± 5 ms, resting 55 ± 2 bpm.

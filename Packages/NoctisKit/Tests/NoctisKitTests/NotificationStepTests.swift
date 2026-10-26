@@ -10,19 +10,22 @@ import Testing
 struct NotificationStepTests {
     @Test func theThreeRemindersAreInTheSameOrderWithTheSameNames() {
         #expect(NotificationKind.allCases.map(\.toggleTitle) == ["Morning summary", "Wind-down reminder", "Weekly review"])
-        #expect(NotificationKind.allCases.map(\.identifier) == [NoctisNotification.morningSummary, NoctisNotification.windDown, NoctisNotification.weeklyReview])
+        #expect(
+            NotificationKind.allCases.map(\.identifier) == [NoctisNotification.morningSummary, NoctisNotification.windDown, NoctisNotification.weeklyReview])
     }
 
     @Test func theExamplesAreTheRealNotificationTexts() {
-        #expect(NotificationKind.allCases.map(\.previewBody) == [
-            "Your morning summary is ready.", "Your wind-down starts in 20 minutes.", "Your weekly review is ready.",
-        ])
+        #expect(
+            NotificationKind.allCases.map(\.previewBody) == [
+                "Your morning summary is ready.", "Your wind-down starts in 20 minutes.", "Your weekly review is ready.",
+            ])
     }
 
     @Test func eachRowSaysWhatItDoes() {
-        #expect(NotificationKind.allCases.map(\.toggleSubtitle) == [
-            "Your night and recovery, ready when you wake", "20 minutes before your bedtime", "A calm look back, once a week",
-        ])
+        #expect(
+            NotificationKind.allCases.map(\.toggleSubtitle) == [
+                "Your night and recovery, ready when you wake", "20 minutes before your bedtime", "A calm look back, once a week",
+            ])
     }
 
     @Test func tappingTheExampleGoesRoundTheThree() {

@@ -1,4 +1,5 @@
 import SwiftUI
+
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -197,10 +198,11 @@ public nonisolated enum NoctisAppColor {
         #elseif canImport(UIKit)
         let light = noctisHexComponents(NoctisAppPalette.light[keyPath: token])
         let dark = noctisHexComponents(NoctisAppPalette.dark[keyPath: token])
-        return Color(uiColor: UIColor { traits in
-            let (r, g, b) = traits.userInterfaceStyle == .dark ? dark : light
-            return UIColor(red: r, green: g, blue: b, alpha: 1)
-        })
+        return Color(
+            uiColor: UIColor { traits in
+                let (r, g, b) = traits.userInterfaceStyle == .dark ? dark : light
+                return UIColor(red: r, green: g, blue: b, alpha: 1)
+            })
         #else
         return noctisHexColor(NoctisAppPalette.light[keyPath: token])
         #endif

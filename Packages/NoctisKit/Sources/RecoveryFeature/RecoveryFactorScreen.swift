@@ -245,7 +245,11 @@ struct RecoveryFactorChartCard: View {
             }
             .frame(height: Self.height)
             .animation(morph, value: content.range)
-            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { plotWidth = $0 }
+            .onGeometryChange(for: CGFloat.self) {
+                $0.size.width
+            } action: {
+                plotWidth = $0
+            }
             .columnScrub(count: content.points.count, chartWidth: plotWidth, outset: Self.outset, selected: $selected)
         } else {
             Color.clear.frame(height: Self.height)

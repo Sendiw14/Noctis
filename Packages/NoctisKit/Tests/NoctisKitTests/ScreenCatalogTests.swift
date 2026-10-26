@@ -1,10 +1,10 @@
 import Foundation
+import RecoveryKit
 import Testing
 
 @testable import NoctisCore
 @testable import OnboardingFeature
 @testable import QACatalog
-import RecoveryKit
 
 // QA part 3 (QA_COVERAGE.md, APP_RULES.md R67): the catalog of every screen is one list, with no entry twice, every route of the app on it, and every
 // launch flag it names one the app reads. QAMatrixTests (the UI tests) visits what this list says; a screen that is not on the list is not in the matrix.
@@ -82,10 +82,11 @@ struct ScreenCatalogTests {
     }
 
     @Test func everyOnboardingStepHasAnEntry() {
-        let steps = Set(ScreenCatalog.all.filter { $0.area == .onboarding }.compactMap { screen -> String? in
-            guard let index = screen.arguments.firstIndex(of: "-noctis.onboarding.step") else { return nil }
-            return screen.arguments[index + 1]
-        })
+        let steps = Set(
+            ScreenCatalog.all.filter { $0.area == .onboarding }.compactMap { screen -> String? in
+                guard let index = screen.arguments.firstIndex(of: "-noctis.onboarding.step") else { return nil }
+                return screen.arguments[index + 1]
+            })
         #expect(steps == Set(OnboardingStep.allCases.map(\.rawValue)))
     }
 

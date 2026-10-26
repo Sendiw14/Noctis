@@ -129,7 +129,9 @@ nonisolated struct WindDownCopyAndRoadmapTests {
         let roadmap = try String(contentsOf: Self.root.appendingPathComponent("Docs/ROADMAP.md"), encoding: .utf8)
         for line in roadmap.split(separator: "\n") where line.lowercased().contains("coming soon") {
             let lowered = line.lowercased()
-            #expect(!lowered.contains("wind-down") && !lowered.contains("sounds") && !lowered.contains("breathing") && !lowered.contains("meditation") && !lowered.contains("reflect"), Comment(rawValue: String(line)))
+            #expect(
+                !lowered.contains("wind-down") && !lowered.contains("sounds") && !lowered.contains("breathing") && !lowered.contains("meditation")
+                    && !lowered.contains("reflect"), Comment(rawValue: String(line)))
         }
     }
 

@@ -108,15 +108,17 @@ private struct TonightSections: View {
             TonightLinkRow(
                 symbol: "speaker.wave.2", fill: NoctisAppColor.blockLavender, title: "Sleep sounds", hint: "Opens Sleep sounds.", identifier: "tonight.sounds"
             ) { model.open(.sounds) }
-                .noctisRise(index: 4)
+            .noctisRise(index: 4)
             TonightLinkRow(
-                symbol: "wind", fill: NoctisAppColor.blockSage, title: WindDownActivity.breathing.title, hint: "Opens Breathing.", identifier: "tonight.breathing"
+                symbol: "wind", fill: NoctisAppColor.blockSage, title: WindDownActivity.breathing.title, hint: "Opens Breathing.",
+                identifier: "tonight.breathing"
             ) { open(.breathing) }
-                .noctisRise(index: 5)
+            .noctisRise(index: 5)
             TonightLinkRow(
-                symbol: "square.and.pencil", fill: NoctisAppColor.blockButter, title: WindDownActivity.reflect.title, hint: "Opens Reflect.", identifier: "tonight.reflect"
+                symbol: "square.and.pencil", fill: NoctisAppColor.blockButter, title: WindDownActivity.reflect.title, hint: "Opens Reflect.",
+                identifier: "tonight.reflect"
             ) { open(.reflect) }
-                .noctisRise(index: 6)
+            .noctisRise(index: 6)
         }
     }
 }

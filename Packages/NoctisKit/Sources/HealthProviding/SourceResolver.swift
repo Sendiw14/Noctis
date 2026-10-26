@@ -137,10 +137,13 @@ public nonisolated struct DefaultSourceResolver: SourceResolving {
                 guard !overlapsHigherPriority else { continue }
                 let start = max(sample.start, coveredUntil)
                 guard sample.end > start else { continue }
-                accepted.append(start == sample.start ? sample : RawSleepSample(
-                    id: sample.id, start: start, end: sample.end, stage: sample.stage,
-                    sourceName: sample.sourceName, sourceBundleID: sample.sourceBundleID, timeZone: sample.timeZone
-                ))
+                accepted.append(
+                    start == sample.start
+                        ? sample
+                        : RawSleepSample(
+                            id: sample.id, start: start, end: sample.end, stage: sample.stage,
+                            sourceName: sample.sourceName, sourceBundleID: sample.sourceBundleID, timeZone: sample.timeZone
+                        ))
                 coveredUntil = sample.end
             }
             resolved += accepted

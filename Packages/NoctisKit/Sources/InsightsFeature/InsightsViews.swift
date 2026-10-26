@@ -515,8 +515,14 @@ struct InsightMilestoneRowView: View {
                 // The dots and their count on one line; the count under the dots when they do not fit (at AX3 "14 nights" was cut to "14 nig…"
                 // beside ten dots, and at AX5 it broke into "14 / nights").
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 5) { dots; count.padding(.leading, 4) }
-                    VStack(alignment: .leading, spacing: 4) { HStack(spacing: 5) { dots }; count }
+                    HStack(spacing: 5) {
+                        dots
+                        count.padding(.leading, 4)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 5) { dots }
+                        count
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

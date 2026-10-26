@@ -186,7 +186,12 @@ public final class BreathingViewModel {
 
     /// The screen was left (back to the wind-down, or the wind-down ended): nothing keeps going.
     public func leave() {
-        if isActive { end() } else if state == .finished { state = .setup; reset() }
+        if isActive {
+            end()
+        } else if state == .finished {
+            state = .setup
+            reset()
+        }
     }
 
     /// The app came back to the front: the clock is read at once, and the circle starts again from

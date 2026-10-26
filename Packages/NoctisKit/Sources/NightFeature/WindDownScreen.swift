@@ -41,7 +41,10 @@ public struct WindDownScreen: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var activity: WindDownActivity?
 
-    public init(autostart: Bool, viewModel: WindDownViewModel, sounds: SoundsViewModel, breathing: BreathingViewModel, meditation: MeditationViewModel, journal: JournalViewModel) {
+    public init(
+        autostart: Bool, viewModel: WindDownViewModel, sounds: SoundsViewModel, breathing: BreathingViewModel, meditation: MeditationViewModel,
+        journal: JournalViewModel
+    ) {
         self.autostart = autostart
         self.viewModel = viewModel
         self.sounds = sounds
@@ -113,13 +116,17 @@ public struct WindDownScreen: View {
         case .ending:
             Color.clear
         case .finished:
-            WindDownFinish(viewModel: viewModel, setAlarm: {
-                viewModel.done()
-                appModel.open(.alarm)
-            }, done: {
-                viewModel.done()
-                appModel.open(.home)
-            })
+            WindDownFinish(
+                viewModel: viewModel,
+                setAlarm: {
+                    viewModel.done()
+                    appModel.open(.alarm)
+                },
+                done: {
+                    viewModel.done()
+                    appModel.open(.home)
+                }
+            )
             .transition(.opacity)
         }
     }
@@ -257,8 +264,12 @@ private struct WindDownSession: View {
                 HStack(spacing: NoctisSpacing.md) {
                     WindDownActionTile(symbol: "speaker.wave.2", title: WindDownActivity.sounds.title, identifier: "windDown.action.sounds") { open(.sounds) }
                     WindDownActionTile(symbol: "wind", title: WindDownActivity.breathing.title, identifier: "windDown.action.breathing") { open(.breathing) }
-                    WindDownActionTile(symbol: "figure.mind.and.body", title: WindDownActivity.meditation.title, identifier: "windDown.action.meditation") { open(.meditation) }
-                    WindDownActionTile(symbol: "square.and.pencil", title: WindDownActivity.reflect.title, identifier: "windDown.action.reflect") { open(.reflect) }
+                    WindDownActionTile(symbol: "figure.mind.and.body", title: WindDownActivity.meditation.title, identifier: "windDown.action.meditation") {
+                        open(.meditation)
+                    }
+                    WindDownActionTile(symbol: "square.and.pencil", title: WindDownActivity.reflect.title, identifier: "windDown.action.reflect") {
+                        open(.reflect)
+                    }
                 }
                 .transition(.opacity)
                 .padding(.bottom, NoctisSpacing.lg)
@@ -267,7 +278,8 @@ private struct WindDownSession: View {
                 .padding(.bottom, NoctisSpacing.xl)
         }
         .padding(.horizontal, NoctisSpacing.lg)
-        .animation(NoctisMotion.adaptive(.easeInOut(duration: WindDownStage.transitionSeconds(for: viewModel.progress)), reduceMotion: reduceMotion), value: stage)
+        .animation(
+            NoctisMotion.adaptive(.easeInOut(duration: WindDownStage.transitionSeconds(for: viewModel.progress)), reduceMotion: reduceMotion), value: stage)
     }
 }
 
@@ -281,20 +293,32 @@ private struct WindDownControls: View {
     var body: some View {
         HStack(spacing: NoctisSpacing.sm) {
             if stage == .full {
-                NightPill(title: viewModel.state == .paused ? WindDownCopy.resume : WindDownCopy.pause, symbol: viewModel.state == .paused ? "play.fill" : "pause.fill", identifier: "windDown.pause") {
+                NightPill(
+                    title: viewModel.state == .paused ? WindDownCopy.resume : WindDownCopy.pause,
+                    symbol: viewModel.state == .paused ? "play.fill" : "pause.fill", identifier: "windDown.pause"
+                ) {
                     viewModel.state == .paused ? viewModel.resume() : viewModel.pause()
                 }
             } else if stage == .reduced {
-                NightIconButton(symbol: viewModel.state == .paused ? "play.fill" : "pause.fill", label: viewModel.state == .paused ? WindDownCopy.resume : WindDownCopy.pause, identifier: "windDown.pause") {
+                NightIconButton(
+                    symbol: viewModel.state == .paused ? "play.fill" : "pause.fill",
+                    label: viewModel.state == .paused ? WindDownCopy.resume : WindDownCopy.pause, identifier: "windDown.pause"
+                ) {
                     viewModel.state == .paused ? viewModel.resume() : viewModel.pause()
                 }
             }
             if stage == .full {
-                NightPill(title: soundPlaying ? WindDownCopy.soundOn : WindDownCopy.soundOff, symbol: soundPlaying ? "speaker.wave.2.fill" : "speaker.slash", identifier: "windDown.sound") {
+                NightPill(
+                    title: soundPlaying ? WindDownCopy.soundOn : WindDownCopy.soundOff, symbol: soundPlaying ? "speaker.wave.2.fill" : "speaker.slash",
+                    identifier: "windDown.sound"
+                ) {
                     viewModel.toggleSound()
                 }
             } else {
-                NightIconButton(symbol: soundPlaying ? "speaker.wave.2.fill" : "speaker.slash", label: soundPlaying ? "Turn the sound off" : "Turn the sound on", identifier: "windDown.sound") {
+                NightIconButton(
+                    symbol: soundPlaying ? "speaker.wave.2.fill" : "speaker.slash", label: soundPlaying ? "Turn the sound off" : "Turn the sound on",
+                    identifier: "windDown.sound"
+                ) {
                     viewModel.toggleSound()
                 }
             }
@@ -367,7 +391,9 @@ struct WindDownActivityHost<Content: View>: View {
         ZStack {
             WindDownScene(progress: progress, backdrop: true)
             VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-                Button { dismiss() } label: {
+                Button {
+                    dismiss()
+                } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.backward").font(.system(size: 15, weight: .semibold))
                         Text(backTitle).noctisFont(17, .medium, relativeTo: .body)
@@ -400,9 +426,12 @@ struct WindDownSoundsPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoctisSpacing.lg) {
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: NoctisSpacing.sm), GridItem(.flexible(), spacing: NoctisSpacing.sm)], spacing: NoctisSpacing.sm) {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: NoctisSpacing.sm), GridItem(.flexible(), spacing: NoctisSpacing.sm)], spacing: NoctisSpacing.sm)
+            {
                 ForEach(sounds.tiles) { tile in
-                    Button { sounds.tap(tile.kind) } label: {
+                    Button {
+                        sounds.tap(tile.kind)
+                    } label: {
                         HStack(spacing: NoctisSpacing.sm) {
                             Image(systemName: tile.symbol)
                                 .font(.system(size: 18, weight: .semibold))
@@ -415,7 +444,9 @@ struct WindDownSoundsPanel: View {
                         .foregroundStyle(tile.isPlaying ? NoctisNight.night : NoctisNight.ivory)
                         .padding(.horizontal, NoctisSpacing.md)
                         .frame(minHeight: 56)
-                        .background(tile.isPlaying ? NoctisNight.ivory : NoctisNight.ivory.opacity(0.12), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .background(
+                            tile.isPlaying ? NoctisNight.ivory : NoctisNight.ivory.opacity(0.12), in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        )
                         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     }
                     .buttonStyle(.plain)

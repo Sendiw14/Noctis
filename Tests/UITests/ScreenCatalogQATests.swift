@@ -57,7 +57,9 @@ final class ScreenCatalogQATests: XCTestCase {
         let scrollView = app.scrollViews.firstMatch
         for _ in 0..<8 where !target.isHittable {
             scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
-                .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.35)), withVelocity: .slow, thenHoldForDuration: 0.3)
+                .press(
+                    forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.35)), withVelocity: .slow,
+                    thenHoldForDuration: 0.3)
             QA.pause(0.4)
         }
         QA.pause(0.8)

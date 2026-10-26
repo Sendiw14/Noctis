@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import SleepKit
 
 struct SleepSessionEngineTests {
@@ -153,25 +154,26 @@ struct SleepSessionEngineTests {
         let asleepOnly = try #require(history([Fixture.sample(at(1, 23), at(2, 7))]).nights.first)
         #expect(asleepOnly.efficiency == nil)
 
-        let withAwake = try #require(history([
-            Fixture.sample(at(1, 23), at(2, 1), .core),
-            Fixture.sample(at(2, 1), at(2, 2), .awake),
-            Fixture.sample(at(2, 2), at(2, 7), .core),
-        ]).nights.first)
+        let withAwake = try #require(
+            history([
+                Fixture.sample(at(1, 23), at(2, 1), .core),
+                Fixture.sample(at(2, 1), at(2, 2), .awake),
+                Fixture.sample(at(2, 2), at(2, 7), .core),
+            ]).nights.first)
         #expect(withAwake.efficiency == 7.0 / 8.0)
     }
 
     @Test func awakeningsAreBreaksOfAMinuteOrMoreBetweenAsleepStretches() throws {
         let samples = [
-            Fixture.sample(at(1, 23), at(1, 23, 10), .awake), // before sleep: not an awakening
+            Fixture.sample(at(1, 23), at(1, 23, 10), .awake),  // before sleep: not an awakening
             Fixture.sample(at(1, 23, 10), at(2, 1), .core),
-            Fixture.sample(at(2, 1), at(2, 1, 5), .awake), // 5 min: counts
+            Fixture.sample(at(2, 1), at(2, 1, 5), .awake),  // 5 min: counts
             Fixture.sample(at(2, 1, 5), at(2, 3), .deep),
-            Fixture.sample(at(2, 3), at(2, 3, 0, 30), .awake), // 30 s: too short
+            Fixture.sample(at(2, 3), at(2, 3, 0, 30), .awake),  // 30 s: too short
             Fixture.sample(at(2, 3, 0, 30), at(2, 5), .rem),
             // 20-minute gap in the data: counts
             Fixture.sample(at(2, 5, 20), at(2, 7), .core),
-            Fixture.sample(at(2, 7), at(2, 7, 10), .awake), // after waking: not an awakening
+            Fixture.sample(at(2, 7), at(2, 7, 10), .awake),  // after waking: not an awakening
         ]
         let night = try #require(history(samples).nights.first)
         #expect(night.awakenings == 2)
@@ -180,10 +182,11 @@ struct SleepSessionEngineTests {
     }
 
     @Test func completenessReportsCoverageAndStageDetail() throws {
-        let gappy = try #require(history([
-            Fixture.sample(at(1, 23), at(2, 3), .core),
-            Fixture.sample(at(2, 4), at(2, 7), .deep),
-        ]).nights.first)
+        let gappy = try #require(
+            history([
+                Fixture.sample(at(1, 23), at(2, 3), .core),
+                Fixture.sample(at(2, 4), at(2, 7), .deep),
+            ]).nights.first)
         #expect(gappy.completeness.coverage == 7.0 / 8.0)
         #expect(gappy.completeness.hasStageDetail)
         #expect(!gappy.completeness.hasInBedData)

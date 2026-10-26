@@ -14,23 +14,34 @@ public nonisolated enum NoctisUnit: Sendable, CaseIterable {
         #endif
         return switch self {
         case .hour:
-            String(localized: "unit.hour.symbol", defaultValue: "h", bundle: .module, comment: "The unit after a number of hours, drawn small beside it: '6h 42m'. As short as the language allows.")
+            String(
+                localized: "unit.hour.symbol", defaultValue: "h", bundle: .module,
+                comment: "The unit after a number of hours, drawn small beside it: '6h 42m'. As short as the language allows.")
         case .minute:
-            String(localized: "unit.minute.symbol", defaultValue: "m", bundle: .module, comment: "The unit after a number of minutes beside hours: '6h 42m'. One letter where the language has one.")
+            String(
+                localized: "unit.minute.symbol", defaultValue: "m", bundle: .module,
+                comment: "The unit after a number of minutes beside hours: '6h 42m'. One letter where the language has one.")
         case .minuteShort:
-            String(localized: "unit.minuteShort.symbol", defaultValue: "min", bundle: .module, comment: "The unit after a number of minutes on its own: '30 min'.")
+            String(
+                localized: "unit.minuteShort.symbol", defaultValue: "min", bundle: .module, comment: "The unit after a number of minutes on its own: '30 min'.")
         case .second:
             String(localized: "unit.second.symbol", defaultValue: "s", bundle: .module, comment: "The unit after a number of seconds: '20 s'.")
         case .percent:
-            String(localized: "unit.percent.symbol", defaultValue: "%", bundle: .module, comment: "The percent sign after a number: '82%'. Keep the language's own spacing rule.")
+            String(
+                localized: "unit.percent.symbol", defaultValue: "%", bundle: .module,
+                comment: "The percent sign after a number: '82%'. Keep the language's own spacing rule.")
         case .beatsPerMinute:
             String(localized: "unit.beatsPerMinute.symbol", defaultValue: "bpm", bundle: .module, comment: "The unit of a heart rate: '52 bpm'.")
         case .millisecond:
             String(localized: "unit.millisecond.symbol", defaultValue: "ms", bundle: .module, comment: "The unit of heart rate variability: '48 ms'.")
         case .point:
-            String(localized: "unit.point.symbol", defaultValue: "points", bundle: .module, comment: "The unit after a number of recovery score points: '+4 points'.")
+            String(
+                localized: "unit.point.symbol", defaultValue: "points", bundle: .module,
+                comment: "The unit after a number of recovery score points: '+4 points'.")
         case .pointShort:
-            String(localized: "unit.pointShort.symbol", defaultValue: "pts", bundle: .module, comment: "The short unit after a number of recovery score points in a small tile: '62 pts'.")
+            String(
+                localized: "unit.pointShort.symbol", defaultValue: "pts", bundle: .module,
+                comment: "The short unit after a number of recovery score points in a small tile: '62 pts'.")
         case .perWeek:
             String(localized: "unit.perWeek.symbol", defaultValue: "/ wk", bundle: .module, comment: "The unit of a rate of change per week: '+2 / wk'.")
         }
@@ -58,21 +69,37 @@ public nonisolated enum NoctisUnit: Sendable, CaseIterable {
         #endif
         return switch self {
         case .hour:
-            String(localized: "unit.hour.spoken", defaultValue: "\(count) hours", bundle: .module, locale: locale, comment: "A number of hours, spoken. Has plural variations: '1 hour', '2 hours'.")
+            String(
+                localized: "unit.hour.spoken", defaultValue: "\(count) hours", bundle: .module, locale: locale,
+                comment: "A number of hours, spoken. Has plural variations: '1 hour', '2 hours'.")
         case .minute, .minuteShort:
-            String(localized: "unit.minute.spoken", defaultValue: "\(count) minutes", bundle: .module, locale: locale, comment: "A number of minutes, spoken. Has plural variations.")
+            String(
+                localized: "unit.minute.spoken", defaultValue: "\(count) minutes", bundle: .module, locale: locale,
+                comment: "A number of minutes, spoken. Has plural variations.")
         case .second:
-            String(localized: "unit.second.spoken", defaultValue: "\(count) seconds", bundle: .module, locale: locale, comment: "A number of seconds, spoken. Has plural variations.")
+            String(
+                localized: "unit.second.spoken", defaultValue: "\(count) seconds", bundle: .module, locale: locale,
+                comment: "A number of seconds, spoken. Has plural variations.")
         case .percent:
-            String(localized: "unit.percent.spoken", defaultValue: "\(count) percent", bundle: .module, locale: locale, comment: "A percentage, spoken: '82 percent'.")
+            String(
+                localized: "unit.percent.spoken", defaultValue: "\(count) percent", bundle: .module, locale: locale,
+                comment: "A percentage, spoken: '82 percent'.")
         case .beatsPerMinute:
-            String(localized: "unit.beatsPerMinute.spoken", defaultValue: "\(count) beats per minute", bundle: .module, locale: locale, comment: "A heart rate, spoken. Has plural variations.")
+            String(
+                localized: "unit.beatsPerMinute.spoken", defaultValue: "\(count) beats per minute", bundle: .module, locale: locale,
+                comment: "A heart rate, spoken. Has plural variations.")
         case .millisecond:
-            String(localized: "unit.millisecond.spoken", defaultValue: "\(count) milliseconds", bundle: .module, locale: locale, comment: "Heart rate variability, spoken. Has plural variations.")
+            String(
+                localized: "unit.millisecond.spoken", defaultValue: "\(count) milliseconds", bundle: .module, locale: locale,
+                comment: "Heart rate variability, spoken. Has plural variations.")
         case .point, .pointShort:
-            String(localized: "unit.point.spoken", defaultValue: "\(count) points", bundle: .module, locale: locale, comment: "A number of recovery score points, spoken. Has plural variations.")
+            String(
+                localized: "unit.point.spoken", defaultValue: "\(count) points", bundle: .module, locale: locale,
+                comment: "A number of recovery score points, spoken. Has plural variations.")
         case .perWeek:
-            String(localized: "unit.perWeek.spoken", defaultValue: "\(count) per week", bundle: .module, locale: locale, comment: "A rate of change, spoken: '2 per week'.")
+            String(
+                localized: "unit.perWeek.spoken", defaultValue: "\(count) per week", bundle: .module, locale: locale,
+                comment: "A rate of change, spoken: '2 per week'.")
         }
     }
 }

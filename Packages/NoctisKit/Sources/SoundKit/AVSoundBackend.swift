@@ -86,7 +86,10 @@ public final class AVSoundEngineDriver: SoundEngineDriving {
     }
 
     private func removeMeter() {
-        guard let engine, let tap = meter else { meter = nil; return }
+        guard let engine, let tap = meter else {
+            meter = nil
+            return
+        }
         tap.remove(from: engine.mainMixerNode)
         meter = nil
     }
@@ -175,27 +178,32 @@ final class SoundSessionObserver: @unchecked Sendable {
 
     init(handler: @escaping @Sendable (SoundSessionEvent) -> Void) {
         let center = NotificationCenter.default
-        tokens.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { note in
-            guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-                  let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
-            switch type {
-            case .began:
-                handler(.interruptionBegan)
-            case .ended:
-                let options = (note.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt).map(AVAudioSession.InterruptionOptions.init(rawValue:)) ?? []
-                handler(.interruptionEnded(shouldResume: options.contains(.shouldResume)))
-            @unknown default:
-                break
-            }
-        })
-        tokens.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { note in
-            guard let raw = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
-                  AVAudioSession.RouteChangeReason(rawValue: raw) == .oldDeviceUnavailable else { return }
-            handler(.routeLost)
-        })
-        tokens.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { _ in
-            handler(.mediaServicesReset)
-        })
+        tokens.append(
+            center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { note in
+                guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                    let type = AVAudioSession.InterruptionType(rawValue: raw)
+                else { return }
+                switch type {
+                case .began:
+                    handler(.interruptionBegan)
+                case .ended:
+                    let options = (note.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt).map(AVAudioSession.InterruptionOptions.init(rawValue:)) ?? []
+                    handler(.interruptionEnded(shouldResume: options.contains(.shouldResume)))
+                @unknown default:
+                    break
+                }
+            })
+        tokens.append(
+            center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { note in
+                guard let raw = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                    AVAudioSession.RouteChangeReason(rawValue: raw) == .oldDeviceUnavailable
+                else { return }
+                handler(.routeLost)
+            })
+        tokens.append(
+            center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { _ in
+                handler(.mediaServicesReset)
+            })
     }
 
     deinit {
@@ -243,16 +251,22 @@ final class RemoteCommandBridge: @unchecked Sendable {
 
     init(handler: @escaping @Sendable (SoundRemoteCommand) -> Void) {
         let center = MPRemoteCommandCenter.shared()
-        for command in [center.nextTrackCommand, center.previousTrackCommand, center.seekForwardCommand, center.seekBackwardCommand,
-                        center.skipForwardCommand, center.skipBackwardCommand, center.changePlaybackPositionCommand] {
+        for command in [
+            center.nextTrackCommand, center.previousTrackCommand, center.seekForwardCommand, center.seekBackwardCommand,
+            center.skipForwardCommand, center.skipBackwardCommand, center.changePlaybackPositionCommand,
+        ] {
             command.isEnabled = false
         }
         func add(_ command: MPRemoteCommand, _ mapped: SoundRemoteCommand) {
             command.isEnabled = true
-            targets.append((command, command.addTarget { _ in
-                handler(mapped)
-                return .success
-            }))
+            targets.append(
+                (
+                    command,
+                    command.addTarget { _ in
+                        handler(mapped)
+                        return .success
+                    }
+                ))
         }
         add(center.playCommand, .play)
         add(center.pauseCommand, .pause)

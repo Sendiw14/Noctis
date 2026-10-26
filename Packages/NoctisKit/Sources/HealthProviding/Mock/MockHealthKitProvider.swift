@@ -98,25 +98,27 @@ public final class MockHealthKitProvider: HealthDataProviding {
         self.isHealthDataAvailable = isHealthDataAvailable
         self.failsQueries = failsQueries
 
-        let lastNight: MockLastNight = switch scenario {
-        case .lateBedtime: .later
-        case .steady, .recoveryDip: .steady
-        case .earlyBird, .weekendShift, .hrvDip, .steadyWeek, .improvedWeek, .laterWeek, .variedMonth: .usual
-        case .messyNight: .messy
-        case .highs: .best
-        default: .laterAndShorter
-        }
-        let shape: MockShape = switch scenario {
-        case .earlyBird: .earlyBird
-        case .weekendShift: .weekendShift
-        case .hrvDip: .hrvDip
-        case .full: .fullStory
-        case .steadyWeek: .steadyWeek
-        case .improvedWeek: .improvedWeek
-        case .laterWeek: .laterWeek
-        case .variedMonth: .variedMonth
-        default: .standard
-        }
+        let lastNight: MockLastNight =
+            switch scenario {
+            case .lateBedtime: .later
+            case .steady, .recoveryDip: .steady
+            case .earlyBird, .weekendShift, .hrvDip, .steadyWeek, .improvedWeek, .laterWeek, .variedMonth: .usual
+            case .messyNight: .messy
+            case .highs: .best
+            default: .laterAndShorter
+            }
+        let shape: MockShape =
+            switch scenario {
+            case .earlyBird: .earlyBird
+            case .weekendShift: .weekendShift
+            case .hrvDip: .hrvDip
+            case .full: .fullStory
+            case .steadyWeek: .steadyWeek
+            case .improvedWeek: .improvedWeek
+            case .laterWeek: .laterWeek
+            case .variedMonth: .variedMonth
+            default: .standard
+            }
         // The early bird's story is 90 nights; the others keep the default.
         let historyDays = scenario == .earlyBird ? min(historyDays, 90) : historyDays
         let frame = MockReviewFrame(referenceDate: referenceDate, calendar: calendar)
@@ -125,15 +127,18 @@ public final class MockHealthKitProvider: HealthDataProviding {
             dip: scenario == .recoveryDip,
             shape: shape, frame: frame
         )
-        let nights: [NightProfile] = switch scenario {
-        case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight, .recoveryDip, .highs, .earlyBird, .weekendShift, .hrvDip, .steadyWeek, .improvedWeek, .laterWeek, .variedMonth: generated
-        case .learning: Array(generated.suffix(3))
-        case .sparse: Array(generated.suffix(6))
-        case .empty: []
-        case .gap: Array(generated.dropLast())
-        // The latest review week keeps its 1st, 3rd, 5th and 7th nights.
-        case .sparseWeek: generated.filter { night in frame.weeksBack(ofNight: night.date) != 0 || frame.dayOfWeek(ofNight: night.date) % 2 == 0 }
-        }
+        let nights: [NightProfile] =
+            switch scenario {
+            case .full, .sleepOnly, .stale, .lateBedtime, .steady, .messyNight, .recoveryDip, .highs, .earlyBird, .weekendShift, .hrvDip, .steadyWeek,
+                .improvedWeek, .laterWeek, .variedMonth:
+                generated
+            case .learning: Array(generated.suffix(3))
+            case .sparse: Array(generated.suffix(6))
+            case .empty: []
+            case .gap: Array(generated.dropLast())
+            // The latest review week keeps its 1st, 3rd, 5th and 7th nights.
+            case .sparseWeek: generated.filter { night in frame.weeksBack(ofNight: night.date) != 0 || frame.dayOfWeek(ofNight: night.date) % 2 == 0 }
+            }
         let daytime = scenario == .empty ? [] : MockNightGenerator.daytimeHeartRate(referenceDate: referenceDate, nights: generated, seed: seed)
         let hasHeartData = scenario != .sleepOnly
         // Stale: everything stops 30 hours before now.

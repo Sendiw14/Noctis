@@ -17,7 +17,9 @@ public nonisolated enum LockedCopy {
         case .sleepQuality:
             Card(title: "What went into your sleep quality", line: "Premium shows the four factors behind your score and what changed.")
         case .insightsAll:
-            Card(title: "Everything NOCTIS found, your records and the full history", line: "Premium shows every insight, your records and your insight history.")
+            Card(
+                title: "Everything NOCTIS found, your records and the full history", line: "Premium shows every insight, your records and your insight history."
+            )
         case .coachQuestions:
             Card(title: CoachQuota.usedUpTitle, line: "\(CoachQuota.usedUpDetail) Premium has no daily limit.")
         case .tonightWindow:

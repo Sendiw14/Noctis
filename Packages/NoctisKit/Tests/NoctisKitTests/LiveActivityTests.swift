@@ -41,7 +41,8 @@ struct WindDownActivityStateTests {
         // Paused five minutes in: the countdown stands where it was.
         let pauseAt = start.addingTimeInterval(300)
         clock.pause(at: pauseAt)
-        let paused = WindDownActivityState.make(phase: .paused, startedAt: start, pausedTotal: clock.pausedTotal, plannedSeconds: clock.plannedSeconds, pausedAt: clock.pausedAt)
+        let paused = WindDownActivityState.make(
+            phase: .paused, startedAt: start, pausedTotal: clock.pausedTotal, plannedSeconds: clock.plannedSeconds, pausedAt: clock.pausedAt)
         #expect(paused.pausedAt == pauseAt && paused.isPaused)
         #expect(paused.remaining(at: pauseAt) == 900 && paused.remaining(at: pauseAt.addingTimeInterval(4000)) == 900, "frozen however long it stays paused")
         #expect(paused.progress(at: start.addingTimeInterval(9999)) == 0.25)
@@ -49,7 +50,8 @@ struct WindDownActivityStateTests {
         // Resumed three minutes later: the window has moved on by those three minutes, and the same two dates say what is left.
         let resumeAt = pauseAt.addingTimeInterval(180)
         clock.resume(at: resumeAt)
-        let resumed = WindDownActivityState.make(phase: .running, startedAt: start, pausedTotal: clock.pausedTotal, plannedSeconds: clock.plannedSeconds, pausedAt: pauseAt)
+        let resumed = WindDownActivityState.make(
+            phase: .running, startedAt: start, pausedTotal: clock.pausedTotal, plannedSeconds: clock.plannedSeconds, pausedAt: pauseAt)
         #expect(resumed.pausedAt == nil, "a running state has no pause")
         #expect(resumed.windowStart == start.addingTimeInterval(180) && resumed.windowEnd == start.addingTimeInterval(1380))
         #expect(resumed.remaining(at: resumeAt) == 900 && resumed.remaining(at: resumeAt.addingTimeInterval(100)) == 800)
@@ -66,7 +68,9 @@ struct WindDownActivityStateTests {
                 let state = WindDownActivityState.make(phase: .running, startedAt: start, pausedTotal: clock.pausedTotal, plannedSeconds: clock.plannedSeconds)
                 for offset in stride(from: 0.0, through: Double(minutes) * 60 + 200, by: 83) {
                     let moment = pausedAt.addingTimeInterval(61 + offset)
-                    #expect(abs(state.remaining(at: moment) - clock.remaining(at: moment)) < 0.001, Comment(rawValue: "\(minutes) min, paused at \(pauseAfter), +\(offset)"))
+                    #expect(
+                        abs(state.remaining(at: moment) - clock.remaining(at: moment)) < 0.001,
+                        Comment(rawValue: "\(minutes) min, paused at \(pauseAfter), +\(offset)"))
                     #expect(abs(state.progress(at: moment) - clock.progress(at: moment)) < 0.0001)
                 }
             }
@@ -100,7 +104,8 @@ struct WindDownActivityCopyTests {
         #expect(WindDownActivityCopy.status(state(.running), plannedMinutes: 20, isStale: false) == "20 min")
         #expect(WindDownActivityCopy.status(state(.paused), plannedMinutes: 20, isStale: false) == "Paused")
         #expect(WindDownActivityCopy.status(state(.ending), plannedMinutes: 20, isStale: false) == "Wind-down complete")
-        #expect(WindDownActivityCopy.status(state(.running), plannedMinutes: 20, isStale: true) == "Wind-down complete", "the time ran out while the app was away")
+        #expect(
+            WindDownActivityCopy.status(state(.running), plannedMinutes: 20, isStale: true) == "Wind-down complete", "the time ran out while the app was away")
         let now = start.addingTimeInterval(300)
         #expect(WindDownActivityCopy.spoken(state(.running), at: now) == "Wind down. 15 minutes left.")
         #expect(WindDownActivityCopy.spoken(state(.paused), at: now.addingTimeInterval(3000)) == "Wind down. Paused. 15 minutes left.")
@@ -109,7 +114,10 @@ struct WindDownActivityCopyTests {
     }
 
     @Test func everyWordOnEveryPresentationIsFreeOfTheBannedLanguage() {
-        var words = [WindDownActivityCopy.title, WindDownActivityCopy.paused, WindDownActivityCopy.complete, WindDownActivityCopy.end, WindDownActivityCopy.endAccessibility]
+        var words = [
+            WindDownActivityCopy.title, WindDownActivityCopy.paused, WindDownActivityCopy.complete, WindDownActivityCopy.end,
+            WindDownActivityCopy.endAccessibility,
+        ]
         for phase in [State.Phase.running, .paused, .ending] {
             for minutes in WindDownClock.options {
                 for stale in [false, true] {
@@ -160,7 +168,8 @@ private final class FakeActivityClient: WindDownActivityClient {
 struct WindDownActivityControllerTests {
     private let attributes = WindDownActivityAttributes(plannedMinutes: 20, startedAt: start)
     private func state(_ phase: State.Phase = .running) -> State {
-        WindDownActivityState.make(phase: phase, startedAt: start, pausedTotal: 0, plannedSeconds: 1200, pausedAt: phase == .paused ? start.addingTimeInterval(60) : nil)
+        WindDownActivityState.make(
+            phase: phase, startedAt: start, pausedTotal: 0, plannedSeconds: 1200, pausedAt: phase == .paused ? start.addingTimeInterval(60) : nil)
     }
 
     @Test func itClearsWhatWasLeftThenStartsOneAndUpdatesAndEndsItInOrder() async {
@@ -239,9 +248,18 @@ private final class FakeActivityHost: WindDownActivityHosting {
     var updates: [State] = []
     var ended: [(State?, TimeInterval)] = []
 
-    func start(_ attributes: WindDownActivityAttributes, state: State) { calls.append("start"); started.append((attributes, state)) }
-    func update(_ state: State) { calls.append("update \(state.phase.rawValue)"); updates.append(state) }
-    func end(finalState: State?, dismissAfter: TimeInterval) { calls.append("end \(finalState?.phase.rawValue ?? "none")"); ended.append((finalState, dismissAfter)) }
+    func start(_ attributes: WindDownActivityAttributes, state: State) {
+        calls.append("start")
+        started.append((attributes, state))
+    }
+    func update(_ state: State) {
+        calls.append("update \(state.phase.rawValue)")
+        updates.append(state)
+    }
+    func end(finalState: State?, dismissAfter: TimeInterval) {
+        calls.append("end \(finalState?.phase.rawValue ?? "none")")
+        ended.append((finalState, dismissAfter))
+    }
 }
 
 @MainActor
@@ -376,11 +394,16 @@ struct LiveActivityStructureTests {
     @Test func theExtensionDrawsTheKitsViewsAndGivesEndItsIntent() throws {
         let code = RawDefaultsTests.code(try read("Widgets/Home/NoctisWindDownActivity.swift"))
         #expect(code.contains("ActivityConfiguration(for: WindDownActivityAttributes.self)"))
-        for piece in ["WindDownLockScreenView", "WindDownIslandCompactLeading", "WindDownIslandCompactTrailing", "WindDownIslandMinimal", "WindDownIslandExpandedLeading", "WindDownIslandExpandedTrailing", "WindDownIslandExpandedBottom"] {
+        for piece in [
+            "WindDownLockScreenView", "WindDownIslandCompactLeading", "WindDownIslandCompactTrailing", "WindDownIslandMinimal", "WindDownIslandExpandedLeading",
+            "WindDownIslandExpandedTrailing", "WindDownIslandExpandedBottom",
+        ] {
             #expect(code.contains(piece), Comment(rawValue: "\(piece) is not used"))
         }
         #expect(code.contains("Button(intent: EndWindDownIntent())"))
-        #expect(code.range(of: #"(?<![A-Za-z])Color\("#, options: .regularExpression) == nil && !code.contains(".font("), "the kit draws everything; the extension composes")
+        #expect(
+            code.range(of: #"(?<![A-Za-z])Color\("#, options: .regularExpression) == nil && !code.contains(".font("),
+            "the kit draws everything; the extension composes")
         let bundle = RawDefaultsTests.code(try read("Widgets/Home/NoctisWidgets.swift"))
         #expect(bundle.contains("NoctisWindDownLiveActivity()"))
     }

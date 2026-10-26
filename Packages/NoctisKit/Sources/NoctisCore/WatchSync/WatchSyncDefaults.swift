@@ -24,7 +24,11 @@ public nonisolated final class WatchSyncDefaults: @unchecked Sendable {
         get { lock.withLock { defaults.object(forKey: Self.lastSentAtKey) as? Double }.map { Date(timeIntervalSince1970: $0) } }
         set {
             lock.withLock {
-                if let newValue { defaults.set(newValue.timeIntervalSince1970.rounded(), forKey: Self.lastSentAtKey) } else { defaults.removeObject(forKey: Self.lastSentAtKey) }
+                if let newValue {
+                    defaults.set(newValue.timeIntervalSince1970.rounded(), forKey: Self.lastSentAtKey)
+                } else {
+                    defaults.removeObject(forKey: Self.lastSentAtKey)
+                }
             }
         }
     }

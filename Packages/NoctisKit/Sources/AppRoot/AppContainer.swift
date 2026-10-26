@@ -81,7 +81,8 @@ public struct AppContainer {
         #if DEBUG
         // `-mockAppleAccount signedIn`: the signed-in screens on a simulator with no Apple ID (an in-memory identifier, never the Keychain).
         let launch = ProcessInfo.processInfo.arguments
-        let accountStore = launch.firstIndex(of: "-mockAppleAccount").map { launch.indices.contains($0 + 1) && launch[$0 + 1] == "signedIn" } == true
+        let accountStore =
+            launch.firstIndex(of: "-mockAppleAccount").map { launch.indices.contains($0 + 1) && launch[$0 + 1] == "signedIn" } == true
             ? AccountStore(keychain: MemoryAccountKeychain(userID: "mock-user"), checker: FixedCredentialChecker())
             : AccountStore()
         #else
@@ -208,7 +209,9 @@ public struct AppContainer {
                 let calendar = await reviewRepo.calendar()
                 let periods = ReviewListBuilder.candidates(now: now, weekday: 1, calendar: calendar)
                 for (index, period) in periods.enumerated() {
-                    if case .review(let stored) = await reviewRepo.review(period, profile: UserProfileSnapshot()), index % 2 == 1 { await reviewRepo.markSeen(stored.id) }
+                    if case .review(let stored) = await reviewRepo.review(period, profile: UserProfileSnapshot()), index % 2 == 1 {
+                        await reviewRepo.markSeen(stored.id)
+                    }
                 }
             }
         }
@@ -464,7 +467,8 @@ public struct AppContainer {
         self.soundsViewModel = SoundsViewModel(player: soundPlayer, defaultTimer: { preferences.values.soundsTimer }, isIncluded: { gate.isUnlocked($0) })
         // The Sleep sounds control (R48) is told what the one player does, so it shows what is true. At launch nothing plays: a record left by a
         // process the system ended is removed by the first state it sees.
-        let sleepSoundsPublisher = SleepSoundsPublisher(store: SleepSoundsStore(), reload: { ControlCenter.shared.reloadControls(ofKind: ControlKind.sleepSounds) })
+        let sleepSoundsPublisher = SleepSoundsPublisher(
+            store: SleepSoundsStore(), reload: { ControlCenter.shared.reloadControls(ofKind: ControlKind.sleepSounds) })
         soundPlayer.observe { sleepSoundsPublisher.apply($0) }
         sleepSoundsPublisher.apply(soundPlayer.state)
         let windDownStore = WindDownSessionStore(context: ModelContext(container))
@@ -544,55 +548,56 @@ public struct AppContainer {
         )
 
         // Data management (R41, R42): every store given an eraser and an exporter, and "Delete all NOCTIS data" its steps.
-        let dataManager = DataWiring.manager(DataWiringInputs(
-            model: model, preferences: preferences, defaults: NoctisUserDefaults.standard, profileStore: profileStore, alarmService: alarmService,
-            alarmStore: alarmStore, windDownStore: windDownStore, journal: journalStore, coachHistory: coachHistory, insightFile: insightFile,
-            snapshotStore: snapshotStore, notifications: NotificationScheduler(center: notificationCenter),
-            appVersion: {
-                let info = Bundle.main.infoDictionary
-                return "NOCTIS \(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"
-            },
-            stopAudio: {
-                soundPlayer.stop()
-                if meditation.isActive { meditation.end() }
-                breathing.end()
-            },
-            endWindDown: { windDown.end() },
-            signOutOfApple: { accountStore.deleteAccount() },
-            silenceReminders: {
-                preferences.onChange = nil
-                model.onProfileChange = nil
-                Task { await widgetPublisher.suspend() }
-            },
-            settleReminders: { await coordinator.settled() },
-            afterJournalDeleted: { journal.load() },
-            afterCoachDeleted: { await coachVM.loadHistory() },
-            clearMemory: {
-                await homeRepository.clearCache()
-                await sleepRepository.clearCache()
-                await recoveryRepository.clearCache()
-                await insightsRepo.clearCache()
-            },
-            forgetSoundChoices: {
-                soundPlayer.forgetSavedGains()
-                meditation.forgetChoices()
-            },
-            widgets: widgetPublisher,
-            reloadWidgets: { WidgetCenter.shared.reloadAllTimelines() },
-            watch: watchSync,
-            sleepSounds: sleepSoundsPublisher,
-            reloadControls: { ControlCenter.shared.reloadAllControls() },
-            endLiveActivities: { await LiveActivities.endAll() },
-            stopBackgroundUpdates: {
-                model.onHealthAuthorizationRequested = nil
-                await background?.stopBackgroundDelivery()
-            },
-            reviewFile: reviewFile,
-            afterReviewsDeleted: {
-                await reviewCardProvider.reviewsDeleted(weekday: reviewWeekday.current())
-                await homeVM.refreshReviewCards()
-            }
-        ))
+        let dataManager = DataWiring.manager(
+            DataWiringInputs(
+                model: model, preferences: preferences, defaults: NoctisUserDefaults.standard, profileStore: profileStore, alarmService: alarmService,
+                alarmStore: alarmStore, windDownStore: windDownStore, journal: journalStore, coachHistory: coachHistory, insightFile: insightFile,
+                snapshotStore: snapshotStore, notifications: NotificationScheduler(center: notificationCenter),
+                appVersion: {
+                    let info = Bundle.main.infoDictionary
+                    return "NOCTIS \(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"
+                },
+                stopAudio: {
+                    soundPlayer.stop()
+                    if meditation.isActive { meditation.end() }
+                    breathing.end()
+                },
+                endWindDown: { windDown.end() },
+                signOutOfApple: { accountStore.deleteAccount() },
+                silenceReminders: {
+                    preferences.onChange = nil
+                    model.onProfileChange = nil
+                    Task { await widgetPublisher.suspend() }
+                },
+                settleReminders: { await coordinator.settled() },
+                afterJournalDeleted: { journal.load() },
+                afterCoachDeleted: { await coachVM.loadHistory() },
+                clearMemory: {
+                    await homeRepository.clearCache()
+                    await sleepRepository.clearCache()
+                    await recoveryRepository.clearCache()
+                    await insightsRepo.clearCache()
+                },
+                forgetSoundChoices: {
+                    soundPlayer.forgetSavedGains()
+                    meditation.forgetChoices()
+                },
+                widgets: widgetPublisher,
+                reloadWidgets: { WidgetCenter.shared.reloadAllTimelines() },
+                watch: watchSync,
+                sleepSounds: sleepSoundsPublisher,
+                reloadControls: { ControlCenter.shared.reloadAllControls() },
+                endLiveActivities: { await LiveActivities.endAll() },
+                stopBackgroundUpdates: {
+                    model.onHealthAuthorizationRequested = nil
+                    await background?.stopBackgroundDelivery()
+                },
+                reviewFile: reviewFile,
+                afterReviewsDeleted: {
+                    await reviewCardProvider.reviewsDeleted(weekday: reviewWeekday.current())
+                    await homeVM.refreshReviewCards()
+                }
+            ))
         self.dataManager = dataManager
         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
         #if DEBUG
@@ -746,7 +751,9 @@ struct DebugLaunchOptions {
         switch mockSubscription {
         case "monthly": return SubscriptionSummary(isPremium: true, plan: .monthly, willRenew: true, endDate: ends)
         case "yearly": return SubscriptionSummary(isPremium: true, plan: .yearly, willRenew: true, endDate: ends)
-        case "trial": return SubscriptionSummary(isPremium: true, plan: .yearly, isTrial: true, willRenew: true, endDate: Calendar.current.date(byAdding: .day, value: 5, to: Date()))
+        case "trial":
+            return SubscriptionSummary(
+                isPremium: true, plan: .yearly, isTrial: true, willRenew: true, endDate: Calendar.current.date(byAdding: .day, value: 5, to: Date()))
         case "ending": return SubscriptionSummary(isPremium: true, plan: .yearly, willRenew: false, endDate: ends)
         case "grace": return SubscriptionSummary(isPremium: true, plan: .monthly, willRenew: true, endDate: ends, isInGracePeriod: true)
         default: return .free

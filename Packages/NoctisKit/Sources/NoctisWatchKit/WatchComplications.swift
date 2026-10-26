@@ -28,13 +28,13 @@ public nonisolated enum WatchLink: String, Sendable, CaseIterable, Equatable {
 
     public init?(url: URL) {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              components.scheme?.lowercased() == Self.scheme,
-              // The host as written, not as decoded: "%72ecovery" is not "recovery".
-              let host = components.percentEncodedHost?.lowercased(),
-              components.user == nil, components.password == nil, components.port == nil,
-              components.query == nil, components.fragment == nil,
-              components.percentEncodedPath.isEmpty || components.percentEncodedPath == "/",
-              let link = WatchLink(rawValue: host)
+            components.scheme?.lowercased() == Self.scheme,
+            // The host as written, not as decoded: "%72ecovery" is not "recovery".
+            let host = components.percentEncodedHost?.lowercased(),
+            components.user == nil, components.password == nil, components.port == nil,
+            components.query == nil, components.fragment == nil,
+            components.percentEncodedPath.isEmpty || components.percentEncodedPath == "/",
+            let link = WatchLink(rawValue: host)
         else { return nil }
         self = link
     }
@@ -182,7 +182,8 @@ public nonisolated enum WatchComplications {
         let link = link(kind, input: input)
         // A summary with no plan to read: nothing for any kind.
         guard let snapshot = input.snapshot, state != .noSnapshotYet else {
-            return message(kind, glyph: "iphone", lines: ["Open NOCTIS", "on your iPhone"], inline: "Open NOCTIS on iPhone", spoken: WatchCopy.getStarted, link: link)
+            return message(
+                kind, glyph: "iphone", lines: ["Open NOCTIS", "on your iPhone"], inline: "Open NOCTIS on iPhone", spoken: WatchCopy.getStarted, link: link)
         }
         // The kinds the person's plan does not include: a plain "Premium" state, whatever the numbers are (R62).
         if WatchGate.isLocked(kind, tier: snapshot.tier) { return premium(kind, link: link) }
@@ -191,16 +192,22 @@ public nonisolated enum WatchComplications {
         guard state.showsNumbers else {
             switch state {
             case .waitingForToday:
-                return message(kind, glyph: "hourglass", lines: ["Waiting for", "last night's sleep"], inline: "Waiting for sleep data", spoken: WatchCopy.waiting, link: link)
+                return message(
+                    kind, glyph: "hourglass", lines: ["Waiting for", "last night's sleep"], inline: "Waiting for sleep data", spoken: WatchCopy.waiting,
+                    link: link)
             case .learning(let nights):
                 return message(
-                    kind, glyph: "chart.line.uptrend.xyaxis", lines: [WidgetCopy.learningTitle, WidgetCopy.nights(nights)], inline: "Learning · \(WidgetCopy.nights(nights))",
+                    kind, glyph: "chart.line.uptrend.xyaxis", lines: [WidgetCopy.learningTitle, WidgetCopy.nights(nights)],
+                    inline: "Learning · \(WidgetCopy.nights(nights))",
                     spoken: WidgetCopy.learningLine(nights), link: link
                 )
             case .gap:
-                return message(kind, glyph: "moon.zzz", lines: ["No sleep recorded", "last night"], inline: "No sleep last night", spoken: WatchCopy.noSleep, link: link)
+                return message(
+                    kind, glyph: "moon.zzz", lines: ["No sleep recorded", "last night"], inline: "No sleep last night", spoken: WatchCopy.noSleep, link: link)
             default:
-                return message(kind, glyph: "heart.text.square", lines: ["Open NOCTIS", "to connect Apple Health"], inline: "Open NOCTIS for Health", spoken: WatchCopy.connectHealth, link: link)
+                return message(
+                    kind, glyph: "heart.text.square", lines: ["Open NOCTIS", "to connect Apple Health"], inline: "Open NOCTIS for Health",
+                    spoken: WatchCopy.connectHealth, link: link)
             }
         }
         let age = input.staleLine
@@ -277,7 +284,9 @@ public nonisolated enum WatchComplications {
                 inline = [.text("Bed \(bedTime)")]
             }
             if let score { spoken.append("Recovery \(score)") }
-            if let last = snapshot.lastNight { spoken.append("\(age == nil ? "Slept" : "Last recorded sleep") \(WidgetFormat.spokenDuration(last.asleepMinutes))") }
+            if let last = snapshot.lastNight {
+                spoken.append("\(age == nil ? "Slept" : "Last recorded sleep") \(WidgetFormat.spokenDuration(last.asleepMinutes))")
+            }
             if let age { spoken.append(age) }
         }
         if let score, entry.mode == .evening { spoken.insert("Recovery \(score)", at: 0) }
@@ -292,7 +301,8 @@ public nonisolated enum WatchComplications {
 
     private static func sleep(snapshot: WidgetSnapshot, age: String?, format: WidgetFormat, link: WatchLink) -> WatchComplicationContent {
         guard let night = snapshot.lastNight else {
-            return message(.sleep, glyph: "moon.zzz", lines: ["No sleep recorded", "last night"], inline: "No sleep last night", spoken: WatchCopy.noSleep, link: link)
+            return message(
+                .sleep, glyph: "moon.zzz", lines: ["No sleep recorded", "last night"], inline: "No sleep last night", spoken: WatchCopy.noSleep, link: link)
         }
         let duration = WidgetFormat.compactDuration(night.asleepMinutes)
         let caption = age == nil ? "Slept" : "Last slept"
@@ -310,12 +320,14 @@ public nonisolated enum WatchComplications {
 
     private static func quality(snapshot: WidgetSnapshot, age: String?, format: WidgetFormat, link: WatchLink) -> WatchComplicationContent {
         guard let night = snapshot.lastNight else {
-            return message(.quality, glyph: "moon.zzz", lines: ["No sleep recorded", "last night"], inline: "No sleep last night", spoken: WatchCopy.noSleep, link: link)
+            return message(
+                .quality, glyph: "moon.zzz", lines: ["No sleep recorded", "last night"], inline: "No sleep last night", spoken: WatchCopy.noSleep, link: link)
         }
         guard let score = night.quality else {
             // Numbers for the night, but no score for it: never one made up.
             return WatchComplicationContent(
-                kind: .quality, gauge: nil, centerText: "–", centerGlyph: nil, centerIsHealth: false, rectangular: [[.text("Sleep quality")], [.text("No score for last night")]],
+                kind: .quality, gauge: nil, centerText: "–", centerGlyph: nil, centerIsHealth: false,
+                rectangular: [[.text("Sleep quality")], [.text("No score for last night")]],
                 stages: nil, inline: [.text("Sleep quality - none")], link: link, accessibilityLabel: "Sleep quality: no score for last night"
             )
         }

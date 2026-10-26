@@ -1,6 +1,7 @@
 import Foundation
 import HealthProviding
 import Testing
+
 @testable import HomeFeature
 @testable import InsightsKit
 @testable import NoctisCore
@@ -54,9 +55,10 @@ struct InsightLanguageTests {
     }
 
     @Test func theBannedListIsTheOneTheBriefNames() {
-        #expect(Set(InsightScreenBuilder.bannedWords) == [
-            "cause", "because", "diagnos", "disease", "sick", "insomnia", "apnea", "should", "must", "poor", "bad", "debt", "danger", "warning", "worry",
-        ])
+        #expect(
+            Set(InsightScreenBuilder.bannedWords) == [
+                "cause", "because", "diagnos", "disease", "sick", "insomnia", "apnea", "should", "must", "poor", "bad", "debt", "danger", "warning", "worry",
+            ])
     }
 
     @Test func theLintWouldCatchABannedWord() {
@@ -145,8 +147,12 @@ struct InsightLanguageTests {
     }
 
     @Test func theConfidenceLineNamesTheNightsUsed() {
-        #expect(content(R.record(.sleepDurationShift, R.duration(delta: -70).evidence, confidence: .moderate, nights: 23)).confidenceLine == "Moderate confidence · based on 23 nights")
-        #expect(content(R.record(.sleepDurationShift, R.duration(delta: -70).evidence, confidence: .low, nights: 1)).confidenceLine == "Low confidence · based on 1 night")
+        #expect(
+            content(R.record(.sleepDurationShift, R.duration(delta: -70).evidence, confidence: .moderate, nights: 23)).confidenceLine
+                == "Moderate confidence · based on 23 nights")
+        #expect(
+            content(R.record(.sleepDurationShift, R.duration(delta: -70).evidence, confidence: .low, nights: 1)).confidenceLine
+                == "Low confidence · based on 1 night")
         #expect(content(R.pattern()).confidenceLine == "High confidence · based on 33 nights")
     }
 

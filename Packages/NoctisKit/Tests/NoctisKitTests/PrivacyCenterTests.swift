@@ -33,13 +33,14 @@ private func with(_ category: DataCategory, destination: DataDestination? = nil,
 struct PrivacyStatementTests {
     @Test func theHeadlineStatementsAreTheOnesThatAreTrue() {
         let texts = PrivacyStatements.headline(shared).map(\.text)
-        #expect(texts == [
-            "NOCTIS reads your sleep and heart data from Apple Health. It never writes to Health.",
-            "Your data is stored on this iPhone.",
-            "A summary of your recovery and sleep is sent to your Apple Watch.",
-            "Coach answers are made on your iPhone or built from your data.",
-            "Nothing is sold or shared.",
-        ])
+        #expect(
+            texts == [
+                "NOCTIS reads your sleep and heart data from Apple Health. It never writes to Health.",
+                "Your data is stored on this iPhone.",
+                "A summary of your recovery and sleep is sent to your Apple Watch.",
+                "Coach answers are made on your iPhone or built from your data.",
+                "Nothing is sold or shared.",
+            ])
         #expect(PrivacyStatements.noSync(shared)?.text == "Nothing syncs between devices.")
         #expect(PrivacyStatements.noAccount(shared)?.text == "NOCTIS has no account, so there is no account to delete.")
     }
@@ -65,12 +66,17 @@ struct PrivacyStatementTests {
 
         // Facts.
         let facts = shared.facts
-        let writes = changed(facts: DataInventoryFacts(healthAccess: .readWrite, hasAccount: facts.hasAccount, coachUsesRemoteModel: false, coachNeverSees: facts.coachNeverSees))
-        #expect(PrivacyStatements.healthReadOnly(writes) == nil && PrivacyStatements.readOnlyNote(writes) == nil && PrivacyStatements.healthKeeps(writes) == nil)
-        let remote = changed(facts: DataInventoryFacts(healthAccess: .readOnly, hasAccount: false, coachUsesRemoteModel: true, coachNeverSees: facts.coachNeverSees))
+        let writes = changed(
+            facts: DataInventoryFacts(healthAccess: .readWrite, hasAccount: facts.hasAccount, coachUsesRemoteModel: false, coachNeverSees: facts.coachNeverSees)
+        )
+        #expect(
+            PrivacyStatements.healthReadOnly(writes) == nil && PrivacyStatements.readOnlyNote(writes) == nil && PrivacyStatements.healthKeeps(writes) == nil)
+        let remote = changed(
+            facts: DataInventoryFacts(healthAccess: .readOnly, hasAccount: false, coachUsesRemoteModel: true, coachNeverSees: facts.coachNeverSees))
         #expect(PrivacyStatements.coachLocal(remote) == nil && PrivacyStatements.coachWritten(remote) == nil)
         #expect(PrivacyStatements.coachShort(remote).contains("off your iPhone"))
-        let account = changed(facts: DataInventoryFacts(healthAccess: .readOnly, hasAccount: true, coachUsesRemoteModel: false, coachNeverSees: facts.coachNeverSees))
+        let account = changed(
+            facts: DataInventoryFacts(healthAccess: .readOnly, hasAccount: true, coachUsesRemoteModel: false, coachNeverSees: facts.coachNeverSees))
         #expect(PrivacyStatements.noAccount(account) == nil)
     }
 
@@ -91,12 +97,16 @@ struct PrivacyStatementTests {
     }
 
     @Test func theLinesOtherScreensShowComeFromTheInventory() {
-        #expect(PrivacyStatements.journalLine(shared) == "Kept only on this iPhone, and locked when it is. Not synced, not backed up, and never used by Coach or your insights.")
+        #expect(
+            PrivacyStatements.journalLine(shared)
+                == "Kept only on this iPhone, and locked when it is. Not synced, not backed up, and never used by Coach or your insights.")
         #expect(ReflectCopy.privacyLine == PrivacyStatements.journalLine(shared))
         #expect(CoachHistoryContent.emptyMessage == "What you ask Coach, and the answers built from your data, are kept here on this iPhone only.")
         #expect(PrivacyStatements.nameStays(shared) == "Your name stays on this iPhone.")
         #expect(PrivacyStatements.readOnlyNote(shared) == "Read-only. You control access in the Health app at any time.")
-        #expect(PrivacyStatements.healthKeeps(shared) == "NOCTIS only reads. It never writes to Health, and it keeps only numbers worked out from it, on this iPhone.")
+        #expect(
+            PrivacyStatements.healthKeeps(shared)
+                == "NOCTIS only reads. It never writes to Health, and it keeps only numbers worked out from it, on this iPhone.")
         #expect(NotificationsCopy.privacyNote == "Reminders never carry a number from your Health data.")
         #expect(HealthCopy.howAccessWorks.last == PrivacyStatements.healthKeeps(shared))
         // And they go when the inventory stops backing them.
@@ -109,9 +119,14 @@ struct PrivacyStatementTests {
     @Test func coachsSheetIsWrittenFromTheInventory() {
         #expect(CoachPrivacySheet.sees == shared.coachSees)
         #expect(CoachPrivacySheet.sees.count == 6)
-        #expect(CoachPrivacySheet.neverSees == "It never sees your name, your Apple Account, individual Health readings or when they were taken, which app or device recorded them, or what you wrote in the Journal.")
+        #expect(
+            CoachPrivacySheet.neverSees
+                == "It never sees your name, your Apple Account, individual Health readings or when they were taken, which app or device recorded them, or what you wrote in the Journal."
+        )
         #expect(CoachPrivacySheet.written?.contains("Nothing you ask and nothing about your health is sent to a server") == true)
-        #expect(CoachPrivacySheet.stored.contains("aren't synced") && CoachPrivacySheet.stored.contains("aren't in backups") && CoachPrivacySheet.stored.contains("protected while your iPhone is locked"))
+        #expect(
+            CoachPrivacySheet.stored.contains("aren't synced") && CoachPrivacySheet.stored.contains("aren't in backups")
+                && CoachPrivacySheet.stored.contains("protected while your iPhone is locked"))
     }
 
     @Test func helpsPrivacyAnswersAreMadeFromTheInventory() {
@@ -169,10 +184,15 @@ struct PrivacyCenterContentTests {
         #expect(ids.contains(.preferences) && ids.contains(.journal) && ids.contains(.cachedSummaries))
         #expect(!ids.contains(.insightHistory), "nothing in a place that holds nothing the person wrote is not listed")
         #expect(!ids.contains(.appleHealth) && !ids.contains(.memorySummaries) && !ids.contains(.reminders), "Apple's or memory only")
-        #expect(page.sizes.first { $0.category == .cachedSummaries }?.value == "3 KB" || page.sizes.first { $0.category == .cachedSummaries }?.value?.contains("KB") == true)
+        #expect(
+            page.sizes.first { $0.category == .cachedSummaries }?.value == "3 KB"
+                || page.sizes.first { $0.category == .cachedSummaries }?.value?.contains("KB") == true)
         #expect(page.sizes.first { $0.category == .journal }?.value == "Nothing stored", "the Journal says so when it is empty")
         #expect(page.storedTotal.contains("KB"))
-        #expect(content.deletable.map(\.title) == ["Journal", "Coach history", "Insights history", "Reviews", "Wind-down history", "Cached summaries", "Preferences and goals", "Files set aside"])
+        #expect(
+            content.deletable.map(\.title) == [
+                "Journal", "Coach history", "Insights history", "Reviews", "Wind-down history", "Cached summaries", "Preferences and goals", "Files set aside",
+            ])
         #expect(content.deleteNote.hasPrefix("Deleting NOCTIS from this iPhone"), "no Data management page yet to point at")
         #expect(PrivacyCenterBuilder.content(shared, dataManagement: true).deleteNote.contains("Data management"))
     }
@@ -195,7 +215,9 @@ struct PrivacyCenterContentTests {
         for category in shared.categories {
             let page = PrivacyCategoryContent.make(category, in: shared)
             #expect(!page.summary.isEmpty && !page.contents.isEmpty && !page.where_.isEmpty, Comment(rawValue: "\(category.id)"))
-            #expect(!page.leaves.isEmpty && !page.syncs.isEmpty && !page.backups.isEmpty && !page.protection.isEmpty && !page.size.isEmpty && !page.deletion.isEmpty, Comment(rawValue: "\(category.id)"))
+            #expect(
+                !page.leaves.isEmpty && !page.syncs.isEmpty && !page.backups.isEmpty && !page.protection.isEmpty && !page.size.isEmpty
+                    && !page.deletion.isEmpty, Comment(rawValue: "\(category.id)"))
             #expect(page.syncs == "No. It does not sync between devices.")
         }
         let journal = PrivacyCategoryContent.make(shared[.journal], in: shared)
@@ -216,7 +238,8 @@ struct PrivacyCenterContentTests {
 nonisolated struct PrivacyWordsComeFromTheInventoryTests {
     /// Where a privacy sentence may be written out: the inventory, and what builds words from it.
     static let allowed: Set<String> = [
-        "NoctisCore/DataInventory.swift", "NoctisCore/DataInventory+Shared.swift", "NoctisCore/PrivacyStatements.swift", "NoctisCore/PrivacyCenterContent.swift",
+        "NoctisCore/DataInventory.swift", "NoctisCore/DataInventory+Shared.swift", "NoctisCore/PrivacyStatements.swift",
+        "NoctisCore/PrivacyCenterContent.swift",
         // The Privacy Center's own headings ("What stays on this iPhone"); every sentence under them comes from `PrivacyCenterContent`.
         "ProfileFeature/PrivacyViews.swift",
     ]
@@ -245,7 +268,9 @@ nonisolated struct PrivacyWordsComeFromTheInventoryTests {
         for path in ["Packages/NoctisKit/Sources/ProfileFeature/Resources/Help.xcstrings"] {
             let text = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent(path), encoding: .utf8).lowercased()
             // Help's storage answer is a stub; the rest may talk about the models and the app, not about where data goes.
-            for phrase in ["sent to a server", "never leaves", "not synced", "stays on this"] { #expect(!text.contains(phrase), Comment(rawValue: "Help.xcstrings says \"\(phrase)\"")) }
+            for phrase in ["sent to a server", "never leaves", "not synced", "stays on this"] {
+                #expect(!text.contains(phrase), Comment(rawValue: "Help.xcstrings says \"\(phrase)\""))
+            }
         }
     }
 }

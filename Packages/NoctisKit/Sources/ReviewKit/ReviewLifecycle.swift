@@ -106,7 +106,9 @@ public nonisolated struct ReviewLibrary: Sendable, Equatable, Codable {
 
     /// Records of another version, or whose dates are not the dates their id names, are dropped, never half-read: they are made again from Health when asked for.
     public mutating func dropUnreadable() {
-        entries = entries.filter { $0.value.record.version == ReviewRecord.currentVersion && $0.key == $0.value.record.id && ReviewPeriod.period(for: $0.key) == $0.value.record.period }
+        entries = entries.filter {
+            $0.value.record.version == ReviewRecord.currentVersion && $0.key == $0.value.record.id && ReviewPeriod.period(for: $0.key) == $0.value.record.period
+        }
     }
 
     private mutating func prune() {

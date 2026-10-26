@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import DesignSystem
 @testable import HealthProviding
 @testable import NoctisCore
@@ -78,10 +79,14 @@ struct SleepSnapshotTests {
         let unauthorized = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: false)
         let snap = await SleepRepository(provider: unauthorized, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot())
         #expect(snap.dataState == .permissionRequired && snap.records.isEmpty)
-        let unavailable = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: false)
-        #expect(await SleepRepository(provider: unavailable, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot()).dataState == .healthDataUnavailable)
+        let unavailable = MockHealthKitProvider(
+            scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: false)
+        #expect(
+            await SleepRepository(provider: unavailable, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot()).dataState
+                == .healthDataUnavailable)
         let failing = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true, failsQueries: true)
-        #expect(await SleepRepository(provider: failing, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot()).dataState == .failed)
+        #expect(
+            await SleepRepository(provider: failing, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot()).dataState == .failed)
     }
 }
 

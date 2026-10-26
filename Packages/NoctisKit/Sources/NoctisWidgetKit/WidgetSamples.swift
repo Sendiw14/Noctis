@@ -18,8 +18,10 @@ public enum WidgetSamples {
             return fixture
         }
         #endif
-        let plan = WidgetPlan(wakeMinutes: 7 * 60, needMinutes: 8 * 60, bedtimeMinutes: 23 * 60, windowStartMinutes: 22 * 60 + 45, windowEndMinutes: 23 * 60 + 15)
-        let night = WidgetNight(asleepMinutes: 402, stages: WidgetStages(deep: 74, core: 236, rem: 92), bedtimeMinutes: 23 * 60 + 4, wakeMinutes: 6 * 60 + 52, quality: 81)
+        let plan = WidgetPlan(
+            wakeMinutes: 7 * 60, needMinutes: 8 * 60, bedtimeMinutes: 23 * 60, windowStartMinutes: 22 * 60 + 45, windowEndMinutes: 23 * 60 + 15)
+        let night = WidgetNight(
+            asleepMinutes: 402, stages: WidgetStages(deep: 74, core: 236, rem: 92), bedtimeMinutes: 23 * 60 + 4, wakeMinutes: 6 * 60 + 52, quality: 81)
         let fullRing = [
             WidgetRingSegment(kind: .sleepDuration, weight: 0.35, fraction: 0.82), WidgetRingSegment(kind: .hrv, weight: 0.25, fraction: 0.64),
             WidgetRingSegment(kind: .restingHeartRate, weight: 0.2, fraction: 0.71), WidgetRingSegment(kind: .sleepConsistency, weight: 0.2, fraction: 0.9),

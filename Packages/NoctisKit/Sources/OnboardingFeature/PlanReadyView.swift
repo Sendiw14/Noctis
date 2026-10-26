@@ -53,7 +53,8 @@ enum PlanReadyFacts {
     /// The three lines under "Your first two weeks": the copy the plan has always had, without its "Today:", "Day 7:" and "Day 14:" (the badge says that now),
     /// and with the first letter up.
     static func timeline(nightCount: Int) -> [(day: PlanReadyDay, text: String)] {
-        let first = nightCount > 0
+        let first =
+            nightCount > 0
             ? "You already have \(nightCount) nights, so NOCTIS starts learning"
             : "Tonight is your first night, read in the morning"
         return [(.today, first), (.daySeven, "Your first weekly review"), (.dayFourteen, "Early patterns appear")]
@@ -164,13 +165,17 @@ private struct PlanReadyContent: View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(spacing: 10) {
                 ForEach(Array(items.enumerated()), id: \.offset) { index, item in
-                    StatTile(label: item.label, icon: item.icon, color: item.color, parts: item.parts, spoken: item.spoken, wide: true, compact: compact, dark: dark, index: index, appeared: appeared)
+                    StatTile(
+                        label: item.label, icon: item.icon, color: item.color, parts: item.parts, spoken: item.spoken, wide: true, compact: compact, dark: dark,
+                        index: index, appeared: appeared)
                 }
             }
         } else {
             HStack(spacing: 10) {
                 ForEach(Array(items.enumerated()), id: \.offset) { index, item in
-                    StatTile(label: item.label, icon: item.icon, color: item.color, parts: item.parts, spoken: item.spoken, wide: false, compact: compact, dark: dark, index: index, appeared: appeared)
+                    StatTile(
+                        label: item.label, icon: item.icon, color: item.color, parts: item.parts, spoken: item.spoken, wide: false, compact: compact,
+                        dark: dark, index: index, appeared: appeared)
                 }
             }
         }

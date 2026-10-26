@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import HealthProviding
 @testable import HomeFeature
 @testable import NoctisCore
@@ -38,7 +39,7 @@ struct HomeModeTests {
     @Test func aBedtimeAfterMidnightMovesTheEveningLater() {
         var profile = UserProfileSnapshot()
         profile.typicalWakeMinutes = 8 * 60 + 30
-        let late = TonightPlan(profile: profile) // bedtime 12:30 AM, evening from 9:30 PM
+        let late = TonightPlan(profile: profile)  // bedtime 12:30 AM, evening from 9:30 PM
         #expect(mode(at(24, 21, 29), plan: late) == .day)
         #expect(mode(at(24, 21, 30), plan: late) == .evening)
         #expect(mode(at(25, 0, 15), plan: late) == .evening)
@@ -109,10 +110,13 @@ struct HomeModeTests {
 
     // MARK: - Screens
 
-    private func screen(_ scenario: MockScenario, at date: Date, authorized: Bool = true, available: Bool = true, fails: Bool = false,
-                        override: HomeMode? = nil) async -> HomeScreen {
-        let provider = MockHealthKitProvider(scenario: scenario, referenceDate: date, calendar: calendar,
-                                             startAuthorized: authorized, isHealthDataAvailable: available, failsQueries: fails)
+    private func screen(
+        _ scenario: MockScenario, at date: Date, authorized: Bool = true, available: Bool = true, fails: Bool = false,
+        override: HomeMode? = nil
+    ) async -> HomeScreen {
+        let provider = MockHealthKitProvider(
+            scenario: scenario, referenceDate: date, calendar: calendar,
+            startAuthorized: authorized, isHealthDataAvailable: available, failsQueries: fails)
         let snapshot = await HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { date }).refresh(profile: UserProfileSnapshot())
         return HomeScreenBuilder.build(snapshot, now: date, calendar: calendar, locale: locale, modeOverride: override)
     }
@@ -139,7 +143,10 @@ struct HomeModeTests {
         #expect(day.mode == .day)
         #expect(day.header.dateCaption == "THURSDAY, SEPTEMBER 24")
         let sentence = day.header.summary.text(at: at(24, 10))
-        guard case .scored(let scored) = day.recovery else { Issue.record("expected a score"); return }
+        guard case .scored(let scored) = day.recovery else {
+            Issue.record("expected a score")
+            return
+        }
         let slept = try #require(day.lastNight?.duration)
         #expect(sentence == "You slept \(slept.plain). Recovery is \(scored.score).")
     }

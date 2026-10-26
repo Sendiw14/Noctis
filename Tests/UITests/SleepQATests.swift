@@ -107,7 +107,10 @@ final class SleepQATests: XCTestCase {
         XCTAssertTrue(chart.waitForExistence(timeout: 5))
         let deep = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Deep '")).firstMatch
         XCTAssertTrue(deep.waitForExistence(timeout: 5))
-        while !deep.isHittable { app.swipeUp() ; QA.pause(0.3) }
+        while !deep.isHittable {
+            app.swipeUp()
+            QA.pause(0.3)
+        }
         deep.tap()
         QA.pause(0.8)
         XCTAssertTrue(((chart.value as? String) ?? "").hasPrefix("Deep · "), (chart.value as? String) ?? "")
@@ -206,17 +209,23 @@ final class SleepQATests: XCTestCase {
         let app = launchSleep()
         settled(app, waitFor: "sleep.hero")
         choose("Week", app)
-        for (card, sheet, name) in [("sleep.consistency", "sleep.consistencySheet", "consistency"), ("sleep.balance", "sleep.balanceSheet", "balance"), ("sleep.timing", "sleep.timingSheet", "timing")] {
+        for (card, sheet, name) in [
+            ("sleep.consistency", "sleep.consistencySheet", "consistency"), ("sleep.balance", "sleep.balanceSheet", "balance"),
+            ("sleep.timing", "sleep.timingSheet", "timing"),
+        ] {
             tapScrolling(element(app, card), in: app)
             let opened = element(app, sheet).waitForExistence(timeout: 5)
             if !opened { QA.shot("sleep-sheet-missing-\(name)") }
             XCTAssertTrue(opened, sheet)
             QA.pause(0.8)
             QA.shot("sleep-sheet-\(name)")
-            XCTAssertTrue(app.staticTexts["Patterns matter more than perfect nights."].exists || {
-                app.swipeUp(); QA.pause(0.3)
-                return app.staticTexts["Patterns matter more than perfect nights."].exists
-            }())
+            XCTAssertTrue(
+                app.staticTexts["Patterns matter more than perfect nights."].exists
+                    || {
+                        app.swipeUp()
+                        QA.pause(0.3)
+                        return app.staticTexts["Patterns matter more than perfect nights."].exists
+                    }())
             let close = app.buttons["Close"]
             XCTAssertTrue(close.waitForExistence(timeout: 3))
             close.tap()
@@ -277,7 +286,9 @@ final class SleepQATests: XCTestCase {
         let scrollView = app.scrollViews.firstMatch
         for _ in 0..<2 {
             scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.85))
-                .press(forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.2)), withVelocity: .slow, thenHoldForDuration: 0.3)
+                .press(
+                    forDuration: 0.05, thenDragTo: scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.2)), withVelocity: .slow,
+                    thenHoldForDuration: 0.3)
             QA.pause(0.4)
         }
         XCTAssertNotEqual(hero.frame.minY, topY, accuracy: 20, "scrolled away")

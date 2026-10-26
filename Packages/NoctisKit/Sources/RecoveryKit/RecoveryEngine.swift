@@ -18,7 +18,8 @@ public enum RecoveryEngine {
             return .learning(nightsSoFar: complete.count)
         }
         guard let lastNight = complete.max(by: { $0.wakeTime < $1.wakeTime }),
-              now.timeIntervalSince(lastNight.wakeTime) <= RecoveryModelV1.lastNightWindow else {
+            now.timeIntervalSince(lastNight.wakeTime) <= RecoveryModelV1.lastNightWindow
+        else {
             return .noSleepLastNight
         }
         let baselines = BaselineEngine.baselines(for: lastNight.night, history: complete)
@@ -31,7 +32,8 @@ public enum RecoveryEngine {
         let windowResults = window.compactMap { night in
             scoreResultAsOfThatMorning(night, complete: complete, needMinutes: needMinutes, model: model)
         }
-        let today = scored
+        let today =
+            scored
             .with(histories: histories(lastNight, window: window, baselines: baselines, factors: scored.factors))
             .with(usuals: usuals(windowResults))
         let windowScores = windowResults.map { Double($0.score) }
@@ -54,13 +56,16 @@ public enum RecoveryEngine {
     /// same model against that night's own baselines. A night without
     /// sleep, not yet over at `now`, or from while the person was still
     /// learning (under 5 nights) has no score.
-    public static func nightlyScores(history: [NightMetrics], nights: [SleepNightKey], needMinutes: Double, asOf now: Date, model: RecoveryModel = .current) -> [SleepNightKey: Int] {
+    public static func nightlyScores(
+        history: [NightMetrics], nights: [SleepNightKey], needMinutes: Double, asOf now: Date, model: RecoveryModel = .current
+    ) -> [SleepNightKey: Int] {
         let complete = history.filter { $0.wakeTime <= now }
         let byNight = Dictionary(complete.map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
         var scores: [SleepNightKey: Int] = [:]
         for key in nights {
             guard let night = byNight[key],
-                  let score = scoreAsOfThatMorning(night, complete: complete, needMinutes: needMinutes, model: model) else { continue }
+                let score = scoreAsOfThatMorning(night, complete: complete, needMinutes: needMinutes, model: model)
+            else { continue }
             scores[key] = score
         }
         return scores
@@ -148,7 +153,9 @@ public enum RecoveryEngine {
     /// when all are within. Consistency is judged on whichever of bedtime
     /// and wake time is further off.
     static func topContributor(_ night: NightMetrics, _ baselines: Baselines, factors: [RecoveryFactor]) -> RecoveryContributor? {
-        func measure(_ factor: RecoveryFactor, _ measure: RecoveryContributor.Measure, value: Double?, baseline: Baseline?, floor: Double) -> RecoveryContributor? {
+        func measure(
+            _ factor: RecoveryFactor, _ measure: RecoveryContributor.Measure, value: Double?, baseline: Baseline?, floor: Double
+        ) -> RecoveryContributor? {
             guard let value, let baseline else { return nil }
             let z = RecoveryNormalRange.standardDeviations(value, from: baseline, floor: floor)
             return RecoveryContributor(
@@ -159,13 +166,15 @@ public enum RecoveryEngine {
         let candidates = factors.compactMap { factor -> RecoveryContributor? in
             switch factor.kind {
             case .sleepDuration:
-                return measure(factor, .sleepDuration, value: night.asleepMinutes, baseline: baselines.sleepDuration,
-                               floor: RecoveryNormalRange.sleepDurationStandardDeviationFloor)
+                return measure(
+                    factor, .sleepDuration, value: night.asleepMinutes, baseline: baselines.sleepDuration,
+                    floor: RecoveryNormalRange.sleepDurationStandardDeviationFloor)
             case .hrv:
                 return measure(factor, .hrv, value: night.hrv, baseline: baselines.hrv, floor: RecoveryModelV2.hrvStandardDeviationFloor)
             case .restingHeartRate:
-                return measure(factor, .restingHeartRate, value: night.restingHeartRate, baseline: baselines.restingHeartRate,
-                               floor: RecoveryModelV2.restingStandardDeviationFloor)
+                return measure(
+                    factor, .restingHeartRate, value: night.restingHeartRate, baseline: baselines.restingHeartRate,
+                    floor: RecoveryModelV2.restingStandardDeviationFloor)
             case .sleepConsistency:
                 let floor = RecoveryNormalRange.timingStandardDeviationFloor
                 return [
@@ -177,7 +186,8 @@ public enum RecoveryEngine {
             }
         }
         // `max` keeps the first of equals, so ties go to the factor listed first.
-        return candidates
+        return
+            candidates
             .filter { !RecoveryNormalRange.contains(standardDeviations: $0.standardDeviations) }
             .reduce(nil) { best, next in
                 guard let best else { return next }
@@ -193,7 +203,8 @@ public enum RecoveryEngine {
     static func histories(_ night: NightMetrics, window: [NightMetrics], baselines: Baselines, factors: [RecoveryFactor]) -> [RecoveryFactorHistory] {
         let byNight = Dictionary(window.map { ($0.night, $0) }, uniquingKeysWith: { first, _ in first })
         let keys = (1...BaselineEngine.windowNights).reversed().map { night.night.adding(days: -$0) }
-        func history(_ kind: RecoveryFactorKind, today: Double?, baseline: Baseline?, floor: Double, value: (NightMetrics) -> Double?) -> RecoveryFactorHistory? {
+        func history(_ kind: RecoveryFactorKind, today: Double?, baseline: Baseline?, floor: Double, value: (NightMetrics) -> Double?) -> RecoveryFactorHistory?
+        {
             guard let today, let baseline else { return nil }
             return RecoveryFactorHistory(
                 kind: kind,
@@ -206,16 +217,22 @@ public enum RecoveryEngine {
         return factors.compactMap { factor in
             switch factor.kind {
             case .sleepDuration:
-                history(.sleepDuration, today: night.asleepMinutes, baseline: baselines.sleepDuration,
-                        floor: RecoveryNormalRange.sleepDurationStandardDeviationFloor) { $0.asleepMinutes }
+                history(
+                    .sleepDuration, today: night.asleepMinutes, baseline: baselines.sleepDuration,
+                    floor: RecoveryNormalRange.sleepDurationStandardDeviationFloor
+                ) { $0.asleepMinutes }
             case .hrv:
                 history(.hrv, today: night.hrv, baseline: baselines.hrv, floor: RecoveryModelV2.hrvStandardDeviationFloor) { $0.hrv }
             case .restingHeartRate:
-                history(.restingHeartRate, today: night.restingHeartRate, baseline: baselines.restingHeartRate,
-                        floor: RecoveryModelV2.restingStandardDeviationFloor) { $0.restingHeartRate }
+                history(
+                    .restingHeartRate, today: night.restingHeartRate, baseline: baselines.restingHeartRate,
+                    floor: RecoveryModelV2.restingStandardDeviationFloor
+                ) { $0.restingHeartRate }
             case .sleepConsistency:
-                history(.sleepConsistency, today: night.bedtimeMinutes, baseline: baselines.bedtime,
-                        floor: RecoveryNormalRange.timingStandardDeviationFloor) { $0.bedtimeMinutes }
+                history(
+                    .sleepConsistency, today: night.bedtimeMinutes, baseline: baselines.bedtime,
+                    floor: RecoveryNormalRange.timingStandardDeviationFloor
+                ) { $0.bedtimeMinutes }
             }
         }
     }
@@ -225,7 +242,8 @@ public enum RecoveryEngine {
     static func heartSignalsBothFarOff(_ factors: [RawFactor]) -> Bool {
         let limit = -RecoveryModelV3.heartCapStandardDeviations
         guard let hrv = factors.first(where: { $0.kind == .hrv })?.standardScore,
-              let resting = factors.first(where: { $0.kind == .restingHeartRate })?.standardScore else { return false }
+            let resting = factors.first(where: { $0.kind == .restingHeartRate })?.standardScore
+        else { return false }
         return hrv <= limit && resting <= limit
     }
 
@@ -241,7 +259,8 @@ public enum RecoveryEngine {
             case .hrv:
                 gaps[kind] = night.hrv == nil ? (baselines.hrvNights > 0 ? .notRecorded : .unavailable) : .buildingBaseline
             case .restingHeartRate:
-                gaps[kind] = night.restingHeartRate == nil
+                gaps[kind] =
+                    night.restingHeartRate == nil
                     ? (baselines.restingHeartRateNights > 0 ? .notRecorded : .unavailable)
                     : .buildingBaseline
             }
@@ -280,7 +299,8 @@ public enum RecoveryEngine {
         let ratio = night.asleepMinutes / needMinutes
         let score = ratio >= 1 ? 100 : 100 - (1 - ratio) * RecoveryModelV1.durationPointsPerShortfall
         let baseline = baselines.sleepDuration?.value
-        return RawFactor(kind: .sleepDuration, score: clamp(score), value: night.asleepMinutes, baseline: baseline, delta: baseline.map { night.asleepMinutes - $0 })
+        return RawFactor(
+            kind: .sleepDuration, score: clamp(score), value: night.asleepMinutes, baseline: baseline, delta: baseline.map { night.asleepMinutes - $0 })
     }
 
     private static func consistencyFactor(_ night: NightMetrics, _ baselines: Baselines) -> RawFactor? {
@@ -318,7 +338,8 @@ public enum RecoveryEngine {
         guard let resting = night.restingHeartRate, let baseline = baselines.restingHeartRate else { return nil }
         let spread = max(baseline.standardDeviation, RecoveryModelV2.restingStandardDeviationFloor)
         let z = (baseline.value - resting) / spread
-        return RawFactor(kind: .restingHeartRate, score: variationScore(z), value: resting, baseline: baseline.value, delta: resting - baseline.value, standardScore: z)
+        return RawFactor(
+            kind: .restingHeartRate, score: variationScore(z), value: resting, baseline: baseline.value, delta: resting - baseline.value, standardScore: z)
     }
 
     static func variationScore(_ z: Double) -> Double {

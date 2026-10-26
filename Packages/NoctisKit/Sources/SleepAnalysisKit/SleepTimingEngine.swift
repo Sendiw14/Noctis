@@ -46,7 +46,8 @@ public struct SleepTimingResult: Sendable, Equatable, Codable {
     public let suggested: SleepTimingRange?
     public let night: SleepNightKey
 
-    public init(typicalBedtime: Double?, typicalWake: Double?, nights: Int, recentShift: SleepTimingShift?, suggested: SleepTimingRange?, night: SleepNightKey) {
+    public init(typicalBedtime: Double?, typicalWake: Double?, nights: Int, recentShift: SleepTimingShift?, suggested: SleepTimingRange?, night: SleepNightKey)
+    {
         self.typicalBedtime = typicalBedtime
         self.typicalWake = typicalWake
         self.nights = nights
@@ -88,15 +89,17 @@ public enum SleepTimingEngine {
         let recent = metrics(recentNights - 1, 0)
         let prior = metrics(recentNights + priorNights - 1, recentNights)
         if recent.count >= minimumNights, prior.count >= minimumNights,
-           let recentBed = median(recent.map(\.bedtimeMinutes)), let priorBed = median(prior.map(\.bedtimeMinutes)),
-           let recentWake = median(recent.map(\.wakeMinutes)), let priorWake = median(prior.map(\.wakeMinutes)) {
+            let recentBed = median(recent.map(\.bedtimeMinutes)), let priorBed = median(prior.map(\.bedtimeMinutes)),
+            let recentWake = median(recent.map(\.wakeMinutes)), let priorWake = median(prior.map(\.wakeMinutes))
+        {
             shift = SleepTimingShift(bedtimeMinutes: recentBed - priorBed, wakeMinutes: recentWake - priorWake)
         }
 
         var suggested: SleepTimingRange?
         let month = metrics(suggestionWindowNights - 1, 0)
         if month.count >= suggestionMinimumNights,
-           let bed = middleHalf(month.map(\.bedtimeMinutes)), let wakeRange = middleHalf(month.map(\.wakeMinutes)) {
+            let bed = middleHalf(month.map(\.bedtimeMinutes)), let wakeRange = middleHalf(month.map(\.wakeMinutes))
+        {
             suggested = SleepTimingRange(bedtime: bed, wake: wakeRange)
         }
 

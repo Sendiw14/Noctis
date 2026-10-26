@@ -137,7 +137,9 @@ struct ScoredHeroView: View {
     }
 
     private var ring: some View {
-        Button { actions.openRecoveryDetail(nil) } label: {
+        Button {
+            actions.openRecoveryDetail(nil)
+        } label: {
             NoctisRingLayout(
                 maxDiameter: Self.ringDiameter,
                 narrowDiameter: Self.narrowRingDiameter,
@@ -331,7 +333,9 @@ struct FactorCapsulesView: View {
     }
 
     private func capsule(_ factor: FactorCell, index: Int) -> some View {
-        Button { open(factor.kind) } label: {
+        Button {
+            open(factor.kind)
+        } label: {
             VStack(spacing: NoctisSpacing.xxs) {
                 Circle().fill(factor.kind.tint).frame(width: 8, height: 8)
                 Text(factor.name)
@@ -670,7 +674,9 @@ struct CompactRecoveryCard: View {
     var body: some View {
         switch content {
         case .scored(let scored):
-            Button { openDetail(nil) } label: {
+            Button {
+                openDetail(nil)
+            } label: {
                 NoctisAppCard {
                     HStack(spacing: NoctisSpacing.md) {
                         NoctisRingLayout(maxDiameter: 72) {
@@ -734,7 +740,8 @@ struct CompactRecoveryCard: View {
     /// The ring beside the words; above them at accessibility sizes, where a 72pt ring beside the text left it a column of about 150pt
     /// (seven lines for "NOCTIS reads sleep from Apple Health..." on an SE at AX5).
     private func ringAndText<Text: View>(@ViewBuilder text: () -> Text) -> some View {
-        let layout = dynamicTypeSize.isAccessibilitySize
+        let layout =
+            dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: NoctisSpacing.md))
             : AnyLayout(HStackLayout(spacing: NoctisSpacing.md))
         return layout {

@@ -10,7 +10,9 @@ import Testing
 // eligibility), the renewal line is always the selected plan's, Save is worked out from the two real prices, and the benefit list is held to FeatureTable.
 struct PaywallFactsTests {
     private func plan(_ id: String, yearly: Bool, price: Decimal, shown: String, trial: Bool = false) -> PaywallPlan {
-        PaywallPlan(id: id, isYearly: yearly, displayPrice: shown, price: price, perMonthText: yearly ? "$3.33 / month" : nil, trialPhrase: trial ? "7 days" : nil, trialAdjective: trial ? "7-day" : nil)
+        PaywallPlan(
+            id: id, isYearly: yearly, displayPrice: shown, price: price, perMonthText: yearly ? "$3.33 / month" : nil, trialPhrase: trial ? "7 days" : nil,
+            trialAdjective: trial ? "7-day" : nil)
     }
 
     private func facts(selected: String = StoreProductID.yearly, eligible: Bool, yearlyTrial: Bool = true) -> PaywallFacts {
@@ -44,7 +46,8 @@ struct PaywallFactsTests {
         let f = facts(eligible: false)
         #expect(!f.showsTrial && f.trialBadge == nil)
         #expect(f.buttonTitle == "Continue")
-        #expect(f.renewalText == "$39.99 per year, renewing automatically. Cancel anytime in Settings.", "no trial wording for someone who cannot have the trial")
+        #expect(
+            f.renewalText == "$39.99 per year, renewing automatically. Cancel anytime in Settings.", "no trial wording for someone who cannot have the trial")
         #expect(f.savingsPercent == 52, "the saving is still true")
     }
 
@@ -58,7 +61,9 @@ struct PaywallFactsTests {
         for eligible in [true, false] {
             let f = facts(eligible: eligible)
             let badge = f.trialBadge != nil, button = f.buttonTitle != "Continue", renewal = f.renewalText?.contains("free, then") == true
-            #expect(badge == eligible && button == eligible && renewal == eligible, "eligible \(eligible): badge \(badge), button \(button), renewal line \(renewal)")
+            #expect(
+                badge == eligible && button == eligible && renewal == eligible,
+                "eligible \(eligible): badge \(badge), button \(button), renewal line \(renewal)")
         }
     }
 
@@ -68,7 +73,8 @@ struct PaywallFactsTests {
         #expect(facts(eligible: true).savingsPercent == 52, "39.99 against 12 x 6.99")
         func percent(yearly: Decimal, monthly: Decimal) -> Int? {
             PaywallFacts(
-                yearly: plan("y", yearly: true, price: yearly, shown: "x"), monthly: plan("m", yearly: false, price: monthly, shown: "y"), selectedID: "y", eligibleForIntroOffer: false
+                yearly: plan("y", yearly: true, price: yearly, shown: "x"), monthly: plan("m", yearly: false, price: monthly, shown: "y"), selectedID: "y",
+                eligibleForIntroOffer: false
             ).savingsPercent
         }
         #expect(percent(yearly: 29.99, monthly: 4.99) == 50)
@@ -103,16 +109,21 @@ struct PaywallFactsTests {
     // MARK: Benefits
 
     @Test func theFiveLinesAreTheOnesTheScreenAlwaysHadAndEveryFeatureBehindThemIsPremium() {
-        #expect(PaywallBenefits.all.map(\.text) == [
-            "Recovery over 30 and 90 days", "A month of sleep, and what went into it", "Every insight, your records and history", "Unlimited Coach questions",
-            "Wind-down, meditation and all six sounds",
-        ])
+        #expect(
+            PaywallBenefits.all.map(\.text) == [
+                "Recovery over 30 and 90 days", "A month of sleep, and what went into it", "Every insight, your records and history",
+                "Unlimited Coach questions",
+                "Wind-down, meditation and all six sounds",
+            ])
         for benefit in PaywallBenefits.all {
             #expect(benefit.features.contains { FeatureTable.tier(of: $0) == .premium }, "\(benefit.text) has a Premium feature behind it")
         }
         // The line that says "all six sounds" is the three free and the three Premium ones, as the table has them.
         #expect(FeatureTable.tier(of: .soundsFree) == .free && FeatureTable.tier(of: .soundsPremium) == .premium)
-        for feature in [Feature.recovery30D, .recovery90D, .sleepMonth, .sleepQualityFactors, .insightAll, .insightRecords, .insightHistory, .coachUnlimited, .windDownSession, .meditation] {
+        for feature in [
+            Feature.recovery30D, .recovery90D, .sleepMonth, .sleepQualityFactors, .insightAll, .insightRecords, .insightHistory, .coachUnlimited,
+            .windDownSession, .meditation,
+        ] {
             #expect(FeatureTable.tier(of: feature) == .premium, "\(feature) is free in the table: the paywall cannot sell it")
         }
     }

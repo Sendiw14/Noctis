@@ -23,7 +23,10 @@ nonisolated final class ManualTime: @unchecked Sendable {
 
     func sleep(_ seconds: TimeInterval) async {
         if seconds <= 0 { return }
-        let id = lock.withLock { () -> Int in next += 1; return next }
+        let id = lock.withLock { () -> Int in
+            next += 1
+            return next
+        }
         await withTaskCancellationHandler {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 lock.withLock { waiters.append((id, current.addingTimeInterval(seconds), continuation)) }
@@ -47,7 +50,10 @@ nonisolated final class ManualTime: @unchecked Sendable {
         while true {
             let due = lock.withLock { () -> [CheckedContinuation<Void, Never>] in
                 let soonest = waiters.map(\.wake).min()
-                guard let soonest, soonest <= target else { current = target; return [] }
+                guard let soonest, soonest <= target else {
+                    current = target
+                    return []
+                }
                 current = max(current, soonest)
                 let ready = waiters.filter { $0.wake <= soonest }
                 waiters.removeAll { $0.wake <= soonest }
@@ -87,8 +93,14 @@ final class FakeEngine: SoundEngineDriving {
         calls.append("start")
     }
 
-    func pause() { running = false; calls.append("pause") }
-    func stop() { running = false; calls.append("stop") }
+    func pause() {
+        running = false
+        calls.append("pause")
+    }
+    func stop() {
+        running = false
+        calls.append("stop")
+    }
     func send(_ command: SoundCommand) { commands.append(command) }
 
     func setMeter(_ handler: (@Sendable (Float) -> Void)?) {
@@ -96,7 +108,11 @@ final class FakeEngine: SoundEngineDriving {
         meterHandler = handler
     }
 
-    func rebuild() { rebuilds += 1; running = false; calls.append("rebuild") }
+    func rebuild() {
+        rebuilds += 1
+        running = false
+        calls.append("rebuild")
+    }
 
     var meterOn: Bool { meterHandler != nil }
     var last: SoundCommand? { commands.last }
@@ -108,8 +124,14 @@ final class FakeSession: SoundSessionDriving {
     var active = false
     var activations = 0
     var deactivations = 0
-    func activate() throws { active = true; activations += 1 }
-    func deactivate() { active = false; deactivations += 1 }
+    func activate() throws {
+        active = true
+        activations += 1
+    }
+    func deactivate() {
+        active = false
+        deactivations += 1
+    }
 }
 
 @MainActor
@@ -118,7 +140,10 @@ final class FakeNowPlaying: SoundNowPlayingDriving {
     var shown: [(title: String, playing: Bool)] = []
     var cleared = 0
     func show(title: String, isPlaying: Bool) { shown.append((title, isPlaying)) }
-    func clear() { cleared += 1; shown = [] }
+    func clear() {
+        cleared += 1
+        shown = []
+    }
 }
 
 struct StartFailure: Error {}

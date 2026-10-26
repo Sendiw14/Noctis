@@ -80,9 +80,16 @@ struct MeditationViewModelTests {
         let again = MeditationViewModel(audio: SilentMeditationAudio(), player: bench.player.player, defaults: bench.player.defaults)
         // That model had its own defaults; the one that ran has the keys.
         #expect(again.categoryID == .sleep)
-        let bad = Self.make(seed: { $0.set("nonsense", forKey: MeditationViewModel.categoryKey); $0.set(3, forKey: MeditationViewModel.minutesKey) })
+        let bad = Self.make(seed: {
+            $0.set("nonsense", forKey: MeditationViewModel.categoryKey)
+            $0.set(3, forKey: MeditationViewModel.minutesKey)
+        })
         #expect(bad.model.categoryID == .sleep && bad.model.minutes == 10)
-        let good = Self.make(seed: { $0.set("bodyScan", forKey: MeditationViewModel.categoryKey); $0.set(20, forKey: MeditationViewModel.minutesKey); $0.set("rain", forKey: MeditationViewModel.soundKey) })
+        let good = Self.make(seed: {
+            $0.set("bodyScan", forKey: MeditationViewModel.categoryKey)
+            $0.set(20, forKey: MeditationViewModel.minutesKey)
+            $0.set("rain", forKey: MeditationViewModel.soundKey)
+        })
         #expect(good.model.categoryID == .bodyScan && good.model.minutes == 20 && good.model.sound == .rain && good.model.remaining == 1200)
     }
 

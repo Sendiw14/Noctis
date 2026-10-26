@@ -27,9 +27,12 @@ private nonisolated func moment(_ year: Int, _ month: Int, _ day: Int, _ hour: I
 
 /// A night that ended on `morning`, with values a test can bend.
 private nonisolated func night(
-    _ morning: SleepNightKey, asleep: Double = 420, bedtime: Double = 660, wake: Double = 1140, recovery: Int? = nil, hrv: Double? = nil, rhr: Double? = nil, stages: ReviewStages? = nil
+    _ morning: SleepNightKey, asleep: Double = 420, bedtime: Double = 660, wake: Double = 1140, recovery: Int? = nil, hrv: Double? = nil, rhr: Double? = nil,
+    stages: ReviewStages? = nil
 ) -> ReviewNightInput {
-    ReviewNightInput(night: ReviewPeriod.night(endingOn: morning), asleepMinutes: asleep, stages: stages, bedtimeMinutes: bedtime, wakeMinutes: wake, recoveryScore: recovery, hrv: hrv, restingHeartRate: rhr)
+    ReviewNightInput(
+        night: ReviewPeriod.night(endingOn: morning), asleepMinutes: asleep, stages: stages, bedtimeMinutes: bedtime, wakeMinutes: wake,
+        recoveryScore: recovery, hrv: hrv, restingHeartRate: rhr)
 }
 
 /// Every morning of `period`, with the values `make` gives for its index and date.
@@ -58,8 +61,11 @@ private nonisolated func record(_ result: ReviewResult) -> ReviewRecord? {
 private nonisolated func steadyNights(
     for period: ReviewPeriod = week, asleep: Double = 420, bedtime: Double = 660, recovery: Int? = nil
 ) -> [ReviewNightInput] {
-    let earlier = ReviewPeriod(kind: period.kind, firstMorning: period.firstMorning.adding(days: -ReviewModel.priorNights - period.morningCount), lastMorning: period.firstMorning.adding(days: -1))
-    return fill(earlier) { _, morning in night(morning, asleep: asleep, bedtime: bedtime, recovery: recovery) } + fill(period) { _, morning in night(morning, asleep: asleep, bedtime: bedtime, recovery: recovery) }
+    let earlier = ReviewPeriod(
+        kind: period.kind, firstMorning: period.firstMorning.adding(days: -ReviewModel.priorNights - period.morningCount),
+        lastMorning: period.firstMorning.adding(days: -1))
+    return fill(earlier) { _, morning in night(morning, asleep: asleep, bedtime: bedtime, recovery: recovery) }
+        + fill(period) { _, morning in night(morning, asleep: asleep, bedtime: bedtime, recovery: recovery) }
 }
 
 // MARK: - Periods
@@ -80,7 +86,8 @@ struct ReviewPeriodTests {
         // Mid-week it is still last Sunday's week; Saturday 23:59:59 is; Sunday 00:00:00 starts the next.
         let sunday = ReviewPeriod.latestWeekly(now: moment(2026, 9, 30, 15), weekday: 1, calendar: ny)
         #expect(sunday.lastMorning == key(2026, 9, 26))
-        let lateSaturday = ReviewPeriod.latestWeekly(now: ny.date(from: DateComponents(year: 2026, month: 10, day: 3, hour: 23, minute: 59, second: 59)) ?? Date(), weekday: 1, calendar: ny)
+        let lateSaturday = ReviewPeriod.latestWeekly(
+            now: ny.date(from: DateComponents(year: 2026, month: 10, day: 3, hour: 23, minute: 59, second: 59)) ?? Date(), weekday: 1, calendar: ny)
         #expect(lateSaturday.lastMorning == key(2026, 9, 26))
         let midnight = ReviewPeriod.latestWeekly(now: ny.date(from: DateComponents(year: 2026, month: 10, day: 4)) ?? Date(), weekday: 1, calendar: ny)
         #expect(midnight.lastMorning == key(2026, 10, 3) && midnight.firstMorning == key(2026, 9, 27))
@@ -90,7 +97,13 @@ struct ReviewPeriodTests {
         let now = moment(2026, 9, 30, 12)
         for weekday in 1...7 {
             let period = ReviewPeriod.latestWeekly(now: now, weekday: weekday, calendar: ny)
-            #expect(period.morningCount == 7 && ny.component(.weekday, from: ny.date(from: DateComponents(year: period.nextMorning.year, month: period.nextMorning.month, day: period.nextMorning.day)) ?? now) == weekday)
+            #expect(
+                period.morningCount == 7
+                    && ny.component(
+                        .weekday,
+                        from: ny.date(from: DateComponents(year: period.nextMorning.year, month: period.nextMorning.month, day: period.nextMorning.day)) ?? now)
+                        == weekday
+            )
             #expect(period.previous.nextMorning == period.firstMorning, "weeks tile with no gap and no overlap")
             #expect(period.previous.lastMorning.adding(days: 1) == period.firstMorning)
         }
@@ -170,7 +183,8 @@ struct ReviewPeriodTests {
     @Test func anIdFromOutsideIsNeverTrusted() {
         let bad = [
             "", "weekly", "weekly-", "weekly-2026-09", "weekly-2026-9-26", "weekly-2026-09-6", "daily-2026-09-26", "Weekly-2026-09-26", "weekly-2026-02-30",
-            "weekly-2026-13-01", "weekly-2026-00-10", "monthly-2026-04-31", "weekly-1999-09-26", "weekly-2026-09-26-extra", "weekly--2026-09-26", "weekly-2026-09-26\n",
+            "weekly-2026-13-01", "weekly-2026-00-10", "monthly-2026-04-31", "weekly-1999-09-26", "weekly-2026-09-26-extra", "weekly--2026-09-26",
+            "weekly-2026-09-26\n",
             "weekly-../../2026", "monthly-2026-09-30 ", String(repeating: "a", count: 4000),
         ]
         for text in bad { #expect(ReviewID(text) == nil, Comment(rawValue: text.prefix(40).description)) }
@@ -213,7 +227,8 @@ struct ReviewSectionTests {
     }
 
     @Test func sleepIsTheAverageTheNightsThatMetTheNeedAndTheChange() throws {
-        let nights = fill(week.previous) { _, m in night(m, asleep: 400) } + fill(week) { index, m in night(m, asleep: [480, 500, 400, 420, 470, 480, 450][index]) }
+        let nights =
+            fill(week.previous) { _, m in night(m, asleep: 400) } + fill(week) { index, m in night(m, asleep: [480, 500, 400, 420, 470, 480, 450][index]) }
         let result = try weekRecord(nights)
         #expect(abs(result.sleep.averageMinutes - 457.142857) < 0.001)
         #expect(result.sleep.nightsReachedNeed == 3 && result.sleep.needMinutes == 480)
@@ -234,7 +249,9 @@ struct ReviewSectionTests {
     }
 
     @Test func timingIsTheMedianAndTheShiftFromTheWeekBefore() throws {
-        let nights = fill(week.previous) { _, m in night(m, bedtime: 660, wake: 1140) } + fill(week) { index, m in night(m, bedtime: [700, 705, 710, 715, 720, 900, 690][index], wake: 1150) }
+        let nights =
+            fill(week.previous) { _, m in night(m, bedtime: 660, wake: 1140) }
+            + fill(week) { index, m in night(m, bedtime: [700, 705, 710, 715, 720, 900, 690][index], wake: 1150) }
         let result = try weekRecord(nights)
         #expect(result.timing.medianBedtimeMinutes == 710 && result.timing.medianWakeMinutes == 1150)
         #expect(result.timing.bedtimeShift == 50 && result.timing.wakeShift == 10)
@@ -268,7 +285,9 @@ struct ReviewSectionTests {
     }
 
     @Test func heartNumbersAreAveragesOfFiveOrMoreNights() throws {
-        let nights = fill(week.previous) { _, m in night(m, hrv: 50, rhr: 56) } + fill(week) { index, m in night(m, hrv: index < 5 ? 55 : nil, rhr: index < 4 ? 54 : nil) }
+        let nights =
+            fill(week.previous) { _, m in night(m, hrv: 50, rhr: 56) }
+            + fill(week) { index, m in night(m, hrv: index < 5 ? 55 : nil, rhr: index < 4 ? 54 : nil) }
         let heart = try weekRecord(nights).heart
         #expect(heart.hrvAverage == 55 && heart.hrvDelta == 5)
         #expect(heart.restingHeartRateAverage == nil && heart.restingHeartRateDelta == nil, "four nights: no average")
@@ -309,7 +328,9 @@ struct ReviewSectionTests {
 struct ReviewPreviousPeriodTests {
     @Test func nothingIsComparedWithAPreviousWeekOfFewerThanFiveNights() throws {
         for count in [0, 4] {
-            let nights = fill(week.previous, count: count) { _, m in night(m, asleep: 300, recovery: 40, hrv: 30, rhr: 70) } + fill(week) { _, m in night(m, recovery: 70, hrv: 50, rhr: 55) }
+            let nights =
+                fill(week.previous, count: count) { _, m in night(m, asleep: 300, recovery: 40, hrv: 30, rhr: 70) }
+                + fill(week) { _, m in night(m, recovery: 70, hrv: 50, rhr: 55) }
             let result = try #require(record(build(nights)))
             #expect(!result.hasComparison, Comment(rawValue: "\(count)"))
             #expect(result.sleep.deltaMinutes == nil && result.consistency.bedtimeSDDelta == nil && result.consistency.wakeSDDelta == nil)
@@ -351,7 +372,9 @@ struct ReviewHighlightTests {
 
     private var older: [ReviewNightInput] {
         // The 28 mornings before the previous week: they alternate between 380 and 460 minutes.
-        let range = ReviewPeriod(kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights), lastMorning: week.previous.firstMorning.adding(days: -1))
+        let range = ReviewPeriod(
+            kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights),
+            lastMorning: week.previous.firstMorning.adding(days: -1))
         return fill(range) { index, m in night(m, asleep: index % 2 == 0 ? 380 : 460) }
     }
 
@@ -368,23 +391,33 @@ struct ReviewHighlightTests {
         for (step, moves) in [(0.49, false), (0.5, true), (0.51, true), (-0.49, false), (-0.5, true)] {
             let result = try duration(step: step)
             if moves {
-                guard case .change(let change) = result.biggestChange else { Issue.record("\(step) should be a change"); continue }
+                guard case .change(let change) = result.biggestChange else {
+                    Issue.record("\(step) should be a change")
+                    continue
+                }
                 #expect(change.metric == .duration && abs(abs(change.normalized) - abs(step)) < 1e-9, Comment(rawValue: "\(step)"))
             } else {
                 #expect(result.biggestChange == .steady && result.biggestImprovement == .steady, Comment(rawValue: "\(step)"))
             }
         }
-        #expect(ReviewEngine.passes(0.5) && !ReviewEngine.passes(0.49) && ReviewEngine.passes(-0.5) && !ReviewEngine.passes(-0.4994) && ReviewEngine.passes(0.9996))
+        #expect(
+            ReviewEngine.passes(0.5) && !ReviewEngine.passes(0.49) && ReviewEngine.passes(-0.5) && !ReviewEngine.passes(-0.4994) && ReviewEngine.passes(0.9996))
     }
 
     @Test func moreSleepIsAnImprovementOnlyWhileTheSleepWasBelowTheNeed() throws {
         let belowNeed = try duration(step: 0.6, before: 420, need: 480)
-        guard case .change(let improved) = belowNeed.biggestImprovement else { Issue.record("below the need, more sleep is an improvement"); return }
+        guard case .change(let improved) = belowNeed.biggestImprovement else {
+            Issue.record("below the need, more sleep is an improvement")
+            return
+        }
         #expect(improved.metric == .duration && improved.goodness > 0)
         // The same step from nights that already met the need: a change, but not an improvement.
         let metNeed = try duration(step: 0.6, before: 500, need: 480)
         #expect(metNeed.biggestImprovement == .steady)
-        guard case .change(let change) = metNeed.biggestChange else { Issue.record("it is still the biggest change"); return }
+        guard case .change(let change) = metNeed.biggestChange else {
+            Issue.record("it is still the biggest change")
+            return
+        }
         #expect(change.metric == .duration)
         // Less sleep is never an improvement.
         #expect(try duration(step: -0.8, before: 420, need: 480).biggestImprovement == .steady)
@@ -392,35 +425,55 @@ struct ReviewHighlightTests {
 
     @Test func aSteadierBedtimeIsAnImprovementBecauseLowerIsBetter() throws {
         func alternating(_ range: ReviewPeriod) -> [ReviewNightInput] { fill(range) { index, m in night(m, bedtime: index % 2 == 0 ? 630 : 690) } }
-        let range = ReviewPeriod(kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights), lastMorning: week.previous.firstMorning.adding(days: -1))
+        let range = ReviewPeriod(
+            kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights),
+            lastMorning: week.previous.firstMorning.adding(days: -1))
         let steadier = try #require(record(build(alternating(range) + alternating(week.previous) + fill(week) { _, m in night(m, bedtime: 660) })))
-        guard case .change(let change) = steadier.biggestImprovement else { Issue.record("a steadier bedtime is an improvement"); return }
+        guard case .change(let change) = steadier.biggestImprovement else {
+            Issue.record("a steadier bedtime is an improvement")
+            return
+        }
         #expect(change.metric == .bedtimeVariation && change.normalized < 0 && change.goodness > 0)
         // And a less steady one is a change, not an improvement.
         let worse = try #require(record(build(alternating(range) + fill(week.previous) { _, m in night(m, bedtime: 660) } + alternating(week))))
         #expect(worse.biggestImprovement == .steady)
-        guard case .change(let biggest) = worse.biggestChange else { Issue.record("it is the biggest change"); return }
+        guard case .change(let biggest) = worse.biggestChange else {
+            Issue.record("it is the biggest change")
+            return
+        }
         #expect(biggest.metric == .bedtimeVariation && biggest.goodness < 0)
     }
 
     @Test func aLowerRestingHeartRateIsAnImprovementAndTheBiggestChangeCanBeTheOtherWay() throws {
-        let range = ReviewPeriod(kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights), lastMorning: week.previous.firstMorning.adding(days: -1))
-        let nights = fill(range) { index, m in night(m, recovery: index % 2 == 0 ? 66 : 74, rhr: index % 2 == 0 ? 54 : 58) }
+        let range = ReviewPeriod(
+            kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights),
+            lastMorning: week.previous.firstMorning.adding(days: -1))
+        let nights =
+            fill(range) { index, m in night(m, recovery: index % 2 == 0 ? 66 : 74, rhr: index % 2 == 0 ? 54 : 58) }
             + fill(week.previous) { _, m in night(m, recovery: 72, rhr: 58) } + fill(week) { _, m in night(m, recovery: 60, rhr: 55.5) }
         let result = try #require(record(build(nights)))
         // Resting heart rate fell 2.5 bpm against a spread under 2; recovery fell 12 points against a spread near 4.
-        guard case .change(let improvement) = result.biggestImprovement, case .change(let biggest) = result.biggestChange else { Issue.record("both exist"); return }
+        guard case .change(let improvement) = result.biggestImprovement, case .change(let biggest) = result.biggestChange else {
+            Issue.record("both exist")
+            return
+        }
         #expect(improvement.metric == .restingHeartRate && improvement.goodness > 0)
         #expect(biggest.metric == .recovery && biggest.delta < 0, "the largest move was a fall in recovery, said as a change and not as an improvement")
     }
 
     @Test func theBiggestOfSeveralIsDecidedBySizeAgainstTheirOwnVariation() throws {
-        let range = ReviewPeriod(kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights), lastMorning: week.previous.firstMorning.adding(days: -1))
-        let nights = fill(range) { index, m in night(m, asleep: index % 2 == 0 ? 400 : 440, recovery: index % 2 == 0 ? 60 : 80, hrv: index % 2 == 0 ? 40 : 60) }
+        let range = ReviewPeriod(
+            kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights),
+            lastMorning: week.previous.firstMorning.adding(days: -1))
+        let nights =
+            fill(range) { index, m in night(m, asleep: index % 2 == 0 ? 400 : 440, recovery: index % 2 == 0 ? 60 : 80, hrv: index % 2 == 0 ? 40 : 60) }
             + fill(week.previous) { _, m in night(m, asleep: 420, recovery: 70, hrv: 50) } + fill(week) { _, m in night(m, asleep: 430, recovery: 85, hrv: 52) }
         let result = try #require(record(build(nights)))
         // Duration +10 against a spread near 18; recovery +15 against a spread near 9; HRV +2 against a spread near 9.
-        guard case .change(let biggest) = result.biggestChange, case .change(let improvement) = result.biggestImprovement else { Issue.record("recovery moved most"); return }
+        guard case .change(let biggest) = result.biggestChange, case .change(let improvement) = result.biggestImprovement else {
+            Issue.record("recovery moved most")
+            return
+        }
         #expect(biggest.metric == .recovery && improvement.metric == .recovery)
     }
 
@@ -430,7 +483,10 @@ struct ReviewHighlightTests {
             steadyNights(asleep: 420).map { $0.morning >= week.firstMorning ? night($0.morning, asleep: 420 + step) : $0 }
         }
         #expect(try #require(record(build(steadyThenSteps(4)))).biggestChange == .steady, "4 minutes against a floor of 15 is 0.27")
-        guard case .change(let change) = try #require(record(build(steadyThenSteps(15)))).biggestChange else { Issue.record("15 against a floor of 15 is 1"); return }
+        guard case .change(let change) = try #require(record(build(steadyThenSteps(15)))).biggestChange else {
+            Issue.record("15 against a floor of 15 is 1")
+            return
+        }
         #expect(abs(change.normalized - 1) < 1e-9 && change.normalized.isFinite)
     }
 
@@ -459,7 +515,8 @@ struct ReviewFocusTests {
 
     private func recovery(trend: RecoveryTrendDirection?, scored: Int = 7) -> ReviewRecovery {
         ReviewRecovery(
-            average: 60, scoredNights: scored, high: ReviewExtreme(value: 70, morning: week.lastMorning, alsoOn: 0), low: ReviewExtreme(value: 50, morning: week.firstMorning, alsoOn: 0),
+            average: 60, scoredNights: scored, high: ReviewExtreme(value: 70, morning: week.lastMorning, alsoOn: 0),
+            low: ReviewExtreme(value: 50, morning: week.firstMorning, alsoOn: 0),
             trend: trend.map { RecoveryHistoryTrend(direction: $0, pointsPerWeek: $0 == .lower ? -3 : 0) }, delta: nil
         )
     }
@@ -468,7 +525,8 @@ struct ReviewFocusTests {
         consistency: ReviewConsistency? = nil, timing: ReviewTiming? = nil, recovery: ReviewRecovery? = nil, asleep: Double = 480, need: Int = 480
     ) -> ReviewFocus {
         ReviewEngine.focus(
-            period: week, inPeriod: fill(week) { _, m in night(m, asleep: asleep) }, consistency: consistency ?? steadyConsistency, timing: timing ?? steadyTiming, recovery: recovery, needMinutes: need
+            period: week, inPeriod: fill(week) { _, m in night(m, asleep: asleep) }, consistency: consistency ?? steadyConsistency,
+            timing: timing ?? steadyTiming, recovery: recovery, needMinutes: need
         )
     }
 
@@ -481,7 +539,8 @@ struct ReviewFocusTests {
         #expect(focus(consistency: ReviewConsistency(bedtimeSD: 45, wakeSD: 10, bedtimeSDDelta: nil, wakeSDDelta: nil)) == .keepGoing, "over 45, not 45")
         // It outranks every other thing a week can say.
         let everything = focus(
-            consistency: ReviewConsistency(bedtimeSD: 60, wakeSD: 10, bedtimeSDDelta: nil, wakeSDDelta: nil), timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 90, wakeShift: 0),
+            consistency: ReviewConsistency(bedtimeSD: 60, wakeSD: 10, bedtimeSDDelta: nil, wakeSDDelta: nil),
+            timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 90, wakeShift: 0),
             recovery: recovery(trend: .lower), asleep: 300
         )
         #expect(everything == .steadyBedtime(minutes: 60))
@@ -492,29 +551,43 @@ struct ReviewFocusTests {
         #expect(focus(asleep: 471) == .sleepNeed(minutesBehind: 63))
         #expect(focus(asleep: 471.5) == .keepGoing, "59.5 behind is under 60")
         let exactlySixty = ReviewEngine.focus(
-            period: week, inPeriod: fill(week) { index, m in night(m, asleep: index == 0 ? 420 : 480) }, consistency: steadyConsistency, timing: steadyTiming, recovery: nil, needMinutes: 480
+            period: week, inPeriod: fill(week) { index, m in night(m, asleep: index == 0 ? 420 : 480) }, consistency: steadyConsistency, timing: steadyTiming,
+            recovery: nil, needMinutes: 480
         )
         #expect(exactlySixty == .sleepNeed(minutesBehind: 60), "60 or more")
         // It outranks a later bedtime and a lower recovery.
-        let both = focus(timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 60, wakeShift: 0), recovery: recovery(trend: .lower), asleep: 400)
+        let both = focus(
+            timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 60, wakeShift: 0), recovery: recovery(trend: .lower),
+            asleep: 400)
         #expect(both == .sleepNeed(minutesBehind: 560))
     }
 
     @Test func theBalanceNeedsFiveRecordedNightsOfTheLastSeven() {
         // Five nights, each 90 behind: counted. Four: no balance, so it is not said.
-        let five = ReviewEngine.focus(period: week, inPeriod: fill(week, count: 5) { _, m in night(m, asleep: 390) }, consistency: steadyConsistency, timing: steadyTiming, recovery: nil, needMinutes: 480)
+        let five = ReviewEngine.focus(
+            period: week, inPeriod: fill(week, count: 5) { _, m in night(m, asleep: 390) }, consistency: steadyConsistency, timing: steadyTiming, recovery: nil,
+            needMinutes: 480)
         #expect(five == .sleepNeed(minutesBehind: 450))
         // The last seven nights: five early ones that do not fall in the last seven leave only two.
         let spread = fill(week) { index, m in night(m, asleep: 300) }.enumerated().filter { $0.offset < 4 }.map(\.element)
-        #expect(ReviewEngine.focus(period: week, inPeriod: spread, consistency: steadyConsistency, timing: steadyTiming, recovery: nil, needMinutes: 480) == .keepGoing)
+        #expect(
+            ReviewEngine.focus(period: week, inPeriod: spread, consistency: steadyConsistency, timing: steadyTiming, recovery: nil, needMinutes: 480)
+                == .keepGoing)
     }
 
     @Test func aMedianBedtimeFortyFiveMinutesOrMoreLaterIsThird() {
-        #expect(focus(timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 45, wakeShift: 0)) == .gentleShiftBack(minutesLater: 45))
+        #expect(
+            focus(timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 45, wakeShift: 0))
+                == .gentleShiftBack(minutesLater: 45))
         #expect(focus(timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 44.9, wakeShift: 0)) == .keepGoing)
-        #expect(focus(timing: ReviewTiming(medianBedtimeMinutes: 600, medianWakeMinutes: 1140, bedtimeShift: -80, wakeShift: 0)) == .keepGoing, "earlier is not a thing to move back")
-        #expect(focus(timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: nil, wakeShift: nil)) == .keepGoing, "no previous week, no shift")
-        let withRecovery = focus(timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 60, wakeShift: 0), recovery: recovery(trend: .lower))
+        #expect(
+            focus(timing: ReviewTiming(medianBedtimeMinutes: 600, medianWakeMinutes: 1140, bedtimeShift: -80, wakeShift: 0)) == .keepGoing,
+            "earlier is not a thing to move back")
+        #expect(
+            focus(timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: nil, wakeShift: nil)) == .keepGoing,
+            "no previous week, no shift")
+        let withRecovery = focus(
+            timing: ReviewTiming(medianBedtimeMinutes: 700, medianWakeMinutes: 1140, bedtimeShift: 60, wakeShift: 0), recovery: recovery(trend: .lower))
         #expect(withRecovery == .gentleShiftBack(minutesLater: 60), "it outranks a lower recovery")
     }
 
@@ -534,13 +607,16 @@ struct ReviewInsightTests {
     @Test func aWeekPointsToTheBestRankedInsightGeneratedInsideIt() throws {
         let inside = moment(2026, 9, 23, 8)
         let list = [
-            insight("b", 0.7, inside), insight("a", 0.9, inside), insight("early", 0.99, moment(2026, 9, 19, 23, 59)), insight("late", 0.99, moment(2026, 9, 27, 0, 1)),
+            insight("b", 0.7, inside), insight("a", 0.9, inside), insight("early", 0.99, moment(2026, 9, 19, 23, 59)),
+            insight("late", 0.99, moment(2026, 9, 27, 0, 1)),
             insight("c", 0.8, moment(2026, 9, 20, 0, 0)),
         ]
         let result = try #require(record(build(fill(week) { _, m in night(m) }, insights: list)))
         #expect(result.topInsightIDs == ["a"], "the edges are the period's: the 20th at midnight is in, the 19th and the 27th are not")
         let ties = [insight("z", 0.5, inside), insight("m", 0.5, inside), insight("m", 0.5, inside)]
-        #expect(try #require(record(build(fill(week) { _, m in night(m) }, insights: ties))).topInsightIDs == ["m"], "equal scores go to the smaller id, and one id is one insight")
+        #expect(
+            try #require(record(build(fill(week) { _, m in night(m) }, insights: ties))).topInsightIDs == ["m"],
+            "equal scores go to the smaller id, and one id is one insight")
         #expect(try #require(record(build(fill(week) { _, m in night(m) }))).topInsightIDs.isEmpty)
     }
 
@@ -561,10 +637,20 @@ struct ReviewInsightTests {
 
 struct ReviewRecordTests {
     private func scenario() -> [ReviewNightInput] {
-        let prior = ReviewPeriod(kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights), lastMorning: week.previous.firstMorning.adding(days: -1))
-        return fill(prior) { index, m in night(m, asleep: 400 + Double(index % 5) * 8, bedtime: 650 + Double(index % 4) * 10, recovery: 60 + index % 9, hrv: 45 + Double(index % 6), rhr: 55 + Double(index % 3)) }
+        let prior = ReviewPeriod(
+            kind: .weekly, firstMorning: week.previous.firstMorning.adding(days: -ReviewModel.priorNights),
+            lastMorning: week.previous.firstMorning.adding(days: -1))
+        return fill(prior) { index, m in
+            night(
+                m, asleep: 400 + Double(index % 5) * 8, bedtime: 650 + Double(index % 4) * 10, recovery: 60 + index % 9, hrv: 45 + Double(index % 6),
+                rhr: 55 + Double(index % 3))
+        }
             + fill(week.previous) { index, m in night(m, asleep: 410 + Double(index) * 4, bedtime: 660, recovery: 66, hrv: 48, rhr: 56) }
-            + fill(week) { index, m in night(m, asleep: 440 + Double(index) * 3, bedtime: 640, recovery: 72 + index, hrv: 53, rhr: 54, stages: ReviewStages(deep: 70, core: 240, rem: 90)) }
+            + fill(week) { index, m in
+                night(
+                    m, asleep: 440 + Double(index) * 3, bedtime: 640, recovery: 72 + index, hrv: 53, rhr: 54, stages: ReviewStages(deep: 70, core: 240, rem: 90)
+                )
+            }
     }
 
     @Test func theSameNightsGiveTheSameRecordWhateverTheirOrder() throws {
@@ -580,12 +666,14 @@ struct ReviewRecordTests {
     }
 
     @Test func aRecordRoundTripsThroughJSON() throws {
-        let original = try #require(record(build(scenario(), insights: [ReviewInsightInput(id: "bedtimeShift-3fa9c2d1", generatedAt: moment(2026, 9, 22), score: 0.8)])))
+        let original = try #require(
+            record(build(scenario(), insights: [ReviewInsightInput(id: "bedtimeShift-3fa9c2d1", generatedAt: moment(2026, 9, 22), score: 0.8)])))
         let data = try JSONEncoder().encode(original)
         #expect(try JSONDecoder().decode(ReviewRecord.self, from: data) == original)
         #expect(original.topInsightIDs == ["bedtimeShift-3fa9c2d1"])
         let month = ReviewPeriod.monthly(year: 2026, month: 9)
-        let monthly = try #require(record(build(month, fill(month) { index, m in night(m, asleep: 400 + Double(index), recovery: 60 + index) }, now: moment(2026, 10, 2))))
+        let monthly = try #require(
+            record(build(month, fill(month) { index, m in night(m, asleep: 400 + Double(index), recovery: 60 + index) }, now: moment(2026, 10, 2))))
         #expect(try JSONDecoder().decode(ReviewRecord.self, from: try JSONEncoder().encode(monthly)) == monthly)
     }
 
@@ -602,32 +690,58 @@ struct ReviewLanguageTests {
     private let format = ReviewFormat(locale: Locale(identifier: "en_US"))
 
     private func prior(_ period: ReviewPeriod) -> ReviewPeriod {
-        ReviewPeriod(kind: period.kind, firstMorning: period.previous.firstMorning.adding(days: -ReviewModel.priorNights), lastMorning: period.previous.firstMorning.adding(days: -1))
+        ReviewPeriod(
+            kind: period.kind, firstMorning: period.previous.firstMorning.adding(days: -ReviewModel.priorNights),
+            lastMorning: period.previous.firstMorning.adding(days: -1))
     }
 
     /// Records for every situation a review can be in: improved, steady, nothing to compare, each next focus, a month, ties, no recovery.
     private func records() throws -> [(String, ReviewRecord)] {
-        func make(_ name: String, _ period: ReviewPeriod, _ nights: [ReviewNightInput], need: Int = 480, insights: [ReviewInsightInput] = []) throws -> (String, ReviewRecord) {
-            (name, try #require(record(ReviewEngine.build(period: period, nights: nights, needMinutes: need, insights: insights, now: reviewNow, calendar: ny))))
+        func make(
+            _ name: String, _ period: ReviewPeriod, _ nights: [ReviewNightInput], need: Int = 480, insights: [ReviewInsightInput] = []
+        ) throws -> (String, ReviewRecord) {
+            (
+                name,
+                try #require(record(ReviewEngine.build(period: period, nights: nights, needMinutes: need, insights: insights, now: reviewNow, calendar: ny)))
+            )
         }
-        let alternating = fill(prior(week)) { index, m in night(m, asleep: index % 2 == 0 ? 380 : 460, bedtime: index % 2 == 0 ? 630 : 690, recovery: index % 2 == 0 ? 62 : 74, hrv: index % 2 == 0 ? 44 : 56, rhr: index % 2 == 0 ? 54 : 58) }
+        let alternating = fill(prior(week)) { index, m in
+            night(
+                m, asleep: index % 2 == 0 ? 380 : 460, bedtime: index % 2 == 0 ? 630 : 690, recovery: index % 2 == 0 ? 62 : 74, hrv: index % 2 == 0 ? 44 : 56,
+                rhr: index % 2 == 0 ? 54 : 58)
+        }
         let month = ReviewPeriod.monthly(year: 2026, month: 9)
-        let monthPrior = ReviewPeriod(kind: .monthly, firstMorning: month.previous.firstMorning.adding(days: -ReviewModel.priorNights), lastMorning: month.previous.firstMorning.adding(days: -1))
-        let monthAlternating = fill(monthPrior) { index, m in night(m, asleep: index % 2 == 0 ? 380 : 460, bedtime: index % 2 == 0 ? 630 : 690, recovery: index % 2 == 0 ? 62 : 74, hrv: index % 2 == 0 ? 44 : 56) }
+        let monthPrior = ReviewPeriod(
+            kind: .monthly, firstMorning: month.previous.firstMorning.adding(days: -ReviewModel.priorNights),
+            lastMorning: month.previous.firstMorning.adding(days: -1))
+        let monthAlternating = fill(monthPrior) { index, m in
+            night(m, asleep: index % 2 == 0 ? 380 : 460, bedtime: index % 2 == 0 ? 630 : 690, recovery: index % 2 == 0 ? 62 : 74, hrv: index % 2 == 0 ? 44 : 56)
+        }
         let stages = ReviewStages(deep: 70, core: 240, rem: 90)
         let insights = [ReviewInsightInput(id: "bedtimeShift-3fa9c2d1", generatedAt: moment(2026, 9, 22), score: 0.9)]
         return [
-            try make("improved", week, alternating + fill(week.previous) { _, m in night(m, asleep: 400, bedtime: 630, recovery: 66, hrv: 48, rhr: 58) } + fill(week) { _, m in night(m, asleep: 470, bedtime: 660, recovery: 76, hrv: 55, rhr: 55, stages: stages) }, insights: insights),
-            try make("worse", week, alternating + fill(week.previous) { _, m in night(m, asleep: 470, bedtime: 660, recovery: 76, hrv: 55, rhr: 55) } + fill(week) { index, m in night(m, asleep: 380, bedtime: index % 2 == 0 ? 630 : 740, recovery: 60, hrv: 44, rhr: 60) }),
+            try make(
+                "improved", week,
+                alternating + fill(week.previous) { _, m in night(m, asleep: 400, bedtime: 630, recovery: 66, hrv: 48, rhr: 58) }
+                    + fill(week) { _, m in night(m, asleep: 470, bedtime: 660, recovery: 76, hrv: 55, rhr: 55, stages: stages) }, insights: insights),
+            try make(
+                "worse", week,
+                alternating + fill(week.previous) { _, m in night(m, asleep: 470, bedtime: 660, recovery: 76, hrv: 55, rhr: 55) }
+                    + fill(week) { index, m in night(m, asleep: 380, bedtime: index % 2 == 0 ? 630 : 740, recovery: 60, hrv: 44, rhr: 60) }),
             try make("steady", week, steadyNights(recovery: 70)),
             try make("noComparison", week, fill(week) { _, m in night(m, recovery: 70, hrv: 50, rhr: 55) }),
             try make("steadyBedtime", week, fill(week) { index, m in night(m, bedtime: [600, 720, 610, 740, 590, 730, 650][index]) }),
             try make("sleepNeed", week, fill(week) { _, m in night(m, asleep: 380) }),
-            try make("gentleShift", week, steadyNights(asleep: 480, bedtime: 600).map { $0.morning >= week.firstMorning ? night($0.morning, asleep: 480, bedtime: 700) : $0 }),
+            try make(
+                "gentleShift", week,
+                steadyNights(asleep: 480, bedtime: 600).map { $0.morning >= week.firstMorning ? night($0.morning, asleep: 480, bedtime: 700) : $0 }),
             try make("recent", week, fill(week) { index, m in night(m, asleep: 480, recovery: 80 - index * 4) }),
             try make("keepGoing", week, fill(week) { _, m in night(m, asleep: 480) }),
             try make("tied", week, fill(week) { _, m in night(m, asleep: 480, recovery: 70) }),
-            try make("monthImproved", month, monthAlternating + fill(month.previous) { _, m in night(m, asleep: 400, bedtime: 630, recovery: 66, hrv: 48) } + fill(month) { index, m in night(m, asleep: 470, bedtime: 660, recovery: 70 + index % 5, hrv: 55) }, insights: insights),
+            try make(
+                "monthImproved", month,
+                monthAlternating + fill(month.previous) { _, m in night(m, asleep: 400, bedtime: 630, recovery: 66, hrv: 48) }
+                    + fill(month) { index, m in night(m, asleep: 470, bedtime: 660, recovery: 70 + index % 5, hrv: 55) }, insights: insights),
             try make("monthSparse", month, fill(month, count: 20) { _, m in night(m) }),
         ]
     }
@@ -645,7 +759,9 @@ struct ReviewLanguageTests {
             "because", "caused", "due to", "led to", "leads to", "as a result", "diagnos", "symptom", "disorder",
         ]
         for text in strings {
-            #expect(BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty, Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))"))
+            #expect(
+                BannedLanguage.hits(in: text, of: BannedLanguage.coach).isEmpty,
+                Comment(rawValue: "\"\(text)\" has \(BannedLanguage.hits(in: text, of: BannedLanguage.coach))"))
             for word in extra { #expect(!text.lowercased().contains(word), Comment(rawValue: "\"\(text)\" has \(word)")) }
         }
     }
@@ -694,15 +810,21 @@ struct ReviewLanguageTests {
         let content = ReviewScreenBuilder.notReady(period: period, have: 4, need: 5, format: format)
         #expect(content.title == "Not enough nights yet" && content.count == "4 of 5 nights so far" && content.dateRange == "Sep 20 \u{2013} 26")
         let month = ReviewScreenBuilder.notReady(period: ReviewPeriod.monthly(year: 2026, month: 9), have: 19, need: 20, format: format)
-        #expect(month.count == "19 of 20 nights so far" && month.dateRange == "September 2026" && month.detail == "Your monthly review appears once there are at least 20.")
+        #expect(
+            month.count == "19 of 20 nights so far" && month.dateRange == "September 2026"
+                && month.detail == "Your monthly review appears once there are at least 20.")
     }
 
     @Test func theFormatWritesDurationsDatesAndClocksInTheLanguageOfTheDay() {
-        #expect(ReviewFormat.duration(402) == "6h 42m" && ReviewFormat.duration(480) == "8h" && ReviewFormat.duration(45) == "45m" && ReviewFormat.amount(-14) == "14 min" && ReviewFormat.amount(65) == "1h 5m")
+        #expect(
+            ReviewFormat.duration(402) == "6h 42m" && ReviewFormat.duration(480) == "8h" && ReviewFormat.duration(45) == "45m"
+                && ReviewFormat.amount(-14) == "14 min" && ReviewFormat.amount(65) == "1h 5m")
         #expect(ReviewFormat.number(54) == "54" && ReviewFormat.number(7.46) == "7.5" && ReviewFormat.minutes(23.6) == "24 min")
         #expect(format.clock(minutesAfterNoon: 660).replacingOccurrences(of: "\u{202F}", with: " ") == "11:00 PM")
         #expect(format.clock(minutesAfterNoon: 1140).replacingOccurrences(of: "\u{202F}", with: " ") == "7:00 AM")
-        #expect(format.day(key(2026, 9, 20)) == "Sep 20" && format.monthName(key(2026, 9, 1)) == "September" && format.monthYear(key(2026, 9, 1)) == "September 2026")
+        #expect(
+            format.day(key(2026, 9, 20)) == "Sep 20" && format.monthName(key(2026, 9, 1)) == "September"
+                && format.monthYear(key(2026, 9, 1)) == "September 2026")
         let twentyFour = ReviewFormat(locale: Locale(identifier: "en_GB"))
         #expect(twentyFour.clock(minutesAfterNoon: 660) == "23:00")
     }
@@ -719,7 +841,8 @@ struct ReviewMajorChangesTests {
         let candidates = [change(.duration, 0.4), change(.bedtimeVariation, -0.5), change(.recovery, 0.5), change(.hrv, -0.9), change(.restingHeartRate, 1.2)]
         let major = ReviewEngine.majorChanges(candidates)
         #expect(major.map(\.metric) == [.restingHeartRate, .hrv, .bedtimeVariation], "1.2, 0.9, then the first of the two that are 0.5; 0.4 is not a change")
-        #expect(ReviewEngine.majorChanges([change(.duration, 0.49), change(.recovery, -0.4994)]).isEmpty, "under half of the person's own variation is nothing")
+        #expect(
+            ReviewEngine.majorChanges([change(.duration, 0.49), change(.recovery, -0.4994)]).isEmpty, "under half of the person's own variation is nothing")
         #expect(ReviewEngine.majorChanges([change(.duration, 0.5)]).count == 1 && ReviewEngine.majorChanges([]).isEmpty)
     }
 
@@ -728,18 +851,25 @@ struct ReviewMajorChangesTests {
             let morning = key(2026, 6, 1).adding(days: index)
             // Sleep gets steadily longer, so August is longer than July and the person's own variation is small.
             return ReviewNightInput(
-                night: ReviewPeriod.night(endingOn: morning), asleepMinutes: 380 + Double(index) * 1.2 + Double(index % 3) * 3, bedtimeMinutes: 660, wakeMinutes: 1140,
+                night: ReviewPeriod.night(endingOn: morning), asleepMinutes: 380 + Double(index) * 1.2 + Double(index % 3) * 3, bedtimeMinutes: 660,
+                wakeMinutes: 1140,
                 recoveryScore: 60 + index / 3, hrv: 40 + Double(index) / 4, restingHeartRate: 60 - Double(index) / 10
             )
         }
         let month = ReviewPeriod.monthly(year: 2026, month: 8)
-        guard case .record(let record) = ReviewEngine.build(period: month, nights: nights, needMinutes: 480, now: moment(2026, 9, 2), calendar: ny) else { Issue.record("a record"); return }
+        guard case .record(let record) = ReviewEngine.build(period: month, nights: nights, needMinutes: 480, now: moment(2026, 9, 2), calendar: ny) else {
+            Issue.record("a record")
+            return
+        }
         #expect(record.hasComparison && !record.topChanges.isEmpty && record.topChanges.count <= 3)
         #expect(record.topChanges.allSatisfy { ReviewEngine.passes($0.normalized) })
         #expect(record.topChanges.map { abs($0.normalized) } == record.topChanges.map { abs($0.normalized) }.sorted(by: >))
         // Without a previous month of its own, nothing is compared and nothing is listed.
         let alone = nights.filter { month.contains(morning: ReviewPeriod.morning(ofNight: $0.night)) }
-        guard case .record(let first) = ReviewEngine.build(period: month, nights: alone, needMinutes: 480, now: moment(2026, 9, 2), calendar: ny) else { Issue.record("a record"); return }
+        guard case .record(let first) = ReviewEngine.build(period: month, nights: alone, needMinutes: 480, now: moment(2026, 9, 2), calendar: ny) else {
+            Issue.record("a record")
+            return
+        }
         #expect(!first.hasComparison && first.topChanges.isEmpty)
     }
 }

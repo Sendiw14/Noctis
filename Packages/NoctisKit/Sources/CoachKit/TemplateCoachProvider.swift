@@ -41,16 +41,17 @@ public struct TemplateCoachProvider: AIProvider {
         case .learning: return composer.gap(context.has("history.nights") ? "learning" : "sparse")
         case .ready, .stale, .noSleepLastNight: break
         }
-        let draft: CoachAnswerDraft? = switch intent {
-        case .recoveryChange: composer.recoveryChange()
-        case .sleepChange: composer.sleepChange()
-        case .weekChange: composer.weekChange()
-        case .bedtimeAdvice: composer.bedtimeAdvice()
-        case .consistencyHelp: composer.consistencyHelp()
-        case .todayFocus: composer.todayFocus()
-        case .patterns: composer.patterns()
-        case .medicalOutOfScope, .crisis, .unknown: nil
-        }
+        let draft: CoachAnswerDraft? =
+            switch intent {
+            case .recoveryChange: composer.recoveryChange()
+            case .sleepChange: composer.sleepChange()
+            case .weekChange: composer.weekChange()
+            case .bedtimeAdvice: composer.bedtimeAdvice()
+            case .consistencyHelp: composer.consistencyHelp()
+            case .todayFocus: composer.todayFocus()
+            case .patterns: composer.patterns()
+            case .medicalOutOfScope, .crisis, .unknown: nil
+            }
         return draft ?? composer.gap(composer.gapKind)
     }
 }
@@ -176,20 +177,25 @@ private struct Composer {
         guard context.has("recovery.score") else { return nil }
         let delta = value("recovery.deltaVsUsual")
         let direction = sign(delta, minor: threshold)
-        let summary = switch direction {
-        case .lower?: text("rc.summary.lower")
-        case .higher?: text("rc.summary.higher")
-        case .same?: text("rc.summary.same")
-        case nil: text("rc.summary.noBaseline")
-        }
+        let summary =
+            switch direction {
+            case .lower?: text("rc.summary.lower")
+            case .higher?: text("rc.summary.higher")
+            case .same?: text("rc.summary.same")
+            case nil: text("rc.summary.noBaseline")
+            }
         guard let summary else { return nil }
         let notice = copy("coach.tpl.rc.notice.\(direction?.rawValue ?? "same")")
         return draft(
             summary: summary,
             contributors: [
-                value("sleep.deltaVsBaseline").flatMap { abs($0) >= minor ? contributor($0 < 0 ? "sleep.shorter" : "sleep.longer", "sleep.deltaVsBaseline") : nil },
+                value("sleep.deltaVsBaseline").flatMap {
+                    abs($0) >= minor ? contributor($0 < 0 ? "sleep.shorter" : "sleep.longer", "sleep.deltaVsBaseline") : nil
+                },
                 contributor("hrv", "hrv.today"), contributor("rhr", "rhr.today"),
-                value("bedtime.deltaVsUsual").flatMap { abs($0) >= minor ? contributor($0 > 0 ? "bedtime.later" : "bedtime.earlier", "bedtime.deltaVsUsual") : nil },
+                value("bedtime.deltaVsUsual").flatMap {
+                    abs($0) >= minor ? contributor($0 > 0 ? "bedtime.later" : "bedtime.earlier", "bedtime.deltaVsUsual") : nil
+                },
             ],
             changed: changed(
                 [sleepClause(), text("clause.hrv"), text("clause.rhr"), bedtimeClause()], none: "rc.changed.none"
@@ -203,12 +209,13 @@ private struct Composer {
     func sleepChange() -> CoachAnswerDraft? {
         guard context.has("sleep.duration") else { return nil }
         let direction = sign(value("sleep.deltaVsBaseline"), minor: minor)
-        let summary = switch direction {
-        case .lower?: text("sc.summary.lower")
-        case .higher?: text("sc.summary.higher")
-        case .same?: text("sc.summary.same")
-        case nil: text("sc.summary.noBaseline")
-        }
+        let summary =
+            switch direction {
+            case .lower?: text("sc.summary.lower")
+            case .higher?: text("sc.summary.higher")
+            case .same?: text("sc.summary.same")
+            case nil: text("sc.summary.noBaseline")
+            }
         guard let summary else { return nil }
         let quality = text("clause.quality") ?? text("clause.quality.only")
         return draft(
@@ -226,12 +233,13 @@ private struct Composer {
     func weekChange() -> CoachAnswerDraft? {
         guard context.has("week.avgSleep") else { return nil }
         let direction = sign(value("week.avgSleepDelta"), minor: minor)
-        let summary = switch direction {
-        case .lower?: text("wc.summary.less")
-        case .higher?: text("wc.summary.more")
-        case .same?: text("wc.summary.same")
-        case nil: text("wc.summary.noPrior")
-        }
+        let summary =
+            switch direction {
+            case .lower?: text("wc.summary.less")
+            case .higher?: text("wc.summary.more")
+            case .same?: text("wc.summary.same")
+            case nil: text("wc.summary.noPrior")
+            }
         guard let summary else { return nil }
         let trend = value("week.recoveryTrend").flatMap { abs($0) >= RecoveryHistoryModel.trendPointsPerWeek ? $0 : nil }
         return draft(
@@ -257,7 +265,9 @@ private struct Composer {
         guard let summary = text("ba.summary") else { return nil }
         return draft(
             summary: summary,
-            contributors: [contributor("bedtimeSuggested", "bedtime.suggested"), contributor("need", "sleep.need"), contributor("bedtimeUsual", "bedtime.usual")],
+            contributors: [
+                contributor("bedtimeSuggested", "bedtime.suggested"), contributor("need", "sleep.need"), contributor("bedtimeUsual", "bedtime.usual"),
+            ],
             changed: text("ba.changed.usual") ?? copy("coach.tpl.ba.changed.none"),
             notice: copy("coach.tpl.ba.notice"),
             tonight: text("ba.tonight"),

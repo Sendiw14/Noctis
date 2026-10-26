@@ -1,8 +1,9 @@
 import Foundation
 import Testing
+
 @testable import CoachKit
-@testable import NoctisCore
 @testable import HomeFeature
+@testable import NoctisCore
 
 /// Tokens: how a draft points at a number, and how the app puts it in.
 struct CoachTokenTests {
@@ -36,7 +37,9 @@ struct CoachTokenTests {
     }
 
     @Test func malformedBracesAreCaught() {
-        for text in ["{{a.b", "a.b}}", "{a.b}", "{{a b}}", "{{}}", "{{{a.b}}", "{{a.b}}}"] { #expect(CoachTokens.hasMalformedBraces(text), Comment(rawValue: text)) }
+        for text in ["{{a.b", "a.b}}", "{a.b}", "{{a b}}", "{{}}", "{{{a.b}}", "{{a.b}}}"] {
+            #expect(CoachTokens.hasMalformedBraces(text), Comment(rawValue: text))
+        }
         for text in ["{{a.b}}", "{{ a.b }}", "{{a.b}} and {{c.d}}", "none"] { #expect(!CoachTokens.hasMalformedBraces(text), Comment(rawValue: text)) }
     }
 
@@ -47,7 +50,8 @@ struct CoachTokenTests {
             "Recovery {{recovery.score}}, sleep {{sleep.duration}} ({{sleep.deltaVsBaseline}} short), bedtime {{bedtime.usual}}, HRV {{hrv.today}}, resting {{rhr.today}}, deep {{deep.share}}, spread {{consistency.bedtimeVarMin}}, {{history.nights}} nights.",
             facts: facts()
         )
-        #expect(resolved?.plain == "Recovery 72, sleep 6h 42m (1h 10m short), bedtime 11:00 PM, HRV 48 ms, resting 52 bpm, deep 21%, spread 36 min, 1,234 nights.")
+        #expect(
+            resolved?.plain == "Recovery 72, sleep 6h 42m (1h 10m short), bedtime 11:00 PM, HRV 48 ms, resting 52 bpm, deep 21%, spread 36 min, 1,234 nights.")
     }
 
     @Test func locale() {
@@ -83,7 +87,8 @@ struct CoachTokenTests {
                 let draft = TemplateCoachProvider(locale: CoachFixture.locale).compose(intent: intent, context: context)
                 let answer = try #require(CoachAnswerAssembler.assemble(draft, context: context, source: .fromYourData, locale: CoachFixture.locale))
                 // Take out every value the answer was given (longest first), and no digit is left in what the model wrote.
-                var text = [answer.summary, answer.whatChanged, answer.whatToNotice, answer.tonightSuggestion, answer.pattern, answer.caution].compactMap { $0 }.joined(separator: "\n")
+                var text = [answer.summary, answer.whatChanged, answer.whatToNotice, answer.tonightSuggestion, answer.pattern, answer.caution].compactMap { $0 }
+                    .joined(separator: "\n")
                 for fact in context.facts.sorted(by: { $0.display.count > $1.display.count }) { text = text.replacingOccurrences(of: fact.display, with: "") }
                 #expect(!text.hasDigit, Comment(rawValue: "\(scenario.rawValue)/\(intent.rawValue): \(text)"))
                 #expect(!text.contains("{{") && !text.contains("}}"))
@@ -121,7 +126,8 @@ struct CoachTokenTests {
     @Test func aPatternGetsTheAppsNoteAndOtherFieldsGetNone() throws {
         let context = CoachFixture.handmade()
         var draft = CoachAnswerDraft(summary: "s", whatChanged: "a", whatToNotice: "b", confidence: .high)
-        #expect(try #require(CoachAnswerAssembler.assemble(draft, context: context, source: .appleIntelligence, locale: CoachFixture.locale)).patternNote == nil)
+        #expect(
+            try #require(CoachAnswerAssembler.assemble(draft, context: context, source: .appleIntelligence, locale: CoachFixture.locale)).patternNote == nil)
         draft.pattern = "Your data suggests a link."
         let answer = try #require(CoachAnswerAssembler.assemble(draft, context: context, source: .appleIntelligence, locale: CoachFixture.locale))
         #expect(answer.patternNote == "This is a pattern in your data, not proof of a cause.")
@@ -139,7 +145,9 @@ struct CoachTokenTests {
         let answer = CoachScriptedAnswers.answer(.crisis)
         let decoded = try JSONDecoder().decode(CoachAnswer.self, from: JSONEncoder().encode(answer))
         #expect(decoded == answer)
-        let route = CoachAnswer(sourceKind: .fromYourData, intent: .weekChange, summary: "s", confidence: .high, destinations: [.sleep(night: nil, range: .week), .recovery(range: .month, factor: .hrv)], footer: "f")
+        let route = CoachAnswer(
+            sourceKind: .fromYourData, intent: .weekChange, summary: "s", confidence: .high,
+            destinations: [.sleep(night: nil, range: .week), .recovery(range: .month, factor: .hrv)], footer: "f")
         #expect(try JSONDecoder().decode(CoachAnswer.self, from: JSONEncoder().encode(route)) == route)
     }
 }

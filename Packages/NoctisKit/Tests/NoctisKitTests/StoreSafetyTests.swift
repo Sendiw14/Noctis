@@ -8,8 +8,8 @@ import Testing
 @testable import InsightsKit
 @testable import JournalKit
 @testable import NoctisCore
-@testable import SoundKit
 @testable import ReviewKit
+@testable import SoundKit
 
 // QA part 2 (QA_LEDGER.md, APP_RULES.md R65): every database has a named version and a way forward, and a file that cannot be read is set aside,
 // never deleted, and never stops the app. Real files, in a folder per test.
@@ -105,10 +105,14 @@ private enum LightweightPlan: SchemaMigrationPlan {
 private enum CustomPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] { [NoctisSchemaV1.self, DummyV2.self] }
     static var stages: [MigrationStage] {
-        [.custom(fromVersion: NoctisSchemaV1.self, toVersion: DummyV2.self, willMigrate: nil, didMigrate: { context in
-            for session in try context.fetch(FetchDescriptor<DummyV2.WindDownSession>()) { session.note = "migrated" }
-            try context.save()
-        })]
+        [
+            .custom(
+                fromVersion: NoctisSchemaV1.self, toVersion: DummyV2.self, willMigrate: nil,
+                didMigrate: { context in
+                    for session in try context.fetch(FetchDescriptor<DummyV2.WindDownSession>()) { session.note = "migrated" }
+                    try context.save()
+                })
+        ]
     }
 }
 

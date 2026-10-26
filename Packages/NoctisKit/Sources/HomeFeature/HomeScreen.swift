@@ -3,10 +3,10 @@ import Foundation
 import HealthProviding
 import InsightsKit
 import NoctisCore
+import NoctisText
 import NoctisWidgetKit
 import RecoveryKit
 import SleepKit
-import NoctisText
 
 // Everything Home shows, as plain values: every string and number is
 // decided here, from `HomeSnapshot`, so the views only lay it out
@@ -422,16 +422,18 @@ public nonisolated enum HomeScreenBuilder {
         let recovery = recoveryCard(snapshot, format: format)
         // With Premium's window the countdown, the strip and the evening's start all run to the recommended bedtime it is built around, so none of them
         // contradicts the window; the wake time is still the person's own.
-        let plan = bedtimeWindow.map {
-            TonightPlan(bedtimeMinutes: $0.centerMinutes, wakeMinutes: snapshot.tonight.wakeMinutes, needMinutes: snapshot.tonight.needMinutes)
-        } ?? snapshot.tonight
+        let plan =
+            bedtimeWindow.map {
+                TonightPlan(bedtimeMinutes: $0.centerMinutes, wakeMinutes: snapshot.tonight.wakeMinutes, needMinutes: snapshot.tonight.needMinutes)
+            } ?? snapshot.tonight
         let mode = modeOverride ?? Self.mode(now: now, plan: plan, calendar: calendar)
         let times = tonightTimes(now: now, plan: plan, format: format)
         let summary: HeaderSummary = mode == .evening ? .bedtime(times) : .text(daySummary(snapshot, recovery: recovery))
-        let showsDataCards: Bool = switch recovery {
-        case .connect, .noSleepData, .failed: false
-        case .learning, .scored, .noSleep, .stale: true
-        }
+        let showsDataCards: Bool =
+            switch recovery {
+            case .connect, .noSleepData, .failed: false
+            case .learning, .scored, .noSleep, .stale: true
+            }
         var detail: RecoveryDetailContent?
         if case .scored(let content) = recovery, case .scored(let result)? = snapshot.recovery {
             detail = recoveryDetail(result, content: content, needMinutes: snapshot.tonight.needMinutes, render: snapshot.render, format: format)
@@ -441,7 +443,10 @@ public nonisolated enum HomeScreenBuilder {
             mode: mode,
             nextModeChange: nextModeChange(after: now, plan: plan, calendar: calendar),
             recovery: recovery,
-            lastNight: showsDataCards ? snapshot.lastNight.map { lastNightCard($0, heart: snapshot.lastNightHeart, quality: snapshot.lastNightSleepQuality, render: snapshot.render.night, format: format) } : nil,
+            lastNight: showsDataCards
+                ? snapshot.lastNight.map {
+                    lastNightCard($0, heart: snapshot.lastNightHeart, quality: snapshot.lastNightSleepQuality, render: snapshot.render.night, format: format)
+                } : nil,
             insight: showsDataCards ? snapshot.topInsight.map { insightCard($0, format: format) } : nil,
             tonight: tonightCard(plan, window: bedtimeWindow, format: format),
             evening: eveningHero(times, plan: plan, window: bedtimeWindow, format: format),
@@ -524,7 +529,8 @@ public nonisolated enum HomeScreenBuilder {
     public static func loadingHeader(now: Date, plan: TonightPlan, calendar: Calendar, locale: Locale, modeOverride: HomeMode? = nil) -> HomeHeader {
         let format = HomeFormat(calendar: calendar, locale: locale)
         let mode = modeOverride ?? Self.mode(now: now, plan: plan, calendar: calendar)
-        let summary: HeaderSummary = mode == .evening
+        let summary: HeaderSummary =
+            mode == .evening
             ? .bedtime(tonightTimes(now: now, plan: plan, format: format))
             : .text("Reading your sleep data.")
         return header(now: now, newestSample: nil, mode: mode, summary: summary, format: format)
@@ -538,13 +544,14 @@ public nonisolated enum HomeScreenBuilder {
     /// "Good night." from midnight to 4 AM; day mode follows the clock.
     static func header(now: Date, newestSample: Date?, mode: HomeMode, summary: HeaderSummary, format: HomeFormat) -> HomeHeader {
         let hour = format.calendar.component(.hour, from: now)
-        let partOfDay = switch (mode, hour) {
-        case (.evening, 0..<eveningEndMinutes / 60): "night"
-        case (.evening, _): "evening"
-        case (.day, 4..<12): "morning"
-        case (.day, 12..<18): "afternoon"
-        case (.day, _): "evening"
-        }
+        let partOfDay =
+            switch (mode, hour) {
+            case (.evening, 0..<eveningEndMinutes / 60): "night"
+            case (.evening, _): "evening"
+            case (.day, 4..<12): "morning"
+            case (.day, 12..<18): "afternoon"
+            case (.day, _): "evening"
+            }
         let date = format.longDate(now)
         return HomeHeader(
             greetingLead: "Good ",
@@ -627,11 +634,12 @@ public nonisolated enum HomeScreenBuilder {
         }
         let line = confidenceLine(result)
         let why = whyLine(result.topContributor)
-        let phrase = switch (chip, why) {
-        case (nil, _): "Not enough nights yet to compare."
-        case (_, nil): "In line with your usual"
-        default: "vs your usual"
-        }
+        let phrase =
+            switch (chip, why) {
+            case (nil, _): "Not enough nights yet to compare."
+            case (_, nil): "In line with your usual"
+            default: "vs your usual"
+            }
         return ScoredRecoveryContent(
             score: result.score,
             segments: (ring ?? RingRenderBuilder.build(result)).map(RingSegmentContent.init(arc:)),
@@ -657,13 +665,14 @@ public nonisolated enum HomeScreenBuilder {
         let above = contributor.direction == .above
         let minutes = Int(abs(contributor.difference).rounded())
         let amount = spoken ? HomeFormat.spokenDuration(minutes) : HomeFormat.compactDuration(minutes, minutesWord: true)
-        let reason = switch contributor.measure {
-        case .sleepDuration: "sleep was \(amount) \(above ? "longer" : "shorter") than usual"
-        case .hrv: "HRV \(above ? "above" : "below") your normal range"
-        case .restingHeartRate: "resting heart rate \(above ? "above" : "below") your normal range"
-        case .bedtime: "bedtime \(amount) \(above ? "later" : "earlier") than usual"
-        case .wakeTime: "wake-up \(amount) \(above ? "later" : "earlier") than usual"
-        }
+        let reason =
+            switch contributor.measure {
+            case .sleepDuration: "sleep was \(amount) \(above ? "longer" : "shorter") than usual"
+            case .hrv: "HRV \(above ? "above" : "below") your normal range"
+            case .restingHeartRate: "resting heart rate \(above ? "above" : "below") your normal range"
+            case .bedtime: "bedtime \(amount) \(above ? "later" : "earlier") than usual"
+            case .wakeTime: "wake-up \(amount) \(above ? "later" : "earlier") than usual"
+            }
         return (spoken ? "Mostly, " : "Mostly: ") + reason
     }
 
@@ -691,11 +700,12 @@ public nonisolated enum HomeScreenBuilder {
     /// alone "Low confidence · sleep only. HRV and heart rate aren't
     /// available from your sources."
     public static func confidenceLine(_ result: RecoveryResult) -> String {
-        let tier = switch result.confidence {
-        case .high: "High confidence"
-        case .moderate: "Moderate confidence"
-        case .low: "Low confidence"
-        }
+        let tier =
+            switch result.confidence {
+            case .high: "High confidence"
+            case .moderate: "Moderate confidence"
+            case .low: "Low confidence"
+            }
         let used = factorOrder.filter { result.factorsUsed.contains($0) }
         let heartFactors: [RecoveryFactorKind] = [.hrv, .restingHeartRate]
         guard used.contains(where: heartFactors.contains) else {
@@ -713,11 +723,12 @@ public nonisolated enum HomeScreenBuilder {
             guard !names.isEmpty else { return nil }
             let plural = names.count > 1
             let subject = names.joined(separator: " and ")
-            let sentence = switch gap {
-            case .unavailable: "\(subject) \(plural ? "aren't" : "isn't") available from your sources."
-            case .notRecorded: "\(subject) \(plural ? "weren't" : "wasn't") recorded last night."
-            case .buildingBaseline: "\(subject) \(plural ? "baselines are" : "baseline is") still forming."
-            }
+            let sentence =
+                switch gap {
+                case .unavailable: "\(subject) \(plural ? "aren't" : "isn't") available from your sources."
+                case .notRecorded: "\(subject) \(plural ? "weren't" : "wasn't") recorded last night."
+                case .buildingBaseline: "\(subject) \(plural ? "baselines are" : "baseline is") still forming."
+                }
             return sentence.prefix(1).uppercased() + sentence.dropFirst()
         }
     }
@@ -768,7 +779,9 @@ public nonisolated enum HomeScreenBuilder {
 
     // MARK: Recovery detail
 
-    static func recoveryDetail(_ result: RecoveryResult, content: ScoredRecoveryContent, needMinutes: Int, render: HomeRenderModel? = nil, format: HomeFormat) -> RecoveryDetailContent {
+    static func recoveryDetail(
+        _ result: RecoveryResult, content: ScoredRecoveryContent, needMinutes: Int, render: HomeRenderModel? = nil, format: HomeFormat
+    ) -> RecoveryDetailContent {
         let rows = factorOrder.compactMap { result.factor($0) }.map { detailRow($0, result: result, needMinutes: needMinutes, render: render, format: format) }
         return RecoveryDetailContent(
             recovery: content,
@@ -778,7 +791,9 @@ public nonisolated enum HomeScreenBuilder {
         )
     }
 
-    public static func detailRow(_ factor: RecoveryFactor, result: RecoveryResult, needMinutes: Int, render: HomeRenderModel? = nil, format: HomeFormat) -> FactorDetailRow {
+    public static func detailRow(
+        _ factor: RecoveryFactor, result: RecoveryResult, needMinutes: Int, render: HomeRenderModel? = nil, format: HomeFormat
+    ) -> FactorDetailRow {
         let name = shortName(factor.kind)
         let value: NoctisMetricValue
         var suffix: String?
@@ -790,7 +805,8 @@ public nonisolated enum HomeScreenBuilder {
             let need = HomeFormat.compactDuration(needMinutes)
             value = HomeFormat.durationMetric(slept)
             baseline = factor.baseline.map { "baseline \(HomeFormat.compactDuration(Int($0.rounded())))" } ?? "no baseline yet"
-            sentence = slept >= needMinutes
+            sentence =
+                slept >= needMinutes
                 ? "You met your \(need) sleep need."
                 : "You slept \(HomeFormat.compactDuration(slept)) of your \(need) need."
         case .hrv:
@@ -800,15 +816,24 @@ public nonisolated enum HomeScreenBuilder {
             let v1Sentence = percent == 0 ? "In line with your baseline." : "\(abs(percent))% \(percent > 0 ? "above" : "below") your baseline."
             value = HomeFormat.quantityMetric(ms, .millisecond)
             baseline = "baseline \(NoctisQuantityText.text(Int(usual.rounded()), .millisecond))"
-            sentence = factor.range.map { rangeSentence($0, value: NoctisQuantityText.text(ms, .millisecond), baseline: NoctisQuantityText.text(Int(usual.rounded()), .millisecond)) } ?? v1Sentence
+            sentence =
+                factor.range.map {
+                    rangeSentence($0, value: NoctisQuantityText.text(ms, .millisecond), baseline: NoctisQuantityText.text(Int(usual.rounded()), .millisecond))
+                } ?? v1Sentence
         case .restingHeartRate:
             let usual = factor.baseline ?? factor.value
             let bpm = Int(factor.value.rounded())
             let difference = bpm - Int(usual.rounded())
-            let v1Sentence = difference == 0 ? "Same as your baseline." : "\(NoctisQuantityText.text(abs(difference), .beatsPerMinute)) \(difference > 0 ? "above" : "below") your baseline."
+            let v1Sentence =
+                difference == 0
+                ? "Same as your baseline." : "\(NoctisQuantityText.text(abs(difference), .beatsPerMinute)) \(difference > 0 ? "above" : "below") your baseline."
             value = HomeFormat.quantityMetric(bpm, .beatsPerMinute)
             baseline = "baseline \(NoctisQuantityText.text(Int(usual.rounded()), .beatsPerMinute))"
-            sentence = factor.range.map { rangeSentence($0, value: NoctisQuantityText.text(bpm, .beatsPerMinute), baseline: NoctisQuantityText.text(Int(usual.rounded()), .beatsPerMinute)) } ?? v1Sentence
+            sentence =
+                factor.range.map {
+                    rangeSentence(
+                        $0, value: NoctisQuantityText.text(bpm, .beatsPerMinute), baseline: NoctisQuantityText.text(Int(usual.rounded()), .beatsPerMinute))
+                } ?? v1Sentence
         case .sleepConsistency:
             let minutes = Int(factor.value.rounded())
             value = HomeFormat.durationMetric(minutes)
@@ -818,7 +843,8 @@ public nonisolated enum HomeScreenBuilder {
             } else {
                 baseline = "no baseline yet"
             }
-            sentence = minutes == 0
+            sentence =
+                minutes == 0
                 ? "Right on your usual bedtime and wake time."
                 : "Bedtime and wake time were \(HomeFormat.compactDuration(minutes, minutesWord: true)) from your usual, on average."
         }
@@ -835,12 +861,13 @@ public nonisolated enum HomeScreenBuilder {
     /// scaled them (0...1 up); consistency is drawn as bedtime.
     public static func sparklineContent(_ history: RecoveryFactorHistory, render: SparklineRender? = nil) -> SparklineContent {
         let render = render ?? SparklineRenderBuilder.build(history)
-        let subject = switch history.kind {
-        case .sleepDuration: "Sleep"
-        case .hrv: "HRV"
-        case .restingHeartRate: "Resting heart rate"
-        case .sleepConsistency: "Bedtime"
-        }
+        let subject =
+            switch history.kind {
+            case .sleepDuration: "Sleep"
+            case .hrv: "HRV"
+            case .restingHeartRate: "Resting heart rate"
+            case .sleepConsistency: "Bedtime"
+            }
         return SparklineContent(
             nights: render.nights,
             today: render.today,
@@ -870,13 +897,15 @@ public nonisolated enum HomeScreenBuilder {
                     ? " HRV and resting heart rate are scored against how much they normally vary for you: a typical night scores about "
                         + "\(Int(RecoveryModelV2.variationCenter)), and each standard deviation better or worse moves the score "
                         + "\(Int(RecoveryModelV2.pointsPerStandardDeviation)) points."
-                    : ""),
+                    : "")
         ]
         if result.factors.count < RecoveryFactorKind.allCases.count {
             let today = factorOrder.compactMap { result.factor($0) }
                 .map { "\(listName($0.kind)) \(Int(($0.weight * 100).rounded()))%" }
                 .joined(separator: ", ")
-            paragraphs.append("A signal without data, or without \(BaselineEngine.minimumNights) nights to compare with, is left out and the others share its weight. Today: \(today).")
+            paragraphs.append(
+                "A signal without data, or without \(BaselineEngine.minimumNights) nights to compare with, is left out and the others share its weight. Today: \(today)."
+            )
         } else {
             paragraphs.append("Today all four signals count.")
         }
@@ -909,7 +938,8 @@ public nonisolated enum HomeScreenBuilder {
     // MARK: This week
 
     static func weekCard(_ snapshot: HomeSnapshot, format: HomeFormat) -> WeekCardContent {
-        let render = snapshot.render.week.bars.count == snapshot.recentNights.count
+        let render =
+            snapshot.render.week.bars.count == snapshot.recentNights.count
             ? snapshot.render.week
             : WeekRenderBuilder.build(snapshot.recentNights, needMinutes: snapshot.tonight.needMinutes, lastNight: snapshot.lastNight?.night)
         let bars = snapshot.recentNights.enumerated().map { index, night -> WeekBar in
@@ -920,10 +950,12 @@ public nonisolated enum HomeScreenBuilder {
             let stageParts: [(String, Int)] = night.stages.map { [("Deep", Int($0.deep.rounded())), ("REM", Int($0.rem.rounded()))] } ?? []
             // A night that was recorded without stages says so.
             let noStages = minutes != nil && night.stages == nil
-            let pill = [format.weekday(wakeDay, width: .abbreviated), minutes.map { HomeFormat.compactDuration($0) } ?? "No data"]
+            let pill =
+                [format.weekday(wakeDay, width: .abbreviated), minutes.map { HomeFormat.compactDuration($0) } ?? "No data"]
                 + stageParts.map { "\($0.0) \(HomeFormat.compactDuration($0.1))" }
                 + (noStages ? ["No stages"] : [])
-            let spoken = [dayName, minutes.map { HomeFormat.spokenDuration($0) } ?? "no data"]
+            let spoken =
+                [dayName, minutes.map { HomeFormat.spokenDuration($0) } ?? "no data"]
                 + stageParts.map { "\($0.0 == "Deep" ? "deep" : $0.0) \(HomeFormat.spokenDuration($0.1))" }
                 + (noStages ? ["no stage detail"] : [])
             return WeekBar(
@@ -995,7 +1027,6 @@ nonisolated extension NoctisFormat {
         }
     }
 }
-
 
 nonisolated extension HomeFormat {
     /// Noon of a night's calendar day, on this calendar.

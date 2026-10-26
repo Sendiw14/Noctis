@@ -72,14 +72,16 @@ public nonisolated enum ReviewEngine {
 
         let values = inPeriod.map { night in
             ReviewNightValues(
-                morning: night.morning, asleepMinutes: Int(night.asleepMinutes.rounded()), stages: night.stages, bedtimeMinutes: Int(night.bedtimeMinutes.rounded()),
+                morning: night.morning, asleepMinutes: Int(night.asleepMinutes.rounded()), stages: night.stages,
+                bedtimeMinutes: Int(night.bedtimeMinutes.rounded()),
                 wakeMinutes: Int(night.wakeMinutes.rounded()), recoveryScore: night.recoveryScore
             )
         }
 
         let record = ReviewRecord(
             id: period.id, firstMorning: period.firstMorning, lastMorning: period.lastMorning, generatedAt: now, nightsRecorded: inPeriod.count,
-            nightsInPeriod: period.morningCount, hasComparison: comparable, sleep: sleep, consistency: consistency, recovery: recovery, heart: heart, timing: timing,
+            nightsInPeriod: period.morningCount, hasComparison: comparable, sleep: sleep, consistency: consistency, recovery: recovery, heart: heart,
+            timing: timing,
             nights: values, biggestImprovement: improvement, biggestChange: biggest, topChanges: major,
             topInsightIDs: topInsights(insights, period: period, calendar: calendar),
             nextFocus: focus(period: period, inPeriod: inPeriod, consistency: consistency, timing: timing, recovery: recovery, needMinutes: needMinutes),
@@ -95,7 +97,8 @@ public nonisolated enum ReviewEngine {
         let average = BaselineEngine.baseline(asleep)?.value ?? asleep.reduce(0, +) / Double(asleep.count)
         let previous = before.flatMap { BaselineEngine.baseline($0.map(\.asleepMinutes))?.value }
         return ReviewSleep(
-            averageMinutes: average, nightsReachedNeed: asleep.filter { $0 >= Double(needMinutes) }.count, needMinutes: needMinutes, deltaMinutes: previous.map { average - $0 }
+            averageMinutes: average, nightsReachedNeed: asleep.filter { $0 >= Double(needMinutes) }.count, needMinutes: needMinutes,
+            deltaMinutes: previous.map { average - $0 }
         )
     }
 
@@ -104,7 +107,8 @@ public nonisolated enum ReviewEngine {
         let wake = BaselineEngine.baseline(nights.map(\.wakeMinutes))?.standardDeviation ?? 0
         let previousBedtime = before.flatMap { BaselineEngine.baseline($0.map(\.bedtimeMinutes))?.standardDeviation }
         let previousWake = before.flatMap { BaselineEngine.baseline($0.map(\.wakeMinutes))?.standardDeviation }
-        return ReviewConsistency(bedtimeSD: bedtime, wakeSD: wake, bedtimeSDDelta: previousBedtime.map { bedtime - $0 }, wakeSDDelta: previousWake.map { wake - $0 })
+        return ReviewConsistency(
+            bedtimeSD: bedtime, wakeSD: wake, bedtimeSDDelta: previousBedtime.map { bedtime - $0 }, wakeSDDelta: previousWake.map { wake - $0 })
     }
 
     private static func recoverySummary(_ nights: [ReviewNightInput], before: [ReviewNightInput]?) -> ReviewRecovery? {
@@ -115,7 +119,8 @@ public nonisolated enum ReviewEngine {
         let previous = before.flatMap { BaselineEngine.baseline($0.compactMap { $0.recoveryScore.map(Double.init) })?.value }
         return ReviewRecovery(
             average: average, scoredNights: scored.count,
-            high: extreme(scored.map { (Double($0.score), $0.morning) }, highest: true), low: extreme(scored.map { (Double($0.score), $0.morning) }, highest: false),
+            high: extreme(scored.map { (Double($0.score), $0.morning) }, highest: true),
+            low: extreme(scored.map { (Double($0.score), $0.morning) }, highest: false),
             trend: trend, delta: previous.map { average - $0 }
         )
     }
@@ -138,7 +143,8 @@ public nonisolated enum ReviewEngine {
         let previousBedtime = before.flatMap { median($0.map(\.bedtimeMinutes)) }
         let previousWake = before.flatMap { median($0.map(\.wakeMinutes)) }
         return ReviewTiming(
-            medianBedtimeMinutes: bedtime, medianWakeMinutes: wake, bedtimeShift: previousBedtime.map { bedtime - $0 }, wakeShift: previousWake.map { wake - $0 }
+            medianBedtimeMinutes: bedtime, medianWakeMinutes: wake, bedtimeShift: previousBedtime.map { bedtime - $0 },
+            wakeShift: previousWake.map { wake - $0 }
         )
     }
 
@@ -152,11 +158,15 @@ public nonisolated enum ReviewEngine {
             return ReviewChange(metric: metric, value: value, previous: previous, normalized: (value - previous) / max(spread, ReviewModel.floor(metric)))
         }
         func mean(_ list: [ReviewNightInput], _ value: (ReviewNightInput) -> Double?) -> Double? { BaselineEngine.baseline(list.compactMap(value))?.value }
-        func deviation(_ list: [ReviewNightInput], _ value: (ReviewNightInput) -> Double?) -> Double? { BaselineEngine.baseline(list.compactMap(value))?.standardDeviation }
+        func deviation(_ list: [ReviewNightInput], _ value: (ReviewNightInput) -> Double?) -> Double? {
+            BaselineEngine.baseline(list.compactMap(value))?.standardDeviation
+        }
         return [
             make(.duration, mean(inPeriod) { $0.asleepMinutes }, mean(before) { $0.asleepMinutes }, prior.map(\.asleepMinutes)),
             make(.bedtimeVariation, deviation(inPeriod) { $0.bedtimeMinutes }, deviation(before) { $0.bedtimeMinutes }, prior.map(\.bedtimeMinutes)),
-            make(.recovery, mean(inPeriod) { $0.recoveryScore.map(Double.init) }, mean(before) { $0.recoveryScore.map(Double.init) }, prior.compactMap { $0.recoveryScore.map(Double.init) }),
+            make(
+                .recovery, mean(inPeriod) { $0.recoveryScore.map(Double.init) }, mean(before) { $0.recoveryScore.map(Double.init) },
+                prior.compactMap { $0.recoveryScore.map(Double.init) }),
             make(.hrv, mean(inPeriod) { $0.hrv }, mean(before) { $0.hrv }, prior.compactMap(\.hrv)),
             make(.restingHeartRate, mean(inPeriod) { $0.restingHeartRate }, mean(before) { $0.restingHeartRate }, prior.compactMap(\.restingHeartRate)),
         ].compactMap { $0 }
@@ -170,7 +180,9 @@ public nonisolated enum ReviewEngine {
     /// The changes that count (at least half the person's own variation), the largest first, at most three; equals keep the metrics' own order.
     static func majorChanges(_ candidates: [ReviewChange]) -> [ReviewChange] {
         let counted = candidates.enumerated().filter { passes($0.element.normalized) }
-        let ordered = counted.sorted { abs($0.element.normalized) != abs($1.element.normalized) ? abs($0.element.normalized) > abs($1.element.normalized) : $0.offset < $1.offset }
+        let ordered = counted.sorted {
+            abs($0.element.normalized) != abs($1.element.normalized) ? abs($0.element.normalized) > abs($1.element.normalized) : $0.offset < $1.offset
+        }
         return ordered.prefix(3).map(\.element)
     }
 
@@ -220,7 +232,8 @@ public nonisolated enum ReviewEngine {
 
     static func topInsights(_ insights: [ReviewInsightInput], period: ReviewPeriod, calendar: Calendar) -> [String] {
         var seen: Set<String> = []
-        return insights
+        return
+            insights
             .filter { period.contains(morning: ReviewPeriod.today($0.generatedAt, calendar: calendar)) }
             .sorted { $0.score != $1.score ? $0.score > $1.score : $0.id < $1.id }
             .filter { seen.insert($0.id).inserted }

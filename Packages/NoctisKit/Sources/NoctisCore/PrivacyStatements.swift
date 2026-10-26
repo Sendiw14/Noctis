@@ -42,7 +42,8 @@ public nonisolated enum PrivacyStatements {
     /// "NOCTIS reads your sleep and heart data from Apple Health. It never writes to Health."
     public static func healthReadOnly(_ inventory: DataInventory) -> PrivacyStatement? {
         guard inventory.facts.healthAccess == .readOnly else { return nil }
-        return PrivacyStatement(id: "healthReadOnly", text: "NOCTIS reads your sleep and heart data from Apple Health. It never writes to Health.", evidence: [.appleHealth])
+        return PrivacyStatement(
+            id: "healthReadOnly", text: "NOCTIS reads your sleep and heart data from Apple Health. It never writes to Health.", evidence: [.appleHealth])
     }
 
     /// "Your data is stored on this iPhone."
@@ -57,7 +58,8 @@ public nonisolated enum PrivacyStatements {
     /// "Coach answers are made on your iPhone or built from your data."
     public static func coachLocal(_ inventory: DataInventory) -> PrivacyStatement? {
         guard !inventory.facts.coachUsesRemoteModel else { return nil }
-        return PrivacyStatement(id: "coachLocal", text: "Coach answers are made on your iPhone or built from your data.", evidence: [.appleHealth, .insightHistory, .profile])
+        return PrivacyStatement(
+            id: "coachLocal", text: "Coach answers are made on your iPhone or built from your data.", evidence: [.appleHealth, .insightHistory, .profile])
     }
 
     /// "Nothing is sold or shared."
@@ -109,7 +111,8 @@ public nonisolated enum PrivacyStatements {
     /// Where Coach's answers are written, said only as far as the facts allow.
     public static func coachWritten(_ inventory: DataInventory) -> String? {
         guard !inventory.facts.coachUsesRemoteModel else { return nil }
-        return "Answers are written on your iPhone by Apple Intelligence when it's available. Otherwise NOCTIS builds them from your data with no model at all. Nothing you ask and nothing about your health is sent to a server."
+        return
+            "Answers are written on your iPhone by Apple Intelligence when it's available. Otherwise NOCTIS builds them from your data with no model at all. Nothing you ask and nothing about your health is sent to a server."
     }
 
     /// Coach's sheet: what is kept and how to delete it, from the Coach category.
@@ -207,10 +210,15 @@ public nonisolated enum PrivacyStatements {
             guard let last = items.last else { return "" }
             return items.count == 1 ? last : items.dropLast().joined(separator: ", ") + " and " + last
         }
-        var parts = ["In Settings, Data management deletes \(list(deletes)), one kind at a time, and resets \(list(resets)). Each asks first and says what it removes."]
-        parts.append("\"Delete all NOCTIS data\" removes everything NOCTIS stores on this iPhone and starts the app over. \"Export my data\" makes a copy first, if you want one.")
+        var parts = [
+            "In Settings, Data management deletes \(list(deletes)), one kind at a time, and resets \(list(resets)). Each asks first and says what it removes."
+        ]
+        parts.append(
+            "\"Delete all NOCTIS data\" removes everything NOCTIS stores on this iPhone and starts the app over. \"Export my data\" makes a copy first, if you want one."
+        )
         if let account = noAccount(inventory) { parts.append(account.text) }
-        parts.append("Your health data lives in Apple Health, so to remove it, delete it there. Deleting NOCTIS from your iPhone also removes everything NOCTIS keeps.")
+        parts.append(
+            "Your health data lives in Apple Health, so to remove it, delete it there. Deleting NOCTIS from your iPhone also removes everything NOCTIS keeps.")
         return parts.joined(separator: " ")
     }
 
@@ -237,4 +245,3 @@ public nonisolated enum PrivacyStatements {
         return "Private by design"
     }
 }
-

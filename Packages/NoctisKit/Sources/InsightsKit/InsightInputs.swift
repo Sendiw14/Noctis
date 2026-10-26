@@ -93,7 +93,8 @@ public struct InsightInputs: Sendable, Equatable {
     /// the night every rule is about.
     public var lastNight: InsightNightInput? {
         guard let last = complete.max(by: { $0.wakeTime < $1.wakeTime }),
-              asOf.timeIntervalSince(last.wakeTime) <= RecoveryModelV1.lastNightWindow else { return nil }
+            asOf.timeIntervalSince(last.wakeTime) <= RecoveryModelV1.lastNightWindow
+        else { return nil }
         return last
     }
 }

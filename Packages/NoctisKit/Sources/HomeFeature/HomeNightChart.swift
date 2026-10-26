@@ -1,8 +1,8 @@
 import DesignSystem
 import Foundation
-import NoctisText
 import HealthProviding
 import NoctisCore
+import NoctisText
 import SleepKit
 
 // The night panel's content (and the share card's chart), built by
@@ -33,7 +33,9 @@ public nonisolated struct NightChartContent: Sendable, Equatable {
     /// The same chart without its heart-rate strip (the share card's
     /// default: heart rate shares only with "Include details").
     public func removingHeart() -> NightChartContent {
-        NightChartContent(spans: spans, connectors: connectors, timeLabels: timeLabels, caption: caption, laneTotals: laneTotals, heart: nil, clock: clock, render: render.removingHeart())
+        NightChartContent(
+            spans: spans, connectors: connectors, timeLabels: timeLabels, caption: caption, laneTotals: laneTotals, heart: nil, clock: clock,
+            render: render.removingHeart())
     }
 
     /// What the scrub pill says with the finger at `position` (0...1
@@ -43,7 +45,8 @@ public nonisolated struct NightChartContent: Sendable, Equatable {
     public func reading(at position: Double) -> NightReading? {
         guard let clock, !spans.isEmpty else { return nil }
         let position = min(max(position, 0), 1)
-        let index = spans.firstIndex { position >= $0.start && position < $0.end }
+        let index =
+            spans.firstIndex { position >= $0.start && position < $0.end }
             ?? spans.indices.min { distance(position, spans[$0]) < distance(position, spans[$1]) }
         guard let index else { return nil }
         return reading(segment: index, at: position, clock: clock)
@@ -70,7 +73,8 @@ public nonisolated struct NightChartContent: Sendable, Equatable {
         let length = Int(((span.end - span.start) * minutes).rounded())
         let time = clock.text(at: position)
         let bpm = heart?.bpm(at: position)
-        let text = [time, span.stage.name, HomeFormat.compactDuration(length, minutesWord: true)] + (bpm.map { [NoctisQuantityText.text($0, .beatsPerMinute)] } ?? [])
+        let text =
+            [time, span.stage.name, HomeFormat.compactDuration(length, minutesWord: true)] + (bpm.map { [NoctisQuantityText.text($0, .beatsPerMinute)] } ?? [])
         let spoken = [time, span.stage.name, HomeFormat.spokenDuration(length)] + (bpm.map { [NoctisUnit.beatsPerMinute.spoken($0)] } ?? [])
         return NightReading(
             position: position,
@@ -163,7 +167,9 @@ public nonisolated struct LastNightCardContent: Sendable, Equatable {
 // MARK: - Builder
 
 nonisolated extension HomeScreenBuilder {
-    static func lastNightCard(_ session: SleepSession, heart: NightHeartSeries?, quality: Int? = nil, render: NightRender? = nil, format: HomeFormat) -> LastNightCardContent {
+    static func lastNightCard(
+        _ session: SleepSession, heart: NightHeartSeries?, quality: Int? = nil, render: NightRender? = nil, format: HomeFormat
+    ) -> LastNightCardContent {
         let minutes = Int((session.totals.asleep / 60).rounded())
         let bedtime = format.clock(session.bedtime, in: session.timeZone)
         let wake = format.clock(session.wakeTime, in: session.timeZone)
@@ -241,12 +247,13 @@ nonisolated extension HomeScreenBuilder {
     /// where it's drawn.
     static func laneTotals(_ totals: SleepTotals) -> [NightLaneTotal] {
         NightLane.allCases.map { lane in
-            let seconds: TimeInterval = switch lane {
-            case .awake: totals.awake
-            case .rem: totals.rem
-            case .core: totals.core + totals.unspecified
-            case .deep: totals.deep
-            }
+            let seconds: TimeInterval =
+                switch lane {
+                case .awake: totals.awake
+                case .rem: totals.rem
+                case .core: totals.core + totals.unspecified
+                case .deep: totals.deep
+                }
             let minutes = Int((seconds / 60).rounded())
             return NightLaneTotal(
                 lane: lane,

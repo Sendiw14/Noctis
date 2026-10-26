@@ -26,13 +26,15 @@ public nonisolated enum NoctisStore {
     /// Nothing on disk: tests, previews, and the last resort when the file cannot be opened or replaced.
     public static func inMemory() throws -> ModelContainer {
         let schema = Schema(versionedSchema: NoctisCurrentSchema.self)
-        return try ModelContainer(for: schema, migrationPlan: NoctisMigrationPlan.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        return try ModelContainer(
+            for: schema, migrationPlan: NoctisMigrationPlan.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
     }
 
     /// Opens the database for the app. A damaged file is set aside and the app starts empty; a locked one is left alone and the app runs in memory.
     public static func open(at url: URL = defaultURL, recovery: StoreRecovery? = nil) -> (container: ModelContainer, outcome: StoreOpenOutcome) {
         // Beside the database's own folder: `Noctis/Quarantine` in Application Support, and a test's folder when a test gives one.
-        let recovery = recovery ?? StoreRecovery(quarantineRoot: url.deletingLastPathComponent().appending(path: StoreRecovery.folderPath, directoryHint: .isDirectory))
+        let recovery =
+            recovery ?? StoreRecovery(quarantineRoot: url.deletingLastPathComponent().appending(path: StoreRecovery.folderPath, directoryHint: .isDirectory))
         if let result = try? recovery.open(.app, at: url, make: { try container(at: $0) }, inMemory: { try inMemory() }) {
             return result
         }

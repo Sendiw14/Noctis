@@ -111,7 +111,9 @@ struct HealthScreen: View {
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(NoctisPaper.cocoa))
-        .overlay { if colorScheme == .dark { RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(NoctisPaper.ivory.opacity(0.12), lineWidth: 1) } }
+        .overlay {
+            if colorScheme == .dark { RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(NoctisPaper.ivory.opacity(0.12), lineWidth: 1) }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(note)
         .accessibilityIdentifier("health.privacy")
@@ -119,7 +121,8 @@ struct HealthScreen: View {
 
     private var unavailableBanner: some View {
         HStack(spacing: NoctisSpacing.sm) {
-            Image(systemName: "exclamationmark.triangle.fill").noctisIcon(15, relativeTo: .subheadline).foregroundStyle(NoctisPaper.butter).accessibilityHidden(true)
+            Image(systemName: "exclamationmark.triangle.fill").noctisIcon(15, relativeTo: .subheadline).foregroundStyle(NoctisPaper.butter).accessibilityHidden(
+                true)
             Text("Health data isn't available on this device.")
                 .noctisFont(14, relativeTo: .subheadline)
                 .foregroundStyle(colorScheme == .dark ? NoctisPaper.ivory : NoctisPaper.ink)

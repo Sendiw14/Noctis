@@ -2,10 +2,10 @@ import DesignSystem
 import HomeFeature
 import InsightsKit
 import NoctisCore
+import NoctisText
 import PremiumKit
 import ReviewKit
 import SwiftUI
-import NoctisText
 
 /// A review's story (APP_RULES.md R63): a full-screen page pushed over Insights with the tab bar hidden, a horizontally paged story with progress segments across the top, a
 /// Close button, a Share button where something shareable is shown, and Back and Next buttons, so nothing depends on a gesture alone. A swipe pages it, and a tap on the left or
@@ -91,7 +91,11 @@ public struct ReviewStoryScreen: View {
                     .background(alignment: .top) { band(tint.fill, fadesAbove: true).ignoresSafeArea(edges: .bottom) }
             }
         }
-        .onGeometryChange(for: EdgeInsets.self) { $0.safeAreaInsets } action: { safe = $0 }
+        .onGeometryChange(for: EdgeInsets.self) {
+            $0.safeAreaInsets
+        } action: {
+            safe = $0
+        }
         .onChange(of: model.index) {
             guard position != model.index else { return }
             withAnimation(NoctisMotion.adaptive(NoctisMotion.flow, reduceMotion: reduceMotion)) { position = model.index }
@@ -121,7 +125,11 @@ public struct ReviewStoryScreen: View {
         // Reduce Motion: the pages cross-fade; swiping still goes back and on.
         .scrollDisabled(reduceMotion)
         .ignoresSafeArea()
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.width
+        } action: {
+            width = $0
+        }
         // A tap on the left or right third goes back or on. A button on a page takes its own tap first.
         .gesture(
             SpatialTapGesture().onEnded { tap in
@@ -348,7 +356,8 @@ struct ReviewMessageView: View {
         VStack(alignment: .leading, spacing: NoctisSpacing.md) {
             switch page {
             case .notEnough(let content):
-                ReviewMessageCard(caption: content.dateRange.uppercased(), headline: content.count, detail: content.detail, identifier: "review.notEnough", prominent: true)
+                ReviewMessageCard(
+                    caption: content.dateRange.uppercased(), headline: content.count, detail: content.detail, identifier: "review.notEnough", prominent: true)
             case .notOver(let content):
                 ReviewMessageCard(caption: content.dateRange.uppercased(), headline: content.count, detail: content.detail, identifier: "review.notOver")
             case .noAccess(let title, let line):

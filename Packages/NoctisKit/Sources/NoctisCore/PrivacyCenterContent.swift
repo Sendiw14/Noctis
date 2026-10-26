@@ -40,7 +40,9 @@ public nonisolated struct PrivacyCenterContent: Sendable, Equatable {
 public nonisolated enum PrivacyCenterBuilder {
     /// `dataManagement`: whether the app has a Data management page to point at.
     public static func content(_ inventory: DataInventory, roots: DataRoots = DataRoots(), dataManagement: Bool = false) -> PrivacyCenterContent {
-        let reads = HealthDataKind.allCases.map { PrivacyCenterContent.Line(id: $0.rawValue, title: $0.displayName, detail: $0.benefit, value: nil, category: nil) }
+        let reads = HealthDataKind.allCases.map {
+            PrivacyCenterContent.Line(id: $0.rawValue, title: $0.displayName, detail: $0.benefit, value: nil, category: nil)
+        }
         let stays = inventory.categories.filter { $0.destination == .never || $0.destination.isPairedWatch }.map { category in
             PrivacyCenterContent.Line(id: category.id.rawValue, title: category.name, detail: protectionLine(category), value: nil, category: category.id)
         }
@@ -115,7 +117,8 @@ public nonisolated enum PrivacyCenterBuilder {
         if inventory.flows.isEmpty { return "Nothing leaves this iPhone." }
         if PrivacyStatements.nothingSoldOrShared(inventory) == nil { return "Some of your data goes to others. It is listed here." }
         if inventory.flows.contains(where: { $0.trigger == .toYourWatch }) {
-            return "NOCTIS sends a summary to your own Apple Watch by itself, and nothing anywhere else. This is everything that can leave, and what makes it leave."
+            return
+                "NOCTIS sends a summary to your own Apple Watch by itself, and nothing anywhere else. This is everything that can leave, and what makes it leave."
         }
         return "NOCTIS sends nothing anywhere by itself. This is everything that can leave, and what makes it leave."
     }

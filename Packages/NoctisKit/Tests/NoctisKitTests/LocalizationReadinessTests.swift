@@ -96,7 +96,9 @@ struct LocalizationReadinessTests {
         let csv = try String(contentsOf: Self.repository.appending(path: "Localizations/needs-translation.csv"), encoding: .utf8)
         for catalog in try Self.catalogs() {
             for key in catalog.strings.keys {
-                #expect(csv.contains("\n\(key),") || csv.contains("\n\"\(key)\","), "Localizations/needs-translation.csv has no row for \(key) (scripts/qa_localization.py csv)")
+                #expect(
+                    csv.contains("\n\(key),") || csv.contains("\n\"\(key)\","),
+                    "Localizations/needs-translation.csv has no row for \(key) (scripts/qa_localization.py csv)")
             }
         }
         #expect(csv.hasPrefix("key,english,comment,context,max_length_hint,catalog"))
@@ -149,7 +151,9 @@ struct LocalizationReadinessTests {
         var hits: [String] = []
         for url in Self.files(under: "Packages/NoctisKit/Sources", extension: "swift") where !url.path.contains("/NoctisText/") {
             let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
-            for line in Self.code(text) where line.text.contains("== 1 ? \"") && !line.text.contains("copy(") { hits.append("\(url.lastPathComponent):\(line.number)") }
+            for line in Self.code(text) where line.text.contains("== 1 ? \"") && !line.text.contains("copy(") {
+                hits.append("\(url.lastPathComponent):\(line.number)")
+            }
         }
         #expect(hits.isEmpty, "a plural is made with `== 1 ? \"` (use NoctisCount): \(hits)")
     }
@@ -157,7 +161,9 @@ struct LocalizationReadinessTests {
     /// Literal text in views and builders that is in no catalog: it can only go down. `scripts/qa_localization.py csv` lists every one with its file and
     /// line; moving one into a catalog (with a key and a comment) lowers the number.
     @Test nonisolated func theLiteralsNotYetInACatalogOnlyShrink() throws {
-        let pattern = try NSRegularExpression(pattern: #"\b(Text|Button|Label|NoctisCTA|NoctisTextButton)\("([^"\\]{2,})"|\.(navigationTitle|accessibilityLabel|accessibilityHint)\("([^"\\]{2,})""#)
+        let pattern = try NSRegularExpression(
+            pattern:
+                #"\b(Text|Button|Label|NoctisCTA|NoctisTextButton)\("([^"\\]{2,})"|\.(navigationTitle|accessibilityLabel|accessibilityHint)\("([^"\\]{2,})""#)
         var count = 0
         for folder in ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets"] {
             for url in Self.files(under: folder, extension: "swift") {
@@ -173,7 +179,8 @@ struct LocalizationReadinessTests {
     }
 
     @Test nonisolated func layoutNamesLeadingAndTrailingNeverLeftAndRight() throws {
-        let pattern = try NSRegularExpression(pattern: #"\.padding\(\.(left|right)\b|Edge\.Set\.(left|right)|alignment: \.(left|right)\b|\.frame\(.*alignment: \.(left|right)"#)
+        let pattern = try NSRegularExpression(
+            pattern: #"\.padding\(\.(left|right)\b|Edge\.Set\.(left|right)|alignment: \.(left|right)\b|\.frame\(.*alignment: \.(left|right)"#)
         var hits: [String] = []
         for url in Self.files(under: "Packages/NoctisKit/Sources", extension: "swift") {
             let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""

@@ -19,10 +19,12 @@ struct CoachHelpSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: NoctisSpacing.md) {
-                    Text("If you might act on thoughts of harming yourself, call your local emergency number now. These lines are free to talk to, and open at any hour in most places.")
-                        .noctisFont(17, relativeTo: .body)
-                        .foregroundStyle(NoctisAppColor.ink)
-                        .fixedSize(horizontal: false, vertical: true)
+                    Text(
+                        "If you might act on thoughts of harming yourself, call your local emergency number now. These lines are free to talk to, and open at any hour in most places."
+                    )
+                    .noctisFont(17, relativeTo: .body)
+                    .foregroundStyle(NoctisAppColor.ink)
+                    .fixedSize(horizontal: false, vertical: true)
 
                     Menu {
                         ForEach(CoachHelplines.regions + [CoachHelplines.generic]) { item in

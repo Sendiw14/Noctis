@@ -1,9 +1,9 @@
 import DesignSystem
 import Foundation
 import InsightsKit
+import NoctisText
 import RecoveryKit
 import SleepKit
-import NoctisText
 
 /// One side of a featured insight's two-number comparison.
 public nonisolated struct InsightNumber: Sendable, Equatable {
@@ -98,8 +98,12 @@ public nonisolated enum InsightScreenBuilder {
 
     /// Every sentence and label an insight can show, for the language lint.
     public static func strings(_ content: InsightContent) -> [String] {
-        [content.title, content.rowLine, content.context, content.interpretation, content.whatToNotice, content.confidenceLine, content.method.rule, content.method.nights, content.accessibilityLabel]
-            + content.evidenceLines + content.method.thresholds + [content.whatYouCanTry, content.notProofLine].compactMap { $0 } + content.comparison.map(\.label)
+        [
+            content.title, content.rowLine, content.context, content.interpretation, content.whatToNotice, content.confidenceLine, content.method.rule,
+            content.method.nights, content.accessibilityLabel,
+        ]
+            + content.evidenceLines + content.method.thresholds + [content.whatYouCanTry, content.notProofLine].compactMap { $0 }
+            + content.comparison.map(\.label)
     }
 
     // MARK: - Wording
@@ -171,8 +175,11 @@ public nonisolated enum InsightScreenBuilder {
             return Words(
                 title: less ? "Shorter night than usual" : "Longer night than usual",
                 row: "\(duration(e.value)) last night, \(amount(e.delta)) \(less ? "less" : "more") than your usual \(duration(e.baseline)).",
-                evidence: ["Last night · \(duration(e.value))", "Your usual · \(duration(e.baseline))", "Difference · \(amount(e.delta)) \(less ? "less" : "more")"],
-                context: "Compared with your recent baseline of \(duration(e.baseline)) (the average of \(span)), last night was \(amount(e.delta)) \(less ? "shorter" : "longer").",
+                evidence: [
+                    "Last night · \(duration(e.value))", "Your usual · \(duration(e.baseline))", "Difference · \(amount(e.delta)) \(less ? "less" : "more")",
+                ],
+                context:
+                    "Compared with your recent baseline of \(duration(e.baseline)) (the average of \(span)), last night was \(amount(e.delta)) \(less ? "shorter" : "longer").",
                 interpretation: "Your recent data suggests last night ran \(less ? "shorter" : "longer") than your usual range.",
                 notice: "Notice whether today feels different from your usual days.",
                 attempt: less ? "Leave a little extra room for sleep tonight, if your evening allows." : "Keep tonight's routine the same as usual.",
@@ -187,12 +194,14 @@ public nonisolated enum InsightScreenBuilder {
             let later = e.delta > 0
             return Words(
                 title: later ? "Later bedtime than usual" : "Earlier bedtime than usual",
-                row: "\(format.clock(minutesAfterNoon: e.value)) last night, \(amount(e.delta)) \(later ? "later" : "earlier") than your usual \(format.clock(minutesAfterNoon: e.baseline)).",
+                row:
+                    "\(format.clock(minutesAfterNoon: e.value)) last night, \(amount(e.delta)) \(later ? "later" : "earlier") than your usual \(format.clock(minutesAfterNoon: e.baseline)).",
                 evidence: [
                     "Last night · \(format.clock(minutesAfterNoon: e.value))", "Your usual · \(format.clock(minutesAfterNoon: e.baseline))",
                     "Difference · \(amount(e.delta)) \(later ? "later" : "earlier")",
                 ],
-                context: "Compared with your recent baseline of \(format.clock(minutesAfterNoon: e.baseline)) (the average of \(span)), last night's bedtime was \(amount(e.delta)) \(later ? "later" : "earlier").",
+                context:
+                    "Compared with your recent baseline of \(format.clock(minutesAfterNoon: e.baseline)) (the average of \(span)), last night's bedtime was \(amount(e.delta)) \(later ? "later" : "earlier").",
                 interpretation: "Your recent data suggests a shift in when you went to bed.",
                 notice: "Notice whether waking up felt different after \(later ? "a later" : "an earlier") night.",
                 attempt: tonightBedtime(e.baseline, format),
@@ -209,8 +218,12 @@ public nonisolated enum InsightScreenBuilder {
             return Words(
                 title: "Steady bedtime",
                 row: "\(streak) nights in a row within \(tolerance) min of your usual bedtime.",
-                evidence: ["Streak · \(streak) nights", "Your usual · \(format.clock(minutesAfterNoon: e.baseline))", "Last night · \(format.clock(minutesAfterNoon: e.value))"],
-                context: "Compared with your recent baseline of \(format.clock(minutesAfterNoon: e.baseline)) (the average of \(span)), each of your last \(streak) bedtimes fell within \(tolerance) minutes of it.",
+                evidence: [
+                    "Streak · \(streak) nights", "Your usual · \(format.clock(minutesAfterNoon: e.baseline))",
+                    "Last night · \(format.clock(minutesAfterNoon: e.value))",
+                ],
+                context:
+                    "Compared with your recent baseline of \(format.clock(minutesAfterNoon: e.baseline)) (the average of \(span)), each of your last \(streak) bedtimes fell within \(tolerance) minutes of it.",
                 interpretation: "Your recent data suggests a steady bedtime.",
                 notice: "Notice how regular evenings feel compared with the rest of your week.",
                 attempt: tonightBedtime(e.baseline, format),
@@ -240,12 +253,14 @@ public nonisolated enum InsightScreenBuilder {
                 "Earlier nights · \(e.earlyNights) nights, average \(early)", "Later nights · \(e.lateNights) nights, average \(late)",
                 "Difference · \(points) points", "Middle bedtime in this window · \(median)",
             ],
-            context: "Compared with your recent baseline, the middle bedtime of \(median) over this window, your \(e.earlyNights) earlier nights averaged \(early) and your \(e.lateNights) later nights averaged \(late) on sleep continuity, stage balance and HRV over the last \(e.windowNights) nights.",
+            context:
+                "Compared with your recent baseline, the middle bedtime of \(median) over this window, your \(e.earlyNights) earlier nights averaged \(early) and your \(e.lateNights) later nights averaged \(late) on sleep continuity, stage balance and HRV over the last \(e.windowNights) nights.",
             interpretation: "This has coincided with \(earlier ? "higher" : "lower") scores on the nights you went to bed earlier.",
             notice: "Notice how you feel after earlier and later nights.",
             attempt: "",
             method: InsightMethod(
-                rule: "We split your last \(e.windowNights) nights into those \(step)+ minutes earlier and \(step)+ minutes later than your median bedtime, then compare the average of three scores: sleep continuity, stage balance and HRV. Duration and consistency are left out: both follow from bedtime itself.",
+                rule:
+                    "We split your last \(e.windowNights) nights into those \(step)+ minutes earlier and \(step)+ minutes later than your median bedtime, then compare the average of three scores: sleep continuity, stage balance and HRV. Duration and consistency are left out: both follow from bedtime itself.",
                 thresholds: [
                     "Each group needs at least \(InsightModelV2.patternMinimumPerGroup) nights.",
                     "Shown when the groups differ by \(Int(InsightModelV2.patternMinimumDifference)) points or more and the effect size is at least \(String(format: "%.1f", InsightModelV2.patternMinimumEffect)).",
@@ -269,7 +284,9 @@ public nonisolated enum InsightScreenBuilder {
         return Words(
             title: rising ? "Recovery trending higher" : "Recovery trending lower",
             row: "\(e.consecutiveDays) days of a \(rising ? "rising" : "lower") trend, about \(slope) points a week.",
-            evidence: ["Trend · \(slope) points a week", "Days in a row · \(e.consecutiveDays)", "Seven days ago · \(e.startScore)", "Latest · \(e.latestScore)"],
+            evidence: [
+                "Trend · \(slope) points a week", "Days in a row · \(e.consecutiveDays)", "Seven days ago · \(e.startScore)", "Latest · \(e.latestScore)",
+            ],
             context: "Compared with your recent baseline, your Recovery score has moved from \(e.startScore) to \(e.latestScore) over the last 7 days.",
             interpretation: "Your recent data suggests a \(rising ? "rising" : "lower") trend for \(e.consecutiveDays) days in a row.",
             notice: "Notice how your energy through the day lines up with these scores.",
@@ -308,14 +325,21 @@ public nonisolated enum InsightScreenBuilder {
         return Words(
             title: isHRV ? "HRV below your normal range" : "Resting heart rate above your normal range",
             row: "\(name) was \(value) \(unit) last night, \(isHRV ? "under" : "over") your normal range of \(low)–\(high) \(unit).",
-            evidence: ["Last night · \(value) \(unit)", "Your usual · \(usual) \(unit)", "Normal range · \(low)–\(high) \(unit)", "Nights in a row · \(e.consecutiveNights)"],
-            context: "Compared with your recent baseline of \(usual) \(unit), \(name) has been \(isHRV ? "below" : "above") your normal range for \(e.consecutiveNights) nights in a row.",
-            interpretation: "Your recent data suggests a few nights \(isHRV ? "lower" : "higher") than your usual on this measure, which varies naturally from night to night.",
+            evidence: [
+                "Last night · \(value) \(unit)", "Your usual · \(usual) \(unit)", "Normal range · \(low)–\(high) \(unit)",
+                "Nights in a row · \(e.consecutiveNights)",
+            ],
+            context:
+                "Compared with your recent baseline of \(usual) \(unit), \(name) has been \(isHRV ? "below" : "above") your normal range for \(e.consecutiveNights) nights in a row.",
+            interpretation:
+                "Your recent data suggests a few nights \(isHRV ? "lower" : "higher") than your usual on this measure, which varies naturally from night to night.",
             notice: "Notice how you feel, and how much rest the next few nights bring.",
             attempt: "",
             method: InsightMethod(
                 rule: "We compare each night's \(name) with your normal range: your average over the 14 nights before it, give or take one standard deviation.",
-                thresholds: ["Shown when \(name) is \(isHRV ? "below" : "above") that range for \(InsightModelV2.heartConsecutiveNights) or more nights in a row."],
+                thresholds: [
+                    "Shown when \(name) is \(isHRV ? "below" : "above") that range for \(InsightModelV2.heartConsecutiveNights) or more nights in a row."
+                ],
                 nights: "Your normal range is built from \(nights(e.baselineNights))."
             ),
             comparison: [
@@ -336,7 +360,10 @@ public nonisolated enum InsightScreenBuilder {
         return Words(
             title: steadier ? "Bedtimes are steadier" : "Bedtimes are less steady",
             row: "Bedtime varied by \(recent) min over the last 14 nights, \(steadier ? "down" : "up") from \(previous) min.",
-            evidence: ["Last 14 nights · varied by \(recent) min", "The 14 before · varied by \(previous) min", "Change · \(amount(e.delta)) \(steadier ? "steadier" : "less steady")"],
+            evidence: [
+                "Last 14 nights · varied by \(recent) min", "The 14 before · varied by \(previous) min",
+                "Change · \(amount(e.delta)) \(steadier ? "steadier" : "less steady")",
+            ],
             context: "Compared with your recent baseline (the 14 nights before), how much your bedtime varied went from \(previous) min to \(recent) min.",
             interpretation: "Your recent data suggests your bedtimes have become \(steadier ? "steadier" : "less regular").",
             notice: "Notice whether a steadier or looser routine changes how your mornings feel.",
@@ -361,11 +388,16 @@ public nonisolated enum InsightScreenBuilder {
         return Words(
             title: behind ? "Behind your sleep need this week" : "Ahead of your sleep need this week",
             row: "\(amount(e.minutes)) \(behind ? "behind" : "ahead of") your sleep need over the last \(e.recordedNights) nights.",
-            evidence: ["Average night · \(duration(average))", "Your sleep need · \(duration(e.needMinutes))", "Over \(nights(e.recordedNights)) · \(amount(e.minutes)) \(behind ? "behind" : "ahead")"],
-            context: "Compared with your sleep need of \(duration(e.needMinutes)) a night, your last \(nights(e.recordedNights)) added up to \(amount(e.minutes)) \(behind ? "less" : "more") sleep in total.",
+            evidence: [
+                "Average night · \(duration(average))", "Your sleep need · \(duration(e.needMinutes))",
+                "Over \(nights(e.recordedNights)) · \(amount(e.minutes)) \(behind ? "behind" : "ahead")",
+            ],
+            context:
+                "Compared with your sleep need of \(duration(e.needMinutes)) a night, your last \(nights(e.recordedNights)) added up to \(amount(e.minutes)) \(behind ? "less" : "more") sleep in total.",
             interpretation: "Your recent data suggests you have been sleeping \(behind ? "under" : "over") your need lately.",
             notice: "Notice how the balance moves as your nights change.",
-            attempt: behind ? "A little extra sleep over the next few nights would close the gap gradually." : "Keep the routine that has been working for you.",
+            attempt: behind
+                ? "A little extra sleep over the next few nights would close the gap gradually." : "Keep the routine that has been working for you.",
             method: InsightMethod(
                 rule: "We add up, over your last 7 nights, how much you slept more or less than the sleep need you set.",
                 thresholds: ["Shown when the total is \(Int(InsightModelV2.balanceMinutes / 60)) hours or more either way."],
@@ -382,18 +414,23 @@ public nonisolated enum InsightScreenBuilder {
         let later = e.delta > 0
         return Words(
             title: later ? "Later bedtimes on weekends" : "Earlier bedtimes on weekends",
-            row: "Weekend bedtimes run \(amount(e.delta)) \(later ? "later" : "earlier") than weekdays (\(format.clock(minutesAfterNoon: e.weekendMedian)) and \(format.clock(minutesAfterNoon: e.weekdayMedian))).",
+            row:
+                "Weekend bedtimes run \(amount(e.delta)) \(later ? "later" : "earlier") than weekdays (\(format.clock(minutesAfterNoon: e.weekendMedian)) and \(format.clock(minutesAfterNoon: e.weekdayMedian))).",
             evidence: [
                 "Weekend nights · \(format.clock(minutesAfterNoon: e.weekendMedian))", "Other nights · \(format.clock(minutesAfterNoon: e.weekdayMedian))",
                 "Difference · \(amount(e.delta)) \(later ? "later" : "earlier")",
             ],
-            context: "Compared with your recent baseline of weekday bedtimes (\(format.clock(minutesAfterNoon: e.weekdayMedian))), your Friday and Saturday bedtimes were \(amount(e.delta)) \(later ? "later" : "earlier") over the last \(e.windowNights) nights.",
+            context:
+                "Compared with your recent baseline of weekday bedtimes (\(format.clock(minutesAfterNoon: e.weekdayMedian))), your Friday and Saturday bedtimes were \(amount(e.delta)) \(later ? "later" : "earlier") over the last \(e.windowNights) nights.",
             interpretation: "Your recent data suggests your bedtime shifts on weekends.",
             notice: "Notice how the start of the week feels after \(later ? "later" : "earlier") weekends.",
             attempt: "",
             method: InsightMethod(
                 rule: "We compare the median bedtime on Friday and Saturday nights with the median on the other nights of the last \(e.windowNights).",
-                thresholds: ["Needs \(InsightModelV2.weekendMinimumWeekendNights)+ weekend nights and \(InsightModelV2.weekendMinimumWeekdayNights)+ other nights.", "Shown when the medians differ by \(Int(InsightModelV2.weekendDeltaMinutes)) minutes or more."],
+                thresholds: [
+                    "Needs \(InsightModelV2.weekendMinimumWeekendNights)+ weekend nights and \(InsightModelV2.weekendMinimumWeekdayNights)+ other nights.",
+                    "Shown when the medians differ by \(Int(InsightModelV2.weekendDeltaMinutes)) minutes or more.",
+                ],
                 nights: "\(e.weekendNights) weekend and \(e.weekdayNights) other nights."
             ),
             comparison: [clockNumber("Weekdays", e.weekdayMedian, format), clockNumber("Weekends", e.weekendMedian, format)],
@@ -420,7 +457,9 @@ public nonisolated enum InsightScreenBuilder {
             attempt: "",
             method: InsightMethod(
                 rule: "We compare the share of your sleep spent in \(name.lowercased()) last night with your average share over the previous 14 nights.",
-                thresholds: ["Needs stage data from your watch.", "Shown when the share differs by \(Int(InsightModelV2.stagePoints)) percentage points or more."],
+                thresholds: [
+                    "Needs stage data from your watch.", "Shown when the share differs by \(Int(InsightModelV2.stagePoints)) percentage points or more.",
+                ],
                 nights: "Your usual is built from \(nights(e.usualNights))."
             ),
             comparison: [
@@ -465,13 +504,16 @@ public nonisolated enum InsightScreenBuilder {
             title: title,
             row: "\(value(e.value)) \(higher ? "beats" : "is under") your previous best of \(value(e.previousBest)).",
             evidence: ["Now · \(value(e.value))", "Previous best · \(value(e.previousBest))", "Window · last \(days) days"],
-            context: "Compared with your other nights over the last \(days) days, this is your \(higher ? "highest" : "lowest") \(label): \(value(e.value)), against a previous best of \(value(e.previousBest)).",
+            context:
+                "Compared with your other nights over the last \(days) days, this is your \(higher ? "highest" : "lowest") \(label): \(value(e.value)), against a previous best of \(value(e.previousBest)).",
             interpretation: "Your recent data suggests a standout night in your last \(days) days.",
             notice: "Notice how a record night compares with how you felt the next day.",
             attempt: "",
             method: InsightMethod(
                 rule: "We look for last night's value being \(higher ? "higher" : "lower") than every other night in the window. A tie is not a record.",
-                thresholds: ["Looks back \(days) nights, needing at least \(days == InsightModelV2.recordLongWindow ? InsightModelV2.recordMinimumLong : InsightModelV2.recordMinimumShort) with a value."],
+                thresholds: [
+                    "Looks back \(days) nights, needing at least \(days == InsightModelV2.recordLongWindow ? InsightModelV2.recordMinimumLong : InsightModelV2.recordMinimumShort) with a value."
+                ],
                 nights: "Compared with \(nights(e.nightsInWindow - 1))."
             ),
             comparison: [
@@ -503,7 +545,10 @@ public nonisolated enum InsightScreenBuilder {
                 thresholds: ["Shown for a week after each one unlocks."],
                 nights: "Based on \(nights(e.nightsRecorded)) recorded."
             ),
-            comparison: [InsightNumber(label: "Nights recorded", value: NoctisMetricValue(parts: [.number("\(e.nightsRecorded)")], spoken: NoctisCount.nights(e.nightsRecorded)))]
+            comparison: [
+                InsightNumber(
+                    label: "Nights recorded", value: NoctisMetricValue(parts: [.number("\(e.nightsRecorded)")], spoken: NoctisCount.nights(e.nightsRecorded)))
+            ]
         )
     }
 }

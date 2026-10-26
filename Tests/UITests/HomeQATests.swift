@@ -29,7 +29,8 @@ final class HomeQATests: XCTestCase {
     func testEveningFullStatePages() {
         let app = launchHome(mode: "evening")
         // Evening leads with Tonight; Recovery is the compact card under it.
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Recovery ' AND identifier != 'Recovery'")).firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Recovery ' AND identifier != 'Recovery'")).firstMatch.waitForExistence(timeout: 10))
         QA.pause(2)
         QA.capturePages(app, "home-evening-full")
         QA.inspect(app, "home-evening-full")
