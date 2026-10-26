@@ -92,6 +92,7 @@ The OPEN rows after QA part 3 (the two majors are release tasks, not code):
 - **QA-115** (Accessibility, minor): Data management at AX3 and AX5 (SE):
 - **QA-116** (Accessibility, minor): Sleep month at AX3 and AX5 (SE):
 - **QA-150** (Process, minor): QA part 4:
+- **QA-180** (Release, major): The placeholder legal addresses point at a domain the owner may not control.
 <!-- /OPEN-LIST -->
 
 Why they are open: **QA-004** needs the owner (real Terms, Privacy and support addresses). QA-014 (the roadmap) was closed in QA part 4: the deferred features are in POST_LAUNCH.md. QA-016 needs the owner's

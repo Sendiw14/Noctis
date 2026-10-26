@@ -1,0 +1,25 @@
+112 #if DEBUG blocks in 44 files; 293 DEBUG-only names and 110 DEBUG-only strings to look for
+== NOCTIS.app/NOCTIS (2038 KB of its own strings and symbols)
+   required: useMockHealth=0, mockScenario=0, mockAI=0, mockLatency=0, mockUnauthorized=0, forceTier=0, homeMode=0, homeModeFlipIn=0, widgetGallery=0, watchMockSnapshot=0, complicationGallery=0, noctisResetState=0, MockHealthKitProvider=0, MockAIProvider=0, SeededGenerator=0
+   other DEBUG-only names and strings found: 0
+== NOCTIS.app/PlugIns/NOCTISWidgets.appex/NOCTISWidgets (213 KB of its own strings and symbols)
+   required: useMockHealth=0, mockScenario=0, mockAI=0, mockLatency=0, mockUnauthorized=0, forceTier=0, homeMode=0, homeModeFlipIn=0, widgetGallery=0, watchMockSnapshot=0, complicationGallery=0, noctisResetState=0, MockHealthKitProvider=0, MockAIProvider=0, SeededGenerator=0
+   other DEBUG-only names and strings found: 0
+== NOCTIS.app/PlugIns/NoctisAlarmWidget.appex/NoctisAlarmWidget (2 KB of its own strings and symbols)
+   required: useMockHealth=0, mockScenario=0, mockAI=0, mockLatency=0, mockUnauthorized=0, forceTier=0, homeMode=0, homeModeFlipIn=0, widgetGallery=0, watchMockSnapshot=0, complicationGallery=0, noctisResetState=0, MockHealthKitProvider=0, MockAIProvider=0, SeededGenerator=0
+   other DEBUG-only names and strings found: 0
+== NOCTIS.app/Watch/NOCTISWatch.app/NOCTISWatch (219 KB of its own strings and symbols)
+   required: useMockHealth=0, mockScenario=0, mockAI=0, mockLatency=0, mockUnauthorized=0, forceTier=0, homeMode=0, homeModeFlipIn=0, widgetGallery=0, watchMockSnapshot=0, complicationGallery=0, noctisResetState=0, MockHealthKitProvider=0, MockAIProvider=0, SeededGenerator=0
+   other DEBUG-only names and strings found: 0
+== NOCTIS.app/Watch/NOCTISWatch.app/PlugIns/NOCTISWatchWidgets.appex/NOCTISWatchWidgets (189 KB of its own strings and symbols)
+   required: useMockHealth=0, mockScenario=0, mockAI=0, mockLatency=0, mockUnauthorized=0, forceTier=0, homeMode=0, homeModeFlipIn=0, widgetGallery=0, watchMockSnapshot=0, complicationGallery=0, noctisResetState=0, MockHealthKitProvider=0, MockAIProvider=0, SeededGenerator=0
+   other DEBUG-only names and strings found: 0
+== NOCTISWidgets.appex/NOCTISWidgets (213 KB of its own strings and symbols)
+   required: useMockHealth=0, mockScenario=0, mockAI=0, mockLatency=0, mockUnauthorized=0, forceTier=0, homeMode=0, homeModeFlipIn=0, widgetGallery=0, watchMockSnapshot=0, complicationGallery=0, noctisResetState=0, MockHealthKitProvider=0, MockAIProvider=0, SeededGenerator=0
+   other DEBUG-only names and strings found: 0
+== NoctisAlarmWidget.appex/NoctisAlarmWidget (2 KB of its own strings and symbols)
+   required: useMockHealth=0, mockScenario=0, mockAI=0, mockLatency=0, mockUnauthorized=0, forceTier=0, homeMode=0, homeModeFlipIn=0, widgetGallery=0, watchMockSnapshot=0, complicationGallery=0, noctisResetState=0, MockHealthKitProvider=0, MockAIProvider=0, SeededGenerator=0
+   other DEBUG-only names and strings found: 0
+TOTAL: 7 binaries, 0 hits
+exit=0
+Debug build (positive control, must find them): TOTAL: 21 binaries, 314 hits
