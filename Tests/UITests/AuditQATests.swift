@@ -54,7 +54,7 @@ final class AuditQATests: XCTestCase {
     private func reach(_ screen: CatalogScreen) -> XCUIApplication {
         store = nil
         if screen.needsStore {
-            let file = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Noctis.storekit")
+            let file = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Config/Noctis.storekit")
             store = try? SKTestSession(contentsOf: file)
             store?.disableDialogs = true
             store?.resetToDefaultState()

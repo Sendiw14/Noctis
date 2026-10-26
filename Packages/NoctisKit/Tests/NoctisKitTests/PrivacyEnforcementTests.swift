@@ -242,14 +242,14 @@ struct PrivacyEnforcementTests {
     }
 
     /// Export compliance: the app and the Watch app declare that they use no encryption beyond the system's, and that is true: no source of NOCTIS names a cryptography
-    /// API (the Release binaries link none either, qa/privacy/symbols.txt), and it makes no network request of its own.
+    /// API (the Release binaries link none either, Docs/qa/privacy/symbols.txt), and it makes no network request of its own.
     @Test func theAppsDeclareNoNonExemptEncryptionAndUseNone() throws {
         // The key has a build setting (Export Compliance), so it is set there for the app and the Watch app, not in a plist (ConfigAuditTests).
         let project = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("project.yml"), encoding: .utf8)
         #expect(project.components(separatedBy: "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO").count - 1 == 2, "the app and the Watch app declare it")
         let crypto = try Regex(#"import (CryptoKit|CommonCrypto|Security|CryptoTokenKit)\b|\bCCCrypt\b|\bSecKey[A-Z]|\bSymmetricKey\b|\bAES\.GCM\b|\bChaChaPoly\b|\bkSec[A-Z]"#)
         var hits: [String] = []
-        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NOCTISWatch", "NOCTISWatchWidgets", "NoctisWidgets", "NoctisAlarmWidget"]) {
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Watch/App", "Watch/Widgets", "Widgets/Home", "Widgets/Alarm"]) {
             // The one Keychain item (Sign in with Apple's identifier, R69) is the system's storage, not encryption NOCTIS performs: no key, cipher or
             // certificate is made or handled.
             if file.path.hasSuffix("NoctisCore/Account/AccountStore.swift") { continue }

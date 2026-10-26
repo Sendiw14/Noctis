@@ -38,7 +38,7 @@
       </MacroExpansion>
       <TestPlans>
          <TestPlanReference
-            reference = "container:NOCTIS.xctestplan"
+            reference = "container:Config/NOCTIS.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>

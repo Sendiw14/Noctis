@@ -113,7 +113,7 @@ nonisolated struct ShippedLine: Sendable {
 
 nonisolated enum ShippedSource {
     /// Every folder that goes into a binary: the package, the app, the widgets, the alarm extension and the two Watch targets. Not the tests.
-    static let folders = ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NoctisAlarmWidget", "NOCTISWatch", "NOCTISWatchWidgets"]
+    static let folders = ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Widgets/Alarm", "Watch/App", "Watch/Widgets"]
 
     static let lines: [ShippedLine] = {
         var result: [ShippedLine] = []
@@ -141,8 +141,8 @@ struct SourceHygieneTests {
     @Test func theScanReadsTheWholeShippedSource() {
         #expect(ShippedSource.fileCount > 250, Comment(rawValue: "\(ShippedSource.fileCount) files"))
         #expect(ShippedSource.lines.contains { $0.path.hasSuffix("AppRoot/AppContainer.swift") })
-        #expect(ShippedSource.lines.contains { $0.path.hasPrefix("NoctisAlarmWidget/") })
-        #expect(ShippedSource.lines.contains { $0.path.hasPrefix("NOCTISWatchWidgets/") })
+        #expect(ShippedSource.lines.contains { $0.path.hasPrefix("Widgets/Alarm/") })
+        #expect(ShippedSource.lines.contains { $0.path.hasPrefix("Watch/Widgets/") })
     }
 
     @Test func theScannerSeesCodeAndNotWordsInCommentsOrStrings() {

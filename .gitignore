@@ -33,3 +33,7 @@ build/
 *.mobileprovision
 *.certSigningRequest
 Secrets.xcconfig
+
+# Python
+__pycache__/
+*.pyc

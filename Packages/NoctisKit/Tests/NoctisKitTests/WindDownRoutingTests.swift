@@ -126,7 +126,7 @@ nonisolated struct WindDownCopyAndRoadmapTests {
         let soundsCase = try #require(home.range(of: "case .sounds:"))
         #expect(home[soundsCase.upperBound...].prefix(120).contains("soundsScreen()"))
         // Neither the roadmap nor the code describes the wind-down as unbuilt.
-        let roadmap = try String(contentsOf: Self.root.appendingPathComponent("ROADMAP.md"), encoding: .utf8)
+        let roadmap = try String(contentsOf: Self.root.appendingPathComponent("Docs/ROADMAP.md"), encoding: .utf8)
         for line in roadmap.split(separator: "\n") where line.lowercased().contains("coming soon") {
             let lowered = line.lowercased()
             #expect(!lowered.contains("wind-down") && !lowered.contains("sounds") && !lowered.contains("breathing") && !lowered.contains("meditation") && !lowered.contains("reflect"), Comment(rawValue: String(line)))
@@ -135,11 +135,11 @@ nonisolated struct WindDownCopyAndRoadmapTests {
 
     @Test func theDeferredListKeepsTheWindDownPassesThatAreNotBuiltAndNoRoadmapOrDeferredListNamesThoseThatAre() throws {
         // The unbuilt passes moved from ROADMAP.md to POST_LAUNCH.md in QA part 4 (nothing reachable is unbuilt); they must still be written down somewhere.
-        let deferred = try String(contentsOf: Self.root.appendingPathComponent("POST_LAUNCH.md"), encoding: .utf8)
+        let deferred = try String(contentsOf: Self.root.appendingPathComponent("Docs/POST_LAUNCH.md"), encoding: .utf8)
         for entry in ["Adaptive wind-down lengths", "Recorded, voice-guided meditations"] {
             #expect(deferred.contains(entry), Comment(rawValue: "POST_LAUNCH.md lost \"\(entry)\""))
         }
-        let roadmap = try String(contentsOf: Self.root.appendingPathComponent("ROADMAP.md"), encoding: .utf8) + deferred
+        let roadmap = try String(contentsOf: Self.root.appendingPathComponent("Docs/ROADMAP.md"), encoding: .utf8) + deferred
         // The Live Activity, the Control Center controls and the App Intents are built (R47 to R49): QA found the roadmap still calling them
         // "Not started" (QA_LEDGER.md), so they must not come back as unbuilt.
         for entry in ["Live Activity and Dynamic Island", "Control Center control", "StartWindDownIntent", "PlaySleepSoundsIntent"] {

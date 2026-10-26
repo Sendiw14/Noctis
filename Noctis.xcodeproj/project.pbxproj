@@ -8,79 +8,79 @@
 
 /* Begin PBXBuildFile section */
 		00E4F4953101FB10C8BE6B7B /* NoctisAlarmWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 62661AAACE0CDE992D6E58D4 /* NoctisAlarmWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		03F7132E890F3A883ACBF7C1 /* AuditQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB60A36DFCAFAC9B3CD7BCFF /* AuditQATests.swift */; };
-		05C3C238CEA4FEDB493CAEA8 /* GoalQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A10680933E2550E2A73F56 /* GoalQATests.swift */; };
 		0CB4B988606AB038E0A61E84 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */; };
 		0DBF2A4934E280DF26E78F08 /* NoctisCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA617575BEE4DC264F8BF97A /* NoctisCore */; };
-		0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */; };
+		1063E734757976D792334B88 /* HomeMotionQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C74ACDAE93981E96A4D727B1 /* HomeMotionQATests.swift */; };
 		10FD988A3C75A21CDAADDE70 /* NightKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3CBB6675887BD4AB98A80B7A /* NightKit */; };
-		122448D7405361186176F535 /* HomePerformanceQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B596F2C4EB2DB5C8C3B19C1C /* HomePerformanceQATests.swift */; };
+		11AE4CA2E7509EEDF6A4371B /* NOCTISWatchWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB6ED97682E026700D983DDF /* NOCTISWatchWidgets.swift */; };
+		15BF404BF1F7084F92B01922 /* QAMatrixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D35D5153437ABF39F8BB69 /* QAMatrixTests.swift */; };
 		161B6ADE85C18CBCA55B4029 /* PremiumKit in Frameworks */ = {isa = PBXBuildFile; productRef = 37E9C73D7192479BC1BAA98F /* PremiumKit */; };
 		1760F155DA5B5D7DCD493332 /* NOCTISWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = F33DBBF3C1F177D3E008F745 /* NOCTISWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		182F75BB96926890C7F1111B /* HomeV4QATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9541D19A4C980942925904 /* HomeV4QATests.swift */; };
+		186B34080B70291F7DDFED8F /* GoalQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58634FBE1903203C4A25D254 /* GoalQATests.swift */; };
+		18900215F0A4B728AD1450A6 /* PlanQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0522076B56E9D326FF3C5601 /* PlanQATests.swift */; };
+		199AAFA4986D26ED0F9E8540 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4402A929F096A85640CCA5B /* WatchRootView.swift */; };
 		1CF3D1361661BBD47921811C /* AlarmShared in Frameworks */ = {isa = PBXBuildFile; productRef = 61CABC6F041652D64F45376A /* AlarmShared */; };
-		206DD7A23ABCAA85FC6CA867 /* NoctisControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D231D5FD73E2A07D95198B5F /* NoctisControls.swift */; };
-		217D71F7695816D618EF320B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E45DD726D9306577368691CB /* PrivacyInfo.xcprivacy */; };
+		247D223775B86CF896F47DDC /* NoctisAlarmWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB94CAD4A0F5FCEB73174470 /* NoctisAlarmWidget.swift */; };
 		25AAD24E5C80ED991A81E595 /* NoctisWatchKit in Frameworks */ = {isa = PBXBuildFile; productRef = B8942FC75A169FA1FAE86847 /* NoctisWatchKit */; };
 		25CF556144CFBEE639B4531E /* NoctisWidgetKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1397A08C866BEA750F6D4CAC /* NoctisWidgetKit */; };
-		2BAE4D8E8121B8A5A7971641 /* WatchBreathing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34018D713065E556C7C30869 /* WatchBreathing.swift */; };
+		277CE29528C7E2484693FEBA /* WelcomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895A6D3BBEC8C065F110BCEF /* WelcomeQATests.swift */; };
 		2BB343D20446BAFAB394F7AE /* BreathingKit in Frameworks */ = {isa = PBXBuildFile; productRef = 757C0CF7B1DDF4C61E2851C5 /* BreathingKit */; };
-		2D174C4836CCB16E9ABF7770 /* ColorPassQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43AC80FF5F56C48B897A61B /* ColorPassQATests.swift */; };
-		381DB65F36AAD3420467C7AB /* StoreKitSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 741BD74BB02EDA2A56327C1A /* StoreKitSessionTests.swift */; };
-		3E0928328CBB9C6CED1BB7F5 /* HomeMotionQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4176437B1713187435A9E79D /* HomeMotionQATests.swift */; };
-		3E911B85790DBF6F34DD1F06 /* WatchViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4381418BABCD30ED4F9689 /* WatchViews.swift */; };
+		2D072F6142A62CFF23F5AA5E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E80AC1A83F5934B716C50277 /* PrivacyInfo.xcprivacy */; };
+		2E6A6EC38614A6B3203E19A4 /* NoctisWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52311707DBD7D6DC5ACF2FD9 /* NoctisWidgets.swift */; };
+		3B14777D8FF1B73049B7C6EA /* VoiceOverTraversalQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23520758AEC4FA33A973DF19 /* VoiceOverTraversalQATests.swift */; };
+		4196BB26F7965D73B144D3E6 /* HomePerformanceQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 812F5BBE2783A8CBABC26CA9 /* HomePerformanceQATests.swift */; };
+		47E275F9C92D81F94062607C /* RhythmQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC310650AC93B0F4E5C6C9A3 /* RhythmQATests.swift */; };
+		4908BE7BBEBAAD31D0E66F08 /* NoctisControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8EB0299598F66B780D3E13 /* NoctisControls.swift */; };
+		49AF00FF76B582AE1B8EC145 /* NoRequestsQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 828D6D87F8E803BAF0F2399F /* NoRequestsQATests.swift */; };
 		4CD8B6DBB5BDF8E0E2F03AF4 /* NoctisShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A10A8BEADCAC2F10DCF9B93 /* NoctisShortcuts.swift */; };
-		568196AE5ECD4B9FDD467AAD /* PaywallQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54494A28AABD6A7DF50956EE /* PaywallQATests.swift */; };
-		5719FF0C4B1AF25264084D24 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */; };
-		5791296039EB649DC5F07D28 /* ComplicationGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22187E6FC3F314EA69DE78A7 /* ComplicationGallery.swift */; };
-		5B90C13CEAE60BE07AB4CE35 /* NoRequestsQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB0515AC5C3E736CDC8B85A /* NoRequestsQATests.swift */; };
-		5C192DBF50D6E63AE11AFC71 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29446C26A811EB272C0D0A01 /* WatchRootView.swift */; };
-		5D47D15860502C898689BDAF /* ScreenCatalogQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */; };
+		5127A08E02BE4F5D6707D7A2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 9909D4CCEFDD5EE5ED147866 /* PrivacyInfo.xcprivacy */; };
+		5452D365EBF33F0F9C3C2E65 /* NotificationsQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CFB6A9F9587EE805AD28D8F /* NotificationsQATests.swift */; };
+		5CB426C4E5C300124A9B45CA /* HomeV4QATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F721FF2A0075877120564CA4 /* HomeV4QATests.swift */; };
 		5FB459DBC64292A168809508 /* NoctisIntentKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5A839DD9F8FF334F1E8C81D3 /* NoctisIntentKit */; };
-		60C91EB0024BDBB44AD04323 /* WatchSnapshotReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F4B4065C88915F628F53C3 /* WatchSnapshotReceiver.swift */; };
-		63A30BB69215A7159983E0DD /* NoctisAlarmWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29432FD48663BA9B7FD95CC0 /* NoctisAlarmWidget.swift */; };
-		67056F3EDBCFEEB4289B82D3 /* NoctisWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */; };
+		61DA478C9C13B3DBF3AEDB3B /* WatchSnapshotReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E916BE4DD640A04EF8CF8AA /* WatchSnapshotReceiver.swift */; };
+		62D8B8248FEF45C7F55598F6 /* StoreKitSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9D8D3E51A5677F6C6C6059 /* StoreKitSessionTests.swift */; };
+		657BD817BA9B8482C39B6F31 /* VoiceOverQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529B852BC6691A192AFECB83 /* VoiceOverQATests.swift */; };
+		6D8E4A3F595E1245006D4AE2 /* PaywallQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44BEED609B7C258A0F283DB5 /* PaywallQATests.swift */; };
+		7104198AD9B95C68A8D83F3A /* HomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137D251B23E7C89F1EBB0B5B /* HomeQATests.swift */; };
 		71361BAB55BD7C2FC66D8093 /* NoctisWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0543D94DBE7650D827B49501 /* NoctisWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		77C1193892B2A92697DBB77A /* HomeV3QATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */; };
-		795075F25C2C3933613E01BA /* HealthQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAAC877C4A527F9F32077A5 /* HealthQATests.swift */; };
-		7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6D414566DC2646DBC6FE09 /* QASupport.swift */; };
-		7C879FB1FC08C5D2BC6C11F2 /* InsightsQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */; };
-		7F68E1828CDC2E499F9E9DC6 /* QAMatrixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F87EDE2708619AA61A6E0CB /* QAMatrixTests.swift */; };
-		8105DCF93222760938A076E0 /* VoiceOverTraversalQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA5EAFB895C46A48C2FF089 /* VoiceOverTraversalQATests.swift */; };
+		753A0DFD1A22D259597CE8FB /* SleepQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17FBA1AE5C96BC29A0FB97B3 /* SleepQATests.swift */; };
+		836ED8ABBCCA3558D69C0B8A /* ColorPassQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08AB6B49CFE1D486264BEBF /* ColorPassQATests.swift */; };
 		8397FD19D6FA1B907AF84177 /* NoctisWidgetKit in Frameworks */ = {isa = PBXBuildFile; productRef = F201A34E1FC44DD31EEA0BBE /* NoctisWidgetKit */; };
-		842B844F2340D213BF8FAB3F /* RhythmQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC407ADD970193EE378CB1DF /* RhythmQATests.swift */; };
-		8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */; };
-		8C400B4A1FDE08C78B04C375 /* NOCTISWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BE06CE6330A713747986A3 /* NOCTISWatchApp.swift */; };
-		8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F4213CBB03353749905D7E /* HomeQATests.swift */; };
-		8E177465C3F73AD9FF4E034F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 464C5B8CE6E2ACC67014F3E0 /* Assets.xcassets */; };
+		85320DC835507EE832E46022 /* HealthQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E242FB575BBF3074233F698B /* HealthQATests.swift */; };
+		85D8E29EE21C690BF707524B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4482C0AC5D5FE4B81693005B /* PrivacyInfo.xcprivacy */; };
 		8F16A7A5323FD3FD2BB32E0E /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = DA618A0CA216AACC91F1A575 /* DesignSystem */; };
-		9424EE31A8B69FDD17BA2F53 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 87A7E7E9AEB0901EF1908C44 /* PrivacyInfo.xcprivacy */; };
+		95FB257A93583B7E01C17160 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A2A818733892AAB495F4C2F /* Assets.xcassets */; };
 		98B4052A9E1C5519A27C8213 /* NoctisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */; };
-		9AA7E5CA11EE1244D8912A20 /* WelcomeQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A44F626D12FA959CE07C4E /* WelcomeQATests.swift */; };
+		998846B6CE86246E93ABC1DB /* NoctisWindDownActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7681BF788DC8EFB04B63687A /* NoctisWindDownActivity.swift */; };
+		9F4CB9985D67D8B389ABDC5E /* HomeV3QATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 237C7162F4CFCB8B115E6241 /* HomeV3QATests.swift */; };
 		AA4706F3405C418059FEB622 /* NoctisWatchKit in Frameworks */ = {isa = PBXBuildFile; productRef = A4A4A23BA42DD4D7CD8C4DF9 /* NoctisWatchKit */; };
-		AB2379331A94B6437FA7C9E8 /* SampleQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 977DD76C118CF83A99908802 /* SampleQATests.swift */; };
-		ABBF3099518F83448D80C549 /* NOCTISWatchWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D69C1891F567CBDEF5B1DF22 /* NOCTISWatchWidgets.swift */; };
 		B7E234837837FE54E9DAFA15 /* NoctisIntentKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5FDCD6D8575DAAB02C830D66 /* NoctisIntentKit */; };
-		B88BAE63AC69365D3DD5E6E9 /* SleepQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A364E8BF38E298E7413078 /* SleepQATests.swift */; };
-		B8FFA63EFEF05E0F2C634743 /* NoctisWindDownActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4BB76A5775516EE2CDC3DE0 /* NoctisWindDownActivity.swift */; };
+		BBF3949F23D2252C16D8F880 /* ComplicationGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC34B1A31B602B6F81DD93A /* ComplicationGallery.swift */; };
 		BC3765A1E9C5D41BDA93AD26 /* QACatalog in Frameworks */ = {isa = PBXBuildFile; productRef = 675C15FD3FBAD38E6C2DFB18 /* QACatalog */; };
-		C374526DF36FC24F2FDD9DCC /* PlanQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB4C76893E8144EC1F50280 /* PlanQATests.swift */; };
+		BDCDEFB614F65214A1A8C65E /* WatchBreathing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E71F0B1AFA6FBF2C9B84772 /* WatchBreathing.swift */; };
+		BF2299FEDDFC5874EFA3DA66 /* OnboardingQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD9CEBF8BC80C66A8B288A8D /* OnboardingQATests.swift */; };
+		C1177D445537568ED3C20FC2 /* WatchMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C40D0D3316A24B60982812 /* WatchMock.swift */; };
+		C20B1E1FF8C1E240D0EE6D4F /* AuditQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4AF2838A3466672ADD09E5B /* AuditQATests.swift */; };
 		C4E097F8552FBF47761B4A59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4435E6B1989CC790CE6F0F65 /* Assets.xcassets */; };
+		C79301C7B6230207D170E5F4 /* NOCTISWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A3AFA2113821CDBD8C5D20 /* NOCTISWatchApp.swift */; };
 		C8D2F8DFFAEE9CF24CEAD6E8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */; };
-		C9364CCBB3076F2F36C69471 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 870C86CD797FAD52E87DC479 /* PrivacyInfo.xcprivacy */; };
 		CEDFB186607DE853D2A577B7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */; };
-		D51E0D694415A7BBF28D3E87 /* WatchMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64BCF03BF4C8582FEE89933F /* WatchMock.swift */; };
+		D0DA3937D263ECD694520773 /* WatchViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7BEA2CB117F02CF43FA81F /* WatchViews.swift */; };
 		D6A7A1966BF23AA0EBC7DCC7 /* NOCTISWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0BE68BBF5441A532DF5F4970 /* NOCTISWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D6B5EC0B3E1A61DF66D7BFC6 /* SampleQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74849F5629B1319BF09040A5 /* SampleQATests.swift */; };
 		DBBC2F069E7DC63F936AB922 /* NoctisIntentKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1424CEFF19E2D5285CC1804D /* NoctisIntentKit */; };
-		DE78B57E5DDF47A44001EF3E /* WatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CA15F9E177F02AAC5702DB8 /* WatchModel.swift */; };
+		DFFADBF595C0185FE8B8C317 /* ScreenCatalogQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23B421A6AF7E1792887D5D87 /* ScreenCatalogQATests.swift */; };
 		E344AB2E2256E78CD2896504 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E6A1598900D9096E32D4B12A /* AppShortcuts.xcstrings */; };
 		E5224541D5FE0D30636B117F /* NoctisWatchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8DFDA9704300023319D3E352 /* NoctisWatchKit */; };
-		EA7DA501DAE317EC1028F0CD /* RecoveryQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */; };
-		F16F81738ECDC6390853FAEC /* MemoryQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77454765E4DB6994F359B0BA /* MemoryQATests.swift */; };
+		EBA4F08F1DE45DAF6FCFB064 /* InsightsQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC962A99DE5D15598AB5B81 /* InsightsQATests.swift */; };
+		EDEEB3600951016BD5949070 /* QASupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6A60044E8008F457B539DD /* QASupport.swift */; };
+		EF4F5D117B068B8F6D3CC9E5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A04CD2287386DFEDCCDB6199 /* PrivacyInfo.xcprivacy */; };
+		F2C93F85E5FC3CD37D2DDE86 /* TabScaffoldQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC299894D74783B06CC09E8 /* TabScaffoldQATests.swift */; };
 		F432F7BBD5A4F6990A6BA96C /* AppRoot in Frameworks */ = {isa = PBXBuildFile; productRef = 17C413CE67E2BAD13B2C2447 /* AppRoot */; };
-		F44796F3FE12B39F7FCDC5C0 /* TabScaffoldQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */; };
+		F68F302CF9484B9C2DE9CC0B /* WatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E0893946AA78E019D7D19B /* WatchModel.swift */; };
 		FD7DFD110E73258CC40240AB /* NoctisWidgetKit in Frameworks */ = {isa = PBXBuildFile; productRef = 26E8435DA1E232D8A580315D /* NoctisWidgetKit */; };
-		FDAB60A976AC9E01E0A08D9B /* NotificationsQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3E70ACAA12946816DC36C59 /* NotificationsQATests.swift */; };
+		FEED1399BF4FEB3F4E8BBC72 /* MemoryQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51E87AE047D4F2FB5919C97F /* MemoryQATests.swift */; };
+		FFA4135361D416AAAAE7EF35 /* RecoveryQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D33BC00281358996EED5480 /* RecoveryQATests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -167,76 +167,72 @@
 
 /* Begin PBXFileReference section */
 		04379147675C3293572F976D /* NoctisUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NoctisUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0522076B56E9D326FF3C5601 /* PlanQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanQATests.swift; sourceTree = "<group>"; };
 		0543D94DBE7650D827B49501 /* NoctisWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoctisWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		07C192A042BD381110EA9B45 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0A2A818733892AAB495F4C2F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0BE68BBF5441A532DF5F4970 /* NOCTISWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NOCTISWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		0FA5EAFB895C46A48C2FF089 /* VoiceOverTraversalQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverTraversalQATests.swift; sourceTree = "<group>"; };
-		10F4AA81266B6280E130D6A6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		14A364E8BF38E298E7413078 /* SleepQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQATests.swift; sourceTree = "<group>"; };
+		0D9D8D3E51A5677F6C6C6059 /* StoreKitSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitSessionTests.swift; sourceTree = "<group>"; };
+		137D251B23E7C89F1EBB0B5B /* HomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQATests.swift; sourceTree = "<group>"; };
+		15279C2B4B3DA6A4BC617347 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
+		17FBA1AE5C96BC29A0FB97B3 /* SleepQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQATests.swift; sourceTree = "<group>"; };
 		198D588F05663B99C1387217 /* NoctisStoreTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NoctisStoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		1D3A3DCBAF2299BA252BA5C2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCatalogQATests.swift; sourceTree = "<group>"; };
-		22187E6FC3F314EA69DE78A7 /* ComplicationGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationGallery.swift; sourceTree = "<group>"; };
-		2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsQATests.swift; sourceTree = "<group>"; };
-		29432FD48663BA9B7FD95CC0 /* NoctisAlarmWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisAlarmWidget.swift; sourceTree = "<group>"; };
-		29446C26A811EB272C0D0A01 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
+		1C6A60044E8008F457B539DD /* QASupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASupport.swift; sourceTree = "<group>"; };
+		1DC962A99DE5D15598AB5B81 /* InsightsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsQATests.swift; sourceTree = "<group>"; };
+		23520758AEC4FA33A973DF19 /* VoiceOverTraversalQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverTraversalQATests.swift; sourceTree = "<group>"; };
+		237C7162F4CFCB8B115E6241 /* HomeV3QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV3QATests.swift; sourceTree = "<group>"; };
+		23B421A6AF7E1792887D5D87 /* ScreenCatalogQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCatalogQATests.swift; sourceTree = "<group>"; };
 		2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
-		34018D713065E556C7C30869 /* WatchBreathing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBreathing.swift; sourceTree = "<group>"; };
 		3B85D922D7533E3338F79684 /* NoctisKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NoctisKit; path = Packages/NoctisKit; sourceTree = SOURCE_ROOT; };
-		3F87EDE2708619AA61A6E0CB /* QAMatrixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QAMatrixTests.swift; sourceTree = "<group>"; };
-		40BE06CE6330A713747986A3 /* NOCTISWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NOCTISWatchApp.swift; sourceTree = "<group>"; };
-		4176437B1713187435A9E79D /* HomeMotionQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeMotionQATests.swift; sourceTree = "<group>"; };
 		4435E6B1989CC790CE6F0F65 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		464C5B8CE6E2ACC67014F3E0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4482C0AC5D5FE4B81693005B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		44BEED609B7C258A0F283DB5 /* PaywallQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallQATests.swift; sourceTree = "<group>"; };
 		4931DEC833E41A07AE985B2D /* Noctis.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Noctis.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV3QATests.swift; sourceTree = "<group>"; };
-		4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryQATests.swift; sourceTree = "<group>"; };
-		4E894FBA97D32DE7C822CC43 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		54494A28AABD6A7DF50956EE /* PaywallQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallQATests.swift; sourceTree = "<group>"; };
+		4D33BC00281358996EED5480 /* RecoveryQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryQATests.swift; sourceTree = "<group>"; };
+		51E87AE047D4F2FB5919C97F /* MemoryQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryQATests.swift; sourceTree = "<group>"; };
+		52311707DBD7D6DC5ACF2FD9 /* NoctisWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWidgets.swift; sourceTree = "<group>"; };
+		529B852BC6691A192AFECB83 /* VoiceOverQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverQATests.swift; sourceTree = "<group>"; };
+		56E0893946AA78E019D7D19B /* WatchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchModel.swift; sourceTree = "<group>"; };
+		58634FBE1903203C4A25D254 /* GoalQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalQATests.swift; sourceTree = "<group>"; };
 		5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisApp.swift; sourceTree = "<group>"; };
-		5BAAC877C4A527F9F32077A5 /* HealthQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthQATests.swift; sourceTree = "<group>"; };
-		5CA15F9E177F02AAC5702DB8 /* WatchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchModel.swift; sourceTree = "<group>"; };
+		5DC34B1A31B602B6F81DD93A /* ComplicationGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationGallery.swift; sourceTree = "<group>"; };
+		5E916BE4DD640A04EF8CF8AA /* WatchSnapshotReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSnapshotReceiver.swift; sourceTree = "<group>"; };
 		62661AAACE0CDE992D6E58D4 /* NoctisAlarmWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoctisAlarmWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		64BCF03BF4C8582FEE89933F /* WatchMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMock.swift; sourceTree = "<group>"; };
-		6F6B227D6C1D0125E6CB28A2 /* NOCTISWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NOCTISWatch.entitlements; sourceTree = "<group>"; };
-		741BD74BB02EDA2A56327C1A /* StoreKitSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitSessionTests.swift; sourceTree = "<group>"; };
-		77454765E4DB6994F359B0BA /* MemoryQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryQATests.swift; sourceTree = "<group>"; };
-		811601970E5BB83FD5627B7D /* Noctis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Noctis.entitlements; sourceTree = "<group>"; };
-		85F4213CBB03353749905D7E /* HomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQATests.swift; sourceTree = "<group>"; };
-		870C86CD797FAD52E87DC479 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		87A7E7E9AEB0901EF1908C44 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabScaffoldQATests.swift; sourceTree = "<group>"; };
-		935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWidgets.swift; sourceTree = "<group>"; };
-		9714450F1C41512C1CACAF34 /* Noctis.storekit */ = {isa = PBXFileReference; path = Noctis.storekit; sourceTree = "<group>"; };
-		977DD76C118CF83A99908802 /* SampleQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleQATests.swift; sourceTree = "<group>"; };
+		74849F5629B1319BF09040A5 /* SampleQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleQATests.swift; sourceTree = "<group>"; };
+		7681BF788DC8EFB04B63687A /* NoctisWindDownActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWindDownActivity.swift; sourceTree = "<group>"; };
+		79D35D5153437ABF39F8BB69 /* QAMatrixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QAMatrixTests.swift; sourceTree = "<group>"; };
+		7CF59C7438E9902AFBF5D2BE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		812F5BBE2783A8CBABC26CA9 /* HomePerformanceQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePerformanceQATests.swift; sourceTree = "<group>"; };
+		828D6D87F8E803BAF0F2399F /* NoRequestsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoRequestsQATests.swift; sourceTree = "<group>"; };
+		85DE25B4CD9B45FF6A344E49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		895A6D3BBEC8C065F110BCEF /* WelcomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeQATests.swift; sourceTree = "<group>"; };
+		8CFB6A9F9587EE805AD28D8F /* NotificationsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsQATests.swift; sourceTree = "<group>"; };
+		8E71F0B1AFA6FBF2C9B84772 /* WatchBreathing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBreathing.swift; sourceTree = "<group>"; };
+		9909D4CCEFDD5EE5ED147866 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		9A10A8BEADCAC2F10DCF9B93 /* NoctisShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisShortcuts.swift; sourceTree = "<group>"; };
-		9CB0515AC5C3E736CDC8B85A /* NoRequestsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoRequestsQATests.swift; sourceTree = "<group>"; };
-		9F4381418BABCD30ED4F9689 /* WatchViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchViews.swift; sourceTree = "<group>"; };
-		A4BB76A5775516EE2CDC3DE0 /* NoctisWindDownActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisWindDownActivity.swift; sourceTree = "<group>"; };
-		A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
-		B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		B596F2C4EB2DB5C8C3B19C1C /* HomePerformanceQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePerformanceQATests.swift; sourceTree = "<group>"; };
+		A04CD2287386DFEDCCDB6199 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		B98B1F217D476C8650EAE4EB /* NoctisWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoctisWidgets.entitlements; sourceTree = "<group>"; };
-		BC407ADD970193EE378CB1DF /* RhythmQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RhythmQATests.swift; sourceTree = "<group>"; };
-		BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverQATests.swift; sourceTree = "<group>"; };
-		C43AC80FF5F56C48B897A61B /* ColorPassQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPassQATests.swift; sourceTree = "<group>"; };
-		C4CA26412CE79B13440FBA94 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		C7A10680933E2550E2A73F56 /* GoalQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalQATests.swift; sourceTree = "<group>"; };
-		CBB4C76893E8144EC1F50280 /* PlanQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanQATests.swift; sourceTree = "<group>"; };
-		CE9541D19A4C980942925904 /* HomeV4QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV4QATests.swift; sourceTree = "<group>"; };
+		BA7BEA2CB117F02CF43FA81F /* WatchViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchViews.swift; sourceTree = "<group>"; };
+		C4402A929F096A85640CCA5B /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
+		C74ACDAE93981E96A4D727B1 /* HomeMotionQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeMotionQATests.swift; sourceTree = "<group>"; };
+		C8A3AFA2113821CDBD8C5D20 /* NOCTISWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NOCTISWatchApp.swift; sourceTree = "<group>"; };
+		CB94CAD4A0F5FCEB73174470 /* NoctisAlarmWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisAlarmWidget.swift; sourceTree = "<group>"; };
 		D158740EE4CD0F34B228ADEA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		D1A44F626D12FA959CE07C4E /* WelcomeQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeQATests.swift; sourceTree = "<group>"; };
-		D231D5FD73E2A07D95198B5F /* NoctisControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisControls.swift; sourceTree = "<group>"; };
-		D3E70ACAA12946816DC36C59 /* NotificationsQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsQATests.swift; sourceTree = "<group>"; };
-		D69C1891F567CBDEF5B1DF22 /* NOCTISWatchWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NOCTISWatchWidgets.swift; sourceTree = "<group>"; };
-		DB60A36DFCAFAC9B3CD7BCFF /* AuditQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditQATests.swift; sourceTree = "<group>"; };
-		E45DD726D9306577368691CB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		E4F4B4065C88915F628F53C3 /* WatchSnapshotReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSnapshotReceiver.swift; sourceTree = "<group>"; };
+		D4AF2838A3466672ADD09E5B /* AuditQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditQATests.swift; sourceTree = "<group>"; };
+		DB6ED97682E026700D983DDF /* NOCTISWatchWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NOCTISWatchWidgets.swift; sourceTree = "<group>"; };
+		E08AB6B49CFE1D486264BEBF /* ColorPassQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPassQATests.swift; sourceTree = "<group>"; };
+		E242FB575BBF3074233F698B /* HealthQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthQATests.swift; sourceTree = "<group>"; };
 		E6A1598900D9096E32D4B12A /* AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = AppShortcuts.xcstrings; sourceTree = "<group>"; };
+		E80AC1A83F5934B716C50277 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E9463CE1AA48C61532658BD8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		EF5F6AA39A5B25F09E944A27 /* NOCTISWatchWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NOCTISWatchWidgets.entitlements; sourceTree = "<group>"; };
+		EB8EB0299598F66B780D3E13 /* NoctisControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoctisControls.swift; sourceTree = "<group>"; };
+		EC310650AC93B0F4E5C6C9A3 /* RhythmQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RhythmQATests.swift; sourceTree = "<group>"; };
 		F33DBBF3C1F177D3E008F745 /* NOCTISWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NOCTISWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FE6D414566DC2646DBC6FE09 /* QASupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASupport.swift; sourceTree = "<group>"; };
+		F721FF2A0075877120564CA4 /* HomeV4QATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeV4QATests.swift; sourceTree = "<group>"; };
+		F9C40D0D3316A24B60982812 /* WatchMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMock.swift; sourceTree = "<group>"; };
+		F9E23CE0E5EA4185C476E25A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FD9CEBF8BC80C66A8B288A8D /* OnboardingQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQATests.swift; sourceTree = "<group>"; };
+		FEC299894D74783B06CC09E8 /* TabScaffoldQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabScaffoldQATests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,14 +313,22 @@
 			path = Packages;
 			sourceTree = "<group>";
 		};
-		2044BE7B0CA3196277E86BD7 /* NoctisAlarmWidget */ = {
+		167648E6B14035F22A4D12B4 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				C4CA26412CE79B13440FBA94 /* Info.plist */,
-				29432FD48663BA9B7FD95CC0 /* NoctisAlarmWidget.swift */,
-				87A7E7E9AEB0901EF1908C44 /* PrivacyInfo.xcprivacy */,
+				0A2A818733892AAB495F4C2F /* Assets.xcassets */,
+				5DC34B1A31B602B6F81DD93A /* ComplicationGallery.swift */,
+				7CF59C7438E9902AFBF5D2BE /* Info.plist */,
+				C8A3AFA2113821CDBD8C5D20 /* NOCTISWatchApp.swift */,
+				A04CD2287386DFEDCCDB6199 /* PrivacyInfo.xcprivacy */,
+				8E71F0B1AFA6FBF2C9B84772 /* WatchBreathing.swift */,
+				F9C40D0D3316A24B60982812 /* WatchMock.swift */,
+				56E0893946AA78E019D7D19B /* WatchModel.swift */,
+				C4402A929F096A85640CCA5B /* WatchRootView.swift */,
+				5E916BE4DD640A04EF8CF8AA /* WatchSnapshotReceiver.swift */,
+				BA7BEA2CB117F02CF43FA81F /* WatchViews.swift */,
 			);
-			path = NoctisAlarmWidget;
+			path = App;
 			sourceTree = "<group>";
 		};
 		24F0EA3FEF246440BAA18D38 /* Products */ = {
@@ -341,36 +345,84 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		25CFE3D57BF80B090727CD71 /* NOCTISWatchWidgets */ = {
+		36F3155D36F948164479DED1 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				10F4AA81266B6280E130D6A6 /* Info.plist */,
-				EF5F6AA39A5B25F09E944A27 /* NOCTISWatchWidgets.entitlements */,
-				D69C1891F567CBDEF5B1DF22 /* NOCTISWatchWidgets.swift */,
-				870C86CD797FAD52E87DC479 /* PrivacyInfo.xcprivacy */,
+				66DF3019A091E683ED45BCA4 /* StoreTests */,
+				62046EFDB3DA64339D72D6A0 /* UITests */,
 			);
-			path = NOCTISWatchWidgets;
+			path = Tests;
 			sourceTree = "<group>";
 		};
-		74724E6D5E17A9AF562C7F3A /* StoreTests */ = {
+		41317F90C30143C752E9BC26 /* Alarm */ = {
 			isa = PBXGroup;
 			children = (
-				741BD74BB02EDA2A56327C1A /* StoreKitSessionTests.swift */,
+				F9E23CE0E5EA4185C476E25A /* Info.plist */,
+				CB94CAD4A0F5FCEB73174470 /* NoctisAlarmWidget.swift */,
+				9909D4CCEFDD5EE5ED147866 /* PrivacyInfo.xcprivacy */,
+			);
+			path = Alarm;
+			sourceTree = "<group>";
+		};
+		62046EFDB3DA64339D72D6A0 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				D4AF2838A3466672ADD09E5B /* AuditQATests.swift */,
+				E08AB6B49CFE1D486264BEBF /* ColorPassQATests.swift */,
+				58634FBE1903203C4A25D254 /* GoalQATests.swift */,
+				E242FB575BBF3074233F698B /* HealthQATests.swift */,
+				C74ACDAE93981E96A4D727B1 /* HomeMotionQATests.swift */,
+				812F5BBE2783A8CBABC26CA9 /* HomePerformanceQATests.swift */,
+				137D251B23E7C89F1EBB0B5B /* HomeQATests.swift */,
+				237C7162F4CFCB8B115E6241 /* HomeV3QATests.swift */,
+				F721FF2A0075877120564CA4 /* HomeV4QATests.swift */,
+				1DC962A99DE5D15598AB5B81 /* InsightsQATests.swift */,
+				51E87AE047D4F2FB5919C97F /* MemoryQATests.swift */,
+				828D6D87F8E803BAF0F2399F /* NoRequestsQATests.swift */,
+				8CFB6A9F9587EE805AD28D8F /* NotificationsQATests.swift */,
+				FD9CEBF8BC80C66A8B288A8D /* OnboardingQATests.swift */,
+				44BEED609B7C258A0F283DB5 /* PaywallQATests.swift */,
+				0522076B56E9D326FF3C5601 /* PlanQATests.swift */,
+				79D35D5153437ABF39F8BB69 /* QAMatrixTests.swift */,
+				1C6A60044E8008F457B539DD /* QASupport.swift */,
+				4D33BC00281358996EED5480 /* RecoveryQATests.swift */,
+				EC310650AC93B0F4E5C6C9A3 /* RhythmQATests.swift */,
+				74849F5629B1319BF09040A5 /* SampleQATests.swift */,
+				23B421A6AF7E1792887D5D87 /* ScreenCatalogQATests.swift */,
+				17FBA1AE5C96BC29A0FB97B3 /* SleepQATests.swift */,
+				FEC299894D74783B06CC09E8 /* TabScaffoldQATests.swift */,
+				529B852BC6691A192AFECB83 /* VoiceOverQATests.swift */,
+				23520758AEC4FA33A973DF19 /* VoiceOverTraversalQATests.swift */,
+				895A6D3BBEC8C065F110BCEF /* WelcomeQATests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		64535BD9C16B2DC35F208082 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				07C192A042BD381110EA9B45 /* Info.plist */,
+				DB6ED97682E026700D983DDF /* NOCTISWatchWidgets.swift */,
+				E80AC1A83F5934B716C50277 /* PrivacyInfo.xcprivacy */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		65B546672F6488EF02EE1A03 /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				167648E6B14035F22A4D12B4 /* App */,
+				64535BD9C16B2DC35F208082 /* Widgets */,
+			);
+			path = Watch;
+			sourceTree = "<group>";
+		};
+		66DF3019A091E683ED45BCA4 /* StoreTests */ = {
+			isa = PBXGroup;
+			children = (
+				0D9D8D3E51A5677F6C6C6059 /* StoreKitSessionTests.swift */,
 			);
 			path = StoreTests;
-			sourceTree = "<group>";
-		};
-		8513FF8EE58CAD1357FEEC5B /* NoctisWidgets */ = {
-			isa = PBXGroup;
-			children = (
-				4E894FBA97D32DE7C822CC43 /* Info.plist */,
-				D231D5FD73E2A07D95198B5F /* NoctisControls.swift */,
-				B98B1F217D476C8650EAE4EB /* NoctisWidgets.entitlements */,
-				935FE6A20C3BD3ACF35E1B49 /* NoctisWidgets.swift */,
-				A4BB76A5775516EE2CDC3DE0 /* NoctisWindDownActivity.swift */,
-				B4DC976A3B6C4CE53A49C392 /* PrivacyInfo.xcprivacy */,
-			);
-			path = NoctisWidgets;
 			sourceTree = "<group>";
 		};
 		9213F7D570ACC8E3E05A5B13 /* Preview Content */ = {
@@ -381,38 +433,33 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		A5B58CBE9E9988E40D36EC50 /* UITests */ = {
+		96587F387E3AF5A33784764B /* Home */ = {
 			isa = PBXGroup;
 			children = (
-				DB60A36DFCAFAC9B3CD7BCFF /* AuditQATests.swift */,
-				C43AC80FF5F56C48B897A61B /* ColorPassQATests.swift */,
-				C7A10680933E2550E2A73F56 /* GoalQATests.swift */,
-				5BAAC877C4A527F9F32077A5 /* HealthQATests.swift */,
-				4176437B1713187435A9E79D /* HomeMotionQATests.swift */,
-				B596F2C4EB2DB5C8C3B19C1C /* HomePerformanceQATests.swift */,
-				85F4213CBB03353749905D7E /* HomeQATests.swift */,
-				49715D9D59ED81D62C86DC15 /* HomeV3QATests.swift */,
-				CE9541D19A4C980942925904 /* HomeV4QATests.swift */,
-				2533FC2B4CF273C116A36EE7 /* InsightsQATests.swift */,
-				77454765E4DB6994F359B0BA /* MemoryQATests.swift */,
-				9CB0515AC5C3E736CDC8B85A /* NoRequestsQATests.swift */,
-				D3E70ACAA12946816DC36C59 /* NotificationsQATests.swift */,
-				A7B703BF9304E1FD87EB010F /* OnboardingQATests.swift */,
-				54494A28AABD6A7DF50956EE /* PaywallQATests.swift */,
-				CBB4C76893E8144EC1F50280 /* PlanQATests.swift */,
-				3F87EDE2708619AA61A6E0CB /* QAMatrixTests.swift */,
-				FE6D414566DC2646DBC6FE09 /* QASupport.swift */,
-				4C78786BD7C7D63E7D1E58D2 /* RecoveryQATests.swift */,
-				BC407ADD970193EE378CB1DF /* RhythmQATests.swift */,
-				977DD76C118CF83A99908802 /* SampleQATests.swift */,
-				2044C1B4FEBCC7447FDC9EA9 /* ScreenCatalogQATests.swift */,
-				14A364E8BF38E298E7413078 /* SleepQATests.swift */,
-				92C5C612E65A1F3C62FDA440 /* TabScaffoldQATests.swift */,
-				BC4F53E3AD4D9D0596B3A90F /* VoiceOverQATests.swift */,
-				0FA5EAFB895C46A48C2FF089 /* VoiceOverTraversalQATests.swift */,
-				D1A44F626D12FA959CE07C4E /* WelcomeQATests.swift */,
+				85DE25B4CD9B45FF6A344E49 /* Info.plist */,
+				EB8EB0299598F66B780D3E13 /* NoctisControls.swift */,
+				52311707DBD7D6DC5ACF2FD9 /* NoctisWidgets.swift */,
+				7681BF788DC8EFB04B63687A /* NoctisWindDownActivity.swift */,
+				4482C0AC5D5FE4B81693005B /* PrivacyInfo.xcprivacy */,
 			);
-			path = UITests;
+			path = Home;
+			sourceTree = "<group>";
+		};
+		A2156901C14CA12C0D8E5664 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				15279C2B4B3DA6A4BC617347 /* Noctis.storekit */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		B4FCB142F316FC232C4CD4D8 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				41317F90C30143C752E9BC26 /* Alarm */,
+				96587F387E3AF5A33784764B /* Home */,
+			);
+			path = Widgets;
 			sourceTree = "<group>";
 		};
 		D654F53C52B10CF49853EA55 /* App */ = {
@@ -422,7 +469,6 @@
 				4435E6B1989CC790CE6F0F65 /* Assets.xcassets */,
 				E9463CE1AA48C61532658BD8 /* Info.plist */,
 				2BCEDE0F86ADC4708988F800 /* LaunchScreen.storyboard */,
-				811601970E5BB83FD5627B7D /* Noctis.entitlements */,
 				5A12CC978E1DD6E48AF8540C /* NoctisApp.swift */,
 				9A10A8BEADCAC2F10DCF9B93 /* NoctisShortcuts.swift */,
 				B7687C5F40FACE4B5C4C63CF /* PrivacyInfo.xcprivacy */,
@@ -434,36 +480,14 @@
 		D7593041C52A6486137632CC = {
 			isa = PBXGroup;
 			children = (
-				9714450F1C41512C1CACAF34 /* Noctis.storekit */,
 				D654F53C52B10CF49853EA55 /* App */,
-				2044BE7B0CA3196277E86BD7 /* NoctisAlarmWidget */,
-				E484528A6F708DCC12A0D48E /* NOCTISWatch */,
-				25CFE3D57BF80B090727CD71 /* NOCTISWatchWidgets */,
-				8513FF8EE58CAD1357FEEC5B /* NoctisWidgets */,
+				A2156901C14CA12C0D8E5664 /* Config */,
 				07A8686EBBE9F1075DD906F0 /* Packages */,
-				74724E6D5E17A9AF562C7F3A /* StoreTests */,
-				A5B58CBE9E9988E40D36EC50 /* UITests */,
+				36F3155D36F948164479DED1 /* Tests */,
+				65B546672F6488EF02EE1A03 /* Watch */,
+				B4FCB142F316FC232C4CD4D8 /* Widgets */,
 				24F0EA3FEF246440BAA18D38 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		E484528A6F708DCC12A0D48E /* NOCTISWatch */ = {
-			isa = PBXGroup;
-			children = (
-				464C5B8CE6E2ACC67014F3E0 /* Assets.xcassets */,
-				22187E6FC3F314EA69DE78A7 /* ComplicationGallery.swift */,
-				1D3A3DCBAF2299BA252BA5C2 /* Info.plist */,
-				6F6B227D6C1D0125E6CB28A2 /* NOCTISWatch.entitlements */,
-				40BE06CE6330A713747986A3 /* NOCTISWatchApp.swift */,
-				E45DD726D9306577368691CB /* PrivacyInfo.xcprivacy */,
-				34018D713065E556C7C30869 /* WatchBreathing.swift */,
-				64BCF03BF4C8582FEE89933F /* WatchMock.swift */,
-				5CA15F9E177F02AAC5702DB8 /* WatchModel.swift */,
-				29446C26A811EB272C0D0A01 /* WatchRootView.swift */,
-				E4F4B4065C88915F628F53C3 /* WatchSnapshotReceiver.swift */,
-				9F4381418BABCD30ED4F9689 /* WatchViews.swift */,
-			);
-			path = NOCTISWatch;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -673,7 +697,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5719FF0C4B1AF25264084D24 /* PrivacyInfo.xcprivacy in Resources */,
+				85D8E29EE21C690BF707524B /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -693,7 +717,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9424EE31A8B69FDD17BA2F53 /* PrivacyInfo.xcprivacy in Resources */,
+				5127A08E02BE4F5D6707D7A2 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -701,7 +725,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C9364CCBB3076F2F36C69471 /* PrivacyInfo.xcprivacy in Resources */,
+				2D072F6142A62CFF23F5AA5E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -709,8 +733,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8E177465C3F73AD9FF4E034F /* Assets.xcassets in Resources */,
-				217D71F7695816D618EF320B /* PrivacyInfo.xcprivacy in Resources */,
+				95FB257A93583B7E01C17160 /* Assets.xcassets in Resources */,
+				EF4F5D117B068B8F6D3CC9E5 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -721,7 +745,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ABBF3099518F83448D80C549 /* NOCTISWatchWidgets.swift in Sources */,
+				11AE4CA2E7509EEDF6A4371B /* NOCTISWatchWidgets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -729,33 +753,33 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				03F7132E890F3A883ACBF7C1 /* AuditQATests.swift in Sources */,
-				2D174C4836CCB16E9ABF7770 /* ColorPassQATests.swift in Sources */,
-				05C3C238CEA4FEDB493CAEA8 /* GoalQATests.swift in Sources */,
-				795075F25C2C3933613E01BA /* HealthQATests.swift in Sources */,
-				3E0928328CBB9C6CED1BB7F5 /* HomeMotionQATests.swift in Sources */,
-				122448D7405361186176F535 /* HomePerformanceQATests.swift in Sources */,
-				8DFC33750AC640C49CF6B190 /* HomeQATests.swift in Sources */,
-				77C1193892B2A92697DBB77A /* HomeV3QATests.swift in Sources */,
-				182F75BB96926890C7F1111B /* HomeV4QATests.swift in Sources */,
-				7C879FB1FC08C5D2BC6C11F2 /* InsightsQATests.swift in Sources */,
-				F16F81738ECDC6390853FAEC /* MemoryQATests.swift in Sources */,
-				5B90C13CEAE60BE07AB4CE35 /* NoRequestsQATests.swift in Sources */,
-				FDAB60A976AC9E01E0A08D9B /* NotificationsQATests.swift in Sources */,
-				8A05D0FDB5B7C26194D79261 /* OnboardingQATests.swift in Sources */,
-				568196AE5ECD4B9FDD467AAD /* PaywallQATests.swift in Sources */,
-				C374526DF36FC24F2FDD9DCC /* PlanQATests.swift in Sources */,
-				7F68E1828CDC2E499F9E9DC6 /* QAMatrixTests.swift in Sources */,
-				7C307554F576A555A63DFEF8 /* QASupport.swift in Sources */,
-				EA7DA501DAE317EC1028F0CD /* RecoveryQATests.swift in Sources */,
-				842B844F2340D213BF8FAB3F /* RhythmQATests.swift in Sources */,
-				AB2379331A94B6437FA7C9E8 /* SampleQATests.swift in Sources */,
-				5D47D15860502C898689BDAF /* ScreenCatalogQATests.swift in Sources */,
-				B88BAE63AC69365D3DD5E6E9 /* SleepQATests.swift in Sources */,
-				F44796F3FE12B39F7FCDC5C0 /* TabScaffoldQATests.swift in Sources */,
-				0EFF877C623C4C82BC62CEFE /* VoiceOverQATests.swift in Sources */,
-				8105DCF93222760938A076E0 /* VoiceOverTraversalQATests.swift in Sources */,
-				9AA7E5CA11EE1244D8912A20 /* WelcomeQATests.swift in Sources */,
+				C20B1E1FF8C1E240D0EE6D4F /* AuditQATests.swift in Sources */,
+				836ED8ABBCCA3558D69C0B8A /* ColorPassQATests.swift in Sources */,
+				186B34080B70291F7DDFED8F /* GoalQATests.swift in Sources */,
+				85320DC835507EE832E46022 /* HealthQATests.swift in Sources */,
+				1063E734757976D792334B88 /* HomeMotionQATests.swift in Sources */,
+				4196BB26F7965D73B144D3E6 /* HomePerformanceQATests.swift in Sources */,
+				7104198AD9B95C68A8D83F3A /* HomeQATests.swift in Sources */,
+				9F4CB9985D67D8B389ABDC5E /* HomeV3QATests.swift in Sources */,
+				5CB426C4E5C300124A9B45CA /* HomeV4QATests.swift in Sources */,
+				EBA4F08F1DE45DAF6FCFB064 /* InsightsQATests.swift in Sources */,
+				FEED1399BF4FEB3F4E8BBC72 /* MemoryQATests.swift in Sources */,
+				49AF00FF76B582AE1B8EC145 /* NoRequestsQATests.swift in Sources */,
+				5452D365EBF33F0F9C3C2E65 /* NotificationsQATests.swift in Sources */,
+				BF2299FEDDFC5874EFA3DA66 /* OnboardingQATests.swift in Sources */,
+				6D8E4A3F595E1245006D4AE2 /* PaywallQATests.swift in Sources */,
+				18900215F0A4B728AD1450A6 /* PlanQATests.swift in Sources */,
+				15BF404BF1F7084F92B01922 /* QAMatrixTests.swift in Sources */,
+				EDEEB3600951016BD5949070 /* QASupport.swift in Sources */,
+				FFA4135361D416AAAAE7EF35 /* RecoveryQATests.swift in Sources */,
+				47E275F9C92D81F94062607C /* RhythmQATests.swift in Sources */,
+				D6B5EC0B3E1A61DF66D7BFC6 /* SampleQATests.swift in Sources */,
+				DFFADBF595C0185FE8B8C317 /* ScreenCatalogQATests.swift in Sources */,
+				753A0DFD1A22D259597CE8FB /* SleepQATests.swift in Sources */,
+				F2C93F85E5FC3CD37D2DDE86 /* TabScaffoldQATests.swift in Sources */,
+				657BD817BA9B8482C39B6F31 /* VoiceOverQATests.swift in Sources */,
+				3B14777D8FF1B73049B7C6EA /* VoiceOverTraversalQATests.swift in Sources */,
+				277CE29528C7E2484693FEBA /* WelcomeQATests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -763,9 +787,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				206DD7A23ABCAA85FC6CA867 /* NoctisControls.swift in Sources */,
-				67056F3EDBCFEEB4289B82D3 /* NoctisWidgets.swift in Sources */,
-				B8FFA63EFEF05E0F2C634743 /* NoctisWindDownActivity.swift in Sources */,
+				4908BE7BBEBAAD31D0E66F08 /* NoctisControls.swift in Sources */,
+				2E6A6EC38614A6B3203E19A4 /* NoctisWidgets.swift in Sources */,
+				998846B6CE86246E93ABC1DB /* NoctisWindDownActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -773,7 +797,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63A30BB69215A7159983E0DD /* NoctisAlarmWidget.swift in Sources */,
+				247D223775B86CF896F47DDC /* NoctisAlarmWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -781,7 +805,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				381DB65F36AAD3420467C7AB /* StoreKitSessionTests.swift in Sources */,
+				62D8B8248FEF45C7F55598F6 /* StoreKitSessionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -798,14 +822,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5791296039EB649DC5F07D28 /* ComplicationGallery.swift in Sources */,
-				8C400B4A1FDE08C78B04C375 /* NOCTISWatchApp.swift in Sources */,
-				2BAE4D8E8121B8A5A7971641 /* WatchBreathing.swift in Sources */,
-				D51E0D694415A7BBF28D3E87 /* WatchMock.swift in Sources */,
-				DE78B57E5DDF47A44001EF3E /* WatchModel.swift in Sources */,
-				5C192DBF50D6E63AE11AFC71 /* WatchRootView.swift in Sources */,
-				60C91EB0024BDBB44AD04323 /* WatchSnapshotReceiver.swift in Sources */,
-				3E911B85790DBF6F34DD1F06 /* WatchViews.swift in Sources */,
+				BBF3949F23D2252C16D8F880 /* ComplicationGallery.swift in Sources */,
+				C79301C7B6230207D170E5F4 /* NOCTISWatchApp.swift in Sources */,
+				BDCDEFB614F65214A1A8C65E /* WatchBreathing.swift in Sources */,
+				C1177D445537568ED3C20FC2 /* WatchMock.swift in Sources */,
+				F68F302CF9484B9C2DE9CC0B /* WatchModel.swift in Sources */,
+				199AAFA4986D26ED0F9E8540 /* WatchRootView.swift in Sources */,
+				61DA478C9C13B3DBF3AEDB3B /* WatchSnapshotReceiver.swift in Sources */,
+				D0DA3937D263ECD694520773 /* WatchViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -869,8 +893,8 @@
 		1139385B2A38FB0F8CD28A5D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NoctisWidgets/NoctisWidgets.entitlements;
-				INFOPLIST_FILE = NoctisWidgets/Info.plist;
+				CODE_SIGN_ENTITLEMENTS = Config/NoctisWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Home/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -888,7 +912,7 @@
 		252DC0B9141324C18AC1A323 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				INFOPLIST_FILE = NoctisAlarmWidget/Info.plist;
+				INFOPLIST_FILE = Widgets/Alarm/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -926,8 +950,8 @@
 		52AE01366AE77F386E4F67D5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NOCTISWatchWidgets/NOCTISWatchWidgets.entitlements;
-				INFOPLIST_FILE = NOCTISWatchWidgets/Info.plist;
+				CODE_SIGN_ENTITLEMENTS = Config/NOCTISWatchWidgets.entitlements;
+				INFOPLIST_FILE = Watch/Widgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1038,7 +1062,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = App/Noctis.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Config/Noctis.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
@@ -1068,8 +1092,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = NOCTISWatch/NOCTISWatch.entitlements;
-				INFOPLIST_FILE = NOCTISWatch/Info.plist;
+				CODE_SIGN_ENTITLEMENTS = Config/NOCTISWatch.entitlements;
+				INFOPLIST_FILE = Watch/App/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.noctis.app.watchkitapp;
 				PRODUCT_NAME = NOCTISWatch;
@@ -1083,7 +1107,7 @@
 		963B9597EADBFD5EEDC086A1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				INFOPLIST_FILE = NoctisAlarmWidget/Info.plist;
+				INFOPLIST_FILE = Widgets/Alarm/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1100,8 +1124,8 @@
 		AF09A6827687D6467AA15EEB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NoctisWidgets/NoctisWidgets.entitlements;
-				INFOPLIST_FILE = NoctisWidgets/Info.plist;
+				CODE_SIGN_ENTITLEMENTS = Config/NoctisWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Home/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1121,7 +1145,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = App/Noctis.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Config/Noctis.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
@@ -1235,8 +1259,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = NOCTISWatch/NOCTISWatch.entitlements;
-				INFOPLIST_FILE = NOCTISWatch/Info.plist;
+				CODE_SIGN_ENTITLEMENTS = Config/NOCTISWatch.entitlements;
+				INFOPLIST_FILE = Watch/App/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.noctis.app.watchkitapp;
 				PRODUCT_NAME = NOCTISWatch;
@@ -1250,8 +1274,8 @@
 		ECECE976F27D05BC269C7864 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NOCTISWatchWidgets/NOCTISWatchWidgets.entitlements;
-				INFOPLIST_FILE = NOCTISWatchWidgets/Info.plist;
+				CODE_SIGN_ENTITLEMENTS = Config/NOCTISWatchWidgets.entitlements;
+				INFOPLIST_FILE = Watch/Widgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

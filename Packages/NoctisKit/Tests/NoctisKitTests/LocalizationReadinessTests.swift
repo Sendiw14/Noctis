@@ -23,7 +23,7 @@ struct LocalizationReadinessTests {
 
     private nonisolated static func catalogs() throws -> [Catalog] {
         var found: [URL] = []
-        for folder in ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets", "NoctisAlarmWidget"] {
+        for folder in ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets", "Widgets/Alarm"] {
             found += files(under: folder, extension: "xcstrings")
         }
         return try found.map { url in
@@ -159,7 +159,7 @@ struct LocalizationReadinessTests {
     @Test nonisolated func theLiteralsNotYetInACatalogOnlyShrink() throws {
         let pattern = try NSRegularExpression(pattern: #"\b(Text|Button|Label|NoctisCTA|NoctisTextButton)\("([^"\\]{2,})"|\.(navigationTitle|accessibilityLabel|accessibilityHint)\("([^"\\]{2,})""#)
         var count = 0
-        for folder in ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets"] {
+        for folder in ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets"] {
             for url in Self.files(under: folder, extension: "swift") {
                 let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
                 for line in text.split(separator: "\n", omittingEmptySubsequences: false) {

@@ -112,7 +112,7 @@ struct ConfigAuditTests {
     }
 
     @Test func theExtensionsAndTheWatchAppCarryOnlyTheirOwnKeys() throws {
-        for path in ["NoctisAlarmWidget/Info.plist", "NoctisWidgets/Info.plist", "NOCTISWatchWidgets/Info.plist"] {
+        for path in ["Widgets/Alarm/Info.plist", "Widgets/Home/Info.plist", "Watch/Widgets/Info.plist"] {
             let info = try plist(path)
             let extensionPoint = (info["NSExtension"] as? [String: Any])?["NSExtensionPointIdentifier"] as? String
             #expect(extensionPoint == "com.apple.widgetkit-extension", Comment(rawValue: path))
@@ -120,14 +120,14 @@ struct ConfigAuditTests {
             for key in info.keys where key.hasPrefix("NS") && key != "NSExtension" { Issue.record("\(path) has \(key)") }
             #expect(info["UIBackgroundModes"] == nil && info["WKBackgroundModes"] == nil && info["CFBundleURLTypes"] == nil)
         }
-        let watch = try plist("NOCTISWatch/Info.plist")
+        let watch = try plist("Watch/App/Info.plist")
         #expect(watch["WKBackgroundModes"] as? [String] == ["mindfulness"], "the breathing session only (R55)")
         #expect(watch["WKCompanionAppBundleIdentifier"] as? String == "com.noctis.app")
         for key in watch.keys where key.hasPrefix("NS") { Issue.record("the Watch app has \(key): it reads nothing from Health (R34)") }
     }
 
     @Test func noPlistOrManifestOpensTheNetwork() throws {
-        let files = ["App/Info.plist", "NoctisAlarmWidget/Info.plist", "NoctisWidgets/Info.plist", "NOCTISWatch/Info.plist", "NOCTISWatchWidgets/Info.plist", "project.yml"]
+        let files = ["App/Info.plist", "Widgets/Alarm/Info.plist", "Widgets/Home/Info.plist", "Watch/App/Info.plist", "Watch/Widgets/Info.plist", "project.yml"]
         for path in files {
             let content = try text(path)
             for key in ["NSAppTransportSecurity", "NSAllowsArbitraryLoads", "NSExceptionDomains", "NSAllowsLocalNetworking", "NSBonjourServices", "NSExceptionAllowsInsecureHTTPLoads"] {
@@ -155,7 +155,7 @@ struct ConfigAuditTests {
     // MARK: Entitlements
 
     @Test func onlyTheIPhoneAppHasHealthKitAndEveryTargetSharesOneAppGroup() throws {
-        let app = try plist("App/Noctis.entitlements")
+        let app = try plist("Config/Noctis.entitlements")
         #expect(app["com.apple.developer.healthkit"] as? Bool == true)
         #expect((app["com.apple.developer.healthkit.access"] as? [Any])?.isEmpty == true, "no clinical records")
         #expect(app["com.apple.developer.healthkit.background-delivery"] as? Bool == true, "R46: the morning wake")
@@ -164,13 +164,13 @@ struct ConfigAuditTests {
 
         let group = WidgetSnapshotStore.appGroupIdentifier
         #expect(app["com.apple.security.application-groups"] as? [String] == [group])
-        for path in ["NoctisWidgets/NoctisWidgets.entitlements", "NOCTISWatch/NOCTISWatch.entitlements", "NOCTISWatchWidgets/NOCTISWatchWidgets.entitlements"] {
+        for path in ["Config/NoctisWidgets.entitlements", "Config/NOCTISWatch.entitlements", "Config/NOCTISWatchWidgets.entitlements"] {
             let entitlements = try plist(path)
             #expect(Set(entitlements.keys) == ["com.apple.security.application-groups"], Comment(rawValue: "\(path): the App Group and nothing else (R34, R44)"))
             #expect(entitlements["com.apple.security.application-groups"] as? [String] == [group], Comment(rawValue: path))
         }
         // The alarm extension has none: it reads what AlarmKit hands it.
-        #expect(!FileManager.default.fileExists(atPath: root("NoctisAlarmWidget/NoctisAlarmWidget.entitlements").path))
+        #expect(!FileManager.default.fileExists(atPath: root("Config/NoctisAlarmWidget.entitlements").path))
         let yml = try text("project.yml")
         let alarmBlock = try #require(yml.range(of: "  NoctisAlarmWidget:\n"))
         let nextTarget = try #require(yml.range(of: "\n  # NOCTIS's widgets:", range: alarmBlock.upperBound..<yml.endIndex))

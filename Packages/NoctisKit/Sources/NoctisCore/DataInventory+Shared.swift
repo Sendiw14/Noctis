@@ -302,7 +302,7 @@ nonisolated extension DataInventory {
             ),
             NetworkUse(
                 token: "import WatchConnectivity", purpose: "Sending the summary to your own paired Apple Watch, and nowhere else: the Watch asks for an update, and the iPhone answers it.",
-                files: ["NoctisCore/WatchSync/WCSessionDriver.swift", "NOCTISWatch/WatchSnapshotReceiver.swift"], categories: [.widgetSnapshot]
+                files: ["NoctisCore/WatchSync/WCSessionDriver.swift", "Watch/App/WatchSnapshotReceiver.swift"], categories: [.widgetSnapshot]
             ),
             NetworkUse(
                 token: "import MessageUI", purpose: "The mail composer behind Contact support: it sends only if you send the email.",

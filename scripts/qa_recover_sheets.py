@@ -2,9 +2,9 @@
 """Recovers which combinations a viewed sheet showed, when the sheet directory is gone.
 
 The system's /tmp cleanup deleted every contact sheet, screenshot and manifest of the matrix runs after they were viewed (the working files now live in
-~/qa-work). qa/coverage/viewed.tsv survives, and each line's note says what the sheet was: the screen is the sheet's name, the devices ("SE", "17 Pro")
+~/qa-work). Docs/qa/coverage/viewed.tsv survives, and each line's note says what the sheet was: the screen is the sheet's name, the devices ("SE", "17 Pro")
 and the configurations ("A-light against B-AX3 and B-AX5", "D-RTL against D-DoubleLength and D-Bounded") are in its first words. This script reads those
-and writes qa/coverage/recovered.tsv (sheet, screen, page, combinations) and recovered_produced.tsv (a sheet that was viewed was produced). A line whose
+and writes Docs/qa/coverage/recovered.tsv (sheet, screen, page, combinations) and recovered_produced.tsv (a sheet that was viewed was produced). A line whose
 note does not say its columns is left out, so its combinations stay UNVERIFIED. Coverage marks every recovered combination "(recovered)" because its image
 can no longer be looked at again.
 
@@ -15,7 +15,7 @@ import os
 import re
 
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-base = os.path.join(root, "qa", "coverage")
+base = os.path.join(root, "Docs", "qa", "coverage")
 catalog = {s["id"]: s for s in json.load(open(os.path.join(base, "catalog.json")))}
 known = {line.split("\t")[0] for line in open(os.path.join(base, "sheets.tsv"))}
 

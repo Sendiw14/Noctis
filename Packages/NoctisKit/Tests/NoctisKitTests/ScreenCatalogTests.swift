@@ -120,7 +120,7 @@ struct ScreenCatalogTests {
         #expect(ScreenCatalog.all.filter(\.tierOne).count >= 20)
     }
 
-    /// `QA_CATALOG_JSON=<path> swift test --filter ScreenCatalogTests` writes the catalog for `scripts/qa_coverage.py` (qa/coverage/catalog.json).
+    /// `QA_CATALOG_JSON=<path> swift test --filter ScreenCatalogTests` writes the catalog for `scripts/qa_coverage.py` (Docs/qa/coverage/catalog.json).
     @Test func theCatalogIsWrittenAsJSONWhenAsked() throws {
         guard let path = ProcessInfo.processInfo.environment["QA_CATALOG_JSON"] else { return }
         let list: [[String: Any]] = ScreenCatalog.all.map { screen in
@@ -136,7 +136,7 @@ struct ScreenCatalogTests {
     /// The Swift in the app, its extensions and the Watch (not the catalog itself).
     private nonisolated static func shippedSource() throws -> String {
         var text = ""
-        let roots = ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NoctisAlarmWidget", "NOCTISWatch", "NOCTISWatchWidgets"]
+        let roots = ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Widgets/Alarm", "Watch/App", "Watch/Widgets"]
         for root in roots {
             let url = repository.appending(path: root, directoryHint: .isDirectory)
             guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil) else { continue }

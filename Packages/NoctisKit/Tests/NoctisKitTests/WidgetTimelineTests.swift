@@ -192,12 +192,12 @@ struct WidgetTimelineTests {
     }
 
     @Test func sampleNumbersAreOnlyEverNamedWhereAPreviewIsMade() throws {
-        let allowed = ["NoctisWidgetKit/WidgetSamples.swift", "AppRoot/WidgetGallery.swift", "AppRoot/IntentRunner.swift", "NoctisWidgets/NoctisWidgets.swift", "NOCTISWatch/WatchMock.swift"]
-        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets"]) where file.text.contains("WidgetSamples") {
+        let allowed = ["NoctisWidgetKit/WidgetSamples.swift", "AppRoot/WidgetGallery.swift", "AppRoot/IntentRunner.swift", "Widgets/Home/NoctisWidgets.swift", "Watch/App/WatchMock.swift"]
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets"]) where file.text.contains("WidgetSamples") {
             #expect(allowed.contains { file.path.hasSuffix($0) }, Comment(rawValue: "\(file.path) uses sample numbers"))
         }
         // In the extension, only the placeholder and the gallery preview make one; the timeline is built from the store.
-        let source = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NoctisWidgets/NoctisWidgets.swift"), encoding: .utf8)
+        let source = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisWidgets.swift"), encoding: .utf8)
         let timeline = try #require(source.range(of: "func getTimeline"))
         let relevance = try #require(source.range(of: "func relevance"))
         #expect(!source[timeline.lowerBound..<relevance.lowerBound].contains("sample("), "the real timeline never draws a sample")

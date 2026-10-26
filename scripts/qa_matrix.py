@@ -8,7 +8,7 @@
 The simulator is put in the configuration with `simctl ui` (appearance, content size, increase contrast) and, for the accessibility settings
 `simctl ui` does not have, by writing the com.apple.Accessibility defaults of the simulated device. Every setting the run claims is then
 read back from the app by the environment probe (QA_EXPECT), so a configuration that did not take effect fails instead of being photographed.
-Output: DIR/matrix/<config>/<device>/ (see UITests/QAMatrixTests.swift).
+Output: DIR/matrix/<config>/<device>/ (see Tests/UITests/QAMatrixTests.swift).
 """
 import argparse
 import os

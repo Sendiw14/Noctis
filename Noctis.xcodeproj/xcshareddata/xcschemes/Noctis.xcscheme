@@ -70,7 +70,7 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <StoreKitConfigurationFileReference
-         identifier = "../../Noctis.storekit">
+         identifier = "../../Config/Noctis.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction

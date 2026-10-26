@@ -13,7 +13,7 @@ struct WatchActivityTests {
     }
 
     @Test func theActivityAsksForTheSmallFamilyAndDrawsTheWatchViewForIt() throws {
-        let code = RawDefaultsTests.code(try read("NoctisWidgets/NoctisWindDownActivity.swift"))
+        let code = RawDefaultsTests.code(try read("Widgets/Home/NoctisWindDownActivity.swift"))
         #expect(code.contains(".supplementalActivityFamilies([.small])"))
         #expect(code.contains("@Environment(\\.activityFamily)") && code.contains("WindDownWatchView(state: context.state, isStale: context.isStale)"))
         // The iPhone's own presentation is what every other family gets.

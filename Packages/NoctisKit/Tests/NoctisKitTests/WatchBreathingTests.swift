@@ -365,7 +365,7 @@ struct WatchBreathPreferenceTests {
     }
 
     @Test func breathingWritesNothingToHealthAndTheWatchHasTheBackgroundModeItNeeds() throws {
-        let files = RawDefaultsTests.swiftFiles(under: ["NOCTISWatch", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/BreathingKit"])
+        let files = RawDefaultsTests.swiftFiles(under: ["Watch/App", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/BreathingKit"])
         for file in files {
             let code = RawDefaultsTests.code(file.text)
             for token in ["HealthKit", "HKHealthStore", "mindfulSession", "HKCategoryType", "HKWorkout", "requestAuthorization"] {

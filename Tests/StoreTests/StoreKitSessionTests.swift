@@ -25,7 +25,7 @@ import Testing
 //     expireSubscription(productIdentifier:) move the clock for the test.
 
 private let storeKitFile: URL = URL(fileURLWithPath: #filePath)
-    .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Noctis.storekit")
+    .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Config/Noctis.storekit")
 
 @MainActor
 private final class Rig {

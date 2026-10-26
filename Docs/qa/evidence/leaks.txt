@@ -4,4 +4,4 @@ Export: xcrun xctrace export --input leaks.trace --xpath '/trace-toc/run[@number
 
 rows 46, all "Malloc 32 Bytes", 1,472 bytes in total; responsible library: none; responsible frame: <Call stack limit reached> (all 46)
 No leak is attributed to a NOCTIS frame (the stack that allocated each was deeper than the instrument records), so the owner of these 46 blocks
-is UNVERIFIED. About 150 bytes a lap, against the 5 MB budget the memory tests hold; see qa/evidence/memory/.
+is UNVERIFIED. About 150 bytes a lap, against the 5 MB budget the memory tests hold; see Docs/qa/evidence/memory/.

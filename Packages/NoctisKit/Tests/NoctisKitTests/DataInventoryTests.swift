@@ -13,7 +13,7 @@ private let inventory = DataInventory.shared
 
 /// The code, for the scans: every Swift file under the package's sources and the app, comments removed.
 private nonisolated func sources() -> [(path: String, code: String)] {
-    RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NOCTISWatch", "NOCTISWatchWidgets"]).map { ($0.path, RawDefaultsTests.code($0.text)) }
+    RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Watch/App", "Watch/Widgets"]).map { ($0.path, RawDefaultsTests.code($0.text)) }
 }
 
 private nonisolated func relative(_ path: String) -> String {
@@ -402,7 +402,7 @@ struct DataInventoryNetworkTests {
     }
 
     @Test func theAppHasNoICloudOrNetworkEntitlements() throws {
-        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/Noctis.entitlements"), encoding: .utf8)
+        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/Noctis.entitlements"), encoding: .utf8)
         for key in ["com.apple.developer.icloud", "com.apple.developer.ubiquity", "com.apple.security.network", "aps-environment", "com.apple.developer.associated-domains"] {
             #expect(!entitlements.contains(key), Comment(rawValue: "the entitlements hold \(key)"))
         }

@@ -4,10 +4,10 @@
     scripts/qa_tier1.py <matrix dir> [--sheets <sheets dir>] [--write]
 
 Tier 1 is the v1 plan: the screens and configurations listed in DEFINITION below. For every planned combination (device, configuration, screen) it reads whether the
-harness PRODUCED it (a top picture, and a bottom picture for a page that scrolls), and whether it was VIEWED (qa/tier1/viewed.tsv: one line per contact sheet that
+harness PRODUCED it (a top picture, and a bottom picture for a page that scrolls), and whether it was VIEWED (Docs/qa/tier1/viewed.tsv: one line per contact sheet that
 somebody looked at, `sheet<TAB>result<TAB>note`, where a sheet's cells are in <sheets dir>/sheets.tsv). A combination that is not produced or not viewed is UNVERIFIED and
 is never counted as a pass. Everything outside tier 1 is "tier 2, not planned for v1" and is counted as such. With --write the tables go to QA_COVERAGE.md and
-qa/tier1/coverage.csv.
+Docs/qa/tier1/coverage.csv.
 """
 import argparse, collections, csv, datetime, json, os, sys
 
@@ -38,7 +38,7 @@ DEFINITION = {
 }
 
 def load_catalog():
-    return [c for c in json.load(open(os.path.join(ROOT, "qa", "coverage", "catalog.json"))) if c["platform"] == "iPhone"]
+    return [c for c in json.load(open(os.path.join(ROOT, "Docs", "qa", "coverage", "catalog.json"))) if c["platform"] == "iPhone"]
 
 def planned(catalog):
     out = []
@@ -74,7 +74,7 @@ def viewed_map(sheets_dirs):
             else:
                 cells[key] = (dev, screen, [(c, screen) for c, *_ in parts])
     seen = {}
-    vpath = os.path.join(ROOT, "qa", "tier1", "viewed.tsv")
+    vpath = os.path.join(ROOT, "Docs", "qa", "tier1", "viewed.tsv")
     if os.path.exists(vpath):
         for line in open(vpath):
             parts = line.rstrip("\n").split("\t")
@@ -111,8 +111,8 @@ def main():
     print(total, "planned;", dict(counts))
     if not a.write:
         return
-    os.makedirs(os.path.join(ROOT, "qa", "tier1"), exist_ok=True)
-    with open(os.path.join(ROOT, "qa", "tier1", "coverage.csv"), "w", newline="") as handle:
+    os.makedirs(os.path.join(ROOT, "Docs", "qa", "tier1"), exist_ok=True)
+    with open(os.path.join(ROOT, "Docs", "qa", "tier1", "coverage.csv"), "w", newline="") as handle:
         w = csv.writer(handle)
         w.writerow(["area", "screen", "device", "configuration", "produced", "viewed", "status", "result", "note"])
         for r in rows:
@@ -128,13 +128,13 @@ def main():
     A = lines.append
     A("# QA coverage")
     A("")
-    A(f"Written by `scripts/qa_tier1.py` on {today} from `qa/tier1/` (the plan, what the harness produced, and which contact sheets were looked at). The earlier coverage tables, made before the final")
-    A("build, are kept in `qa/coverage/` as history; they are not the v1 record.")
+    A(f"Written by `scripts/qa_tier1.py` on {today} from `Docs/qa/tier1/` (the plan, what the harness produced, and which contact sheets were looked at). The earlier coverage tables, made before the final")
+    A("build, are kept in `Docs/qa/coverage/` as history; they are not the v1 record.")
     A("")
     A("## What counts")
     A("")
     A("- **Tier 1** is what v1 ships and is judged on: the screens and configurations below. Every tier-1 combination must be **produced** on the final build (a top picture, and a")
-    A("  bottom picture for a page that scrolls) and **viewed** (a contact sheet at a size where its text can be read, in `qa/tier1/viewed.tsv`). One that is not is UNVERIFIED, with the reason,")
+    A("  bottom picture for a page that scrolls) and **viewed** (a contact sheet at a size where its text can be read, in `Docs/qa/tier1/viewed.tsv`). One that is not is UNVERIFIED, with the reason,")
     A("  and is never counted as a pass.")
     A("- **Tier 2, not planned for v1** is everything else: the other states of each screen (learning, empty, no permission, gap, stale, loading, error) beyond the ones named,")
     A("  the other accessibility settings (Bold Text, Reduce Motion, Increase Contrast, Differentiate Without Color, Button Shapes, On/Off Labels, Reduce Transparency, Smart Invert), the pseudolanguages beyond")
@@ -186,8 +186,8 @@ def main():
     A("")
     A("## Every tier-1 combination")
     A("")
-    A("`qa/tier1/coverage.csv` has one line per combination: area, screen, device, configuration, produced, viewed, status, result, what was seen.")
+    A("`Docs/qa/tier1/coverage.csv` has one line per combination: area, screen, device, configuration, produced, viewed, status, result, what was seen.")
     A("")
-    open(os.path.join(ROOT, "QA_COVERAGE.md"), "w").write("\n".join(lines) + "\n")
+    open(os.path.join(ROOT, "Docs", "QA_COVERAGE.md"), "w").write("\n".join(lines) + "\n")
 
 main()

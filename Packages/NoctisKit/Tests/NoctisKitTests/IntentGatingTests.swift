@@ -257,7 +257,7 @@ struct IntentGatePerformTests {
     }
 
     @Test func theWindDownControlRunsTheSameIntentSoItOpensThePaywallSheetForTheFreePlan() throws {
-        let controls = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NoctisWidgets/NoctisControls.swift"), encoding: .utf8)
+        let controls = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisControls.swift"), encoding: .utf8)
         #expect(RawDefaultsTests.code(controls).contains("ControlWidgetButton(action: StartWindDownIntent())"), "one intent, one gate")
         #expect(!RawDefaultsTests.code(controls).contains("StoreKit") && !RawDefaultsTests.code(controls).contains("FeatureTable"), "the control decides nothing itself")
     }
@@ -356,7 +356,7 @@ struct IntentGateAppTests {
     }
 
     @Test func theIntentsAndTheControlNeverCallStoreKitAndTheRunnerCoversBothPlans() throws {
-        for folder in ["Packages/NoctisKit/Sources/NoctisIntentKit", "NoctisWidgets"] {
+        for folder in ["Packages/NoctisKit/Sources/NoctisIntentKit", "Widgets/Home"] {
             for file in RawDefaultsTests.swiftFiles(under: [folder]) {
                 #expect(!file.text.contains("import StoreKit"), Comment(rawValue: "\(file.path) imports StoreKit"))
             }

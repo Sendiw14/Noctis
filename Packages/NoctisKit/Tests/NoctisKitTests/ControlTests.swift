@@ -358,10 +358,10 @@ struct ControlIntentTests {
 // MARK: - The extension and what it links
 
 struct ControlExtensionTests {
-    private let controls = RawDefaultsTests.root.appendingPathComponent("NoctisWidgets/NoctisControls.swift")
+    private let controls = RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisControls.swift")
 
     @Test func theBundleHoldsTheWidgetsAndBothControls() throws {
-        let bundle = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NoctisWidgets/NoctisWidgets.swift"), encoding: .utf8)
+        let bundle = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisWidgets.swift"), encoding: .utf8)
         let body = RawDefaultsTests.code(bundle)
         for name in ["NoctisTodayWidget()", "NoctisLockWidget()", "NoctisWindDownControl()", "NoctisSleepSoundsControl()"] { #expect(body.contains(name), Comment(rawValue: name)) }
     }
@@ -378,7 +378,7 @@ struct ControlExtensionTests {
     }
 
     @Test func theExtensionHoldsNothingThatPlaysReadsHealthOrStores() throws {
-        for file in RawDefaultsTests.swiftFiles(under: ["NoctisWidgets"]) {
+        for file in RawDefaultsTests.swiftFiles(under: ["Widgets/Home"]) {
             let code = RawDefaultsTests.code(file.text)
             for token in ["import HealthKit", "import SwiftData", "import AVFoundation", "import SoundKit", "import CoachKit", "import JournalKit", "import NoctisCore", "import NightKit", "import AppRoot", "AVAudioEngine", "UserDefaults"] {
                 #expect(!code.contains(token), Comment(rawValue: "\(file.path) has \(token)"))
@@ -388,7 +388,7 @@ struct ControlExtensionTests {
 
     @Test func theModulesTheExtensionLinksUseNoRequiredReasonAPI() throws {
         // The extension's manifest declares none (R43), and now it also links the intents and the sound names: none of that may use one.
-        let modules = ["NoctisWidgets", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisIntentKit", "Packages/NoctisKit/Sources/SoundCatalog", "Packages/NoctisKit/Sources/DesignSystem"]
+        let modules = ["Widgets/Home", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisIntentKit", "Packages/NoctisKit/Sources/SoundCatalog", "Packages/NoctisKit/Sources/DesignSystem"]
         let tokens = ["UserDefaults", "@AppStorage", "creationDate", "modificationDate", "contentModificationDate", "systemUptime", "mach_absolute_time", "volumeAvailableCapacity", "systemFreeSize", "activeInputModes", "fstat(", "lstat("]
         let files = RawDefaultsTests.swiftFiles(under: modules)
         #expect(files.count > 15)
@@ -424,7 +424,7 @@ struct ControlExtensionTests {
         // (comment lines belong to the next target)
         let lines = block.components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#") }.joined(separator: "\n")
         #expect(!lines.contains("product: SoundKit") && !lines.contains("HealthKit"))
-        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NoctisWidgets/NoctisWidgets.entitlements"), encoding: .utf8)
+        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/NoctisWidgets.entitlements"), encoding: .utf8)
         #expect(entitlements.components(separatedBy: "<string>").count - 1 == 1, "the App Group and nothing else")
     }
 }

@@ -24,7 +24,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FOLDERS = ['Packages/NoctisKit/Sources', 'App', 'NoctisWidgets', 'NoctisAlarmWidget', 'NOCTISWatch', 'NOCTISWatchWidgets']
+FOLDERS = ['Packages/NoctisKit/Sources', 'App', 'Widgets/Home', 'Widgets/Alarm', 'Watch/App', 'Watch/Widgets']
 
 # Names the QA brief requires to be absent from Release, checked as plain substrings.
 REQUIRED = ['useMockHealth', 'mockScenario', 'mockAI', 'mockLatency', 'mockUnauthorized', 'forceTier', 'homeMode', 'homeModeFlipIn',

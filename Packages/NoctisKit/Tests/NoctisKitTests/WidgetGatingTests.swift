@@ -141,7 +141,7 @@ struct WidgetLockedContentTests {
     }
 
     @Test func theExtensionDecidesNothingItselfAndTheLockedTextIs12ptOrMore() throws {
-        let extensionCode = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NoctisWidgets/NoctisWidgets.swift"), encoding: .utf8))
+        let extensionCode = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Widgets/Home/NoctisWidgets.swift"), encoding: .utf8))
         #expect(extensionCode.contains("WidgetGate.entries(entries, in: $0)"))
         #expect(!extensionCode.contains("StoreKit") && !extensionCode.contains(".tier"), "the extension never reads or asks for the plan: the kit does")
         let views = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetViews.swift"), encoding: .utf8)

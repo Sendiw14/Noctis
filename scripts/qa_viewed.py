@@ -3,7 +3,7 @@
 
     scripts/qa_viewed.py <PASS|NOTE|FINDING QA-nnn|UNVERIFIED> "what was seen" <sheet> [<sheet> ...] [--screens id,id] [--configs name,name]
 
-Appends one line a sheet to qa/coverage/viewed.tsv (sheet, result, note, screens, configs). With --screens the result is for those screens on the sheet only;
+Appends one line a sheet to Docs/qa/coverage/viewed.tsv (sheet, result, note, screens, configs). With --screens the result is for those screens on the sheet only;
 the other screens on it keep their own lines (or, with none, are PASS only if a line without --screens says so). With --configs the result is for those
 configurations' columns on the sheet only (UNVERIFIED there: the column showed something other than the screen, so it is not counted as viewed).
 A sheet is recorded only by someone who looked at it at a readable size;
@@ -12,7 +12,7 @@ scripts/qa_coverage.py counts a combination as viewed from these lines and nothi
 import os
 import sys
 
-path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "qa", "coverage", "viewed.tsv")
+path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Docs", "qa", "coverage", "viewed.tsv")
 args = sys.argv[1:]
 screens = ""
 configs = ""

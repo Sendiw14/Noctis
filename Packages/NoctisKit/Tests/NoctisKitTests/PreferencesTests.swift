@@ -595,7 +595,11 @@ nonisolated struct RawDefaultsTests {
         var result: [(String, String)] = []
         for folder in folders {
             let base = root.appendingPathComponent(folder)
-            guard let walker = FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil) else { continue }
+            // A folder that is not there must fail the test that names it, not pass it by scanning nothing.
+            guard FileManager.default.fileExists(atPath: base.path), let walker = FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil) else {
+                Issue.record("\(folder) does not exist: a test names a folder that was moved or renamed")
+                continue
+            }
             for case let url as URL in walker where url.pathExtension == "swift" {
                 if let text = try? String(contentsOf: url, encoding: .utf8) { result.append((url.path.replacingOccurrences(of: root.path + "/", with: ""), text)) }
             }

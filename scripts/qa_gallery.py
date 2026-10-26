@@ -9,7 +9,7 @@ captured once ("-light" only). Writes <out dir>/gallery.tsv (file, area, screen 
 import json, os, re, sys
 from PIL import Image
 matrix, out = sys.argv[1:3]
-catalog = {c["id"]: c for c in json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "qa", "coverage", "catalog.json"))) if c["platform"] == "iPhone"}
+catalog = {c["id"]: c for c in json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Docs", "qa", "coverage", "catalog.json"))) if c["platform"] == "iPhone"}
 STATES = ("sleepOnly", "learning", "empty", "noPermission", "gap", "stale", "loading", "error")
 LOCKS = ("premium.paywall.recovery30D", "premium.paywall.sleepMonth", "premium.paywall.coachQuestions", "premium.paywall.windDown", "premium.paywall.weeklyReview", "premium.compare",
          "night.tonight.free", "reviews.list.free", "reviews.monthly.locked", "settings.subscription.free")

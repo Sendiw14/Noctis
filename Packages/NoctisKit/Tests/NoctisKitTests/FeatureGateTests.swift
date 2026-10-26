@@ -396,7 +396,7 @@ struct FeatureGateRegistrationTests {
     @Test func theForcedTierExistsOnlyInDebugBuilds() throws {
         let tokens = ["forceTier", "debugForce", "debugForced"]
         var seen = 0
-        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets"]) {
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets"]) {
             var depth = 0                  // nesting of `#if DEBUG`
             var other: [Bool] = []         // whether each open `#if` is the DEBUG one
             for line in file.text.split(separator: "\n", omittingEmptySubsequences: false) {

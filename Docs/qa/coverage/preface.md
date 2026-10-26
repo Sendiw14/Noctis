@@ -2,7 +2,7 @@
 
 - **Screens.** `ScreenCatalog` (`Packages/NoctisKit/QA/QACatalog`) lists every screen, sheet and state the Debug launch arguments can reach (193 iPhone entries
   plus 19 for the Apple Watch). A unit test (`ScreenCatalogTests`) fails on a duplicate, on an `AppRoute` case no entry opens, on a route that does not
-  parse, on a Settings page, Recovery range or factor with no entry and on a launch flag no source reads. `qa/coverage/catalog.json` is its export.
+  parse, on a Settings page, Recovery range or factor with no entry and on a launch flag no source reads. `Docs/qa/coverage/catalog.json` is its export.
 - **Configurations.** `scripts/qa_configs.py` names each one; `scripts/qa_matrix.py` puts the simulator in it (`simctl ui` for appearance, content size and
   Increase Contrast; the simulated device's `com.apple.Accessibility` defaults for the rest; Xcode's own launch arguments for the pseudolanguages and
   right-to-left) and runs `QAMatrixTests`. **Before a screen is photographed the app is asked what it sees** (`-noctisEnvironmentProbe`: text size, bold,
@@ -10,7 +10,7 @@
   calendar, time zone, hour format, first weekday) and the run fails if it is not the configuration it claims to be. `environmentOK` is that check.
 - **Produced** means a top screenshot (and, for a page that scrolls, every page down to the bottom) exists for the combination and the screen reached
   its ready state. **Viewed** means a contact sheet that contains the combination's top and bottom was looked at at a size where its text can be read
-  (`scripts/qa_sheets.py`: 340 to 460 pt a phone, the screen's name and the configuration's above each); `qa/coverage/viewed.tsv` is the list of sheets that
+  (`scripts/qa_sheets.py`: 340 to 460 pt a phone, the screen's name and the configuration's above each); `Docs/qa/coverage/viewed.tsv` is the list of sheets that
   were, with what was seen. Zoomed crops were taken where the text on a sheet was too small. **Result** is the worst of what was seen: PASS, NOTE (something
   seen that is not a defect, recorded) or FINDING (a ledger row).
 - **UNVERIFIED** is everything else: not produced (and why, in the report), or produced and not looked at. It is never counted as a pass.

@@ -118,7 +118,7 @@ struct WatchLockedPageTests {
     }
 
     @Test func theLockedCardIsDrawnFromThePageAloneAndBreathingIsStillOnTheTonightPage() throws {
-        let views = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NOCTISWatch/WatchViews.swift"), encoding: .utf8))
+        let views = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Watch/App/WatchViews.swift"), encoding: .utf8))
         let start = try #require(views.range(of: "struct WatchLockedView: View {"))
         let end = try #require(views.range(of: "private struct WatchQuietLine", range: start.upperBound..<views.endIndex))
         let locked = String(views[start.lowerBound..<end.lowerBound])
@@ -215,7 +215,7 @@ struct WatchLockedComplicationTests {
     @Test func theComplicationViewsAndTheGalleryDrawTheLockedStateFromTheContent() throws {
         let views = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisWatchKit/WatchComplicationViews.swift"), encoding: .utf8))
         #expect(views.contains("content.isLocked"))
-        for file in ["NOCTISWatchWidgets/NOCTISWatchWidgets.swift", "NOCTISWatch/ComplicationGallery.swift", "NOCTISWatch/WatchModel.swift", "NOCTISWatch/WatchRootView.swift"] {
+        for file in ["Watch/Widgets/NOCTISWatchWidgets.swift", "Watch/App/ComplicationGallery.swift", "Watch/App/WatchModel.swift", "Watch/App/WatchRootView.swift"] {
             let code = RawDefaultsTests.code(try String(contentsOf: RawDefaultsTests.root.appendingPathComponent(file), encoding: .utf8))
             #expect(!code.contains("StoreKit") && !code.contains("FeatureTable"), Comment(rawValue: "\(file) decides the plan itself"))
         }

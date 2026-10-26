@@ -98,7 +98,7 @@ final class QAMatrixTests: XCTestCase {
         // the visit (the session is the device's, not the app's: the app asks StoreKit as it always does).
         var store: SKTestSession?
         if screen.needsStore {
-            let file = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Noctis.storekit")
+            let file = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Config/Noctis.storekit")
             store = try? SKTestSession(contentsOf: file)
             store?.disableDialogs = true
             store?.resetToDefaultState()

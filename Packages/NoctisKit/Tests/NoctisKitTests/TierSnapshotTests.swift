@@ -167,7 +167,7 @@ struct TierPublishingTests {
     }
 
     @Test func noExtensionOrWatchTargetCallsStoreKit() throws {
-        for folder in ["NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisIntentKit"] {
+        for folder in ["Widgets/Home", "Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisIntentKit"] {
             let found = RawDefaultsTests.swiftFiles(under: [folder])
             #expect(!found.isEmpty, Comment(rawValue: folder))
             for file in found {

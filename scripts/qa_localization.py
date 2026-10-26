@@ -110,7 +110,7 @@ def usage_of(key, sources):
 
 def cmd_csv():
     sources = {}
-    for folder in ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets"]:
+    for folder in ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Watch/App", "Watch/Widgets"]:
         for path in glob.glob(os.path.join(ROOT, folder, "**", "*.swift"), recursive=True):
             sources[os.path.relpath(path, ROOT)] = open(path).read()
     rows = []

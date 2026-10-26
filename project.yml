@@ -32,12 +32,12 @@ packages:
 # In the navigator for the scheme's StoreKit testing, but never bundled
 # into the app.
 fileGroups:
-  - Noctis.storekit
+  - Config/Noctis.storekit
 
-# The unit suite under the time zone, region, clock and first-weekday configurations in NOCTIS.xctestplan (QA part 2, 2.9):
+# The unit suite under the time zone, region, clock and first-weekday configurations in Config/NOCTIS.xctestplan (QA part 2, 2.9):
 #   xcodebuild test -scheme NOCTIS-Unit -testPlan NOCTIS -destination 'platform=iOS Simulator,id=...'
 schemes:
-  # The purchase tests (StoreTests/), hosted by the app.
+  # The purchase tests (Tests/StoreTests/), hosted by the app.
   NOCTIS-Store:
     build:
       targets:
@@ -52,7 +52,7 @@ schemes:
         Noctis: [test]
     test:
       testPlans:
-        - path: NOCTIS.xctestplan
+        - path: Config/NOCTIS.xctestplan
           defaultPlan: true
 
 targets:
@@ -77,7 +77,7 @@ targets:
     # HealthKit, read-only (see NSHealthShareUsageDescription below). The App Group is the one place the app shares
     # a file with its widgets (APP_RULES.md R44): a small summary the app writes and the widgets read.
     entitlements:
-      path: App/Noctis.entitlements
+      path: Config/Noctis.entitlements
       properties:
         com.apple.developer.healthkit: true
         # Sign in with Apple, optional and local (APP_RULES.md R69): the iOS app only.
@@ -91,7 +91,7 @@ targets:
     scheme:
       testTargets:
         - NoctisUITests
-      storeKitConfiguration: Noctis.storekit
+      storeKitConfiguration: Config/Noctis.storekit
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app
@@ -126,12 +126,12 @@ targets:
     platform: iOS
     deploymentTarget: "26.1"
     sources:
-      - path: NoctisAlarmWidget
+      - path: Widgets/Alarm
     dependencies:
       - package: NoctisKit
         product: AlarmShared
     info:
-      path: NoctisAlarmWidget/Info.plist
+      path: Widgets/Alarm/Info.plist
       properties:
         CFBundleDisplayName: NOCTIS Alarm
         # An extension must carry its app's version.
@@ -154,7 +154,7 @@ targets:
     platform: iOS
     deploymentTarget: "26.1"
     sources:
-      - path: NoctisWidgets
+      - path: Widgets/Home
     dependencies:
       - package: NoctisKit
         product: NoctisWidgetKit
@@ -162,12 +162,12 @@ targets:
       - package: NoctisKit
         product: NoctisIntentKit
     entitlements:
-      path: NoctisWidgets/NoctisWidgets.entitlements
+      path: Config/NoctisWidgets.entitlements
       properties:
         com.apple.security.application-groups:
           - group.com.noctis.app
     info:
-      path: NoctisWidgets/Info.plist
+      path: Widgets/Home/Info.plist
       properties:
         CFBundleDisplayName: NOCTIS Widgets
         # An extension must carry its app's version.
@@ -190,7 +190,7 @@ targets:
     platform: watchOS
     deploymentTarget: "26.0"
     sources:
-      - path: NOCTISWatch
+      - path: Watch/App
     dependencies:
       - package: NoctisKit
         product: NoctisWatchKit
@@ -203,12 +203,12 @@ targets:
       # The complications (part 2 of the Watch work).
       - target: NOCTISWatchWidgets
     entitlements:
-      path: NOCTISWatch/NOCTISWatch.entitlements
+      path: Config/NOCTISWatch.entitlements
       properties:
         com.apple.security.application-groups:
           - group.com.noctis.app
     info:
-      path: NOCTISWatch/Info.plist
+      path: Watch/App/Info.plist
       properties:
         CFBundleDisplayName: NOCTIS
         CFBundleShortVersionString: $(MARKETING_VERSION)
@@ -233,19 +233,19 @@ targets:
     platform: watchOS
     deploymentTarget: "26.0"
     sources:
-      - path: NOCTISWatchWidgets
+      - path: Watch/Widgets
     dependencies:
       - package: NoctisKit
         product: NoctisWatchKit
       - package: NoctisKit
         product: NoctisWidgetKit
     entitlements:
-      path: NOCTISWatchWidgets/NOCTISWatchWidgets.entitlements
+      path: Config/NOCTISWatchWidgets.entitlements
       properties:
         com.apple.security.application-groups:
           - group.com.noctis.app
     info:
-      path: NOCTISWatchWidgets/Info.plist
+      path: Watch/Widgets/Info.plist
       properties:
         CFBundleDisplayName: NOCTIS
         CFBundleShortVersionString: $(MARKETING_VERSION)
@@ -266,7 +266,7 @@ targets:
     platform: iOS
     deploymentTarget: "26.1"
     sources:
-      - path: StoreTests
+      - path: Tests/StoreTests
     dependencies:
       - target: Noctis
       - package: NoctisKit
@@ -296,7 +296,7 @@ targets:
     platform: iOS
     deploymentTarget: "26.1"
     sources:
-      - path: UITests
+      - path: Tests/UITests
     dependencies:
       - target: Noctis
       # The list of every screen and the Debug flags that reach it (R67): the matrix tests read it, the app never links it.

@@ -849,7 +849,7 @@ Source of every picture: the QA screen matrix (`scripts/qa_matrix.py`, configs A
 
 | category | why | where it is covered instead |
 |---|---|---|
-| 11-system: widgets on a real Home Screen / Lock Screen, wind-down Live Activity, Dynamic Island, Control Center controls, notification banners, Siri answers | each needs a driven SpringBoard/system UI session that the screen matrix cannot reach; widget families are captured from the in-app widget gallery (11-system), nothing else was photographed | QA_LEDGER.md rows for widgets, Live Activity and controls (verified on the simulator earlier, evidence in qa/evidence); stays UNVERIFIED as an image here |
+| 11-system: widgets on a real Home Screen / Lock Screen, wind-down Live Activity, Dynamic Island, Control Center controls, notification banners, Siri answers | each needs a driven SpringBoard/system UI session that the screen matrix cannot reach; widget families are captured from the in-app widget gallery (11-system), nothing else was photographed | QA_LEDGER.md rows for widgets, Live Activity and controls (verified on the simulator earlier, evidence in Docs/qa/evidence); stays UNVERIFIED as an image here |
 | 07-coach typed medical and crisis replies | catalog entries added (coach.medical, coach.crisis) but not run in the gallery matrix | covered by CoachKit tests and the earlier QA part 1 pictures |
 | 08 alarm ringing, Journal Delete all / Export, 09 Help / About, 03 ring zoom, 04 sleep detail sheets | not in the matrix configuration used for the gallery | tier-1 matrix pictures (QA_COVERAGE.md) |
 | Watch status bar | a Watch simulator has no status-bar override: the clock shows the real time, not 9:41 | n/a |

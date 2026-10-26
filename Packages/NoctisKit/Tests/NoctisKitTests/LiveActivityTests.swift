@@ -374,14 +374,14 @@ struct LiveActivityStructureTests {
     }
 
     @Test func theExtensionDrawsTheKitsViewsAndGivesEndItsIntent() throws {
-        let code = RawDefaultsTests.code(try read("NoctisWidgets/NoctisWindDownActivity.swift"))
+        let code = RawDefaultsTests.code(try read("Widgets/Home/NoctisWindDownActivity.swift"))
         #expect(code.contains("ActivityConfiguration(for: WindDownActivityAttributes.self)"))
         for piece in ["WindDownLockScreenView", "WindDownIslandCompactLeading", "WindDownIslandCompactTrailing", "WindDownIslandMinimal", "WindDownIslandExpandedLeading", "WindDownIslandExpandedTrailing", "WindDownIslandExpandedBottom"] {
             #expect(code.contains(piece), Comment(rawValue: "\(piece) is not used"))
         }
         #expect(code.contains("Button(intent: EndWindDownIntent())"))
         #expect(code.range(of: #"(?<![A-Za-z])Color\("#, options: .regularExpression) == nil && !code.contains(".font("), "the kit draws everything; the extension composes")
-        let bundle = RawDefaultsTests.code(try read("NoctisWidgets/NoctisWidgets.swift"))
+        let bundle = RawDefaultsTests.code(try read("Widgets/Home/NoctisWidgets.swift"))
         #expect(bundle.contains("NoctisWindDownLiveActivity()"))
     }
 
@@ -412,11 +412,11 @@ struct LiveActivityStructureTests {
     @Test func noLiveActivityExistsForTheMorningSummaryOrTheAlarm() throws {
         // The alarm's snooze countdown is AlarmKit's; the wake window needs Smart Wake (ROADMAP.md). NOCTIS starts exactly one kind of its own.
         var requests = 0
-        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NoctisAlarmWidget"]) {
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Widgets/Alarm"]) {
             requests += RawDefaultsTests.code(file.text).components(separatedBy: "Activity.request(").count - 1
         }
         #expect(requests == 1, "one place starts an activity: the wind-down's")
-        let rules = try read("APP_RULES.md")
+        let rules = try read("Docs/APP_RULES.md")
         #expect(rules.contains("no Live Activity for the morning summary or the alarm"))
     }
 }

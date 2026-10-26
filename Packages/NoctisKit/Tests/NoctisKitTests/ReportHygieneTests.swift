@@ -8,8 +8,8 @@ struct ReportHygieneTests {
 
     @Test func theReportHasNoUnfilledPlaceholder() throws {
         for name in ["QA_REPORT.md", "QA_LEDGER.md", "QA_COVERAGE.md", "ROADMAP.md", "POST_LAUNCH.md"] {
-            let url = root.appendingPathComponent(name)
-            guard FileManager.default.fileExists(atPath: url.path) else { continue }
+            let url = root.appendingPathComponent("Docs/\(name)")
+            try #require(FileManager.default.fileExists(atPath: url.path), Comment(rawValue: "\(name) is missing from Docs/"))
             let text = try String(contentsOf: url, encoding: .utf8)
             let placeholder = try Regex(#"\{[a-z][a-z0-9_]*\}"#)
             let found = text.split(separator: "\n").filter { (try? placeholder.firstMatch(in: String($0))) != nil }
@@ -18,8 +18,8 @@ struct ReportHygieneTests {
     }
 
     @Test func everyOpenAndUnverifiedLedgerRowIsInTheReport() throws {
-        let ledger = try String(contentsOf: root.appendingPathComponent("QA_LEDGER.md"), encoding: .utf8)
-        let report = try String(contentsOf: root.appendingPathComponent("QA_REPORT.md"), encoding: .utf8)
+        let ledger = try String(contentsOf: root.appendingPathComponent("Docs/QA_LEDGER.md"), encoding: .utf8)
+        let report = try String(contentsOf: root.appendingPathComponent("Docs/QA_REPORT.md"), encoding: .utf8)
         for line in ledger.split(separator: "\n") where line.hasPrefix("| QA-") {
             let cells = line.split(separator: "|", omittingEmptySubsequences: false).map { $0.trimmingCharacters(in: .whitespaces) }
             guard cells.count > 5, cells[5] == "OPEN" || cells[5] == "UNVERIFIED" else { continue }
@@ -29,13 +29,13 @@ struct ReportHygieneTests {
 }
 
 // R19 (APP_RULES.md): no button or row may lead to an unbuilt feature, so no string in the app says one is. The matrix's hierarchy check looks for the same
-// words on every screen it photographs (UITests/QASupport.swift, "UNBUILT text").
+// words on every screen it photographs (Tests/UITests/QASupport.swift, "UNBUILT text").
 struct NothingUnbuiltIsReachableTests {
     @Test func noUserFacingStringSaysAFeatureIsComingOrNotBuilt() throws {
         let base = RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources")
         let words = try Regex(#"(?i)coming soon|not built|under construction|not available yet|lorem ipsum|will be (added|available) (in a|soon)|stay tuned"#)
         var hits: [String] = []
-        let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NOCTISWatch", "NOCTISWatchWidgets", "NoctisWidgets", "NoctisAlarmWidget"])
+        let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Watch/App", "Watch/Widgets", "Widgets/Home", "Widgets/Alarm"])
         for file in files {
             for (number, line) in file.text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
                 let trimmed = line.trimmingCharacters(in: .whitespaces)

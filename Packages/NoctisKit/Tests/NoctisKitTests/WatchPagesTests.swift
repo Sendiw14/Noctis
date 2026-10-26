@@ -285,7 +285,7 @@ struct WatchPageWordingTests {
     }
 
     @Test func theViewsHideEveryHealthValueBehindThePrivacyWrapper() throws {
-        let views = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NOCTISWatch/WatchViews.swift"), encoding: .utf8)
+        let views = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Watch/App/WatchViews.swift"), encoding: .utf8)
         let code = RawDefaultsTests.code(views)
         #expect(code.contains(".privacySensitive(") && code.contains("redactionReasons") && code.contains("lock.fill"))
         // Each page wraps what it shows of Health: the score, the factor scores, the delta, the duration, the strip, the quality, the heart tiles.

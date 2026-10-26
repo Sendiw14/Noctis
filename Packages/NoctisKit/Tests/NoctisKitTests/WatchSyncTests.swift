@@ -727,14 +727,14 @@ struct WatchInventoryTests {
     }
 
     @Test func theReportCoversTheWatch() throws {
-        let report = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("PRIVACY_REPORT.md"), encoding: .utf8)
+        let report = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Docs/PRIVACY_REPORT.md"), encoding: .utf8)
         #expect(report.contains("A summary of your recovery and sleep is sent to your Apple Watch"))
         #expect(report.contains("WatchConnectivity") && report.contains("Apple Watch status"))
     }
 
     @Test func watchConnectivityIsNamedOnlyInTheDriverAndTheReceiver() throws {
         var found: Set<String> = []
-        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisAlarmWidget", "NoctisWidgets", "NOCTISWatch", "NOCTISWatchWidgets"]) {
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Alarm", "Widgets/Home", "Watch/App", "Watch/Widgets"]) {
             // The inventory names the API as a string; that is not a use.
             if file.path.contains("NoctisCore/DataInventory") || file.path.contains("NoctisCore/Privacy") { continue }
             let code = RawDefaultsTests.code(file.text)
@@ -742,7 +742,7 @@ struct WatchInventoryTests {
                 found.insert(file.path.replacingOccurrences(of: "Packages/NoctisKit/Sources/", with: ""))
             }
         }
-        #expect(found == ["NoctisCore/WatchSync/WCSessionDriver.swift", "NOCTISWatch/WatchSnapshotReceiver.swift"], "\(found)")
+        #expect(found == ["NoctisCore/WatchSync/WCSessionDriver.swift", "Watch/App/WatchSnapshotReceiver.swift"], "\(found)")
         let use = try #require(inventory.networkUses.first { $0.token == "import WatchConnectivity" })
         #expect(Set(use.files) == found && use.categories == [.widgetSnapshot])
     }
@@ -784,7 +784,7 @@ struct WatchTargetStructureTests {
         let app = try block("Noctis", in: project)
         #expect(app.contains("- target: NOCTISWatch"), "the Watch app is embedded in the iPhone app")
         // The same App Group identifier on both sides (separate containers on separate devices).
-        for entitlement in ["NOCTISWatch/NOCTISWatch.entitlements", "NOCTISWatchWidgets/NOCTISWatchWidgets.entitlements"] {
+        for entitlement in ["Config/NOCTISWatch.entitlements", "Config/NOCTISWatchWidgets.entitlements"] {
             let text = try read(entitlement)
             #expect(text.contains("<string>\(WidgetSnapshotStore.appGroupIdentifier)</string>") && text.components(separatedBy: "<string>").count - 1 == 1, Comment(rawValue: entitlement))
         }
@@ -798,12 +798,12 @@ struct WatchTargetStructureTests {
                 #expect(!text.contains(token), Comment(rawValue: "\(name) mentions \(token)"))
             }
         }
-        for path in ["NOCTISWatch/NOCTISWatch.entitlements", "NOCTISWatchWidgets/NOCTISWatchWidgets.entitlements"] {
+        for path in ["Config/NOCTISWatch.entitlements", "Config/NOCTISWatchWidgets.entitlements"] {
             let text = try read(path)
             #expect(!text.lowercased().contains("healthkit") && !text.contains("NSHealth"), Comment(rawValue: path))
         }
         // The code: no import of HealthKit or anything that reads Health, and no engine.
-        for file in RawDefaultsTests.swiftFiles(under: ["NOCTISWatch", "NOCTISWatchWidgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit"]) {
+        for file in RawDefaultsTests.swiftFiles(under: ["Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit"]) {
             let code = RawDefaultsTests.code(file.text)
             for token in [
                 "import HealthKit", "HKHealthStore", "import HealthProviding", "import SleepKit", "import RecoveryKit", "import SleepAnalysisKit", "import InsightsKit",
@@ -826,13 +826,13 @@ struct WatchTargetStructureTests {
     }
 
     @Test func eachWatchTargetHasItsOwnPrivacyManifestThatDeclaresOnlyWhatItUses() throws {
-        for path in ["NOCTISWatch/PrivacyInfo.xcprivacy", "NOCTISWatchWidgets/PrivacyInfo.xcprivacy"] {
+        for path in ["Watch/App/PrivacyInfo.xcprivacy", "Watch/Widgets/PrivacyInfo.xcprivacy"] {
             let data = try Data(contentsOf: RawDefaultsTests.root.appendingPathComponent(path))
             let plist = try #require(try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
             #expect(plist["NSPrivacyTracking"] as? Bool == false, Comment(rawValue: path))
             #expect((plist["NSPrivacyTrackingDomains"] as? [Any])?.isEmpty == true && (plist["NSPrivacyCollectedDataTypes"] as? [Any])?.isEmpty == true)
             let types = try #require(plist["NSPrivacyAccessedAPITypes"] as? [[String: Any]], Comment(rawValue: path))
-            if path.hasPrefix("NOCTISWatchWidgets") {
+            if path.hasPrefix("Watch/Widgets") {
                 #expect(types.isEmpty, "the complications use no required-reason API: no defaults, no timestamps")
             } else {
                 // The Watch app keeps one preference of its own in UserDefaults (R55), for its own use only: reason CA92.1.
@@ -844,7 +844,7 @@ struct WatchTargetStructureTests {
 
     @Test func theWatchCodeUsesNoRequiredReasonAPIBeyondTheOneItsManifestDeclares() throws {
         let tokens = ["@AppStorage", "creationDate", "modificationDate", "contentModificationDate", "systemUptime", "mach_absolute_time", "volumeAvailableCapacity", "systemFreeSize", "activeInputModes", "fstat(", "lstat("]
-        let files = RawDefaultsTests.swiftFiles(under: ["NOCTISWatch", "NOCTISWatchWidgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/DesignSystem"])
+        let files = RawDefaultsTests.swiftFiles(under: ["Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWatchKit", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/DesignSystem"])
         #expect(files.count > 20)
         var usesDefaults: Set<String> = []
         for file in files {
@@ -855,7 +855,7 @@ struct WatchTargetStructureTests {
         // UserDefaults is named only by the small wrapper in the Watch kit (`WatchPreferences`, the Watch app's one preference); the Watch app opens it
         // with the system's own defaults, and that is the use its manifest declares.
         #expect(usesDefaults == ["Packages/NoctisKit/Sources/NoctisWatchKit/WatchBreathing.swift"], "\(usesDefaults)")
-        let model = try read("NOCTISWatch/WatchModel.swift")
+        let model = try read("Watch/App/WatchModel.swift")
         #expect(model.contains("WatchPreferences(defaults: .standard)"))
     }
 

@@ -1,12 +1,12 @@
 # QA coverage
 
-Written by `scripts/qa_tier1.py` on 2026-10-19 from `qa/tier1/` (the plan, what the harness produced, and which contact sheets were looked at). The earlier coverage tables, made before the final
-build, are kept in `qa/coverage/` as history; they are not the v1 record.
+Written by `scripts/qa_tier1.py` on 2026-10-19 from `Docs/qa/tier1/` (the plan, what the harness produced, and which contact sheets were looked at). The earlier coverage tables, made before the final
+build, are kept in `Docs/qa/coverage/` as history; they are not the v1 record.
 
 ## What counts
 
 - **Tier 1** is what v1 ships and is judged on: the screens and configurations below. Every tier-1 combination must be **produced** on the final build (a top picture, and a
-  bottom picture for a page that scrolls) and **viewed** (a contact sheet at a size where its text can be read, in `qa/tier1/viewed.tsv`). One that is not is UNVERIFIED, with the reason,
+  bottom picture for a page that scrolls) and **viewed** (a contact sheet at a size where its text can be read, in `Docs/qa/tier1/viewed.tsv`). One that is not is UNVERIFIED, with the reason,
   and is never counted as a pass.
 - **Tier 2, not planned for v1** is everything else: the other states of each screen (learning, empty, no permission, gap, stale, loading, error) beyond the ones named,
   the other accessibility settings (Bold Text, Reduce Motion, Increase Contrast, Differentiate Without Color, Button Shapes, On/Off Labels, Reduce Transparency, Smart Invert), the pseudolanguages beyond
@@ -103,5 +103,5 @@ None: every tier-1 combination was produced on the final build and viewed.
 
 ## Every tier-1 combination
 
-`qa/tier1/coverage.csv` has one line per combination: area, screen, device, configuration, produced, viewed, status, result, what was seen.
+`Docs/qa/tier1/coverage.csv` has one line per combination: area, screen, device, configuration, produced, viewed, status, result, what was seen.
 

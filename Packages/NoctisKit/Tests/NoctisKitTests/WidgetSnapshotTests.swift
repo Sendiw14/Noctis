@@ -187,7 +187,7 @@ struct WidgetSnapshotStoreTests {
     }
 
     @Test func onlyThisStoreNamesTheAppGroup() throws {
-        let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NoctisAlarmWidget"])
+        let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Widgets/Alarm"])
         #expect(files.count > 150)
         for file in files where !file.path.hasSuffix("NoctisWidgetKit/WidgetSnapshotStore.swift") {
             let code = RawDefaultsTests.code(file.text)
@@ -195,13 +195,13 @@ struct WidgetSnapshotStoreTests {
             #expect(!code.contains("group.com.noctis"), Comment(rawValue: "\(file.path) names the App Group"))
             #expect(code.range(of: #"UserDefaults\(suiteName"#, options: .regularExpression) == nil || file.path.hasSuffix("HomePreviews.swift"), Comment(rawValue: "\(file.path) opens a defaults suite"))
         }
-        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/Noctis.entitlements"), encoding: .utf8)
+        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/Noctis.entitlements"), encoding: .utf8)
         #expect(entitlements.components(separatedBy: "<string>group.").count == 2, "exactly one group")
         #expect(entitlements.contains("<string>\(WidgetSnapshotStore.appGroupIdentifier)</string>"))
     }
 
     @Test func theKitReachesNeitherHealthNorStoresNorCoach() throws {
-        let kit = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources/NoctisWidgetKit", "NoctisWidgets"])
+        let kit = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources/NoctisWidgetKit", "Widgets/Home"])
         #expect(!kit.isEmpty)
         for file in kit {
             let code = RawDefaultsTests.code(file.text)

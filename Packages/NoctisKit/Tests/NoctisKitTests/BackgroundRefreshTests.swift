@@ -153,13 +153,13 @@ struct BackgroundDeliveryChoicesTests {
     }
 
     @Test func backgroundDeliveryIsOnlyAskedForByTheHealthProviderAndTheEntitlementIsThere() throws {
-        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "NoctisWidgets", "NoctisAlarmWidget"]) where file.text.contains("enableBackgroundDelivery") {
+        for file in RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets/Home", "Widgets/Alarm"]) where file.text.contains("enableBackgroundDelivery") {
             #expect(file.path.hasSuffix("HealthProviding/HealthKitProvider.swift"), Comment(rawValue: "\(file.path) asks for background delivery"))
         }
-        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/Noctis.entitlements"), encoding: .utf8)
+        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/Noctis.entitlements"), encoding: .utf8)
         #expect(entitlements.contains("com.apple.developer.healthkit.background-delivery"))
         // The widgets' extension cannot read Health, so it has no such entitlement.
-        let widgets = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("NoctisWidgets/NoctisWidgets.entitlements"), encoding: .utf8)
+        let widgets = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/NoctisWidgets.entitlements"), encoding: .utf8)
         #expect(!widgets.contains("healthkit"))
     }
 
@@ -173,7 +173,7 @@ struct BackgroundDeliveryChoicesTests {
     }
 
     @Test func theInventoryAndTheCodeAgreeAboutReadingHealthInTheBackground() throws {
-        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/Noctis.entitlements"), encoding: .utf8)
+        let entitlements = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Config/Noctis.entitlements"), encoding: .utf8)
         let provider = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift"), encoding: .utf8)
         let container = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
         let inCode = entitlements.contains("healthkit.background-delivery") && provider.contains("enableBackgroundDelivery") && container.contains("startBackgroundDelivery")
