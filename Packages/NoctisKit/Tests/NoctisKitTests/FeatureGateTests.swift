@@ -178,9 +178,48 @@ nonisolated final class FakeEntitlementClient: EntitlementClient, @unchecked Sen
     func announce() { lock.withLock { continuation }?.yield() }
 }
 
+/// A store whose first `records()` answer is held back until `open()`, and is the answer as it was when asked: a slow refresh that a newer one overtakes.
+nonisolated final class GatedEntitlementClient: EntitlementClient, @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored = [EntitlementRecord]()
+    private var calls = 0
+    private var gate: CheckedContinuation<Void, Never>?
+
+    func set(_ records: [EntitlementRecord]) { lock.withLock { stored = records } }
+    var isHolding: Bool { lock.withLock { gate != nil } }
+    func open() { lock.withLock { () -> CheckedContinuation<Void, Never>? in defer { gate = nil }; return gate }?.resume() }
+
+    func records() async -> [EntitlementRecord] {
+        let (answer, holds) = lock.withLock { () -> ([EntitlementRecord], Bool) in
+            calls += 1
+            return (stored, calls == 1)
+        }
+        if holds { await withCheckedContinuation { continuation in lock.withLock { gate = continuation } } }
+        return answer
+    }
+
+    func renewal() async -> RenewalRecord? { nil }
+    func updates() -> AsyncStream<Void> { AsyncStream { _ in } }
+}
+
 @MainActor
 struct EntitlementManagerTests {
     private func defaults() -> UserDefaults { UserDefaults(suiteName: "noctis.entitlement.\(UUID().uuidString)") ?? .standard }
+
+    @Test func anOlderAnswerThatArrivesLateDoesNotUndoANewerOne() async {
+        let cache = EntitlementCache(defaults: defaults())
+        let client = GatedEntitlementClient()
+        let manager = EntitlementManager(client: client, cache: cache, clock: { now })
+        client.set([record()])
+        async let slow: Void = manager.refresh()  // asks while the person is still Premium, then waits at the gate
+        while !client.isHolding { await Task.yield() }
+        client.set([record(revoked: now)])  // a refund arrives; a newer refresh asks and finishes first
+        await manager.refresh()
+        #expect(manager.tier == .free)
+        client.open()  // the slow one resumes with what it was told before the refund
+        await slow
+        #expect(manager.tier == .free && cache.read() != .premium, "the refund stays: the stale answer is dropped, not applied last")
+    }
 
     private func make(_ client: FakeEntitlementClient, cache: EntitlementCache) -> EntitlementManager {
         EntitlementManager(client: client, cache: cache, clock: { now })

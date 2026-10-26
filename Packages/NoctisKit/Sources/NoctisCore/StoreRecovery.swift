@@ -183,7 +183,8 @@ nonisolated enum SQLiteCheck {
         let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
         guard size <= maximumCheckedBytes else { return .unknown }
         var database: OpaquePointer?
-        let opened = sqlite3_open_v2(url.path, &database, SQLITE_OPEN_READWRITE, nil)
+        // Read only: closing a read-write connection moves the write-ahead log into the file and deletes it, which would change a damaged store before it is set aside whole.
+        let opened = sqlite3_open_v2(url.path, &database, SQLITE_OPEN_READONLY, nil)
         defer { sqlite3_close(database) }
         guard opened == SQLITE_OK, let database else { return opened == SQLITE_NOTADB || opened == SQLITE_CORRUPT ? .damaged : .unknown }
         sqlite3_busy_timeout(database, 250)

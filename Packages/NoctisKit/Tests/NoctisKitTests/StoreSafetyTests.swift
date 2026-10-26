@@ -226,6 +226,32 @@ enum FileDamage: CaseIterable, CustomStringConvertible {
 }
 
 struct StoreDamageTests {
+    /// The check must leave the file as it found it: a store the app crashed in has rows only in its write-ahead log, and a read-write check would move them
+    /// into the file (and delete the log) before a damaged store is set aside whole.
+    @Test func theDamageCheckChangesNothingOnDisk() throws {
+        let folder = try temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let live = folder.appending(path: "live.store")
+        var database: OpaquePointer?
+        #expect(sqlite3_open_v2(live.path, &database, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil) == SQLITE_OK)
+        sqlite3_exec(
+            database, "CREATE TABLE t(x INTEGER); PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0; INSERT INTO t VALUES (1),(2),(3);", nil, nil, nil)
+        // What a crash leaves: the file and its log, copied while the writer is still open.
+        let crashed = folder.appending(path: "crashed.store")
+        let crashedLog = folder.appending(path: "crashed.store-wal")
+        try FileManager.default.copyItem(at: live, to: crashed)
+        try FileManager.default.copyItem(at: folder.appending(path: "live.store-wal"), to: crashedLog)
+        sqlite3_close(database)
+        let fileBefore = try Data(contentsOf: crashed)
+        let logBefore = try Data(contentsOf: crashedLog)
+        #expect(!logBefore.isEmpty, "the rows are only in the log")
+
+        #expect(SQLiteCheck.verdict(crashed) == .intact)
+
+        #expect(try Data(contentsOf: crashed) == fileBefore, "the database file was not written to")
+        #expect(try Data(contentsOf: crashedLog) == logBefore, "the log is still there, as it was")
+    }
+
     private nonisolated final class Reports: @unchecked Sendable {
         private let lock = NSLock()
         private var items: [String] = []

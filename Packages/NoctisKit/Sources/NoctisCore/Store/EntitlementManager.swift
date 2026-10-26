@@ -31,6 +31,8 @@ public final class EntitlementManager {
     /// Wakes the manager when the answer it just gave runs out (the plan's end, or the end of a grace period), because the store announces a renewal or
     /// a refund but never an expiry: without it Premium would last until the next launch (QA_LEDGER.md).
     private var dueRefresh: Task<Void, Never>?
+    /// Counts the refreshes that have started; only the latest one may apply its answer.
+    private var refreshCount = 0
     /// Told when the tier changes: the new tier and the old.
     @ObservationIgnored public var onTierChange: (@MainActor (_ new: Tier, _ old: Tier) -> Void)?
 
@@ -92,8 +94,12 @@ public final class EntitlementManager {
         #if DEBUG
         if debugForced || debugSummary != nil { return }
         #endif
+        refreshCount += 1
+        let ticket = refreshCount
         let records = await client.records()
         let renewal = await client.renewal()
+        // A refresh that started after this one asked for a newer answer: this one is out of date, and applying it last would undo a refund or a purchase.
+        guard ticket == refreshCount else { return }
         let resolved = EntitlementResolver.resolve(
             records: records, renewal: renewal, previous: cache.read(), productIDs: Set(StoreProductID.all), now: clock()
         )

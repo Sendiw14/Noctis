@@ -416,6 +416,17 @@ struct StoreKitSessionTests {
         #expect(rig.store.loadState == .loaded)
     }
 
+    @Test func aReloadThatFailsKeepsThePlansAlreadyLoaded() async throws {
+        let rig = try Rig()
+        defer { rig.finish() }
+        await rig.store.loadProducts()
+        #expect(rig.store.loadState == .loaded && rig.store.products.count == 2)
+        try await rig.session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))), forAPI: .loadProducts)
+        await rig.store.loadProducts()  // the paywall opens again with no connection
+        #expect(rig.store.loadState == .loaded && rig.store.products.count == 2, "the plans the person just saw can still be bought")
+        try await rig.session.setSimulatedError(nil, forAPI: .loadProducts)
+    }
+
     @Test func familySharingIsOffInTheConfigurationSoThereIsNothingToBuy() async throws {
         // Both products are familyShareable: false in Noctis.storekit, so Family Sharing cannot be driven by StoreKitTest here. The family-shared rule
         // itself (a family-shared transaction is Premium) is covered against a fake client in FeatureGateTests.

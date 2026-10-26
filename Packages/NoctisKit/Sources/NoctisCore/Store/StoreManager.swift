@@ -61,8 +61,8 @@ public final class StoreManager {
         }
         #endif
         guard let fetched = try? await Product.products(for: StoreProductID.all), !fetched.isEmpty else {
-            products = []
-            loadState = .unavailable
+            // A reload that fails keeps the plans already loaded: someone who opens the paywall again offline can still buy what they just saw.
+            loadState = products.isEmpty ? .unavailable : .loaded
             return
         }
         products = fetched
