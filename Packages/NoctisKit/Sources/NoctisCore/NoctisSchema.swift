@@ -1,4 +1,3 @@
-import Foundation
 import SwiftData
 
 // The app's database (APP_RULES.md R65). Every SwiftData store is opened through a `VersionedSchema` and a `SchemaMigrationPlan`, so a

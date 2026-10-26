@@ -19,8 +19,6 @@ public struct ReviewStoryScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.featureGate) private var gate
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.colorSchemeContrast) private var contrast
     @ScaledMetric(relativeTo: .body) private var scaledBottomInset: CGFloat = 68
     @State private var position: Int?
     @State private var width: CGFloat = 0

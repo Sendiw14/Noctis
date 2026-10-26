@@ -31,6 +31,11 @@ REQUIRED = ['useMockHealth', 'mockScenario', 'mockAI', 'mockLatency', 'mockUnaut
             'widgetGallery', 'watchMockSnapshot', 'complicationGallery', 'noctisResetState', 'MockHealthKitProvider', 'MockAIProvider',
             'SeededGenerator']
 
+# A DEBUG-only string that is also an ordinary word the shipped app contains: the pseudo-script noun "reminder" (NoctisCount, inside #if DEBUG) is
+# also part of shipped enum-case names such as DataInventory's `reminders`, so `strings` shows a bare "reminder" in Release. Proven identical on the commit
+# before the release cleanup (84af85e). Adding to this list needs the same proof.
+COINCIDENCES = {'reminder'}
+
 DECL = re.compile(r'\b(?:func|var|let|class|struct|enum|protocol|actor|typealias|extension)\s+([A-Za-z_]\w*)')
 CASE = re.compile(r'^\s*(?:indirect\s+)?case\s+(.+)$')
 STRING = re.compile(r'"((?:[^"\\]|\\.)*)"')
@@ -93,7 +98,7 @@ def debug_only_names():
                         for t in IDENT.findall(re.sub(r'"(?:[^"\\]|\\.)*"', '""', line)): shipped_tokens.add(t)
                         for m in STRING.finditer(line): shipped_tokens.add(m.group(1))
     names = sorted(n for n in declared if n not in shipped_tokens and len(n) >= 4)
-    flags = sorted(s for s in strings if s not in shipped_tokens)
+    flags = sorted(s for s in strings if s not in shipped_tokens and s not in COINCIDENCES)
     return sorted(blocks), names, flags
 
 

@@ -28,7 +28,6 @@ struct PlanScreen: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var phase: PlanPhase
     @State private var completedLines: Set<PlanBuildLine> = []

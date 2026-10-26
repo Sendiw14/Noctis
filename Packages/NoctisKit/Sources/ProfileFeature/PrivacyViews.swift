@@ -49,7 +49,6 @@ extension DataCategoryID {
 struct PrivacyCenterView: View {
     let viewModel: SettingsViewModel
     @Environment(AppModel.self) private var model
-    @Environment(\.openURL) private var openURL
 
     var body: some View {
         let content = viewModel.privacy

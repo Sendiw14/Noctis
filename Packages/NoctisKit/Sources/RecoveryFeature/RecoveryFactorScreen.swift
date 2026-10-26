@@ -120,7 +120,6 @@ struct RecoveryFactorChartCard: View {
     let tint: Color
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var selected: Int?
     @State private var plotWidth: CGFloat = 0
     @NoctisScaledLength(relativeTo: .caption) private var axisWidth: CGFloat = 40
