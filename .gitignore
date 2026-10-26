@@ -3,9 +3,33 @@
 
 # Xcode user state and build output
 xcuserdata/
+*.xcuserstate
 DerivedData/
+build/
 *.xcresult
+*.xcarchive
+*.ipa
+*.dSYM/
+*.profraw
 
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# Archives, logs and scratch
+*.zip
+*.log
+*.orig
+*.rej
+*.bak
+
+# Secrets and signing material
+.env
+.env.*
+*.p8
+*.p12
+*.pem
+*.cer
+*.mobileprovision
+*.certSigningRequest
+Secrets.xcconfig
