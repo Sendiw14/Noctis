@@ -832,6 +832,7 @@ struct WatchTargetStructureTests {
             widgets.contains("PRODUCT_BUNDLE_IDENTIFIER: com.noctis.app.watchkitapp.widgets") && widgets.contains("type: app-extension")
                 && widgets.contains("platform: watchOS"))
         #expect(watch.contains("target: NOCTISWatchWidgets"), "the complications are embedded in the Watch app")
+        #expect(watch.contains("SKIP_INSTALL: YES"), "the Watch app is embedded, not installed on its own: otherwise the archive holds two apps")
         let app = try block("Noctis", in: project)
         #expect(app.contains("- target: NOCTISWatch"), "the Watch app is embedded in the iPhone app")
         // The same App Group identifier on both sides (separate containers on separate devices).

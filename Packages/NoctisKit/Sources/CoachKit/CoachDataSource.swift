@@ -22,7 +22,7 @@ public struct RepositoryCoachDataSource: CoachDataSource {
     public init(
         home: HomeRepository, sleep: SleepRepository, recovery: RecoveryRepository, insights: InsightsRepository,
         maxAge: TimeInterval = 600, clock: @escaping @Sendable () -> Date = { Date() },
-        suggestedBedtime: @escaping @Sendable (UserProfileSnapshot, SleepSnapshot) async -> Int? = { _, _ in nil }
+        suggestedBedtime: @escaping @Sendable (UserProfileSnapshot, SleepSnapshot) async -> Int?
     ) {
         self.home = home
         self.sleep = sleep
