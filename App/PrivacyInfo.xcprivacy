@@ -22,7 +22,7 @@
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<!-- UserDefaults: NOCTIS's preferences, goals, sound choices and small flags, read and written by the app itself and
-		     never shared with another app or an extension (no App Group). -->
+		     never shared with another app or an extension (the App Group holds two small files, no defaults). -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
