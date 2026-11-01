@@ -58,6 +58,8 @@ private final class Rig {
     func buy(_ id: String) async throws {
         let product = try await product(id)
         await store.purchase(product)
+        // The purchase call returns before StoreKit lists the new entitlement; every caller expects Premium next.
+        _ = await waitUntil { entitlements.tier == .premium }
     }
 
     /// Asks the store again until the state is `expected`, up to 8 seconds.
@@ -68,6 +70,16 @@ private final class Rig {
             try? await Task.sleep(for: .milliseconds(200))
         }
         return entitlements.state == expected
+    }
+
+    /// Asks the store again until `condition` holds, up to 8 seconds: StoreKitTest applies a change a moment after the call returns.
+    func waitUntil(_ condition: () -> Bool) async -> Bool {
+        for _ in 0..<40 {
+            await entitlements.refresh()
+            if condition() { return true }
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+        return condition()
     }
 
     /// Waits for the listener (Transaction.updates) to bring the entitlement to `tier`, up to 8 seconds.
@@ -187,10 +199,8 @@ struct StoreKitSessionTests {
         try await rig.buy(StoreProductID.monthly)
         let before = try #require(rig.entitlements.expirationDate)
         try rig.session.forceRenewalOfSubscription(productIdentifier: StoreProductID.monthly)
-        try await Task.sleep(for: .milliseconds(500))
-        await rig.entitlements.refresh()
-        let after = try #require(rig.entitlements.expirationDate)
-        #expect(after > before && rig.tier == .premium)
+        #expect(await rig.waitUntil { (rig.entitlements.expirationDate ?? before) > before }, "the end date did not move forward")
+        #expect(rig.tier == .premium)
     }
 
     @Test func cancellingAutoRenewKeepsPremiumUntilTheEndAndSaysItWillNotRenew() async throws {
@@ -198,7 +208,7 @@ struct StoreKitSessionTests {
         defer { rig.finish() }
         try await rig.buy(StoreProductID.monthly)
         try rig.session.disableAutoRenewForTransaction(identifier: try rig.transaction(StoreProductID.monthly).identifier)
-        await rig.entitlements.refresh()
+        #expect(await rig.waitUntil { !rig.entitlements.willAutoRenew }, "the store still says it will renew")
         #expect(rig.tier == .premium && !rig.entitlements.willAutoRenew, "cancelled but paid up: Premium to the end date, and the page says it will not renew")
         #expect(rig.entitlements.summary.willRenew == false)
     }
@@ -225,9 +235,7 @@ struct StoreKitSessionTests {
         defer { rig.finish() }
         try await rig.buy(StoreProductID.monthly)
         try rig.session.expireSubscription(productIdentifier: StoreProductID.monthly)
-        try await Task.sleep(for: .milliseconds(500))
-        await rig.entitlements.refresh()
-        #expect(rig.tier == .premium)
+        #expect(await rig.waitUntil { rig.tier == .premium }, "the plan renewed, so Premium must stay")
     }
 
     @Test func billingRetryWithAGracePeriodIsReportedAsGraceByTheStore() async throws {
@@ -238,8 +246,12 @@ struct StoreKitSessionTests {
         try await rig.buy(StoreProductID.monthly)
         let paidThrough = try #require(rig.entitlements.expirationDate)
         try rig.session.forceRenewalOfSubscription(productIdentifier: StoreProductID.monthly)
-        try await Task.sleep(for: .milliseconds(800))
-        let renewal = try #require(await StoreKitEntitlementClient().renewal())
+        var latest = await StoreKitEntitlementClient().renewal()
+        for _ in 0..<40 where latest?.state != .inGracePeriod {
+            try await Task.sleep(for: .milliseconds(200))
+            latest = await StoreKitEntitlementClient().renewal()
+        }
+        let renewal = try #require(latest)
         #expect(renewal.state == .inGracePeriod && renewal.isInBillingRetry, "renewal is \(renewal)")
         let graceEnd = try #require(renewal.gracePeriodExpirationDate)
         // What the app does with that answer: the plan's own period has run out (the first transaction ended in the past), the grace period has not.
@@ -269,8 +281,12 @@ struct StoreKitSessionTests {
         try await rig.buy(StoreProductID.monthly)
         let paidThrough = try #require(rig.entitlements.expirationDate)
         try rig.session.forceRenewalOfSubscription(productIdentifier: StoreProductID.monthly)
-        try await Task.sleep(for: .milliseconds(800))
-        let renewal = try #require(await StoreKitEntitlementClient().renewal())
+        var latest = await StoreKitEntitlementClient().renewal()
+        for _ in 0..<40 where latest?.state != .inBillingRetryPeriod {
+            try await Task.sleep(for: .milliseconds(200))
+            latest = await StoreKitEntitlementClient().renewal()
+        }
+        let renewal = try #require(latest)
         #expect(renewal.state == .inBillingRetryPeriod && renewal.gracePeriodExpirationDate == nil, "renewal is \(renewal)")
         let expired = EntitlementRecord(productID: StoreProductID.monthly, expirationDate: paidThrough.addingTimeInterval(-40 * 86_400))
         #expect(

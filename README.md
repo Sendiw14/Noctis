@@ -92,6 +92,7 @@ The screen matrix (every screen under light/dark, text sizes and accessibility s
 | Document | What it is |
 |---|---|
 | `Docs/RELEASE_READINESS.md` | The release audit, item by item, with the verdict and the blockers |
+| `Docs/DEVICE_TEST_CHECKLIST.md` | What only a real iPhone and Apple Watch can show, as a checklist (nothing ticked yet) |
 | `Docs/CLEANUP_REPORT.md` | What the final cleanup removed and moved, with before and after numbers |
 | `Docs/APP_RULES.md`, `Docs/ONBOARDING_RULES.md` | The design and engineering rules every screen is checked against |
 | `Docs/QA_LEDGER.md`, `Docs/QA_REPORT.md`, `Docs/QA_COVERAGE.md` | Findings, decisions and what was photographed |
