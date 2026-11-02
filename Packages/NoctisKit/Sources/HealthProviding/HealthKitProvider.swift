@@ -21,10 +21,17 @@ public final class HealthKitProvider: HealthDataProviding {
 
     public var isHealthDataAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
 
+    /// The core kinds only (`HealthDataKind.core`): the ones onboarding asks for. Asking about all five here made a person who had just answered
+    /// onboarding's sheet look "not asked yet", because HealthKit reports `.shouldRequest` while any type in the set has not been asked.
     public func authorizationStatus() async -> HealthAuthorizationStatus {
+        await authorizationStatus(for: HealthDataKind.core)
+    }
+
+    /// `.authorized` when the system's question has been asked for every kind given: HealthKit's "no request needed", which says nothing about
+    /// whether reading was allowed.
+    public func authorizationStatus(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus {
         guard isHealthDataAvailable else { return .unavailable }
-        let types = Self.readTypes(for: HealthDataKind.allCases)
-        let requestStatus = try? await store.statusForAuthorizationRequest(toShare: [], read: types)
+        let requestStatus = try? await store.statusForAuthorizationRequest(toShare: [], read: Self.readTypes(for: kinds))
         return requestStatus == .unnecessary ? .authorized : .notDetermined
     }
 

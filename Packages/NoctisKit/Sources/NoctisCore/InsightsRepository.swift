@@ -129,7 +129,7 @@ public actor InsightsRepository {
         do {
             async let sleep = provider.fetchSleepSamples(from: start, to: now)
             async let hrv = provider.fetchHRVSamples(from: start, to: now)
-            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
+            async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
             let (sleepSamples, hrvSamples, restingSamples) = try await (sleep, hrv, resting)
             return await build(profile: profile, sleep: sleepSamples, hrv: hrvSamples, resting: restingSamples)
         } catch HealthProviderError.unauthorized {

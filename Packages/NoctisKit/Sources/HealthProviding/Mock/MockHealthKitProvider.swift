@@ -68,6 +68,8 @@ public final class MockHealthKitProvider: HealthDataProviding {
     public let scenario: MockScenario
 
     private var status: HealthAuthorizationStatus
+    /// The kinds the system's question has been asked for (all of them when the mock starts authorized).
+    private var asked: Set<HealthDataKind>
     private let sleep: [RawSleepSample]
     private let heartRate: [HeartRateSample]
     private let resting: [HeartRateSample]
@@ -95,6 +97,7 @@ public final class MockHealthKitProvider: HealthDataProviding {
         self.scenario = scenario
         self.latency = latency
         self.status = startAuthorized ? .authorized : .notDetermined
+        self.asked = startAuthorized ? Set(HealthDataKind.allCases) : []
         self.isHealthDataAvailable = isHealthDataAvailable
         self.failsQueries = failsQueries
 
@@ -152,37 +155,54 @@ public final class MockHealthKitProvider: HealthDataProviding {
         respiratory = hasHeartData ? nights.flatMap(\.respiratorySamples).filter { $0.date <= cutoff } : []
     }
 
-    public func authorizationStatus() async -> HealthAuthorizationStatus { status }
+    public func authorizationStatus() async -> HealthAuthorizationStatus { await authorizationStatus(for: HealthDataKind.core) }
+
+    /// Like HealthKit's "request status": `.authorized` only once every kind given has been asked for, whatever the answer was.
+    public func authorizationStatus(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus {
+        status == .authorized && kinds.allSatisfy(asked.contains) ? .authorized : .notDetermined
+    }
 
     public func requestAuthorization(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus {
+        asked.formUnion(kinds)
         status = .authorized
         return status
+    }
+
+    /// Like HealthKit: a query for a kind the system's question was never asked for throws "authorization not determined" (the real provider reports it
+    /// as `.unauthorized`); it does not quietly return nothing. Checked against the real HealthKit on the simulator (Stage 1A review, R-01).
+    private func requireAsked(_ kind: HealthDataKind) throws {
+        guard asked.contains(kind) else { throw HealthProviderError.unauthorized }
     }
 
     public func fetchSleepSamples(from start: Date, to end: Date) async throws -> [RawSleepSample] {
         try requireAuthorized()
         if latency > .zero { try await Task.sleep(for: latency) }
         if failsQueries { throw HealthProviderError.queryFailed }
+        try requireAsked(.sleepAnalysis)
         return sleep.filter { $0.start < end && $0.end > start }
     }
 
     public func fetchHeartRateSamples(from start: Date, to end: Date) async throws -> [HeartRateSample] {
         try requireAuthorized()
+        try requireAsked(.heartRate)
         return heartRate.filter { $0.date >= start && $0.date <= end }
     }
 
     public func fetchRestingHeartRate(from start: Date, to end: Date) async throws -> [HeartRateSample] {
         try requireAuthorized()
+        try requireAsked(.restingHeartRate)
         return resting.filter { $0.date >= start && $0.date <= end }
     }
 
     public func fetchHRVSamples(from start: Date, to end: Date) async throws -> [HRVSample] {
         try requireAuthorized()
+        try requireAsked(.hrv)
         return hrv.filter { $0.date >= start && $0.date <= end }
     }
 
     public func fetchRespiratorySamples(from start: Date, to end: Date) async throws -> [RespiratoryRateSample] {
         try requireAuthorized()
+        try requireAsked(.respiratoryRate)
         return respiratory.filter { $0.date >= start && $0.date <= end }
     }
 

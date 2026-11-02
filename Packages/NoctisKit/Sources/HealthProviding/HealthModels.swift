@@ -129,6 +129,13 @@ public nonisolated enum HealthDataKind: String, Sendable, CaseIterable {
     }
 }
 
+extension HealthDataKind {
+    /// The kinds onboarding asks for, and the ones whose question decides whether Home, Sleep, Recovery and Insights load. Resting heart rate and
+    /// respiratory rate are extras: they are asked for only from "Connect Apple Health", never as a side effect of the onboarding step, and a
+    /// person who was never asked for them still sees every screen (those two readings are simply absent).
+    public static let core: [HealthDataKind] = [.sleepAnalysis, .heartRate, .hrv]
+}
+
 public nonisolated enum HealthAuthorizationStatus: Sendable, Equatable {
     case notDetermined
     case authorized

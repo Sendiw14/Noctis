@@ -27,6 +27,15 @@ two weeks of sleep, heart rate and HRV (the Watch's own sleep tracking provides 
 - [ ] Wind-down Live Activity starts, shows on the Lock Screen, the Dynamic Island and the Watch Smart Stack, and ends on its own.
 - [ ] A sleep sound plays with the screen locked, the timer stops it, and the Control Center control matches.
 
+## Coach (on-device model and fallback)
+
+- [ ] On an iPhone with Apple Intelligence turned on: ask a recognised question and an unrecognised one; answers appear, numbers match Home, nothing is sent (no network indicator, Airplane mode on still works).
+- [ ] On an iPhone without Apple Intelligence (or with it off, or not yet downloaded): Coach still answers from the template and the hub says why the model is not used.
+- [ ] A medical question and a crisis question give the fixed replies on both; the crisis exchange is not in history.
+- [ ] The Health permission flow: after onboarding, Home loads with no second "Connect Apple Health" sheet; Settings, Health data offers Connect for resting heart rate and respiratory rate only, and the sheet lists only those two (audit PRIV-01).
+- [ ] The app switcher shows a plain NOCTIS screen, not Home, Recovery or a Journal entry, with a sheet open and with the app in each tab (audit SEC-05).
+- [ ] "Export my data" then lock the iPhone before sharing: the file cannot be opened while locked; unlock and share works (audit SEC-03).
+
 ## Apple Watch
 
 - [ ] Pairing sends the summary within a minute; five pages match the iPhone.

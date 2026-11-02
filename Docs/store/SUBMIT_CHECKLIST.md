@@ -48,7 +48,7 @@ The steps from this repository to "Submit for Review", in order. Everything that
 3. Create the subscription group **NOCTIS Premium** with the two products in `APP_STORE_LISTING.md` (same identifiers), the one-week free trial on the yearly one, localizations, prices and a review screenshot each.
 4. Add the Privacy Policy URL and the Support URL from step 1.
 5. App Privacy: enter the answers from `PRIVACY_REPORT.md` section 4 after you have approved it. Age rating: answer the questionnaire. Export compliance: confirm "no non-exempt encryption".
-6. Fill in the description, keywords, promotional text, and the reviewer notes from `APP_STORE_LISTING.md`.
+6. Fill in the description, keywords, promotional text, and the reviewer notes from `APP_STORE_LISTING.md`. The Coach paragraph describes the on-device generative model and the template fallback; read it against the app on a device with Apple Intelligence and on one without, and correct it if either differs (section 5).
 7. Create sandbox testers (Users and Access, Sandbox).
 
 ## 4. Sign, archive, validate (QA-027)

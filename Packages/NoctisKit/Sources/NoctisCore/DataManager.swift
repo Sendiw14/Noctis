@@ -182,14 +182,12 @@ public final class DataManager {
     /// The export, written to the temporary folder; it is deleted after the share sheet is done.
     public func exportFile() async throws -> URL {
         let data = try await DataExport.build(inventory: inventory, providers: providers, now: clock(), app: appVersion())
-        let url = roots.url(.temporary).appending(path: DataExport.fileName, directoryHint: .notDirectory)
-        try data.write(to: url, options: [.atomic])
-        return url
+        return try DataExport.write(data, in: roots.url(.temporary))
     }
 
-    /// Removes the export file.
+    /// Removes the export file, and a partial one if a write was cut short.
     public func discardExport() {
-        try? FileManager.default.removeItem(at: roots.url(.temporary).appending(path: DataExport.fileName, directoryHint: .notDirectory))
+        DataExport.remove(in: roots.url(.temporary))
     }
 }
 

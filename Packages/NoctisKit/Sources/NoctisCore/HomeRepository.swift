@@ -246,7 +246,7 @@ public actor HomeRepository {
         do {
             async let sleep = provider.fetchSleepSamples(from: start, to: now)
             async let hrv = provider.fetchHRVSamples(from: start, to: now)
-            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
+            async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
             async let heartRate = provider.fetchHeartRateSamples(from: now.addingTimeInterval(-2 * 86_400), to: now)
             let (allSleep, allHRV, allResting) = try await (sleep, hrv, resting)
             // The featured insight comes from the shared store, made at the same time as the snapshot.

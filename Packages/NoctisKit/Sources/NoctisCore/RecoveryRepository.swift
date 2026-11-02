@@ -89,7 +89,7 @@ public actor RecoveryRepository {
         do {
             async let sleep = provider.fetchSleepSamples(from: start, to: now)
             async let hrv = provider.fetchHRVSamples(from: start, to: now)
-            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
+            async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
             async let heartRate = provider.fetchHeartRateSamples(from: now.addingTimeInterval(-2 * 86_400), to: now)
             let inputs = try await HomeHealthInputs(sleep: sleep, hrv: hrv, restingHeartRate: resting, heartRate: heartRate)
             return RecoverySnapshotBuilder.build(inputs, profile: profile, now: now, timeZone: timeZone)

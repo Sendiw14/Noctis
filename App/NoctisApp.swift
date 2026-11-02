@@ -10,6 +10,8 @@ struct NoctisApp: App {
         // Made when the process starts, not when the first screen is drawn: an intent that starts the app in the background (the Sleep sounds
         // control, a Health wake) runs with no screen at all, and still needs the app's host, its sound player and its observers (R46, R47, R48).
         _container = State(initialValue: AppContainer())
+        // The app switcher's picture of NOCTIS is a plain screen, never a recovery score or a Journal entry (SEC-05).
+        PrivacyShield.shared.start()
     }
 
     var body: some Scene {

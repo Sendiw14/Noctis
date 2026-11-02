@@ -135,6 +135,11 @@ public nonisolated enum HealthCopy {
     public static let emptyExplanation =
         "Nothing was recorded in the last \(HealthDataStatus.lookBackDays) days, or NOCTIS isn't allowed to read it. Apple Health doesn't tell apps which."
 
+    /// Data is coming in, yet Connect Apple Health can still ask: onboarding asks for sleep, heart rate and HRV only, so these two have not been asked
+    /// for. Said plainly so an empty row is not read as "denied" or "broken".
+    public static let notAskedYet =
+        "Resting heart rate and respiratory rate haven't been asked for yet, so they show no data. Connect Apple Health to choose whether NOCTIS may read them."
+
     public static func sourceLine(_ source: String?) -> String? {
         source.map { "Last night's sleep came from \($0)." }
     }

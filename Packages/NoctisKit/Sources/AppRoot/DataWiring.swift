@@ -187,7 +187,7 @@ public enum DataWiring {
                 }
             },
             .exportFile: {
-                try? FileManager.default.removeItem(at: i.roots.url(.temporary).appending(path: DataExport.fileName, directoryHint: .notDirectory))
+                DataExport.remove(in: i.roots.url(.temporary))
             },
         ]
     }

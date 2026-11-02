@@ -65,7 +65,7 @@ public actor ReviewRepository {
             do {
                 async let sleep = provider.fetchSleepSamples(from: start, to: now)
                 async let hrv = provider.fetchHRVSamples(from: start, to: now)
-                async let resting = provider.fetchRestingHeartRate(from: start, to: now)
+                async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
                 let samples = try await (sleep, hrv, resting)
                 let nights = ReviewInputsBuilder.nights(
                     sleep: samples.0, hrv: samples.1, restingHeartRate: samples.2, needMinutes: Double(profile.needMinutes), now: now, timeZone: zone
@@ -92,7 +92,7 @@ public actor ReviewRepository {
         do {
             async let sleep = provider.fetchSleepSamples(from: start, to: now)
             async let hrv = provider.fetchHRVSamples(from: start, to: now)
-            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
+            async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
             let samples = try await (sleep, hrv, resting)
             let nights = ReviewInputsBuilder.nights(
                 sleep: samples.0, hrv: samples.1, restingHeartRate: samples.2, needMinutes: Double(profile.needMinutes), now: now, timeZone: zone

@@ -7,7 +7,7 @@ import SwiftUI
 /// so the label and icon shown always match what is actually requested. Activity/steps is deliberately excluded: `RecoveryFactorKind` has no case that
 /// reads activity data today, and Recovery itself is never listed here: it is computed from these signals, not a permission of its own.
 enum HealthStepFacts {
-    static let requestedKinds: [HealthDataKind] = [.sleepAnalysis, .heartRate, .hrv]
+    static let requestedKinds: [HealthDataKind] = HealthDataKind.core
 
     /// The line on each card (the longer `HealthDataKind.benefit` is the Privacy Center's).
     static func line(_ kind: HealthDataKind) -> String {

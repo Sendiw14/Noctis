@@ -30,8 +30,9 @@ public nonisolated struct HealthDataStatus: Sendable, Equatable {
     public let lastNightSource: String?
     /// Health is not available on this device at all.
     public let isUnavailable: Bool
-    /// The system's question has not been asked yet, so "Connect Apple Health" would show it. Once it has been
-    /// asked it never shows again, and the only way to change the answer is the Health app.
+    /// The system's question has not been asked yet for at least one of the five kinds, so "Connect Apple Health" would show it (for a person
+    /// who answered onboarding, that is resting heart rate and respiratory rate, which onboarding does not ask for). Once every kind has been
+    /// asked it never shows again, and the only way to change an answer is the Health app.
     public let canRequestAccess: Bool
 
     public init(kinds: [HealthKindStatus], lastNightSource: String?, isUnavailable: Bool = false, canRequestAccess: Bool = false) {
@@ -90,7 +91,8 @@ public struct HealthDataStatusReader {
                 statuses.append(HealthKindStatus(kind: kind, lastSample: nil, couldNotCheck: true))
             }
         }
-        let canRequest = await provider.authorizationStatus() == .notDetermined
+        // Any of the five still to be asked (resting heart rate and respiratory rate are asked only from here, never by onboarding).
+        let canRequest = await provider.authorizationStatus(for: HealthDataKind.allCases) == .notDetermined
         return HealthDataStatus(
             kinds: statuses, lastNightSource: Self.lastNightSource(sleepSamples, resolver: resolver, now: now), isUnavailable: false,
             canRequestAccess: canRequest

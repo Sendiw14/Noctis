@@ -48,7 +48,7 @@ INSIGHTS AND REVIEWS
 Patterns in your own nights, in plain words, and a weekly and a monthly review.
 
 COACH
-Ask a question about your own sleep and get an answer from your numbers. Coach runs on your iPhone and keeps its conversations there.
+Ask a question about your own sleep and get an answer built from your numbers. On iPhones that support Apple Intelligence and have it turned on, Coach uses Apple's on-device model to word its answers; on other iPhones it uses fixed wording. Either way Coach runs on your iPhone and keeps its conversations there. It is not medical advice.
 
 WIDGETS, APPLE WATCH AND SIRI
 Home Screen and Lock Screen widgets, Control Center controls, a Watch app with complications and breathing, and Siri phrases for recovery, sleep and bedtime.
@@ -98,12 +98,33 @@ Subscriptions: open Settings, then Subscription, or tap a locked item. The paywa
 
 Permissions: Health (read), Notifications (reminders), and AlarmKit (the wake alarm). Sleep sounds use the audio background mode so a sound can play with the screen locked.
 
-Coach answers are made on the iPhone from the person's own numbers and fixed wording. It does not give medical advice; a question about a medical condition gets a fixed reply that points to a doctor,
-and a crisis question gets a fixed reply with a helpline resource.
+Coach (the fifth tab) answers questions about the person's own sleep and recovery. How it works:
+- On iPhones where Apple Intelligence is available and turned on, Coach asks Apple's on-device language model (the Foundation Models framework) to write the answer, and, for a question its patterns do not recognise, to say which topic the question is about. The model runs on the iPhone; NOCTIS has no server and no other model, and sends nothing off the device.
+- On every other iPhone (not eligible, Apple Intelligence off, model not ready, language not supported) Coach builds the answer from fixed sentence templates and the same numbers. The reviewer can see this path on any device without Apple Intelligence.
+- Every number in an answer is a value NOCTIS supplied, not one the model made up: a draft is shown only after NOCTIS checks it (digits, percent signs and number words are allowed only as values NOCTIS supplied, no wording from a list of medical and diagnostic phrases, patterns hedged, a caution when confidence is not high). A draft that fails, or takes longer than 15 seconds, is replaced by the template answer. The answers are not clinically validated.
+- Questions about a medical condition get a fixed reply that points to a doctor; a crisis question gets a fixed reply with helpline numbers. The reply itself is fixed text: no model-written words and no personal data. A question that NOCTIS's own patterns recognise as medical or crisis never reaches the model. A question no pattern recognises is first classified by the on-device model, which reads only the question text (never the person's numbers); if it classifies it as medical or crisis, the same fixed reply is shown. A crisis exchange is neither saved nor logged.
+- Coach conversations stay on the iPhone, can be exported and deleted in Settings, Data management, and are excluded from device backups.
+- Coach is English only.
 
 NOCTIS isn't a medical device and says so on the welcome screen, the paywall, About and the Apple Watch.
 
 **Contact:** the owner's name, phone number and email (required by App Store Connect).
+
+## Coach and generative AI (what to say, and what not to say)
+
+Written 2026-11-02 from the code (`CoachKit/AIService.swift`, `FoundationModelsProvider.swift`, `SystemLanguageModelBackend.swift`, `CoachSafetyValidator.swift`) after the pre-launch audit found the earlier review notes ("fixed wording") did not match it.
+
+| Question | Answer, from the code |
+| --- | --- |
+| Does Coach use a generative model? | **Yes, on supported iPhones**: Apple's on-device `SystemLanguageModel` (Foundation Models). `CoachFeatureFlags.aiAppleIntelligence` is on by default. |
+| On which devices? | Only where the system reports the model available. NOCTIS maps the system's reasons (`deviceNotEligible`, `notEnabled`, `modelNotReady`, `unsupportedLanguage`) and falls back; it does not assume support. |
+| What if it is not available? | Template answers: fixed sentence patterns filled from the person's numbers, checked by the same validator. |
+| Is any remote or third-party model used? | No. `aiRemote` is off; there is no transport, endpoint or key. |
+| What does the model see? | The question, the topic, facts worked out from the person's data (recovery today, last night, usual bedtime and wake, week's average, sleep need, wake time, goals) and short summaries of the last two turns. Never the name, the Journal or raw Health readings. |
+| What is checked before an answer is shown? | `CoachSafetyValidator`: required fields, length limits, no digit, percent or number word outside a fact token, every token a known fact, banned-language list, hedged patterns, caution when confidence is not high, destinations only real screens. |
+| Medical and crisis? | The reply is fixed text (no model-written words, no personal data). A pattern match never reaches the model; a question no pattern recognises is classified first by the on-device model, which reads only the question, and a medical or crisis classification gets the same fixed reply. Crisis exchanges are not kept or logged. The helpline list is built in and flagged for the owner to verify before release. |
+| Claims to avoid | "Works on every iPhone", "AI-powered insights" as a headline, "clinically validated" or "accurate", any diagnosis or treatment wording. Say "on-device", "where your iPhone supports it", "not medical advice". |
+| Not verified | The model path on a real Apple Intelligence device and the template path on a device without it (`DEVICE_TEST_CHECKLIST.md`). The simulator does not prove either. |
 
 ## Age rating
 

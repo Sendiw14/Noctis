@@ -271,6 +271,9 @@ struct HealthDataSettingsView: View {
         if !health.missing.isEmpty && health.hasAnyData {
             SettingsNote(HealthCopy.emptyExplanation).accessibilityIdentifier("settings.health.explanation")
         }
+        if health.canRequestAccess && health.hasAnyData {
+            SettingsNote(HealthCopy.notAskedYet).accessibilityIdentifier("settings.health.notAskedYet")
+        }
     }
 
     private func buttons(_ health: HealthDataStatus) -> some View {
