@@ -56,7 +56,8 @@ public nonisolated enum WidgetGate {
     /// numbers tagged "Sample", R45) always keeps the unlocked design, so what a widget can show is visible before it is added.
     public static func isLocked(_ entry: WidgetEntryModel, in surface: WidgetSurface) -> Bool {
         guard !entry.isPreview else { return false }
-        return surface.isLocked(in: entry.snapshot?.tier ?? .free)
+        // At the entry's own date: a plan that runs out while the app is closed locks the entry the timeline placed at that moment (S1B-C01).
+        return surface.isLocked(in: entry.snapshot?.effectiveTier(at: entry.date) ?? .free)
     }
 
     /// The locked content for `entry` in `surface`, or nil when it is drawn as it always was.

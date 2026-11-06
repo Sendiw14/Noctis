@@ -1,0 +1,2881 @@
+diff --git a/App/NoctisApp.swift b/App/NoctisApp.swift
+index 6378266..3927f38 100644
+--- a/App/NoctisApp.swift
++++ b/App/NoctisApp.swift
+@@ -49,6 +49,10 @@ struct NoctisApp: App {
+             RootView(initiallyOnboarded: container.model.isOnboarded)
+                 // A new container after "Delete all NOCTIS data": every screen is made again, and the app starts over at onboarding.
+                 .id(container.generation)
++                // A "Delete all NOCTIS data" the last run did not finish (the app was killed, the iPhone restarted) was started when the container was made (so a background launch finishes it too, S1B-R-02); the app starts over when it is done (S1B-B02).
++                .task(id: container.generation) {
++                    if await container.finishInterruptedDeletion() { container = AppContainer(restarted: true) }
++                }
+                 .environment(\.restartApp, RestartAction { container = AppContainer(restarted: true) })
+                 .environment(container.model)
+                 .environment(container.accountStore)
+diff --git a/Docs/POST_LAUNCH.md b/Docs/POST_LAUNCH.md
+index 3f13863..26e7699 100644
+--- a/Docs/POST_LAUNCH.md
++++ b/Docs/POST_LAUNCH.md
+@@ -37,13 +37,13 @@ where data is involved).
+ - Sinhala and Tamil translations. The app ships in English only. Both need a native speaker's translation, not a machine's, including the privacy statements (generated from the inventory), the Help answers and Coach's scripted lines; Coach's own language work is listed above.
+ - Configurable widgets. The widgets are static: no choice of what they show (an `AppIntentConfiguration` could let the person pick, for example, recovery or bedtime for a small widget), and no buttons in them. Larger families (extra large on iPad, StandBy tuning) are not designed. The two controls (R48) are not configurable either.
+ - Smart Stack suggestions beyond relevance scores. The widgets give the system a relevance score and the wake-up and bedtime contexts; nothing donates intents or suggests widgets from what the person does, and the App Shortcuts are not shown as suggestions by NOCTIS itself.
+-- Plan expiry on the widgets, the Watch and the intents. They learn the plan from the snapshot the app writes, which happens when the app sees the plan change (a purchase, an update while it runs, a launch). A subscription that ends while the app is not running keeps its Premium widgets, complications and Siri phrases until the app next runs. Options: have the Health background wake ask the App Store before it writes, and/or carry the period's end date in the snapshot so surfaces lock themselves. Not built; needs a real device and a real expiry to test.
++- Plan expiry on the widgets, the Watch and the intents (built in Stage 1B, S1B-C01 and C02; still to be confirmed with a real expiry on a device and a Sandbox account). The snapshot now carries the end of Premium and whether the plan renews, and every surface asks `WidgetSnapshot.effectiveTier(at:)` instead of reading the flag: a plan that does not renew locks at its end, one that renews keeps 48 hours more (`WidgetSnapshot.renewalSlack`, the owner's choice) so a paying person whose renewal the app has not yet written is not locked. The widgets' timeline has an entry at the lock moment, and a Health background wake asks the store before it writes. Not yet seen on a device: the widget and complication actually flipping with the app closed, a renewal that completes late, and the Watch complication refresh budget (about 50 complication transfers a day, a plan change now uses one).
+ - A monthly review notification. Not added: only the weekly one exists (its text is still generic, R13, and it opens the latest weekly review). Whether a month deserves its own reminder, and when, needs a decision; until then the monthly review is found on Home for the first three days of a month and in Insights.
+ - Coach reading reviews. Coach cannot read the reviews (the data inventory says so, R63). Letting it explain a week or a month from its `ReviewRecord` (derived values only) would need a decision, a change to the inventory's Coach column, the Privacy Center and `PRIVACY_REPORT.md`.
+ - Sharing a review beyond what is on screen. Sharing a review would show only what the page shows (as the Home share cards do); a share that carries more than is visible, or a link to a review, is not designed.
+ - A personal records page. A month's longest night and highest recovery are in the monthly review; a page of the person's all-time records beyond the Insights records is not designed.
+ - The review insights page and Insights found late. A review points to the insights NOCTIS found while its week or month was under way; an insight found after the review was made (a person who opens the app only on the review day) is not in a review that is already frozen. Not designed: whether a review should look again inside its first 24 hours for insights found since (it does for nights, R63).
+-- Widgets, the Watch and the intents still learn the plan from the snapshot the app writes. The app itself now asks the store again when the plan's end passes while it is open (QA-127), but a plan that ends while the app is not running still waits for the next launch to reach them (see "Plan expiry on the widgets, the Watch and the intents" above).
++- Widgets, the Watch and the intents learn the plan from the snapshot the app writes, which now also carries the end of Premium (see "Plan expiry on the widgets, the Watch and the intents" above). The app asks the store again when the plan's end passes while it is open (QA-127) and on every Health background wake.
+ 
+ ## Checks that need a real device or a Sandbox account
+ 
+diff --git a/Docs/PRIVACY_REPORT.md b/Docs/PRIVACY_REPORT.md
+index 43e4301..f728065 100644
+--- a/Docs/PRIVACY_REPORT.md
++++ b/Docs/PRIVACY_REPORT.md
+@@ -19,7 +19,7 @@ Status: **draft for owner review**. It was written from an audit of the code at
+ | --- | --- | --- | --- | --- | --- | --- |
+ | Apple Health data | Apple Health (NOCTIS keeps no copy) | No: read on the iPhone, read-only | Facts worked out from it (recovery today, last night, usual bedtime and wake, week's average), never raw readings | n/a | Apple-managed | In Apple's Health app |
+ | Cached summaries | `Application Support/Noctis/home-snapshot.json` | No | No | No | Complete while locked | Data management, Delete |
+-| Widget summary | `WidgetSnapshot.json` in the App Group container (`group.com.noctis.app`), written by the app, read by the widgets (it includes a free or Premium flag, so widgets and the Watch show what your plan includes without calling the App Store; the flag goes only to your own Apple Watch); the same summary is queued for your Apple Watch, which keeps its own copy in its own App Group | Only to your own paired Apple Watch, through WatchConnectivity (never to a server) | No | No | Readable after first unlock (set on purpose: a locked iPhone's widgets must read it) | Data management, Delete cached summaries |
++| Widget summary | `WidgetSnapshot.json` in the App Group container (`group.com.noctis.app`), written by the app, read by the widgets (it includes a free or Premium flag and, for Premium, the date the current period ends and whether it renews, so widgets, Siri and the Watch show what your plan includes, and lock when it ends, without calling the App Store; these go only to your own Apple Watch); the same summary is queued for your Apple Watch, which keeps its own copy in its own App Group | Only to your own paired Apple Watch, through WatchConnectivity (never to a server) | No | No | Readable after first unlock (set on purpose: a locked iPhone's widgets must read it) | Data management, Delete cached summaries |
+ | Sleep sounds status | `SleepSoundsState.json` in the App Group container, written by the app only while a sleep sound plays, read by the Sleep sounds control | No: it stays on this iPhone, shared between the app and its control only | No | No | Readable after first unlock (set on purpose: a control on the Lock Screen must read it) | Removed when the sound stops, and by Delete all NOCTIS data |
+ | Apple Watch status and settings | Three settings keys (`noctis.watch.lastSentAt`, `noctis.watch.complicationMark`, `noctis.watch.breathHaptics`): when the summary was last sent to your Apple Watch, the day the complication was last refreshed for, and (kept on the Watch itself) whether breathing on the Watch plays haptics | No | No | Yes | n/a | Data management, Delete cached summaries; and Delete all NOCTIS data |
+ | Insights history | `Application Support/Noctis/insights.json` | No | Insights already found, as numbers | No | Complete while locked | Data management, Delete |
+@@ -104,6 +104,7 @@ The Privacy Center, Data management, Coach's "How Coach uses your data", Help an
+ 1. **The support email (the one open flow).** Contact support opens the system mail composer (or a `mailto:` link) addressed to the support inbox, with the app version, build number and iOS version in the body. The person must press Send; nothing is sent by the app on its own, and NOCTIS has no server that receives it. Whether Apple's questionnaire counts an email the person chooses to send as data "collected" (Customer Support, and the sender's email address) is an interpretation. Option A (draft above): not collected, because the app transmits nothing and the person's mail app sends the message. Option B: declare Customer Support. This report does not decide it. **Owner.**
+ 2. **Health: onboarding asks for three kinds, the app reads five.** Onboarding asks Apple Health for sleep, heart rate and HRV (`HealthDataKind.core`, used by `HealthScreen.requestedKinds`); "Connect Apple Health" elsewhere asks for all five (`HealthDataKind.allCases`), and Settings, Health data offers it for the two kinds onboarding did not ask for (resting heart rate and respiratory rate). `HealthKitProvider.authorizationStatus()` asks HealthKit about the three core kinds only, so a person who has answered onboarding's sheet is not treated as "not asked yet", and Home, Sleep, Recovery and Insights load; the status means "the system's question was asked", never "read access was allowed", because HealthKit does not say which kinds were declined. HealthKit throws "authorization not determined" for a kind it was never asked about, so resting heart rate and respiratory rate are read through `restingHeartRateIfAsked` and `respiratorySamplesIfAsked`, which turn that into no data; the core reads are not softened. Checked against real HealthKit on the iOS 27 simulator (Stage 1A rework, `NOCTIS_STAGE1A_IMPLEMENTATION_REPORT.md` section 13): with the three core kinds allowed, or declined, Home shows the empty state; with Health skipped, Home shows "Connect Apple Health". Not checked on a physical iPhone or with real Health data. Without resting heart rate Recovery is worked out from the other factors and can differ by a few points from the score with it; the usage string names all five kinds while onboarding's sheet lists three. **Owner**: confirm on a real iPhone; decide whether Settings' note should say that granting the two optional kinds refines Recovery, or whether onboarding should ask for all five, and whether the usage string should name only the kinds a given sheet asks for.
+ 3. **Device backups.** The default SwiftData store (profile, wake alarm, wind-down history) and the preferences, sound choices and flags are in iCloud and computer backups, with iOS's standard file protection (readable after first unlock). The Journal, Coach conversations, insights and cached summaries are excluded from backups and use complete protection. The headline "Your data is stored on this iPhone." is true of where NOCTIS keeps it; a backup is Apple's copy of the iPhone, not NOCTIS syncing. The inventory says so in "What may leave", but the owner decides whether the headline should say "backups aside", whether the profile's optional name should be excluded from backups, and whether the default store should move to complete protection. **Owner.**
++   **What a new iPhone gets (S1B-B05, proposed wording, owner to approve before it goes on the site or the listing; the alarm sentence corrected in the Stage 1B corrective pass, R-12):** "NOCTIS keeps your data on your iPhone and has no copy of it anywhere else. If you set up a new iPhone from an iCloud or computer backup, your profile, the wake alarm's settings, wind-down history and other settings come with it (the alarm itself is set up with the system again by NOCTIS when it opens, since a backup does not restore system alarms). Your Journal, Coach conversations, insights and summaries do not, and neither does a Sign in with Apple link. Export your data first if you want to keep them." This follows from the backup flags above (the Journal, Coach, insights and cached summaries are excluded; the sign-in item is this device only) and says nothing about how the data could be recovered from the device. Nothing in it is a forensic claim: deleting one kind of data now also compacts its database at the next launch (frees the space), and "Delete all NOCTIS data" removes the files themselves.
+ 4. **Subscription.** Purchases go through StoreKit and Apple's App Store. There is no receipt validation server, so the developer receives nothing from the app. If a server or an analytics event for purchases is ever added, Purchases must be declared and the manifest changed.
+ 5. **"Deleted" and free pages.** Deleting one kind of data (for example Coach history) removes its rows; the SQLite file is not vacuumed, so the bytes of deleted text can stay in the file's free pages until they are overwritten (the Coach store stayed near 111 KB after its rows were deleted in testing). "Delete all NOCTIS data" removes the store files themselves. The page says "deleted". **Owner**: accept, reword ("removed from NOCTIS"), or add a vacuum after a single-category delete.
+ 6. **The app switcher's picture.** iOS keeps a small picture of the app's last screen for the app switcher. It can show a recovery score or a Journal entry. NOCTIS does not hide its screens when the app goes to the background. The inventory says so under "Files iOS makes for the app". **Owner**: whether to blur the content when the app becomes inactive.
+diff --git a/Packages/NoctisKit/Sources/AppRoot/AppContainer.swift b/Packages/NoctisKit/Sources/AppRoot/AppContainer.swift
+index 157bdff..a54e0db 100644
+--- a/Packages/NoctisKit/Sources/AppRoot/AppContainer.swift
++++ b/Packages/NoctisKit/Sources/AppRoot/AppContainer.swift
+@@ -44,6 +44,9 @@ public struct AppContainer {
+     public let settingsViewModel: SettingsViewModel
+     /// Data management: what NOCTIS keeps, one kind at a time or all of it, and a copy to take away.
+     public let dataManager: DataManager
++    /// A "Delete all NOCTIS data" that the last run did not finish, being finished: started when the container is made (a background launch has no screen), once
++    /// per process. Its answer says whether the app must start over (S1B-R-02).
++    public let interruptedDeletion: Task<Bool, Never>?
+     /// A new one each time the app starts over (after "Delete all NOCTIS data"), so the screens are made again.
+     public let generation = UUID()
+     /// The sleep sounds: the one player that holds the audio engine, and what the Sounds screen reads.
+@@ -76,8 +79,13 @@ public struct AppContainer {
+         // The launch budgets start counting here.
+         NoctisSignpost.begin(.launchToFirstFrame)
+         NoctisSignpost.begin(.launchToPopulated)
++        // A deletion of one kind of data left free pages in a database: compact it now, before anything opens it (S1B-B03). It only runs when one asked (and the list of files is not even built otherwise: a launch with no request is one flag read).
++        let compaction = StoreCompaction()
++        if compaction.isPending { compaction.runIfRequested(DataManager.databaseFiles()) }
+         let store = StoreManager()
+         self.storeManager = store
++        // Before the account is read: a sign-in an earlier install left in the Keychain is not picked up by a fresh one (S1B-B04).
++        FreshInstallGuard().run()
+         #if DEBUG
+         // `-mockAppleAccount signedIn`: the signed-in screens on a simulator with no Apple ID (an in-memory identifier, never the Keychain).
+         let launch = ProcessInfo.processInfo.arguments
+@@ -401,6 +409,8 @@ public struct AppContainer {
+             coordinator.reschedule()
+             Task { await widgetPublisher.republish() }
+         }
++        // A renewal or a cancellation moves the end of Premium without changing the tier: the snapshot carries the end, so it is written again (S1B-C01).
++        store.entitlementManager.onPremiumWindowChange = { Task { await widgetPublisher.republish() } }
+         model.onProfileChange = {
+             coordinator.reschedule()
+             Task { await widgetPublisher.republish() }
+@@ -408,13 +418,23 @@ public struct AppContainer {
+         // Background updates (R46): Apple Health wakes the app when new sleep data arrives; the refresh writes the widgets' summary
+         // and reloads their timelines. Best-effort: iOS decides when. Nothing runs before setup is finished or without access.
+         let backgroundRefresher = BackgroundRefresher(
+-            isOnboarded: { await MainActor.run { model.profile.onboardingComplete } },
++            // Not while a "Delete all NOCTIS data" is unfinished: a refresh would write the widgets' summary and send the Watch numbers again (S1B-R-02).
++            isOnboarded: { await MainActor.run { model.profile.onboardingComplete && !DataManager.hasPendingDeleteAll() } },
+             isAuthorized: { await provider.authorizationStatus() == .authorized },
+-            refresh: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) }
++            // The Health refresh first: it is what the wake is for, and the whole wake has a 20-second budget, so it must not wait on the store. A fresh background
++            // process has no cached subscription group, and the store may need the network to answer. Then the plan: the store announces a renewal or a refund only
++            // while the app runs, so a wake that finds the plan changed rewrites the snapshot through `onTierChange` or `onPremiumWindowChange` (S1B-C02).
++            refresh: BackgroundRefresher.healthThenPlan(
++                health: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) },
++                plan: { await store.entitlementManager.refresh() }
++            )
+         )
+         // Activates the Watch link at launch; the Watch's "Ask iPhone to update" makes the same refresh a Health wake does.
+         Task {
+-            await watchSync.activate(onUpdateRequested: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) })
++            await watchSync.activate(onUpdateRequested: {
++                guard !DataManager.hasPendingDeleteAll() else { return }
++                _ = await homeRepository.refresh(profile: await MainActor.run { model.profile })
++            })
+         }
+         // Through the existential: in Release the provider is the concrete HealthKit one, and a cast from it would always succeed.
+         let background = (provider as any HealthDataProviding) as? any HealthBackgroundDelivering
+@@ -443,6 +463,9 @@ public struct AppContainer {
+         // update, which redraws the widgets, which asks again (QA_LEDGER.md: 40 million writes of one row).
+         widgetInputs.setAlarm { WidgetSnapshotMaker.alarm(await alarmService.peek().settings) }
+         widgetInputs.setTier { await MainActor.run { gate.tier } }
++        widgetInputs.setPremiumWindow {
++            await MainActor.run { PremiumWindow(until: store.entitlementManager.premiumUntil, autoRenews: store.entitlementManager.premiumAutoRenews) }
++        }
+         Task {
+             for await _ in await alarmService.updates() { await widgetPublisher.republish() }
+         }
+@@ -599,6 +622,7 @@ public struct AppContainer {
+                 }
+             ))
+         self.dataManager = dataManager
++        interruptedDeletion = DataManager.hasPendingDeleteAll() && Self.resumeOnce.claim() ? Task { await dataManager.resumeInterruptedDeletion() } : nil
+         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
+         #if DEBUG
+         if let summary = debug.subscriptionSummary() { storeManager.entitlementManager.debugSet(summary) }
+@@ -623,6 +647,18 @@ public struct AppContainer {
+ }
+ 
+ extension AppContainer {
++    /// Lets one container per process finish an interrupted deletion, so a restart after it cannot start another.
++    fileprivate final class ResumeOnce: @unchecked Sendable {
++        private let lock = NSLock()
++        private var claimed = false
++        func claim() -> Bool { lock.withLock { defer { claimed = true }; return !claimed } }
++    }
++
++    fileprivate static let resumeOnce = ResumeOnce()
++
++    /// True when an interrupted "Delete all NOCTIS data" has been finished and the app should start over; waits for it if it is still running.
++    public func finishInterruptedDeletion() async -> Bool { await interruptedDeletion?.value ?? false }
++
+     /// The on-device model (Apple Intelligence), where this OS has it.
+     static func systemModel() -> (any AIProvider)? {
+         #if canImport(FoundationModels)
+@@ -683,7 +719,7 @@ struct DebugLaunchOptions {
+     /// `-mockNotifications granted|denied|notDetermined|willDeny`: the notification centre plays a script
+     /// (a mock Health scenario with no flag gets one that is already allowed), so the system's question never opens.
+     let mockNotifications: String?
+-    /// `-mockSubscription free|monthly|yearly|trial|ending|grace`: a fixed subscription state (the simulator has no purchase).
++    /// `-mockSubscription free|monthly|yearly|trial|ending|grace|payment`: a fixed subscription state (the simulator has no purchase).
+     let mockSubscription: String?
+     /// `-mockJournal empty|filled|unavailable[:journal][:draft]`: an in-memory journal, with or without entries; `:journal` opens on the list, `:draft` fills in the form.
+     let mockJournal: String?
+@@ -756,6 +792,7 @@ struct DebugLaunchOptions {
+                 isPremium: true, plan: .yearly, isTrial: true, willRenew: true, endDate: Calendar.current.date(byAdding: .day, value: 5, to: Date()))
+         case "ending": return SubscriptionSummary(isPremium: true, plan: .yearly, willRenew: false, endDate: ends)
+         case "grace": return SubscriptionSummary(isPremium: true, plan: .monthly, willRenew: true, endDate: ends, isInGracePeriod: true)
++        case "payment": return SubscriptionSummary(hasPaymentProblem: true)
+         default: return .free
+         }
+     }
+diff --git a/Packages/NoctisKit/Sources/AppRoot/DataWiring.swift b/Packages/NoctisKit/Sources/AppRoot/DataWiring.swift
+index e97e432..f1928eb 100644
+--- a/Packages/NoctisKit/Sources/AppRoot/DataWiring.swift
++++ b/Packages/NoctisKit/Sources/AppRoot/DataWiring.swift
+@@ -113,14 +113,19 @@ private final class WatchLineBox {
+ 
+ /// Wires Data management to the app's stores (APP_RULES.md R41, R42). An eraser and an exporter for each inventory category, and the
+ /// steps of "Delete all NOCTIS data" in the order that keeps it from putting back what it removes.
++/// The database-files step could not remove some files (said in the delete-all sheet, and tried again at the next launch).
++struct FilesNotRemoved: Error, CustomStringConvertible {
++    let count: Int
++    var description: String { "Some database files could not be removed" }
++}
++
+ @MainActor
+ public enum DataWiring {
+     public static func manager(_ i: DataWiringInputs, inventory: DataInventory = .shared) -> DataManager {
+         let erasers = erasers(i, inventory: inventory)
+         return DataManager(
+             inventory: inventory, roots: i.roots, erasers: erasers, providers: providers(i),
+-            deleteAllSteps: deleteAllSteps(i, erasers: erasers, inventory: inventory),
+-            appVersion: i.appVersion
++            deleteAllSteps: deleteAllSteps(i, erasers: erasers, inventory: inventory), appVersion: i.appVersion, defaults: i.defaults
+         )
+     }
+ 
+@@ -224,6 +229,7 @@ public enum DataWiring {
+         // The database files themselves, so what the rows held is not left behind in a file's free pages.
+         steps.append(
+             DeleteStep(id: "databases", title: "Removing database files") {
++                var unremoved = 0
+                 for category in inventory.categories {
+                     for case .database(let directory, let path) in category.locations {
+                         let store = i.roots.url(directory).appending(path: path, directoryHint: .notDirectory)
+@@ -232,11 +238,19 @@ public enum DataWiring {
+                         for entry in (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? [] {
+                             let relative = relativeFolder.isEmpty ? entry : relativeFolder + "/" + entry
+                             if inventory.category(forFile: relative, in: directory) == category.id {
+-                                try? FileManager.default.removeItem(at: folder.appending(path: entry))
++                                do {
++                                    try FileManager.default.removeItem(at: folder.appending(path: entry))
++                                } catch let error as CocoaError where error.code == .fileNoSuchFile {
++                                    // Already gone.
++                                } catch {
++                                    unremoved += 1
++                                }
+                             }
+                         }
+                     }
+                 }
++                // A file that stays is a failed step, not a deletion that worked: the sheet says so, and the next launch tries again (S1B-R-03).
++                if unremoved > 0 { throw FilesNotRemoved(count: unremoved) }
+             })
+         // The widgets redraw without their summary, and no Live Activity is left running.
+         steps.append(
+diff --git a/Packages/NoctisKit/Sources/DesignSystem/NoctisCTA.swift b/Packages/NoctisKit/Sources/DesignSystem/NoctisCTA.swift
+index 5d16546..5078ba8 100644
+--- a/Packages/NoctisKit/Sources/DesignSystem/NoctisCTA.swift
++++ b/Packages/NoctisKit/Sources/DesignSystem/NoctisCTA.swift
+@@ -124,6 +124,7 @@ public struct NoctisTextButton: View {
+                 .noctisFont(15, .medium, relativeTo: .subheadline)
+                 .foregroundStyle(adaptive ? NoctisAppColor.ink2 : NoctisPaper.ink2)
+                 .multilineTextAlignment(.center)
++                .noctisButtonShape()
+                 // 44pt tall at the default size from the padding (a 15pt line is about 18pt), and taller with the text: a `minHeight` frame
+                 // left a two-line "Health data settings" at AX5 in a 44pt slot, where it overprinted "Open Health" above it and hung out of
+                 // its card (seen in B-AX5 on an SE, home.evening.empty).
+diff --git a/Packages/NoctisKit/Sources/DesignSystem/OnboardingStepScaffold.swift b/Packages/NoctisKit/Sources/DesignSystem/OnboardingStepScaffold.swift
+index a88b0eb..dd4a6fe 100644
+--- a/Packages/NoctisKit/Sources/DesignSystem/OnboardingStepScaffold.swift
++++ b/Packages/NoctisKit/Sources/DesignSystem/OnboardingStepScaffold.swift
+@@ -287,6 +287,7 @@ public struct OnboardingSecondaryButton: View {
+                 .multilineTextAlignment(.center)
+                 .fixedSize(horizontal: false, vertical: true)
+                 .foregroundStyle(colorScheme == .dark ? NoctisPaper.ivory.opacity(0.7) : NoctisPaper.cocoa.opacity(0.7))
++                .noctisButtonShape()
+                 .frame(maxWidth: .infinity, minHeight: 44)
+                 .contentShape(Rectangle())
+         }
+diff --git a/Packages/NoctisKit/Sources/HomeFeature/HomeShare.swift b/Packages/NoctisKit/Sources/HomeFeature/HomeShare.swift
+index bbe05a1..d33456e 100644
+--- a/Packages/NoctisKit/Sources/HomeFeature/HomeShare.swift
++++ b/Packages/NoctisKit/Sources/HomeFeature/HomeShare.swift
+@@ -69,6 +69,8 @@ struct SharePreviewSheet: View {
+                     RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous)
+                         .strokeBorder(NoctisAppColor.hairline, lineWidth: 1)
+                 )
++                // A picture of a card is a picture: Smart Invert leaves it as it was drawn (S1B-A03).
++                .accessibilityIgnoresInvertColors()
+                 .accessibilityLabel("Share card preview")
+                 .accessibilityIdentifier("home.share.preview")
+         } else {
+diff --git a/Packages/NoctisKit/Sources/InsightsFeature/ReviewShare.swift b/Packages/NoctisKit/Sources/InsightsFeature/ReviewShare.swift
+index 586ea61..c2f0de9 100644
+--- a/Packages/NoctisKit/Sources/InsightsFeature/ReviewShare.swift
++++ b/Packages/NoctisKit/Sources/InsightsFeature/ReviewShare.swift
+@@ -69,6 +69,8 @@ struct ReviewSharePreviewSheet: View {
+                 .frame(maxWidth: 360)
+                 .clipShape(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
+                 .overlay(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
++                // A picture of a card is a picture: Smart Invert leaves it as it was drawn (S1B-A03).
++                .accessibilityIgnoresInvertColors()
+                 .accessibilityLabel("Share card preview")
+                 .accessibilityIdentifier("review.share.preview")
+         } else {
+diff --git a/Packages/NoctisKit/Sources/NightFeature/WindDownScreen.swift b/Packages/NoctisKit/Sources/NightFeature/WindDownScreen.swift
+index fe130e1..d60e67a 100644
+--- a/Packages/NoctisKit/Sources/NightFeature/WindDownScreen.swift
++++ b/Packages/NoctisKit/Sources/NightFeature/WindDownScreen.swift
+@@ -327,6 +327,7 @@ private struct WindDownControls: View {
+                     Text(WindDownCopy.end)
+                         .noctisFont(15, .medium, relativeTo: .subheadline)
+                         .foregroundStyle(NoctisNight.ivory2)
++                        .noctisButtonShape()
+                         .frame(minWidth: 44, minHeight: 44)
+                         .padding(.horizontal, NoctisSpacing.xs)
+                         .contentShape(Rectangle())
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/Account/AccountStore.swift b/Packages/NoctisKit/Sources/NoctisCore/Account/AccountStore.swift
+index 44f1f1d..7f05a99 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/Account/AccountStore.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/Account/AccountStore.swift
+@@ -38,6 +38,20 @@ public nonisolated protocol AccountKeychain: Sendable {
+     func read() -> String?
+     func write(_ userID: String) -> Bool
+     func delete()
++    /// Whether the item is there, is not, or cannot be asked about now (the iPhone has not been unlocked since it started): "nothing found" and "cannot look" must not
++    /// be taken for each other (S1B-R-16).
++    func lookup() -> KeychainLookup
++}
++
++public nonisolated enum KeychainLookup: Sendable, Equatable {
++    case found
++    case notFound
++    case unavailable
++}
++
++nonisolated extension AccountKeychain {
++    /// For a keychain that is always answerable (memory, tests).
++    public func lookup() -> KeychainLookup { read() == nil ? .notFound : .found }
+ }
+ 
+ /// Asks Apple whether the identifier is still good: Apple's provider in the app, a fake in tests.
+@@ -147,6 +161,15 @@ public nonisolated struct SystemAccountKeychain: AccountKeychain {
+ 
+     public func delete() { SecItemDelete(query as CFDictionary) }
+ 
++    public func lookup() -> KeychainLookup {
++        let status = SecItemCopyMatching(query.merging([kSecMatchLimit as String: kSecMatchLimitOne]) { $1 } as CFDictionary, nil)
++        switch status {
++        case errSecSuccess: return .found
++        case errSecItemNotFound: return .notFound
++        default: return .unavailable  // for example errSecInteractionNotAllowed, before the first unlock
++        }
++    }
++
+     /// How many bytes the item holds (for the Privacy Center), 0 when there is none.
+     public var byteCount: Int { read()?.utf8.count ?? 0 }
+ }
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/BackgroundRefresher.swift b/Packages/NoctisKit/Sources/NoctisCore/BackgroundRefresher.swift
+index 22f5a07..82235ba 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/BackgroundRefresher.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/BackgroundRefresher.swift
+@@ -60,6 +60,17 @@ public actor BackgroundRefresher {
+         self.sleep = sleep
+     }
+ 
++    /// The work of a wake: the Health refresh first, then the plan. The whole wake has `defaultTimeBudget`, and the plan may need the network, so it never goes
++    /// first: if it is slow, the budget ends and the Health numbers are already written (S1B-R-01).
++    public static func healthThenPlan(
++        health: @escaping @Sendable () async -> Void, plan: @escaping @Sendable () async -> Void
++    ) -> @Sendable () async -> Void {
++        {
++            await health()
++            await plan()
++        }
++    }
++
+     /// One wake from Health. Returns when it is finished with, however it ended.
+     public func handleWake() async -> Outcome {
+         if let inFlight {
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/DataInventory+Shared.swift b/Packages/NoctisKit/Sources/NoctisCore/DataInventory+Shared.swift
+index 32bf4de..49699ab 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/DataInventory+Shared.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/DataInventory+Shared.swift
+@@ -38,14 +38,14 @@ nonisolated extension DataInventory {
+             DataCategory(
+                 .widgetSnapshot, name: "Widget summary",
+                 summary:
+-                    "A small file NOCTIS writes for its widgets and for your Apple Watch, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked. It also holds one word saying whether you are on the free plan or Premium, so a widget or your Apple Watch can show what your plan includes without asking the App Store; nothing about a purchase is kept in it. If you have an Apple Watch with NOCTIS on it, the same summary is sent to it, and only to it.",
++                    "A small file NOCTIS writes for its widgets and for your Apple Watch, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked. It also holds one word saying whether you are on the free plan or Premium and, for Premium, the date the current period ends and whether it renews by itself, so a widget or your Apple Watch can show what your plan includes, and lock when it ends, without asking the App Store; nothing else about a purchase is kept in it. If you have an Apple Watch with NOCTIS on it, the same summary is sent to it, and only to it.",
+                 contents: [
+                     "Your recovery score, how it compares with your usual, and the four arcs of its ring",
+                     "How each of the four recovery factors scored, its value last night and your usual for it",
+                     "Last night's sleep: how long, its stages and when it began and ended", "Your resting heart rate and heart rate variability for last night",
+                     "Tonight's bedtime and your usual wake time", "Your wake alarm's time, and whether it is on",
+                     "How many nights your usual is built from, and the time of your last \"Delete all NOCTIS data\"",
+-                    "A free or Premium flag (goes only to your own Apple Watch)",
++                    "A free or Premium flag and, for Premium, when the current period ends and whether it renews (goes only to your own Apple Watch)",
+                 ],
+                 locations: [.file(.appGroup, "WidgetSnapshot.json")],
+                 destination: .pairedWatch(
+@@ -58,7 +58,7 @@ nonisolated extension DataInventory {
+                 summary:
+                     "Small notes about your Apple Watch: when NOCTIS last sent it the summary, the day your Watch face's complication was last refreshed for, and, kept on the Watch itself, whether breathing on the Watch plays haptics. They hold no Health value.",
+                 contents: [
+-                    "When the summary was last sent to your Apple Watch", "Which day, and whether it had a recovery, the complication was last refreshed for",
++                    "When the summary was last sent to your Apple Watch", "Which day, whether it had a recovery, and which plan the complication was last refreshed for",
+                     "Whether breathing on your Apple Watch plays haptics (kept on the Watch, and reset when you delete all NOCTIS data)",
+                 ],
+                 locations: [.defaults([WatchSyncDefaults.lastSentAtKey, WatchSyncDefaults.complicationMarkKey, WatchPreferenceKeys.breathHaptics])],
+@@ -157,16 +157,17 @@ nonisolated extension DataInventory {
+             DataCategory(
+                 .appState, name: "Small app flags",
+                 summary:
+-                    "Small markers so the app does a thing once a day or once ever: the day Home last played its opening animation, whether you have seen Coach's introduction, where you were in setup, which plan tier the App Store last reported (free or premium, one word), and how many of the free Coach questions you have used today (a count and a date, never a question).",
++                    "Small markers so the app does a thing once a day or once ever: the day Home last played its opening animation, whether you have seen Coach's introduction, where you were in setup, which plan tier the App Store last reported (free or premium, one word), and how many of the free Coach questions you have used today (a count and a date, never a question), whether this copy of the app has started before (so a sign-in an earlier install left in the Keychain is not picked up again), and, only while it matters, that a \"Delete all NOCTIS data\" was started and not finished (so the next launch finishes it) or left a database to be compacted.",
+                 contents: [
+                     "The last day each tab played its opening animation", "Whether Coach's first-run card was seen", "Setup answers not yet saved",
+                     "The plan tier the App Store last reported: free, premium or lapsed", "The date, and how many free Coach questions were used that day",
++                    "Whether this copy of the app has started before", "Whether \"Delete all NOCTIS data\" was started and not finished, so the next launch can finish it", "Which steps of that deletion could not be finished, so Data management can say so", "Whether a deletion left a database to be compacted at the next launch",
+                 ],
+                 locations: [
+                     .defaults([
+                         "noctis.home.lastWashDay", "noctis.home.lastIntroDay", "noctis.sleep.lastWashDay", "noctis.sleep.lastIntroDay",
+                         "noctis.recovery.lastWashDay", "noctis.recovery.lastIntroDay", "noctis.insights.lastWashDay", "noctis.insights.lastIntroDay",
+-                        "noctis.coach.lastWashDay", "noctis.coach.firstRunSeen", "noctis.onboarding.step", "noctis.onboarding.selectedGoals",
++                        "noctis.coach.lastWashDay", "noctis.coach.firstRunSeen", FreshInstallGuard.markerKey, DataManager.pendingDeleteAllKey, DataManager.unfinishedDeleteAllKey, StoreCompaction.pendingKey, "noctis.onboarding.step", "noctis.onboarding.selectedGoals",
+                         "noctis.onboarding.wakeMinutes", "noctis.onboarding.needMinutes", "noctis.onboarding.sleepGoalHours",
+                         PremiumKeys.cachedTier, PremiumKeys.coachQuota,
+                     ])
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/DataManager.swift b/Packages/NoctisKit/Sources/NoctisCore/DataManager.swift
+index cadfc24..a5b107b 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/DataManager.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/DataManager.swift
+@@ -76,6 +76,10 @@ public enum DeletionRunner {
+ public final class DataManager {
+     public typealias Eraser = @MainActor () async throws -> Void
+ 
++    /// Set before the first step of "Delete all NOCTIS data" and cleared when every step has worked (S1B-B02): a launch that finds it set means the deletion was cut
++    /// short (the app was killed, the iPhone restarted, a step failed) and finishes it. It lives under the `noctis.` prefix, so the preferences step clears it too.
++    public nonisolated static let pendingDeleteAllKey = "noctis.deleteAll.pending"
++
+     /// One row of the delete-all's progress.
+     public enum StepState: Equatable, Sendable { case waiting, running, done, failed(String) }
+ 
+@@ -96,12 +100,17 @@ public final class DataManager {
+     @ObservationIgnored private let deleteAllSteps: [DeleteStep]
+     @ObservationIgnored private let appVersion: () -> String
+     @ObservationIgnored private let clock: () -> Date
++    @ObservationIgnored private let defaults: UserDefaults
++    @ObservationIgnored private let compaction: StoreCompaction
+ 
+     public init(
+         inventory: DataInventory = .shared, roots: DataRoots = DataRoots(), erasers: [DataCategoryID: Eraser],
+         providers: [DataCategoryID: DataExport.Provider], deleteAllSteps: [DeleteStep], appVersion: @escaping () -> String = { "NOCTIS" },
+-        clock: @escaping () -> Date = { Date() }
++        clock: @escaping () -> Date = { Date() }, defaults: UserDefaults = NoctisUserDefaults.standard
+     ) {
++        self.defaults = defaults
++        unfinishedSteps = (defaults.string(forKey: Self.unfinishedDeleteAllKey) ?? "").split(separator: ",").map(String.init)
++        self.compaction = StoreCompaction(defaults: defaults)
+         self.inventory = inventory
+         self.roots = roots
+         self.erasers = erasers
+@@ -149,15 +158,68 @@ public final class DataManager {
+             : await DeletionRunner.run(steps)
+         lastReport = report
+         lastDeleted = group
++        // The rows are gone but their pages stay in the file until it is compacted: the next launch does it, before anything opens the database (S1B-B03).
++        if report.entries.contains(where: { $0.failure == nil }), group.categories.contains(where: { holdsDatabase($0) }) { compaction.request() }
+         return report
+     }
+ 
++    /// Whether a category keeps its rows in a SQLite database.
++    private func holdsDatabase(_ id: DataCategoryID) -> Bool {
++        inventory[id].locations.contains { if case .database = $0 { true } else { false } }
++    }
++
++    /// The database files the inventory lists, for compaction at launch.
++    public static func databaseFiles(inventory: DataInventory = .shared, roots: DataRoots = DataRoots()) -> [URL] {
++        inventory.categories.flatMap { category in
++            category.locations.compactMap { location -> URL? in
++                guard case .database(let directory, let path) = location else { return nil }
++                return roots.url(directory).appending(path: path, directoryHint: .notDirectory)
++            }
++        }
++    }
++
+     // MARK: Everything
+ 
++    /// How many launches finish an interrupted deletion before giving up (the first is the one right after it was cut short).
++    public nonisolated static let maximumResumeAttempts = 3
++
++    /// Whether a "Delete all NOCTIS data" was started and not finished. Read by the background refresher too, so a half-deleted app does not write its summary
++    /// again from a Health wake (S1B-R-02).
++    public nonisolated static func hasPendingDeleteAll(defaults: UserDefaults = NoctisUserDefaults.standard) -> Bool {
++        defaults.integer(forKey: pendingDeleteAllKey) > 0
++    }
++
++    /// Set when the last resume gave up with steps still failing: their ids, comma-separated. It stays until a "Delete all NOCTIS data" works, and Data management
++    /// says so (S1B-R-03): a deletion that did not finish is never forgotten.
++    public nonisolated static let unfinishedDeleteAllKey = "noctis.deleteAll.unfinished"
++
++    /// The steps the last resume could not finish, by step id (nothing personal); empty when nothing is outstanding. Survives a relaunch.
++    public private(set) var unfinishedSteps: [String] = []
++
++    /// The same steps by the name the delete-all sheet gave them ("Removing database files").
++    public var unfinishedStepTitles: [String] {
++        unfinishedSteps.map { id in deleteAllSteps.first { $0.id == id }?.title ?? id }
++    }
++
+     /// Deletes everything NOCTIS stores on this iPhone, in order. The caller then starts the app again (`restart`).
+     public func deleteEverything() async -> DeletionReport {
+         isWorking = true
+         defer { isWorking = false }
++        // Written first: if the app is cut off from here on, the next launch finishes the job (every step is safe to run again). A count already there stays.
++        defaults.set(max(defaults.integer(forKey: Self.pendingDeleteAllKey), 1), forKey: Self.pendingDeleteAllKey)
++        let report = await runDeleteAll()
++        // The preferences step removes the marker with every other `noctis.` key; a deletion with a failed step puts it back so the next launch tries again.
++        if report.succeeded {
++            defaults.removeObject(forKey: Self.pendingDeleteAllKey)
++            defaults.removeObject(forKey: Self.unfinishedDeleteAllKey)
++            unfinishedSteps = []
++        } else {
++            defaults.set(1, forKey: Self.pendingDeleteAllKey)
++        }
++        return report
++    }
++
++    private func runDeleteAll() async -> DeletionReport {
+         steps = deleteAllSteps.map { ($0.id, $0.title, .waiting) }
+         stepNotes = [:]
+         deleteAllReport = nil
+@@ -170,6 +232,36 @@ public final class DataManager {
+         return report
+     }
+ 
++    /// Whether a "Delete all NOCTIS data" was started and not finished.
++    public var hasInterruptedDeletion: Bool { Self.hasPendingDeleteAll(defaults: defaults) }
++
++    /// At launch: finishes a deletion that was cut short, and says whether it ran (the caller then starts the app over, as the sheet's Done does). It runs the
++    /// steps once per call. A step that still fails keeps the marker for the next launch, up to `maximumResumeAttempts` launches in all; then the marker is
++    /// replaced by the persistent record in `unfinishedSteps`, so a step that cannot work never makes every launch start over and is never forgotten either.
++    public func resumeInterruptedDeletion() async -> Bool {
++        let attempts = defaults.integer(forKey: Self.pendingDeleteAllKey)
++        guard attempts > 0 else { return false }
++        isWorking = true
++        defer { isWorking = false }
++        let report = await runDeleteAll()
++        if report.succeeded {
++            defaults.removeObject(forKey: Self.pendingDeleteAllKey)
++            defaults.removeObject(forKey: Self.unfinishedDeleteAllKey)
++            unfinishedSteps = []
++        } else if attempts >= Self.maximumResumeAttempts {
++            // Out of tries: the marker goes, and what is left is written down where Data management shows it (the preferences step has already run, so it is
++            // written after the run).
++            defaults.removeObject(forKey: Self.pendingDeleteAllKey)
++            unfinishedSteps = report.failures.map(\.id)
++            defaults.set(unfinishedSteps.joined(separator: ","), forKey: Self.unfinishedDeleteAllKey)
++        } else {
++            defaults.set(attempts + 1, forKey: Self.pendingDeleteAllKey)
++            unfinishedSteps = report.failures.map(\.id)
++        }
++        resetDeleteAll()
++        return true
++    }
++
+     /// Forgets the delete-all's progress (the sheet was closed before it ran).
+     public func resetDeleteAll() {
+         steps = []
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/Store/EntitlementClient.swift b/Packages/NoctisKit/Sources/NoctisCore/Store/EntitlementClient.swift
+index 5c3b3ac..4920e5c 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/Store/EntitlementClient.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/Store/EntitlementClient.swift
+@@ -15,6 +15,19 @@ public protocol EntitlementClient: Sendable {
+ /// one is passed on marked, and ignored by the rules); `Product.SubscriptionInfo.Status` and its renewal info give the billing state and the grace period's
+ /// end. Local only: StoreKit keeps the signed transactions on the device, so this works with no connection.
+ public struct StoreKitEntitlementClient: EntitlementClient {
++    /// The subscription group, remembered in memory after the first product answer of the launch (S1B-C04): the status of a group is read without asking the
++    /// store for the products again on every refresh, so a refresh that finds no connection after that still learns the billing state.
++    private final class Group: @unchecked Sendable {
++        private let lock = NSLock()
++        private var id: String?
++        var value: String? {
++            get { lock.withLock { id } }
++            set { lock.withLock { id = newValue } }
++        }
++    }
++
++    private let group = Group()
++
+     public init() {}
+ 
+     public func records() async -> [EntitlementRecord] {
+@@ -38,9 +51,15 @@ public struct StoreKitEntitlementClient: EntitlementClient {
+     }
+ 
+     public func renewal() async -> RenewalRecord? {
+-        guard let products = try? await Product.products(for: StoreProductID.all), let subscription = products.first?.subscription,
+-            let statuses = try? await subscription.status, !statuses.isEmpty
+-        else { return nil }
++        let statuses: [Product.SubscriptionInfo.Status]
++        if let known = group.value, let answer = try? await Product.SubscriptionInfo.status(for: known), !answer.isEmpty {
++            statuses = answer
++        } else {
++            guard let products = try? await Product.products(for: StoreProductID.all), let subscription = products.first?.subscription else { return nil }
++            group.value = subscription.subscriptionGroupID
++            guard let answer = try? await subscription.status, !answer.isEmpty else { return nil }
++            statuses = answer
++        }
+         // The status that says the most: one in grace or billing retry first, then a subscribed one.
+         let status =
+             statuses.first { $0.state == .inGracePeriod || $0.state == .inBillingRetryPeriod } ?? statuses.first { $0.state == .subscribed } ?? statuses[0]
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/Store/EntitlementManager.swift b/Packages/NoctisKit/Sources/NoctisCore/Store/EntitlementManager.swift
+index 77fe005..0e150a0 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/Store/EntitlementManager.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/Store/EntitlementManager.swift
+@@ -17,6 +17,10 @@ public final class EntitlementManager {
+     public private(set) var expirationDate: Date?
+     public private(set) var willAutoRenew = true
+     public private(set) var activeProductID: String?
++    /// The end of the grace period while the plan is in one (the plan's own end has passed by then).
++    public private(set) var gracePeriodEnd: Date?
++    /// Billing failed and is being retried with no grace period: Premium is paused until the payment goes through.
++    public private(set) var hasPaymentProblem = false
+     #if DEBUG
+     /// `-mockSubscription`: a fixed answer for a screenshot, since the simulator's StoreKit has no purchase.
+     public private(set) var debugSummary: SubscriptionSummary?
+@@ -35,6 +39,8 @@ public final class EntitlementManager {
+     private var refreshCount = 0
+     /// Told when the tier changes: the new tier and the old.
+     @ObservationIgnored public var onTierChange: (@MainActor (_ new: Tier, _ old: Tier) -> Void)?
++    /// Told when what the surfaces outside the app are given changes without the tier changing: a renewal moves the end, a cancellation stops it renewing (S1B-C01).
++    @ObservationIgnored public var onPremiumWindowChange: (@MainActor () -> Void)?
+ 
+     public init(
+         client: any EntitlementClient = StoreKitEntitlementClient(), cache: EntitlementCache = EntitlementCache(),
+@@ -47,6 +53,16 @@ public final class EntitlementManager {
+     }
+ 
+     public var tier: Tier { state.tier }
++
++    /// When Premium access ends, as the snapshot carries it for widgets, complications, Siri and the Watch: the end of the grace period while in one, else the plan's
++    /// end. Nil when free or not yet known (the store has not answered since launch).
++    public var premiumUntil: Date? {
++        guard tier == .premium else { return nil }
++        return isInGracePeriod ? (gracePeriodEnd ?? expirationDate) : expirationDate
++    }
++
++    /// Whether the plan renews itself at `premiumUntil`: not in a grace period (a renewal waits for the payment to be fixed) and not after a cancellation.
++    public var premiumAutoRenews: Bool { tier == .premium && !isInGracePeriod && willAutoRenew }
+     public var hasActivePremium: Bool { tier == .premium }
+     /// Premium content is served through a billing grace period (Apple's guidance), so this is the same as `hasActivePremium`.
+     public var hasAccess: Bool { hasActivePremium }
+@@ -61,7 +77,8 @@ public final class EntitlementManager {
+         #endif
+         return SubscriptionSummary(
+             isPremium: hasActivePremium, plan: activeProductID.flatMap(SubscriptionSummary.Plan.init(productID:)), isTrial: isInTrial, willRenew: willAutoRenew,
+-            endDate: expirationDate, isInGracePeriod: isInGracePeriod, isFamilyShared: isFamilyShared, hasLapsed: state == .previouslyPremiumNowFree
++            endDate: expirationDate, isInGracePeriod: isInGracePeriod, isFamilyShared: isFamilyShared, hasLapsed: state == .previouslyPremiumNowFree,
++            hasPaymentProblem: hasPaymentProblem
+         )
+     }
+ 
+@@ -100,6 +117,8 @@ public final class EntitlementManager {
+         let renewal = await client.renewal()
+         // A refresh that started after this one asked for a newer answer: this one is out of date, and applying it last would undo a refund or a purchase.
+         guard ticket == refreshCount else { return }
++        let tierBefore = state.tier
++        let windowBefore = (premiumUntil, premiumAutoRenews)
+         let resolved = EntitlementResolver.resolve(
+             records: records, renewal: renewal, previous: cache.read(), productIDs: Set(StoreProductID.all), now: clock()
+         )
+@@ -109,8 +128,11 @@ public final class EntitlementManager {
+         expirationDate = resolved.tier == .premium ? newest?.expirationDate : nil
+         activeProductID = resolved.tier == .premium ? newest?.productID : nil
+         willAutoRenew = renewal?.willAutoRenew ?? true
++        gracePeriodEnd = resolved == .premium(.grace) ? renewal?.gracePeriodExpirationDate : nil
++        hasPaymentProblem = resolved.tier == .free && renewal.map { $0.state == .inBillingRetryPeriod || $0.isInBillingRetry } == true
+         isResolved = true
+         set(resolved)
++        if (premiumUntil, premiumAutoRenews) != windowBefore, resolved.tier == tierBefore { onPremiumWindowChange?() }
+         scheduleDueRefresh(resolved: resolved, expiration: expirationDate, graceEnd: renewal?.gracePeriodExpirationDate)
+     }
+ 
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/SubscriptionSummary.swift b/Packages/NoctisKit/Sources/NoctisCore/SubscriptionSummary.swift
+index 0bba9d4..c33ddf6 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/SubscriptionSummary.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/SubscriptionSummary.swift
+@@ -30,10 +30,12 @@ public nonisolated struct SubscriptionSummary: Sendable, Equatable {
+     public var isFamilyShared: Bool
+     /// Premium before, free now: everything NOCTIS recorded is still here.
+     public var hasLapsed: Bool
++    /// Billing failed, the App Store is still retrying and there is no grace period: Premium is paused until the payment goes through (S1B-C03).
++    public var hasPaymentProblem: Bool
+ 
+     public init(
+         isPremium: Bool = false, plan: Plan? = nil, isTrial: Bool = false, willRenew: Bool = true, endDate: Date? = nil, isInGracePeriod: Bool = false,
+-        isFamilyShared: Bool = false, hasLapsed: Bool = false
++        isFamilyShared: Bool = false, hasLapsed: Bool = false, hasPaymentProblem: Bool = false
+     ) {
+         self.isPremium = isPremium
+         self.plan = plan
+@@ -43,6 +45,7 @@ public nonisolated struct SubscriptionSummary: Sendable, Equatable {
+         self.isInGracePeriod = isInGracePeriod
+         self.isFamilyShared = isFamilyShared
+         self.hasLapsed = hasLapsed
++        self.hasPaymentProblem = hasPaymentProblem && !isPremium
+     }
+ 
+     public static let free = SubscriptionSummary()
+@@ -50,15 +53,23 @@ public nonisolated struct SubscriptionSummary: Sendable, Equatable {
+     /// "Free", or "Premium".
+     public var title: String { isPremium ? "Premium" : "Free" }
+ 
++    /// The line under the page's title: what the plan is, in a few words (S1B-R-11: a paused plan is not called the free plan).
++    public var pageSummary: String {
++        isPremium ? "You have Premium." : (hasPaymentProblem ? "Your payment needs attention." : "You're on the free plan.")
++    }
++
+     /// "Premium · Yearly" on the row of the Subscription page.
+     public var headline: String {
+-        guard isPremium else { return "Free" }
++        guard isPremium else { return hasPaymentProblem ? "Premium paused" : "Free" }
+         return plan.map { "Premium · \($0.name)" } ?? "Premium"
+     }
+ 
+     /// The one line under the headline. Nothing about price: the store, not NOCTIS, knows what was charged.
+     public func detail(calendar: Calendar = .autoupdatingCurrent, locale: Locale = .autoupdatingCurrent) -> String {
+         guard isPremium else {
++            if hasPaymentProblem {
++                return "Your last payment didn't go through, so Premium is paused. Check your payment method in Manage subscription and it comes back once the App Store can charge it. Everything NOCTIS recorded for you is still here."
++            }
+             return hasLapsed
+                 ? "Your Premium has ended. Everything NOCTIS recorded for you is still here, and you can upgrade again at any time."
+                 : "You can upgrade to Premium at any time."
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/WatchSync/WatchSyncDefaults.swift b/Packages/NoctisKit/Sources/NoctisCore/WatchSync/WatchSyncDefaults.swift
+index 816a65f..7d6f286 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/WatchSync/WatchSyncDefaults.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/WatchSync/WatchSyncDefaults.swift
+@@ -33,7 +33,7 @@ public nonisolated final class WatchSyncDefaults: @unchecked Sendable {
+         }
+     }
+ 
+-    /// The day (and whether it had a recovery) the complication was last woken for: "2026-09-24:1".
++    /// The day, whether it had a recovery and the plan the complication was last woken for: "2026-09-24:1:premium@1790000000" (a mark from before the plan was added has two parts).
+     public var complicationMark: String? {
+         get { lock.withLock { defaults.string(forKey: Self.complicationMarkKey) } }
+         set {
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/WatchSync/WatchSyncService.swift b/Packages/NoctisKit/Sources/NoctisCore/WatchSync/WatchSyncService.swift
+index 6524380..3e390e3 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/WatchSync/WatchSyncService.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/WatchSync/WatchSyncService.swift
+@@ -165,20 +165,23 @@ public actor WatchSyncService {
+         return .sent(context.sentAt)
+     }
+ 
+-    /// Wakes the complication when the day changed or recovery first appeared for the day, within the day's budget.
++    /// Wakes the complication when the day changed, recovery first appeared for the day, or the plan changed (its tier or the end of Premium), within the day's budget.
+     private func wakeComplicationIfNeeded(for snapshot: WidgetSnapshot) {
+         let day = snapshot.forDay.description
+         let hasRecovery = snapshot.recovery != nil
+-        // What the last wake was for: "2026-09-24:1" (that day, with a recovery).
++        // The plan as the complication needs it: Premium with its end ("premium@1790000000"), or free (S1B-D02).
++        let plan = snapshot.premiumUntil.map { "\(snapshot.tier.rawValue)@\(Int($0.timeIntervalSince1970))" } ?? snapshot.tier.rawValue
++        // What the last wake was for: "2026-09-24:1:premium@1790000000" (that day, with a recovery, on that plan). A mark from before the plan was added has no third part.
+         let marked = defaults.complicationMark?.split(separator: ":").map(String.init)
+         let dayChanged = marked?.first != day
+-        let recoveryAppeared = hasRecovery && marked?.last != "1"
+-        guard dayChanged || recoveryAppeared else { return }
++        let recoveryAppeared = hasRecovery && (marked?.dropFirst().first) != "1"
++        let planChanged = marked.map { $0.count > 2 && $0[2] != plan } ?? false
++        guard dayChanged || recoveryAppeared || planChanged else { return }
+         guard session.isComplicationEnabled else { return }
+         let budget = session.remainingComplicationTransfers
+         signpost(budget)
+         guard budget > 0 else { return }
+         guard let context = try? WatchContext(snapshot: snapshot, sentAt: clock()) else { return }
+-        if session.transferCurrentComplicationUserInfo(context.dictionary) { defaults.complicationMark = "\(day):\(hasRecovery ? 1 : 0)" }
++        if session.transferCurrentComplicationUserInfo(context.dictionary) { defaults.complicationMark = "\(day):\(hasRecovery ? 1 : 0):\(plan)" }
+     }
+ }
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/WidgetPublisher.swift b/Packages/NoctisKit/Sources/NoctisCore/WidgetPublisher.swift
+index c817c13..4104aeb 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/WidgetPublisher.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/WidgetPublisher.swift
+@@ -3,6 +3,18 @@ import NightKit
+ import NoctisWidgetKit
+ import PremiumKit
+ 
++/// The end of the person's Premium as the store last said it, and whether the plan renews itself there. `until` is nil when it is not known (before the store has
++/// answered after a launch, or for a free person).
++public nonisolated struct PremiumWindow: Equatable, Sendable {
++    public var until: Date?
++    public var autoRenews: Bool
++
++    public init(until: Date? = nil, autoRenews: Bool = false) {
++        self.until = until
++        self.autoRenews = autoRenews
++    }
++}
++
+ /// What the publisher asks the app for each time it writes: the profile, the bedtime recommendation if one is known, and the
+ /// alarm. Set after the repositories that answer exist, so the publisher can be made first.
+ public nonisolated final class WidgetInputSource: @unchecked Sendable {
+@@ -11,6 +23,7 @@ public nonisolated final class WidgetInputSource: @unchecked Sendable {
+     private var bedtimeProvider: @Sendable (UserProfileSnapshot) async -> BedtimeRecommendation? = { _ in nil }
+     private var alarmProvider: @Sendable () async -> WidgetAlarm? = { nil }
+     private var tierProvider: @Sendable () async -> Tier = { .free }
++    private var windowProvider: @Sendable () async -> PremiumWindow = { PremiumWindow() }
+ 
+     public init(profile: @escaping @Sendable () async -> UserProfileSnapshot) {
+         profileProvider = profile
+@@ -29,10 +42,18 @@ public nonisolated final class WidgetInputSource: @unchecked Sendable {
+         lock.withLock { tierProvider = provider }
+     }
+ 
+-    func current() async -> (profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, tier: Tier) {
+-        let (profileFor, bedtimeFor, alarmFor, tierFor) = lock.withLock { (profileProvider, bedtimeProvider, alarmProvider, tierProvider) }
++    /// When the person's Premium ends and whether it renews, written into the snapshot beside the tier so a surface can tell that access has run out while the app
++    /// was closed (S1B-C01). Empty until the app says otherwise.
++    public func setPremiumWindow(_ provider: @escaping @Sendable () async -> PremiumWindow) {
++        lock.withLock { windowProvider = provider }
++    }
++
++    func current() async -> (profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, tier: Tier, window: PremiumWindow) {
++        let (profileFor, bedtimeFor, alarmFor, tierFor, windowFor) = lock.withLock {
++            (profileProvider, bedtimeProvider, alarmProvider, tierProvider, windowProvider)
++        }
+         let profile = await profileFor()
+-        return await (profile, bedtimeFor(profile), alarmFor(), tierFor())
++        return await (profile, bedtimeFor(profile), alarmFor(), tierFor(), windowFor())
+     }
+ }
+ 
+@@ -104,10 +125,16 @@ public actor WidgetPublisher {
+         guard !suspended, let store, let home = latest else { return }
+         let now = clock()
+         let current = await inputs.current()
++        // Before the store has answered after a launch the end is unknown: keep the one already written for the same plan, so a Home refresh that runs first does
++        // not drop it (the end then only changes when the store says so).
++        var window = current.window
++        if window.until == nil, current.tier == .premium, let written, written.tier == .premium {
++            window = PremiumWindow(until: written.premiumUntil, autoRenews: written.autoRenews)
++        }
+         guard
+             let snapshot = WidgetSnapshotMaker.make(
+                 home: home, profile: current.profile, bedtime: current.bedtime, alarm: current.alarm, now: now, calendar: calendar, dataEpoch: epoch(),
+-                tier: current.tier
++                tier: current.tier, premiumUntil: window.until, autoRenews: window.autoRenews
+             )
+         else { return }
+         // Nothing the widgets draw has changed: leave the file, and the system's budget, alone.
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/WidgetSnapshotMaker.swift b/Packages/NoctisKit/Sources/NoctisCore/WidgetSnapshotMaker.swift
+index bbeb7da..c568fa8 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/WidgetSnapshotMaker.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/WidgetSnapshotMaker.swift
+@@ -12,7 +12,7 @@ public nonisolated enum WidgetSnapshotMaker {
+     /// The snapshot for `home`, or nil when there is nothing true to say (a failed read leaves the last snapshot as it was).
+     public static func make(
+         home: HomeSnapshot, profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, now: Date, calendar: Calendar,
+-        dataEpoch: Int64 = 0, tier: Tier = .free
++        dataEpoch: Int64 = 0, tier: Tier = .free, premiumUntil: Date? = nil, autoRenews: Bool = false
+     ) -> WidgetSnapshot? {
+         guard let state = state(of: home, now: now) else { return nil }
+ 
+@@ -61,7 +61,8 @@ public nonisolated enum WidgetSnapshotMaker {
+ 
+         return WidgetSnapshot(
+             forDay: forDay, generatedAt: now, plan: plan, state: state, recovery: recovery, lastNight: night, factors: factors, alarm: alarm,
+-            recoveryFactors: recoveryFactors, nightsOfHistory: nightsOfHistory, dataEpoch: dataEpoch, tier: tier
++            recoveryFactors: recoveryFactors, nightsOfHistory: nightsOfHistory, dataEpoch: dataEpoch, tier: tier, premiumUntil: premiumUntil,
++            autoRenews: autoRenews
+         )
+     }
+ 
+diff --git a/Packages/NoctisKit/Sources/NoctisIntentKit/IntentRuntime.swift b/Packages/NoctisKit/Sources/NoctisIntentKit/IntentRuntime.swift
+index 4f3f71d..41cd7cd 100644
+--- a/Packages/NoctisKit/Sources/NoctisIntentKit/IntentRuntime.swift
++++ b/Packages/NoctisKit/Sources/NoctisIntentKit/IntentRuntime.swift
+@@ -76,8 +76,8 @@ public struct IntentEnvironment: Sendable {
+         self.endWindDownActivities = endWindDownActivities
+     }
+ 
+-    /// The person's plan, from the snapshot: free with none (R62).
+-    public func tier() -> Tier { snapshot()?.tier ?? .free }
++    /// The person's plan, from the snapshot: free with none (R62). A plan that ended while the app was closed is free here too (S1B-C01).
++    public func tier() -> Tier { snapshot()?.effectiveTier(at: now()) ?? .free }
+ 
+     /// The App Group's snapshot and the real clock.
+     public static let live = IntentEnvironment(snapshot: { WidgetSnapshotStore()?.load() })
+diff --git a/Packages/NoctisKit/Sources/NoctisIntentKit/ShowIntents.swift b/Packages/NoctisKit/Sources/NoctisIntentKit/ShowIntents.swift
+index a61f945..c693d6c 100644
+--- a/Packages/NoctisKit/Sources/NoctisIntentKit/ShowIntents.swift
++++ b/Packages/NoctisKit/Sources/NoctisIntentKit/ShowIntents.swift
+@@ -65,7 +65,7 @@ public struct ShowRecommendedBedtimeIntent: AppIntent {
+     @MainActor
+     public static func answer(_ runtime: IntentRuntime) -> String {
+         let environment = runtime.environment
+-        return WidgetSpoken.bedtime(environment.snapshot(), format: environment.format())
++        return WidgetSpoken.bedtime(environment.snapshot(), now: environment.now(), format: environment.format())
+     }
+ 
+     @MainActor
+diff --git a/Packages/NoctisKit/Sources/NoctisWatchKit/WatchComplications.swift b/Packages/NoctisKit/Sources/NoctisWatchKit/WatchComplications.swift
+index 217d2a1..2604ccd 100644
+--- a/Packages/NoctisKit/Sources/NoctisWatchKit/WatchComplications.swift
++++ b/Packages/NoctisKit/Sources/NoctisWatchKit/WatchComplications.swift
+@@ -186,7 +186,7 @@ public nonisolated enum WatchComplications {
+                 kind, glyph: "iphone", lines: ["Open NOCTIS", "on your iPhone"], inline: "Open NOCTIS on iPhone", spoken: WatchCopy.getStarted, link: link)
+         }
+         // The kinds the person's plan does not include: a plain "Premium" state, whatever the numbers are (R62).
+-        if WatchGate.isLocked(kind, tier: snapshot.tier) { return premium(kind, link: link) }
++        if WatchGate.isLocked(kind, tier: snapshot.effectiveTier(at: input.now)) { return premium(kind, link: link) }
+         if kind == .bedtime { return bedtime(snapshot: snapshot, input: input, link: link) }
+ 
+         guard state.showsNumbers else {
+@@ -384,7 +384,7 @@ public nonisolated enum WatchComplicationSchedule {
+     /// How much the Smart Stack should want `kind` at `date`: Recovery, Sleep and Sleep quality in the morning window (the wake time's half hour before to
+     /// three hours after), Bedtime in the evening hour (the hour before bedtime and half an hour after); idle otherwise, and always idle with no summary.
+     public static func relevance(_ kind: WatchComplicationKind, at date: Date, snapshot: WidgetSnapshot?, calendar: Calendar) -> WidgetRelevanceScore {
+-        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.tier) else { return .idle }
++        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.effectiveTier(at: date)) else { return .idle }
+         switch kind {
+         case .recovery, .sleep, .quality: return WidgetClock.morningRelevance(at: date, plan: snapshot.plan, calendar: calendar)
+         case .bedtime: return WidgetClock.eveningRelevance(at: date, plan: snapshot.plan, calendar: calendar)
+@@ -393,7 +393,7 @@ public nonisolated enum WatchComplicationSchedule {
+ 
+     /// The window the Smart Stack is told about for `kind` (its `RelevantContext`): the morning window or the evening hour, as dates.
+     public static func window(_ kind: WatchComplicationKind, snapshot: WidgetSnapshot?, from date: Date, calendar: Calendar) -> DateInterval? {
+-        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.tier) else { return nil }
++        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.effectiveTier(at: date)) else { return nil }
+         switch kind {
+         case .recovery, .sleep, .quality: return WidgetClock.morningWindow(snapshot.plan, from: date, calendar: calendar)
+         case .bedtime: return WidgetClock.eveningWindow(snapshot.plan, from: date, calendar: calendar)
+diff --git a/Packages/NoctisKit/Sources/NoctisWatchKit/WatchPages.swift b/Packages/NoctisKit/Sources/NoctisWatchKit/WatchPages.swift
+index 6078516..c5979a5 100644
+--- a/Packages/NoctisKit/Sources/NoctisWatchKit/WatchPages.swift
++++ b/Packages/NoctisKit/Sources/NoctisWatchKit/WatchPages.swift
+@@ -279,7 +279,7 @@ public nonisolated enum WatchPages {
+     // MARK: Heart
+ 
+     public static func heart(_ input: WatchPageInput) -> WatchHeartPage {
+-        if WatchGate.isLocked(.heart, tier: input.snapshot?.tier) {
++        if WatchGate.isLocked(.heart, tier: input.snapshot?.effectiveTier(at: input.now)) {
+             let locked = WatchLockedContent(.heart)
+             return WatchHeartPage(message: nil, tiles: [], staleLine: nil, sensitivity: .plan, accessibilityLabel: locked.accessibilityLabel, locked: locked)
+         }
+@@ -312,7 +312,7 @@ public nonisolated enum WatchPages {
+     // MARK: Tonight
+ 
+     public static func tonight(_ input: WatchPageInput) -> WatchTonightPage {
+-        if WatchGate.isLocked(.tonight, tier: input.snapshot?.tier) {
++        if WatchGate.isLocked(.tonight, tier: input.snapshot?.effectiveTier(at: input.now)) {
+             let locked = WatchLockedContent(.tonight)
+             return WatchTonightPage(
+                 message: nil, bedtime: nil, windowText: nil, wakeLine: nil, countdown: .none, alarmLine: nil, sensitivity: .plan,
+diff --git a/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetGate.swift b/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetGate.swift
+index 45a8cdb..9a82f50 100644
+--- a/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetGate.swift
++++ b/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetGate.swift
+@@ -56,7 +56,8 @@ public nonisolated enum WidgetGate {
+     /// numbers tagged "Sample", R45) always keeps the unlocked design, so what a widget can show is visible before it is added.
+     public static func isLocked(_ entry: WidgetEntryModel, in surface: WidgetSurface) -> Bool {
+         guard !entry.isPreview else { return false }
+-        return surface.isLocked(in: entry.snapshot?.tier ?? .free)
++        // At the entry's own date: a plan that runs out while the app is closed locks the entry the timeline placed at that moment (S1B-C01).
++        return surface.isLocked(in: entry.snapshot?.effectiveTier(at: entry.date) ?? .free)
+     }
+ 
+     /// The locked content for `entry` in `surface`, or nil when it is drawn as it always was.
+diff --git a/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift b/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift
+index 49a4674..d28dfd0 100644
+--- a/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift
++++ b/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSnapshot.swift
+@@ -321,14 +321,23 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
+     public var nightsOfHistory: Int
+     /// Unix seconds of the last "Delete all NOCTIS data", 0 if never (v2). A Watch that sees a greater one than it holds wipes its copy.
+     public var dataEpoch: Int64
+-    /// The person's plan when the app wrote this (APP_RULES.md R62): a free or premium flag, and nothing else about a purchase. Extensions and the Watch never
++    /// The person's plan when the app wrote this (APP_RULES.md R62): a free or premium flag and, for premium, when the period ends (`premiumUntil`) and whether it renews: nothing else about a purchase. Extensions and the Watch never
+     /// call StoreKit; they ask the feature table what this tier includes. A snapshot with no flag (written before it existed) is free.
+     public var tier: Tier
++    /// When Premium access ends (the plan's end, or the end of a billing grace period), if the app knew when it wrote this (S1B-C01). With it a widget, a complication,
++    /// a Siri answer or the Watch can tell that access has run out while the app was closed: they read `effectiveTier(at:)`, never `tier` alone.
++    public var premiumUntil: Date?
++    /// Whether the plan renews on its own at `premiumUntil` (false in a grace period and after a cancellation). A renewing plan keeps `renewalSlack` more, since the app,
++    /// which writes the renewal, may not have run yet.
++    public var autoRenews: Bool
++    /// How long an auto-renewing plan stays Premium past `premiumUntil` on a surface the app has not refreshed (the owner's choice; the plan proposes 48 hours).
++    public static let renewalSlack: TimeInterval = 48 * 3600
+ 
+     public init(
+         version: Int = WidgetSnapshot.currentVersion, forDay: WidgetDay, generatedAt: Date, plan: WidgetPlan, state: WidgetDataState,
+         recovery: WidgetRecovery? = nil, lastNight: WidgetNight? = nil, factors: WidgetFactors? = nil, alarm: WidgetAlarm? = nil,
+-        recoveryFactors: [WidgetRecoveryFactor] = [], nightsOfHistory: Int = 0, dataEpoch: Int64 = 0, tier: Tier = .free
++        recoveryFactors: [WidgetRecoveryFactor] = [], nightsOfHistory: Int = 0, dataEpoch: Int64 = 0, tier: Tier = .free,
++        premiumUntil: Date? = nil, autoRenews: Bool = false
+     ) {
+         self.version = version
+         self.forDay = forDay
+@@ -343,11 +352,14 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
+         self.nightsOfHistory = min(max(nightsOfHistory, 0), 14)
+         self.dataEpoch = max(dataEpoch, 0)
+         self.tier = tier
++        // Only a Premium snapshot has an end: free has nothing to run out.
++        self.premiumUntil = tier == .premium ? premiumUntil : nil
++        self.autoRenews = tier == .premium && premiumUntil != nil && autoRenews
+     }
+ 
+     enum CodingKeys: String, CodingKey {
+         case version = "v", forDay = "day", generatedAt = "at", plan = "p", state = "st", recovery = "rec", lastNight = "n", factors = "f", alarm = "al"
+-        case recoveryFactors = "rf", nightsOfHistory = "nh", dataEpoch = "de", tier = "t"
++        case recoveryFactors = "rf", nightsOfHistory = "nh", dataEpoch = "de", tier = "t", premiumUntil = "pu", autoRenews = "ar"
+     }
+ 
+     public init(from decoder: any Decoder) throws {
+@@ -363,17 +375,34 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
+             nightsOfHistory: try values.decodeIfPresent(Int.self, forKey: .nightsOfHistory) ?? 0,
+             dataEpoch: try values.decodeIfPresent(Int64.self, forKey: .dataEpoch) ?? 0,
+             // An unknown word is free too: a flag that cannot be read never unlocks anything.
+-            tier: (try? values.decodeIfPresent(Tier.self, forKey: .tier)).flatMap { $0 } ?? .free
++            tier: (try? values.decodeIfPresent(Tier.self, forKey: .tier)).flatMap { $0 } ?? .free,
++            premiumUntil: try? values.decodeIfPresent(Date.self, forKey: .premiumUntil), autoRenews: (try? values.decodeIfPresent(Bool.self, forKey: .autoRenews)) ?? false
+         )
+     }
+ 
+-    /// The same snapshot for another plan (a purchase, or a lapse).
++    /// The same snapshot for another plan (a purchase, or a lapse). The end date belongs to the old plan, so it goes.
+     public func with(tier: Tier) -> WidgetSnapshot {
+         var copy = self
+         copy.tier = tier
++        copy.premiumUntil = nil
++        copy.autoRenews = false
+         return copy
+     }
+ 
++    /// The moment Premium stops counting on a surface the app has not refreshed: the end date, plus the renewal slack when the plan renews itself. Nil when
++    /// the snapshot is free or carries no end.
++    public var premiumLockDate: Date? {
++        guard tier == .premium, let premiumUntil else { return nil }
++        return premiumUntil.addingTimeInterval(autoRenews ? Self.renewalSlack : 0)
++    }
++
++    /// The plan this snapshot grants at `now`. The one place a reader gets the tier from (a source scan holds them to it): Premium becomes free by itself once
++    /// `premiumLockDate` has passed, so a lapsed plan does not keep its widgets until the app next runs (S1B-C01, P-03).
++    public func effectiveTier(at now: Date) -> Tier {
++        guard let lock = premiumLockDate else { return tier }
++        return now >= lock ? .free : tier
++    }
++
+     /// The same snapshot for the next epoch (delete-all), with everything else as it was: used only to stamp a snapshot.
+     public func stamped(epoch: Int64) -> WidgetSnapshot {
+         var copy = self
+diff --git a/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSpoken.swift b/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSpoken.swift
+index 765a9b5..a2afe0d 100644
+--- a/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSpoken.swift
++++ b/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetSpoken.swift
+@@ -39,9 +39,9 @@ public enum WidgetSpoken {
+ 
+     /// "Your bedtime tonight is 11:00 PM." The bedtime only: it is the plan, not a Health value. The free plan hears the one bedtime; Premium hears the window around it,
+     /// "Your bedtime window tonight is 10:45 to 11:15 PM." (R62: the plan is the snapshot's flag, and the table says what it includes).
+-    public static func bedtime(_ snapshot: WidgetSnapshot?, format: WidgetFormat = WidgetFormat()) -> String {
++    public static func bedtime(_ snapshot: WidgetSnapshot?, now: Date = Date(), format: WidgetFormat = WidgetFormat()) -> String {
+         guard let snapshot else { return WidgetCopy.getStarted + "." }
+-        if FeatureTable.isIncluded(.tonightPersonalizedWindow, in: snapshot.tier), let start = snapshot.plan.windowStartMinutes,
++        if FeatureTable.isIncluded(.tonightPersonalizedWindow, in: snapshot.effectiveTier(at: now)), let start = snapshot.plan.windowStartMinutes,
+             let end = snapshot.plan.windowEndMinutes
+         {
+             let window = format.windowText(startMinutes: start, endMinutes: end).replacingOccurrences(of: "\u{2009}–\u{2009}", with: " to ")
+diff --git a/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetTimeline.swift b/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetTimeline.swift
+index 40a0c79..97e42b3 100644
+--- a/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetTimeline.swift
++++ b/Packages/NoctisKit/Sources/NoctisWidgetKit/WidgetTimeline.swift
+@@ -226,6 +226,8 @@ public enum WidgetTimelineBuilder {
+             if case .stale = snapshot.state {
+                 dates += (1...11).map { now.addingTimeInterval(Double($0) * 3600) }
+             }
++            // A plan that runs out inside the horizon locks the widget at that moment, with the app closed (S1B-C01). Beyond it the next reload looks again.
++            if let lock = snapshot.premiumLockDate, lock > now, lock < limit { dates.append(lock) }
+             let last = dates.filter { $0 < limit }.max() ?? now
+             nextBoundary = WidgetClock.boundaries(after: last, until: last.addingTimeInterval(36 * 3600), plan: snapshot.plan, calendar: calendar).first
+         }
+diff --git a/Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift b/Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift
+index 70fdbc8..5e35f75 100644
+--- a/Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift
++++ b/Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift
+@@ -426,6 +426,7 @@ struct PaywallScreen: View {
+                 .noctisFont(16, .bold, relativeTo: .body, maxScale: 1.3)
+                 .foregroundStyle(ink.opacity(0.8))
+                 .multilineTextAlignment(.center)
++                .noctisButtonShape()
+                 .frame(maxWidth: .infinity)
+                 .atLeastTall(44, alignment: .center)
+                 .contentShape(Rectangle())
+@@ -437,6 +438,7 @@ struct PaywallScreen: View {
+     /// A 12.5pt footer link whose frame is a full 44pt tall, so the tap target and the accessibility frame (Switch Control, the audit) agree. The row keeps its
+     /// compact height because the container takes the padding back (`links`), not each label.
+     private func linkLabel(_ title: String) -> some View {
++        // Not underlined here: these are system `Button` and `Link` views, which the system already draws with a shape when Button Shapes is on.
+         Text(title)
+             .padding(.vertical, Self.linkPadding.height)
+             .padding(.horizontal, Self.linkPadding.width)
+@@ -650,6 +652,7 @@ private struct PaywallBand: View {
+                     Text("Restore")
+                         .noctisFont(15, .semibold, relativeTo: .subheadline, maxScale: 1.3)
+                         .foregroundStyle(NoctisPaper.ivory.opacity(0.7))
++                        .noctisButtonShape()
+                         .frame(minWidth: 44, minHeight: 44)
+                         .contentShape(Rectangle())
+                 }
+diff --git a/Packages/NoctisKit/Sources/ProfileFeature/DataManagementContent.swift b/Packages/NoctisKit/Sources/ProfileFeature/DataManagementContent.swift
+index 3bc446c..f2032c6 100644
+--- a/Packages/NoctisKit/Sources/ProfileFeature/DataManagementContent.swift
++++ b/Packages/NoctisKit/Sources/ProfileFeature/DataManagementContent.swift
+@@ -44,6 +44,12 @@ public nonisolated enum DataManagementCopy {
+ 
+     public static let deleteAllDone = "Everything NOCTIS kept was deleted from this iPhone."
+     public static let deleteAllPartial = "Most of it was deleted, but these steps didn't finish:"
++    /// The notice on Data management when the last "Delete all" could not be finished: what is left, and the way to try again.
++    public static func unfinishedNotice(_ titles: [String]) -> String {
++        "The last \"Delete all NOCTIS data\" did not finish. These steps still need to run: \(titles.joined(separator: ", ")). Choose \"\(deleteAllButton)\" below to try again."
++    }
++
++    public static let unfinishedHeader = "NEEDS ATTENTION"
+     public static let done = "Done"
+     public static let cancel = "Cancel"
+ 
+diff --git a/Packages/NoctisKit/Sources/ProfileFeature/DataManagementViews.swift b/Packages/NoctisKit/Sources/ProfileFeature/DataManagementViews.swift
+index 91f8b93..da9d27b 100644
+--- a/Packages/NoctisKit/Sources/ProfileFeature/DataManagementViews.swift
++++ b/Packages/NoctisKit/Sources/ProfileFeature/DataManagementViews.swift
+@@ -34,6 +34,17 @@ struct DataManagementView: View {
+ 
+     var body: some View {
+         SettingsPageScaffold(.dataManagement, summary: "Delete what NOCTIS keeps, or take a copy.") {
++            if !manager.unfinishedSteps.isEmpty {
++                SettingsGroup(DataManagementCopy.unfinishedHeader) {
++                    NoctisAppCard {
++                        Text(DataManagementCopy.unfinishedNotice(manager.unfinishedStepTitles))
++                            .noctisFont(15, relativeTo: .subheadline)
++                            .foregroundStyle(.noctisInk2)
++                            .fixedSize(horizontal: false, vertical: true)
++                            .accessibilityIdentifier("data.unfinished")
++                    }
++                }
++            }
+             SettingsGroup("DELETE ONE KIND AT A TIME") {
+                 NoctisRowCard {
+                     ForEach(Array(viewModel.inventory.groups.enumerated()), id: \.element.id) { index, group in
+diff --git a/Packages/NoctisKit/Sources/ProfileFeature/SettingsPages.swift b/Packages/NoctisKit/Sources/ProfileFeature/SettingsPages.swift
+index 77c2717..f3e03f2 100644
+--- a/Packages/NoctisKit/Sources/ProfileFeature/SettingsPages.swift
++++ b/Packages/NoctisKit/Sources/ProfileFeature/SettingsPages.swift
+@@ -427,7 +427,7 @@ struct SubscriptionSettingsView: View {
+ 
+     var body: some View {
+         let summary = viewModel.subscription
+-        SettingsPageScaffold(.subscription, summary: summary.isPremium ? "You have Premium." : "You're on the free plan.") {
++        SettingsPageScaffold(.subscription, summary: summary.pageSummary) {
+             NoctisAppCard {
+                 VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
+                     NoctisCaption("YOUR PLAN", style: .noctisInk3)
+@@ -444,7 +444,7 @@ struct SubscriptionSettingsView: View {
+             }
+             .noctisRise(index: 0)
+             VStack(spacing: NoctisSpacing.xs) {
+-                if summary.isPremium {
++                if summary.isPremium || summary.hasPaymentProblem {
+                     NoctisCTA("Manage subscription", icon: "arrow.up.forward", adaptive: true) { viewModel.showsManageSubscription = true }
+                         .accessibilityIdentifier("settings.subscription.manage")
+                         .accessibilityHint("Opens your subscription in the App Store.")
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/WatchSyncTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/WatchSyncTests.swift
+index 2fc661f..f26e41c 100644
+--- a/Packages/NoctisKit/Tests/NoctisKitTests/WatchSyncTests.swift
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/WatchSyncTests.swift
+@@ -568,6 +568,58 @@ struct WatchSyncServiceTests {
+         #expect(session.complicationInfos.count == 2, "and only once")
+     }
+ 
++    @Test func theComplicationIsWokenWhenThePlanChangesAndNotWhenItDoesNot() async {
++        let (service, session, defaults, _) = make()
++        var free = snapshot(day: 24)
++        free.tier = .free
++        await service.publish(free)
++        #expect(session.complicationInfos.count == 1, "a new day")
++
++        var premium = snapshot(day: 24, generated: now.addingTimeInterval(60))
++        premium.tier = .premium
++        premium.premiumUntil = now.addingTimeInterval(30 * 86_400)
++        premium.autoRenews = true
++        await service.publish(premium)
++        #expect(session.complicationInfos.count == 2, "a purchase: the face learns it without waiting for the Watch app's background time")
++        #expect(defaults.complicationMark?.contains("premium@") == true)
++
++        var same = premium
++        same.generatedAt = now.addingTimeInterval(120)
++        await service.publish(same)
++        #expect(session.complicationInfos.count == 2, "the same plan and end: nothing new")
++
++        var renewed = premium
++        renewed.generatedAt = now.addingTimeInterval(180)
++        renewed.premiumUntil = now.addingTimeInterval(60 * 86_400)
++        await service.publish(renewed)
++        #expect(session.complicationInfos.count == 3, "a renewal moves the end the face locks at")
++
++        var lapsed = renewed
++        lapsed.generatedAt = now.addingTimeInterval(240)
++        lapsed.tier = .free
++        lapsed.premiumUntil = nil
++        await service.publish(lapsed)
++        #expect(session.complicationInfos.count == 4, "a lapse")
++    }
++
++    @Test func aMarkFromBeforeThePlanWasAddedDoesNotWakeTheFaceAgain() async {
++        let (service, session, defaults, _) = make()
++        defaults.complicationMark = "2026-09-24:1"
++        await service.publish(snapshot(day: 24))
++        #expect(session.complicationInfos.isEmpty, "two parts: same day, recovery already there")
++    }
++
++    @Test func aPlanChangeWithNoBudgetLeftIsNotMarkedSoTheNextOneTriesAgain() async {
++        let spent = FakeWatchSession()
++        spent.remainingComplicationTransfers = 0
++        let (service, session, defaults, _) = make(spent)
++        var premium = snapshot(day: 24)
++        premium.tier = .premium
++        premium.premiumUntil = now.addingTimeInterval(86_400)
++        await service.publish(premium)
++        #expect(session.complicationInfos.isEmpty && defaults.complicationMark == nil)
++    }
++
+     @Test func theComplicationIsLeftAloneWithoutItOnTheFaceOrWithNoBudgetLeft() async {
+         let off = FakeWatchSession()
+         off.isComplicationEnabled = false
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/WidgetSnapshotTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/WidgetSnapshotTests.swift
+index adc1c94..8f28d3c 100644
+--- a/Packages/NoctisKit/Tests/NoctisKitTests/WidgetSnapshotTests.swift
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/WidgetSnapshotTests.swift
+@@ -101,7 +101,7 @@ struct WidgetSnapshotShapeTests {
+         collect(object)
+         let allowed: Set<String> = [
+             "v", "day", "at", "p", "st", "rec", "n", "f", "al", "w", "ws", "we", "b", "s", "d", "c", "r", "k", "a", "q", "hrv", "rhr", "m", "on", "deep",
+-            "core", "rem", "rf", "nh", "de", "t",
++            "core", "rem", "rf", "nh", "de", "t", "pu", "ar",
+         ]
+         #expect(keys.isSubset(of: allowed), "unexpected keys: \(keys.subtracting(allowed).sorted())")
+         // And the type's own source names none of them either.
+diff --git a/Tests/StoreTests/StoreKitSessionTests.swift b/Tests/StoreTests/StoreKitSessionTests.swift
+index 9dc8882..9696986 100644
+--- a/Tests/StoreTests/StoreKitSessionTests.swift
++++ b/Tests/StoreTests/StoreKitSessionTests.swift
+@@ -51,8 +51,13 @@ private final class Rig {
+     var tier: Tier { entitlements.tier }
+ 
+     func product(_ id: String) async throws -> Product {
+-        await store.loadProducts()
+-        return try #require(store.products.first { $0.id == id }, "product \(id) did not load from Noctis.storekit")
++        // A cold StoreKit test session can answer an empty list the first time (seen once in Stage 1B, never reproduced, R-08): ask a few times before failing.
++        for attempt in 0..<5 {
++            await store.loadProducts()
++            if let found = store.products.first(where: { $0.id == id }) { return found }
++            if attempt < 4 { try? await Task.sleep(for: .milliseconds(400)) }
++        }
++        return try #require(store.products.first { $0.id == id }, "product \(id) did not load from Noctis.storekit after 5 tries")
+     }
+ 
+     func buy(_ id: String) async throws {
+diff --git a/Docs/ACCESSIBILITY_TEST_MATRIX.md b/Docs/ACCESSIBILITY_TEST_MATRIX.md
+new file mode 100644
+index 0000000..af7764a
+--- /dev/null
++++ b/Docs/ACCESSIBILITY_TEST_MATRIX.md
+@@ -0,0 +1,28 @@
++# Accessibility test matrix (Stage 1B, R-14 stays open)
++
++**Status: R-14 is open.** NOCTIS does not claim comprehensive accessibility support. What exists today is partial and is listed below exactly: two settings have code behind them (Button Shapes for text-only buttons, Smart Invert for the two share-card previews), Reduce Motion is read in 108 places (source count, behaviour not run), and the rest is unsupported or unverified. Nothing in this matrix was run on a device. "Simulator" means the iPhone 18 Pro simulator with the setting set through `simctl` or the system preference, screenshots viewed.
++
++Legend for "Today": **code + tested** (a unit or render test exists and passed), **code, screenshots** (viewed on the simulator), **source only** (read in the code, not run), **none** (no code reads the setting; not run).
++
++| Setting | What it asks of the app | Today | Evidence in the repository | To do before the claim can be made |
++| --- | --- | --- | --- | --- |
++| **VoiceOver** | Every control labelled, read in a sensible order, focus lands on a sheet and returns, no hidden content reachable behind the privacy cover | source only; the traversal test is written and was never run on a final build | `QA_LEDGER.md` 3.7; labels in the screens | Run the traversal test; a manual pass on onboarding, Home, Sleep, Recovery, Insights, Coach, Tonight, wind-down, alarm, Sounds, Settings, Subscription (free, premium, grace, payment problem), Paywall, share sheets, Data management (including the unfinished-deletion notice), the privacy cover, and the Watch pages; confirm the Button Shapes underline is not announced (it is an underline on the text itself, so nothing extra exists to announce) |
++| **Dynamic Type** (default, AX3, AX5) | No clipping, no overlap, 44 pt targets, long text scrolls | code, screenshots for the Subscription page (free and payment problem), Paywall and Home at AX5; 18 to 26 earlier layout rows still "fixed in source, not re-photographed" | `Docs/evidence/stage1b/screenshots/` (AX5 pairs) and `QA_LEDGER.md` | Re-run the existing screenshot suite at AX3 and AX5 on SE-sized and Pro Max-sized simulators for every screen and every widget family, and close or reopen each ledger row from a viewed image |
++| **Button Shapes** | Text-only buttons carry a shape or underline | code + tested for the text-only buttons listed below; **not** for icon-only buttons; system buttons already shaped by the system | `ButtonShapeTests` (8 render tests: off is pixel-identical, on underlines in the text's colour, wrapped text underlines line by line, no clipping); screenshots Subscription page and Paywall, base against after | Decide for icon-only custom buttons (back, close, `NightIconButton`): they look unchanged with the setting on. Covered text-only buttons: `NoctisTextButton`, `OnboardingSecondaryButton`, the Paywall free-plan link and Restore, the wind-down End. Not screenshotted: wind-down End, onboarding secondary buttons |
++| **Smart Invert** | Pictures are not inverted | code for bitmaps: the only `Image(uiImage:)` are the two share-card previews, both opt out (full search of `Packages`, `App`, `Widgets`, `Watch`) | `SmartInvertTests` (source scan) | Look at both share sheets with Smart Invert on, and decide whether the dark SwiftUI chrome inverted is acceptable (it is inverted by design) |
++| **Differentiate Without Color** | Colour is never the only signal | none: no shipped code reads `accessibilityDifferentiateWithoutColor` (only the QA probe) | a sample of a few files found no colour-only meaning; a sample is not a result | A full inventory of every colour-coded indicator (Recovery ring arcs, stage ribbons, week bars, range words, widget rings, Watch complications) and the setting on, screenshots viewed; add a non-colour twin only where one is missing |
++| **Bold Text** | Layout survives heavier text | none (system fonts adapt; no custom font was checked for a weight fallback) | `legibilityWeight` is read only by the probe | Screenshots with Bold Text on: fixed-height rows, tab bar, widgets, Watch pages; search for `Font.custom` |
++| **Increase Contrast** | Higher-contrast colours | source only: `colorSchemeContrast` read in 8 places; palette ratio tests exist | `BandStyleContrastTests`, `NoctisAppContrastTests`, `NoctisPaperContrastTests`, `WelcomeContrastTests` | Confirm the tests assert the increased-contrast variants (not confirmed); screenshots with the setting on |
++| **Reduce Transparency** | Opaque fallback for translucent surfaces | none: one `glassEffect` and the tab bar's material, system-handled; custom scrims unchecked | `accessibilityReduceTransparency` read only by the probe | Screenshots with the setting on for the tab bar, sheets, the privacy cover, widget backgrounds; add an opaque fallback only where text sits on a translucent fill and contrast drops |
++| **On/Off Labels** | Switches show I/O marks | none checked: native `Toggle` shows them automatically; custom switch-like controls were not inventoried | none | Search for custom toggles; screenshots of Settings with the setting on |
++| **Reduce Motion** | Replace or remove animation | source only: read in 108 places | `accessibilityReduceMotion` reads | Run Breathing, Meditation, sleep sounds, wind-down, the intro washes and the Watch breathing session with the setting on and watch each |
++
++## Required combinations
++
++- Each setting alone, then with Dark, then with AX5.
++- Button Shapes on at AX5: the Paywall footer links already overlap each other and the medical notice in the base build (see R-21 in the review); this is a pre-existing layout problem the setting exposes, recorded and not changed here.
++- VoiceOver with the Data management "needs attention" notice shown, and with the Subscription "payment problem" state.
++
++## Devices and tools
++
++Accessibility Inspector audit on each screen; a physical iPhone for VoiceOver, Switch Control reach and Smart Invert; a paired Apple Watch for the Watch pages and complications (the Watch has its own Display settings).
+diff --git a/Docs/MIGRATION_PROCEDURE.md b/Docs/MIGRATION_PROCEDURE.md
+new file mode 100644
+index 0000000..7990f3d
+--- /dev/null
++++ b/Docs/MIGRATION_PROCEDURE.md
+@@ -0,0 +1,41 @@
++# Changing a stored model (migration procedure)
++
++NOCTIS keeps three SwiftData databases, each opened through a `VersionedSchema` and a `SchemaMigrationPlan`:
++
++| Database | Schema | Plan | Holds |
++| --- | --- | --- | --- |
++| `default.store` | `NoctisSchemaV1` | `NoctisMigrationPlan` | profile, wake alarm settings, wind-down history |
++| `coach-history.store` | `CoachHistorySchemaV1` | `CoachHistoryMigrationPlan` | Coach conversations |
++| `journal.store` | `JournalSchemaV1` | `JournalMigrationPlan` | Journal entries |
++
++The insights, the reviews, the widget summary and the preference files are JSON with their own version number and are read only if the version matches; they are not covered here.
++
++Every plan has one version and no stages. There is no second version, and none is made up to exercise the machinery: `SchemaMigrationTests` proves the harness with a synthetic version.
++
++## When this applies
++
++Any change to a `@Model` class in one of those schemas: a property added, removed, renamed or retyped, a default changed, a relationship changed. A change that is not to a stored property (a computed property, a method) does not.
++
++`SchemaFingerprintTests` records the shape of each shipped version. A model change makes it fail with "A stored model changed". The failure is the reminder. **Do not edit the recorded line to make the test pass.**
++
++## Steps
++
++1. Add `NoctisSchemaV2` (or the Coach or Journal one) as a new `VersionedSchema` with its own `versionIdentifier`. Keep V1's model types as they shipped (nested copies of the old classes), so the old file can still be read.
++2. Add the schema to the plan's `schemas` list and a `MigrationStage` from V1 to V2 to `stages`. A lightweight stage is enough for an added optional property or a property with a default; anything that changes meaning needs a custom stage that moves the data and is written so it can be run again.
++3. Point the current schema at V2: for the app database change the alias `NoctisCurrentSchema` (`NoctisSchema.swift`); Coach and Journal have no alias, so change the `schema` constant in `CoachHistoryContainer` (`CoachHistory.swift`) or `JournalContainer` (`JournalStore.swift`), which names `CoachHistorySchemaV1` or `JournalSchemaV1` directly.
++4. Build the upgrade fixture: a real V1 store with data in it, made by the shipped build (see below), kept as a test resource.
++5. Write the upgrade test: copy the fixture to a temporary folder, open it through the plan, and assert that every row is there with the values it had. Include a row with every optional property set and unset.
++6. Update the line in `SchemaFingerprintTests` for the new version, and add a line for the old one so the old shape stays on record.
++7. Run `SchemaVersionTests`, `SchemaMigrationTests`, `StoreDamageTests`, `SchemaFingerprintTests` and the new upgrade test.
++
++## Making a V1 fixture
++
++Install the build that is on the App Store (or the TestFlight build that shipped V1) on a simulator, use the app until each model has rows, then copy `default.store`, its `-wal` and `-shm` files (and the Coach and Journal stores, which live in their own folder under Application Support) out of the app's data container. Run `PRAGMA wal_checkpoint(TRUNCATE);` on the copy so the rows are in the one file.
++
++## Before a release that changes a model
++
++Real upgrade test on a device [D]: install the previous release, add data (a profile, an alarm, a wind-down, Journal entries, a Coach conversation), update to the new build, and check that every screen shows the data. Keep the device's store: it is the next fixture.
++
++## What happens when it goes wrong
++
++A store that will not open is set aside whole under `Noctis/Quarantine`, never deleted, and the app starts with an empty one (`StoreRecovery`). That keeps the app running, not the person's data in view: it is the last line, not a migration strategy.
+diff --git a/Packages/NoctisKit/Sources/DesignSystem/NoctisButtonShape.swift b/Packages/NoctisKit/Sources/DesignSystem/NoctisButtonShape.swift
+new file mode 100644
+index 0000000..77de61d
+--- /dev/null
++++ b/Packages/NoctisKit/Sources/DesignSystem/NoctisButtonShape.swift
+@@ -0,0 +1,25 @@
++import SwiftUI
++
++/// What "Settings > Accessibility > Display & Text Size > Button Shapes" asks of a button that is only text (S1B-A01, UX-02): the system underlines text buttons,
++/// but not a `.plain` button with a custom label, so a link like "Restore" looked like a caption. With the setting on, the words are underlined, the way the
++/// system does it; with it off nothing changes. The underline is the text's own, so it takes the text's colour and weight, follows every wrapped line and never
++/// draws outside the label (an earlier version drew a separate rule, which took the wrong colour and the full width of a wrapped label). Rows, cards and tiles
++/// already have a shape of their own and do not use it.
++public struct NoctisButtonShape: ViewModifier {
++    private let forced: Bool?
++    @Environment(\.accessibilityShowButtonShapes) private var systemSetting
++
++    /// `showsShapes` fixes the answer (tests, previews); nil follows the setting.
++    public init(showsShapes: Bool? = nil) {
++        forced = showsShapes
++    }
++
++    public func body(content: Content) -> some View {
++        content.underline(forced ?? systemSetting)
++    }
++}
++
++extension View {
++    /// Underlines the text of a text-only button when Button Shapes is on (see `NoctisButtonShape`).
++    public func noctisButtonShape() -> some View { modifier(NoctisButtonShape()) }
++}
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/Account/FreshInstallGuard.swift b/Packages/NoctisKit/Sources/NoctisCore/Account/FreshInstallGuard.swift
+new file mode 100644
+index 0000000..7e8751e
+--- /dev/null
++++ b/Packages/NoctisKit/Sources/NoctisCore/Account/FreshInstallGuard.swift
+@@ -0,0 +1,35 @@
++import Foundation
++
++/// A Keychain item outlives an uninstall, a UserDefaults marker does not (S1B-B04, X-11). At launch, before the account is read: if this copy of the app has never
++/// started (no marker) and there is no database either, the Keychain item belongs to an earlier install and is cleared, so a reinstalled app starts signed out
++/// instead of showing a sign-in the person may expect to be gone. The database test is what keeps an update, or a restore that lost the marker, signed in: only an
++/// install with nothing of its own on disk loses the item. Sign in with Apple is one tap again. Never touches anything but the identifier.
++public nonisolated struct FreshInstallGuard {
++    public static let markerKey = "noctis.install.marker"
++
++    private let defaults: UserDefaults
++    private let hasDatabase: () -> Bool
++    private let keychain: any AccountKeychain
++
++    public init(
++        defaults: UserDefaults = NoctisUserDefaults.standard, keychain: any AccountKeychain = SystemAccountKeychain(),
++        hasDatabase: @escaping () -> Bool = { FileManager.default.fileExists(atPath: NoctisStore.defaultURL.path) }
++    ) {
++        self.defaults = defaults
++        self.keychain = keychain
++        self.hasDatabase = hasDatabase
++    }
++
++    /// Clears the identifier on a fresh install and records that this copy has started. True when it cleared one. When the Keychain cannot be asked yet (the iPhone
++    /// has not been unlocked since it started) nothing is cleared and nothing is recorded, so the next launch asks again (S1B-R-16).
++    @discardableResult
++    public func run() -> Bool {
++        guard defaults.object(forKey: Self.markerKey) == nil else { return false }
++        let lookup = keychain.lookup()
++        guard lookup != .unavailable else { return false }
++        let cleared = lookup == .found && !hasDatabase()
++        if cleared { keychain.delete() }
++        defaults.set(true, forKey: Self.markerKey)
++        return cleared
++    }
++}
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/StoreCompaction.swift b/Packages/NoctisKit/Sources/NoctisCore/StoreCompaction.swift
+new file mode 100644
+index 0000000..23224bc
+--- /dev/null
++++ b/Packages/NoctisKit/Sources/NoctisCore/StoreCompaction.swift
+@@ -0,0 +1,83 @@
++import Foundation
++import SQLite3
++
++// Deleting rows from a SQLite database leaves their pages in the file's free list until the file is compacted (X-15, S1B-B03). After a deletion of one kind of data
++// (the Journal, Coach conversations, the wind-down history) the next launch compacts the databases, before anything opens them: a checkpoint of the write-ahead log,
++// then `VACUUM`. That frees the space. It is not a promise that anything is unrecoverable: iOS encrypts the file at rest, and this says nothing about the flash
++// underneath. "Delete all NOCTIS data" removes the files themselves and never needs it.
++//
++// It is careful and it is rare: it runs only when a deletion asked for it, only on a database SQLite itself calls intact, only with room for the copy `VACUUM`
++// makes, never while the iPhone is locked (the file cannot be opened then, and the request waits), and once per request.
++
++public nonisolated struct StoreCompaction {
++    /// Set by a deletion of one kind of data, cleared when every database has been dealt with.
++    public static let pendingKey = "noctis.compact.pending"
++
++    public enum Outcome: String, Sendable, Equatable {
++        /// Compacted.
++        case compacted
++        /// There is no such file (nothing to do).
++        case missing
++        /// Not touched: larger than `maximumBytes`.
++        case tooLarge
++        /// SQLite calls it damaged: left for `StoreRecovery`, which sets it aside at the next open.
++        case notIntact
++        /// Could not be opened for writing (the iPhone is locked, or another connection holds it): tried at the next launch.
++        case unavailable
++        /// SQLite refused the work: left as it was, tried at the next launch.
++        case failed
++    }
++
++    /// The largest database it compacts. The stores here are kilobytes to a few megabytes; a larger one is left alone. The compaction keeps the copy in memory
++    /// (see `compact`), so this also bounds the memory it uses.
++    public static let maximumBytes = 16 * 1_048_576
++
++    private let defaults: UserDefaults
++    private let maximumBytes: Int
++
++    public init(defaults: UserDefaults = NoctisUserDefaults.standard, maximumBytes: Int = StoreCompaction.maximumBytes) {
++        self.defaults = defaults
++        self.maximumBytes = maximumBytes
++    }
++
++    public var isPending: Bool { defaults.bool(forKey: Self.pendingKey) }
++
++    /// A deletion of one kind of data asks for the next launch to compact.
++    public func request() { defaults.set(true, forKey: Self.pendingKey) }
++
++    /// At launch, before any database opens: compacts `databases` if a deletion asked for it. The request is cleared once no database is waiting on room or on the
++    /// iPhone being unlocked. Returns what happened to each.
++    @discardableResult
++    public func runIfRequested(_ databases: [URL]) -> [(URL, Outcome)] {
++        guard isPending else { return [] }
++        let outcomes = databases.map { ($0, compact($0)) }
++        let waiting: Set<Outcome> = [.unavailable, .failed]
++        if !outcomes.contains(where: { waiting.contains($0.1) }) { defaults.removeObject(forKey: Self.pendingKey) }
++        return outcomes
++    }
++
++    /// One database.
++    public func compact(_ url: URL) -> Outcome {
++        let manager = FileManager.default
++        guard manager.fileExists(atPath: url.path) else { return .missing }
++        let size = (try? manager.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
++        guard size <= maximumBytes else { return .tooLarge }
++        switch SQLiteCheck.verdict(url) {
++        case .damaged: return .notIntact
++        case .unknown: return .unavailable  // busy or locked: tried again at the next launch
++        case .intact: break
++        }
++        var database: OpaquePointer?
++        guard sqlite3_open_v2(url.path, &database, SQLITE_OPEN_READWRITE, nil) == SQLITE_OK, let database else {
++            sqlite3_close(database)
++            return .unavailable
++        }
++        defer { sqlite3_close(database) }
++        sqlite3_busy_timeout(database, 1_000)
++        // `VACUUM` builds the compacted copy in a temporary file by default, in the app's temporary folder, which is not the Journal's and Coach's protected folder
++        // (measured: the file `etilqs_…` appears in the temporary folder and holds the whole copy). In memory, nothing is written outside the store (S1B-R-04).
++        guard sqlite3_exec(database, "PRAGMA temp_store = MEMORY;", nil, nil, nil) == SQLITE_OK else { return .failed }
++        guard sqlite3_exec(database, "PRAGMA wal_checkpoint(TRUNCATE);", nil, nil, nil) == SQLITE_OK else { return .unavailable }
++        return sqlite3_exec(database, "VACUUM;", nil, nil, nil) == SQLITE_OK ? .compacted : .failed
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/ButtonShapeTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/ButtonShapeTests.swift
+new file mode 100644
+index 0000000..2779c81
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/ButtonShapeTests.swift
+@@ -0,0 +1,122 @@
++import SwiftUI
++import Testing
++import UIKit
++
++@testable import DesignSystem
++
++// Button Shapes (S1B-A01, UX-02): a text-only button carries a rule under its words when the setting is on, and is drawn exactly as before when it is off.
++
++@MainActor
++struct ButtonShapeTests {
++    /// The label as a button draws it: text first, the modifier on it, then padding and a frame.
++    private func label(_ title: String, width: CGFloat, color: Color, _ shapes: Bool?) -> some View {
++        let text = Text(title).font(.system(size: 15)).multilineTextAlignment(.center).foregroundStyle(color)
++        return Group {
++            if let shapes { text.modifier(NoctisButtonShape(showsShapes: shapes)).frame(width: width) } else { text.frame(width: width) }
++        }
++        .padding(.vertical, 12)
++        .background(Color.white)
++    }
++
++    private func image(title: String = "Restore", width: CGFloat = 120, color: Color = .black, shapes: Bool?) throws -> UIImage {
++        let renderer = ImageRenderer(content: label(title, width: width, color: color, shapes))
++        renderer.scale = 2
++        return try #require(renderer.uiImage)
++    }
++
++    /// Pixels that are dark (a black rule over a coloured label would show up here).
++    private func darkPixels(_ image: UIImage) -> Int {
++        guard let cg = image.cgImage, let data = cg.dataProvider?.data, let bytes = CFDataGetBytePtr(data) else { return -1 }
++        let step = cg.bitsPerPixel / 8
++        var count = 0
++        for y in 0..<cg.height {
++            for x in 0..<cg.width {
++                let o = y * cg.bytesPerRow + x * step
++                if bytes[o] < 110 && bytes[o + 1] < 110 && bytes[o + 2] < 110 { count += 1 }
++            }
++        }
++        return count
++    }
++
++    private func ink(_ image: UIImage, rowsFrom top: Double = 0) -> Int {
++        guard let cg = image.cgImage, let data = cg.dataProvider?.data, let bytes = CFDataGetBytePtr(data) else { return -1 }
++        let step = cg.bitsPerPixel / 8
++        var count = 0
++        for y in Int(Double(cg.height) * top)..<cg.height {
++            for x in 0..<cg.width {
++                let o = y * cg.bytesPerRow + x * step
++                if bytes[o] < 200 || bytes[o + 1] < 200 || bytes[o + 2] < 200 { count += 1 }
++            }
++        }
++        return count
++    }
++
++    @Test func withTheSettingOffNothingIsDrawn() throws {
++        #expect(try image(shapes: false).pngData() == image(shapes: nil).pngData(), "pixel for pixel the same as a label with no modifier")
++        #expect(try image(title: "A longer label that wraps over two lines", width: 90, shapes: false).pngData() == image(title: "A longer label that wraps over two lines", width: 90, shapes: nil).pngData())
++    }
++
++    @Test func withTheSettingOnTheWordsAreUnderlined() throws {
++        #expect(try image(shapes: true).pngData() != image(shapes: false).pngData())
++        #expect(try ink(image(shapes: true)) > ink(image(shapes: false)), "more ink: the underline")
++    }
++
++    @Test func theUnderlineTakesTheColourOfTheText() throws {
++        let red = try image(color: .red, shapes: true)
++        #expect(darkPixels(red) == 0, "no black anywhere: a red label has a red underline, not a separate black rule")
++        let black = try image(color: .black, shapes: true)
++        #expect(darkPixels(black) > 0, "the control: a black label does have dark pixels, so the check can see them")
++    }
++
++    @Test func aWrappedLabelIsUnderlinedLineByLineNotWithOneFullWidthRule() throws {
++        let title = "Continue with the free plan and decide later"
++        let one = try image(title: title, width: 400, shapes: true)
++        let wrapped = try image(title: title, width: 110, shapes: true)
++        let plainWrapped = try image(title: title, width: 110, shapes: false)
++        #expect(ink(wrapped) > ink(plainWrapped) + 100, "every wrapped line gets its own underline")
++        // The underline sits inside the label: the rows below the last line are as empty as with the setting off.
++        #expect(ink(wrapped, rowsFrom: 0.93) == ink(plainWrapped, rowsFrom: 0.93), "nothing is drawn below the text")
++        #expect(one.size.height < wrapped.size.height)
++    }
++
++    @Test func aLabelIsNotClippedByItsPadding() throws {
++        let on = try image(shapes: true)
++        let off = try image(shapes: false)
++        #expect(on.size == off.size, "the underline does not change the size of the label")
++    }
++
++    @Test func theTextButtonAndTheTextLinksUseIt() throws {
++        let root = RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources")
++        for (path, count) in [
++            ("DesignSystem/NoctisCTA.swift", 1), ("DesignSystem/OnboardingStepScaffold.swift", 1), ("OnboardingFeature/PaywallScreen.swift", 2),
++            ("NightFeature/WindDownScreen.swift", 1),
++        ] {
++            let text = try String(contentsOf: root.appendingPathComponent(path), encoding: .utf8)
++            #expect(text.components(separatedBy: ".noctisButtonShape()").count - 1 >= count, Comment(rawValue: path))
++        }
++    }
++
++    @Test func theSystemsOwnShapedButtonsAreNotShapedTwice() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/OnboardingFeature/PaywallScreen.swift"), encoding: .utf8)
++        let link = try #require(text.range(of: "private func linkLabel(_ title: String)"))
++        #expect(!text[link.upperBound...].prefix(400).contains("noctisButtonShape"), "Restore Purchases, Terms and Privacy are system buttons: the system draws their shape")
++    }
++
++    @Test func theSettingIsReadFromTheSystemNotFromTheProbeOnly() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/DesignSystem/NoctisButtonShape.swift"), encoding: .utf8)
++        #expect(text.contains("accessibilityShowButtonShapes"))
++    }
++}
++
++// Smart Invert (S1B-A03, UX-02): a rendered picture is not re-inverted by the system.
++struct SmartInvertTests {
++    @Test func everyViewThatShowsARenderedPictureOptsOutOfInversion() {
++        let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources", "App", "Widgets", "Watch"])
++        #expect(!files.isEmpty)
++        for file in files where RawDefaultsTests.code(file.text).contains("Image(uiImage:") {
++            #expect(RawDefaultsTests.code(file.text).contains("accessibilityIgnoresInvertColors"), Comment(rawValue: "\(file.path) shows a picture"))
++        }
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/DeleteAllResumeTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/DeleteAllResumeTests.swift
+new file mode 100644
+index 0000000..07cb24a
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/DeleteAllResumeTests.swift
+@@ -0,0 +1,187 @@
++import Foundation
++import Testing
++
++@testable import NoctisCore
++@testable import ProfileFeature
++
++// A "Delete all NOCTIS data" that was cut short is finished at the next launch (S1B-B02). Every step is safe to run again, so the whole list runs once more.
++
++@MainActor
++struct DeleteAllResumeTests {
++    struct Boom: Error {}
++
++    private func defaults() -> UserDefaults { UserDefaults(suiteName: "noctis.resume.\(UUID().uuidString)") ?? .standard }
++
++    private func manager(_ defaults: UserDefaults, steps: [DeleteStep]) -> DataManager {
++        DataManager(erasers: [:], providers: [:], deleteAllSteps: steps, defaults: defaults)
++    }
++
++    @Test func theMarkerIsSetBeforeTheFirstStepAndGoneWhenEveryStepWorked() async {
++        let defaults = defaults()
++        var seenByFirstStep: Bool?
++        let steps = [DeleteStep(id: "a", title: "A") { seenByFirstStep = defaults.bool(forKey: DataManager.pendingDeleteAllKey) }]
++        let manager = manager(defaults, steps: steps)
++        #expect(!manager.hasInterruptedDeletion)
++        let report = await manager.deleteEverything()
++        #expect(seenByFirstStep == true, "a kill from the first step on leaves the marker behind")
++        #expect(report.succeeded && !manager.hasInterruptedDeletion && defaults.object(forKey: DataManager.pendingDeleteAllKey) == nil)
++    }
++
++    @Test func aStepThatFailedLeavesTheMarkerEvenIfAnEarlierStepClearedIt() async {
++        let defaults = defaults()
++        let steps = [
++            DeleteStep(id: "a", title: "A") { throw Boom() },
++            // The preferences step removes every `noctis.` key, the marker with them.
++            DeleteStep(id: "preferences", title: "Clearing preferences") { defaults.removeObject(forKey: DataManager.pendingDeleteAllKey) },
++        ]
++        let manager = manager(defaults, steps: steps)
++        let report = await manager.deleteEverything()
++        #expect(!report.succeeded && manager.hasInterruptedDeletion, "the next launch tries again")
++    }
++
++    @Test func aLaunchThatFindsTheMarkerRunsEveryStepAgainAndSaysToStartOver() async {
++        let defaults = defaults()
++        defaults.set(true, forKey: DataManager.pendingDeleteAllKey)
++        var ran: [String] = []
++        let steps = [
++            DeleteStep(id: "silence", title: "S") { ran.append("silence") },
++            DeleteStep(id: "databases", title: "D") { ran.append("databases") },
++            DeleteStep(id: "preferences", title: "P") { ran.append("preferences") },
++        ]
++        let manager = manager(defaults, steps: steps)
++        #expect(manager.hasInterruptedDeletion)
++        #expect(await manager.resumeInterruptedDeletion(), "the app starts over, as Done does")
++        #expect(ran == ["silence", "databases", "preferences"], "the whole list, in order")
++        #expect(!manager.hasInterruptedDeletion && manager.steps.isEmpty && manager.deleteAllReport == nil, "nothing is left to show or to repeat")
++    }
++
++    @Test func noMarkerMeansNothingRunsAndNothingRestarts() async {
++        var ran = 0
++        let manager = manager(defaults(), steps: [DeleteStep(id: "a", title: "A") { ran += 1 }])
++        #expect(await manager.resumeInterruptedDeletion() == false && ran == 0)
++    }
++
++    @Test func aStepThatKeepsFailingIsTriedAtMostThreeLaunchesThenGivenUp() async {
++        let defaults = defaults()
++        defaults.set(true, forKey: DataManager.pendingDeleteAllKey)
++        let manager = manager(defaults, steps: [DeleteStep(id: "a", title: "A") { throw Boom() }])
++        #expect(DataManager.maximumResumeAttempts == 3)
++        #expect(await manager.resumeInterruptedDeletion())
++        #expect(manager.hasInterruptedDeletion && defaults.integer(forKey: DataManager.pendingDeleteAllKey) == 2, "still asked for: the next launch tries again")
++        #expect(await manager.resumeInterruptedDeletion())
++        #expect(defaults.integer(forKey: DataManager.pendingDeleteAllKey) == 3)
++        #expect(await manager.resumeInterruptedDeletion())
++        #expect(!manager.hasInterruptedDeletion, "the third try was the last: no more launches start over")
++        #expect(manager.unfinishedSteps == ["a"] && manager.unfinishedStepTitles == ["A"], "but the step that could not be finished is on record, by its name")
++        #expect(defaults.string(forKey: DataManager.unfinishedDeleteAllKey) == "a", "written down, not only held in memory")
++        #expect(await manager.resumeInterruptedDeletion() == false, "the next launch is a normal one")
++        // A relaunch: a new manager over the same defaults still knows.
++        let relaunched = self.manager(defaults, steps: [DeleteStep(id: "a", title: "A") { throw Boom() }])
++        #expect(relaunched.unfinishedSteps == ["a"], "the notice survives a relaunch")
++    }
++
++    @Test func aDeleteAllThatWorksLaterClearsTheRecord() async {
++        let defaults = defaults()
++        defaults.set("databases,setup", forKey: DataManager.unfinishedDeleteAllKey)
++        let manager = manager(defaults, steps: [DeleteStep(id: "databases", title: "Removing database files") {}])
++        #expect(manager.unfinishedSteps == ["databases", "setup"])
++        #expect(manager.unfinishedStepTitles == ["Removing database files", "setup"], "an id the list no longer has is shown as it is")
++        let report = await manager.deleteEverything()
++        #expect(report.succeeded && manager.unfinishedSteps.isEmpty && defaults.object(forKey: DataManager.unfinishedDeleteAllKey) == nil)
++    }
++
++    @Test func aResumeThatWorksClearsAnOldRecordToo() async {
++        let defaults = defaults()
++        defaults.set(true, forKey: DataManager.pendingDeleteAllKey)
++        defaults.set("a", forKey: DataManager.unfinishedDeleteAllKey)
++        let manager = manager(defaults, steps: [DeleteStep(id: "a", title: "A") {}])
++        #expect(await manager.resumeInterruptedDeletion())
++        #expect(manager.unfinishedSteps.isEmpty && defaults.object(forKey: DataManager.unfinishedDeleteAllKey) == nil)
++    }
++
++    @Test func theNoticeNamesWhatIsLeftAndHowToTryAgain() {
++        let text = DataManagementCopy.unfinishedNotice(["Removing database files", "Deleting Journal"])
++        #expect(text.contains("did not finish") && text.contains("Removing database files, Deleting Journal"))
++        #expect(text.contains(DataManagementCopy.deleteAllButton), "it points at the button that tries again")
++        #expect(DataManagementCopy.unfinishedHeader == "NEEDS ATTENTION")
++    }
++
++    @Test func dataManagementShowsTheNoticeOnlyWhileSomethingIsOutstanding() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/ProfileFeature/DataManagementViews.swift"), encoding: .utf8)
++        #expect(text.contains("if !manager.unfinishedSteps.isEmpty {") && text.contains("data.unfinished"))
++    }
++
++    @Test func aResumeThatWorkedLeavesNothingOnRecord() async {
++        let defaults = defaults()
++        defaults.set(true, forKey: DataManager.pendingDeleteAllKey)
++        let manager = manager(defaults, steps: [DeleteStep(id: "a", title: "A") {}])
++        #expect(await manager.resumeInterruptedDeletion())
++        #expect(manager.unfinishedSteps.isEmpty && !manager.hasInterruptedDeletion && manager.deleteAllReport == nil)
++    }
++
++    @Test func theBackgroundWorkStopsWhileADeletionIsUnfinished() throws {
++        let defaults = defaults()
++        #expect(!DataManager.hasPendingDeleteAll(defaults: defaults))
++        defaults.set(true, forKey: DataManager.pendingDeleteAllKey)
++        #expect(DataManager.hasPendingDeleteAll(defaults: defaults), "a marker written as a plain true still counts")
++        defaults.set(3, forKey: DataManager.pendingDeleteAllKey)
++        #expect(DataManager.hasPendingDeleteAll(defaults: defaults))
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
++        let refresher = try #require(text.range(of: "let backgroundRefresher = BackgroundRefresher("))
++        #expect(text[refresher.upperBound...].prefix(500).contains("!DataManager.hasPendingDeleteAll()"), "a Health wake does not refresh a half-deleted app")
++        let watch = try #require(text.range(of: "onUpdateRequested: {"))
++        #expect(text[watch.upperBound...].prefix(200).contains("hasPendingDeleteAll()"), "nor does the Watch's request")
++    }
++
++    @Test func theAppFinishesAnInterruptedDeletionBeforeItShowsAnything() throws {
++        let app = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/NoctisApp.swift"), encoding: .utf8)
++        #expect(app.contains("container.finishInterruptedDeletion()") && app.contains("AppContainer(restarted: true)"))
++        let container = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
++        #expect(
++            container.contains("interruptedDeletion = DataManager.hasPendingDeleteAll() && Self.resumeOnce.claim()"),
++            "started when the container is made, so a background launch (no screen) finishes it too, and once per process")
++    }
++
++    @Test func theMarkerIsUnderTheAppPrefixSoThePreferencesStepClearsIt() {
++        #expect(DataManager.pendingDeleteAllKey.hasPrefix("noctis."))
++    }
++}
++
++// A file that stays is a failed step (S1B-R-03): the real wiring, against a database file that cannot be removed.
++@MainActor
++struct DeleteAllFileFailureTests {
++    @Test func aDatabaseFileThatCannotBeRemovedIsAFailedStepAndKeepsTheMarker() async throws {
++        let bench = try DataBench()
++        bench.wire()
++        let file = bench.roots.url(.applicationSupport).appending(path: "default.store", directoryHint: .notDirectory)
++        try Data("not empty".utf8).write(to: file)
++        var locked = file
++        var values = URLResourceValues()
++        values.isUserImmutable = true
++        try locked.setResourceValues(values)
++        defer {
++            values.isUserImmutable = false
++            try? locked.setResourceValues(values)
++            try? FileManager.default.removeItem(at: bench.root)
++        }
++        let report = await bench.manager.deleteEverything()
++        #expect(FileManager.default.fileExists(atPath: file.path), "the file is still there")
++        #expect(report.failures.map(\.id) == ["databases"], "\(report.failures)")
++        #expect(report.failures.first?.failure?.contains("could not be removed") == true)
++        #expect(bench.manager.hasInterruptedDeletion, "so the next launch tries again")
++    }
++
++    @Test func whenEveryFileGoesTheStepWorksAndTheMarkerIsGone() async throws {
++        let bench = try DataBench()
++        bench.wire()
++        defer { try? FileManager.default.removeItem(at: bench.root) }
++        let file = bench.roots.url(.applicationSupport).appending(path: "default.store", directoryHint: .notDirectory)
++        try Data("not empty".utf8).write(to: file)
++        let report = await bench.manager.deleteEverything()
++        #expect(report.succeeded, "\(report.failures)")
++        #expect(!FileManager.default.fileExists(atPath: file.path) && !bench.manager.hasInterruptedDeletion)
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/FreshInstallGuardTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/FreshInstallGuardTests.swift
+new file mode 100644
+index 0000000..1039c41
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/FreshInstallGuardTests.swift
+@@ -0,0 +1,88 @@
++import Foundation
++import Testing
++
++@testable import NoctisCore
++
++// A sign-in left in the Keychain by an earlier install is not picked up by a fresh one (S1B-B04), and an update never signs anyone out.
++
++struct FreshInstallGuardTests {
++    private func defaults() -> UserDefaults { UserDefaults(suiteName: "noctis.install.\(UUID().uuidString)") ?? .standard }
++
++    @Test func aFreshInstallWithAnOldKeychainItemStartsSignedOut() {
++        let keychain = MemoryAccountKeychain(userID: "left-by-an-earlier-install")
++        let defaults = defaults()
++        let cleared = FreshInstallGuard(defaults: defaults, keychain: keychain, hasDatabase: { false }).run()
++        #expect(cleared && keychain.read() == nil)
++        #expect(defaults.object(forKey: FreshInstallGuard.markerKey) != nil, "this copy has now started")
++    }
++
++    @Test func anUpdateWithNoMarkerButADatabaseStaysSignedIn() {
++        let keychain = MemoryAccountKeychain(userID: "someone")
++        let cleared = FreshInstallGuard(defaults: defaults(), keychain: keychain, hasDatabase: { true }).run()
++        #expect(!cleared && keychain.read() == "someone", "the marker is new to an install that already has its own data")
++    }
++
++    @Test func aLaterLaunchNeverTouchesTheItem() {
++        let keychain = MemoryAccountKeychain(userID: "someone")
++        let defaults = defaults()
++        let first = FreshInstallGuard(defaults: defaults, keychain: keychain, hasDatabase: { true })
++        first.run()
++        let signedInAfterwards = MemoryAccountKeychain(userID: "signed-in-after-the-first-launch")
++        let again = FreshInstallGuard(defaults: defaults, keychain: signedInAfterwards, hasDatabase: { false })
++        #expect(!again.run() && signedInAfterwards.read() == "signed-in-after-the-first-launch", "with the marker there, the database is not asked")
++    }
++
++    @Test func aFreshInstallWithNothingInTheKeychainJustRecordsTheStart() {
++        let keychain = MemoryAccountKeychain()
++        let defaults = defaults()
++        #expect(!FreshInstallGuard(defaults: defaults, keychain: keychain, hasDatabase: { false }).run())
++        #expect(defaults.object(forKey: FreshInstallGuard.markerKey) != nil)
++    }
++
++    /// A keychain that cannot be asked yet: the iPhone has not been unlocked since it started.
++    private final class LockedKeychain: AccountKeychain, @unchecked Sendable {
++        let item = "left-by-an-earlier-install"
++        var deleted = false
++        func read() -> String? { nil }
++        func write(_ userID: String) -> Bool { false }
++        func delete() { deleted = true }
++        func lookup() -> KeychainLookup { .unavailable }
++    }
++
++    @Test func aKeychainThatCannotBeAskedYetIsNeitherClearedNorMarked() {
++        let defaults = defaults()
++        let locked = LockedKeychain()
++        #expect(!FreshInstallGuard(defaults: defaults, keychain: locked, hasDatabase: { false }).run())
++        #expect(!locked.deleted && defaults.object(forKey: FreshInstallGuard.markerKey) == nil, "no marker: the next launch asks again")
++        // The next launch can ask: the stale item is found and cleared.
++        let unlocked = MemoryAccountKeychain(userID: "left-by-an-earlier-install")
++        #expect(FreshInstallGuard(defaults: defaults, keychain: unlocked, hasDatabase: { false }).run() && unlocked.read() == nil)
++    }
++
++    @Test func theLookupSaysFoundNotFoundAndDefaultsForAMemoryKeychain() {
++        #expect(MemoryAccountKeychain(userID: "x").lookup() == .found && MemoryAccountKeychain().lookup() == .notFound)
++    }
++
++    @Test func theSystemKeychainDistinguishesNothingFoundFromCannotAsk() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/Account/AccountStore.swift"), encoding: .utf8)
++        #expect(text.contains("case errSecItemNotFound: return .notFound") && text.contains("default: return .unavailable"))
++    }
++
++    @Test func theGuardRunsBeforeTheAccountIsRead() async throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
++        let guardCall = try #require(text.range(of: "FreshInstallGuard().run()"))
++        let account = try #require(text.range(of: "AccountStore("))
++        #expect(guardCall.lowerBound < account.lowerBound)
++    }
++
++    @Test func theMarkerIsInTheInventoryAndHoldsNothingAboutThePerson() throws {
++        let inventory = DataInventory.shared.categories.first { $0.id == .appState }
++        let keys = inventory?.locations.flatMap { location -> [String] in
++            if case .defaults(let keys) = location { return keys }
++            return []
++        }
++        #expect(keys?.contains(FreshInstallGuard.markerKey) == true)
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/PremiumExpiryTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/PremiumExpiryTests.swift
+new file mode 100644
+index 0000000..3af9760
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/PremiumExpiryTests.swift
+@@ -0,0 +1,497 @@
++import Foundation
++import Testing
++
++@testable import HealthProviding
++@testable import HomeFeature
++@testable import NoctisCore
++@testable import NoctisIntentKit
++@testable import NoctisWatchKit
++@testable import NoctisWidgetKit
++@testable import PremiumKit
++
++// A plan that runs out while the app is closed (S1B-C01, P-03): the snapshot carries the end of Premium and every surface outside the app asks one function, at its own
++// time, what the plan is. An auto-renewing plan keeps a slack past its end so a paying person whose renewal the app has not yet written is never locked.
++
++private let hour: TimeInterval = 3600
++
++private enum Expiry {
++    static let now = WidgetFixture.now
++    static var calendar: Calendar { WidgetFixture.calendar }
++
++    static func snapshot(until: Date?, renews: Bool, tier: Tier = .premium) -> WidgetSnapshot {
++        var value = WidgetSamples.snapshot(.full, now: now, calendar: calendar, tier: tier)
++        value.premiumUntil = until
++        value.autoRenews = renews
++        return value
++    }
++}
++
++struct EffectiveTierTests {
++    private let end = Expiry.now.addingTimeInterval(5 * hour)
++
++    @Test func aPlanThatDoesNotRenewLocksAtItsEnd() {
++        let snapshot = Expiry.snapshot(until: end, renews: false)
++        #expect(snapshot.effectiveTier(at: end.addingTimeInterval(-1)) == .premium)
++        #expect(snapshot.effectiveTier(at: end) == .free, "at the end, not after")
++        #expect(snapshot.effectiveTier(at: end.addingTimeInterval(30 * 86_400)) == .free)
++    }
++
++    @Test func aPlanThatRenewsKeepsTheSlackPastItsEnd() {
++        let snapshot = Expiry.snapshot(until: end, renews: true)
++        let lock = end.addingTimeInterval(WidgetSnapshot.renewalSlack)
++        #expect(WidgetSnapshot.renewalSlack == 48 * hour, "the proposed slack; the owner confirms it before release")
++        #expect(snapshot.effectiveTier(at: end.addingTimeInterval(1)) == .premium, "a renewal the app has not written yet does not lock a paying person")
++        #expect(snapshot.effectiveTier(at: lock.addingTimeInterval(-1)) == .premium)
++        #expect(snapshot.effectiveTier(at: lock) == .free)
++        #expect(snapshot.premiumLockDate == lock)
++    }
++
++    @Test func noEndMeansTheFlagAlone() {
++        let premium = Expiry.snapshot(until: nil, renews: false)
++        #expect(premium.premiumLockDate == nil)
++        #expect(premium.effectiveTier(at: .distantFuture) == .premium, "an unknown end is not a lapse: the app rewrites the snapshot when it learns it")
++        let free = Expiry.snapshot(until: end, renews: true, tier: .free)
++        #expect(free.premiumLockDate == nil && free.effectiveTier(at: .distantPast) == .free, "a free snapshot never becomes Premium")
++    }
++
++    @Test func aFreeSnapshotDropsAnEndItWasGiven() {
++        let snapshot = WidgetSnapshot(
++            forDay: WidgetDay(year: 2026, month: 9, day: 24), generatedAt: Expiry.now,
++            plan: WidgetPlan(wakeMinutes: 420, needMinutes: 480, bedtimeMinutes: 1380), state: .full, tier: .free, premiumUntil: end, autoRenews: true)
++        #expect(snapshot.premiumUntil == nil && !snapshot.autoRenews)
++        #expect(Expiry.snapshot(until: end, renews: true).with(tier: .free).premiumUntil == nil, "an end belongs to the plan it came with")
++        #expect(Expiry.snapshot(until: end, renews: true).with(tier: .premium).premiumUntil == nil)
++    }
++
++    @Test func theEndCannotBeClaimedWithoutAnEnd() {
++        let snapshot = WidgetSnapshot(
++            forDay: WidgetDay(year: 2026, month: 9, day: 24), generatedAt: Expiry.now,
++            plan: WidgetPlan(wakeMinutes: 420, needMinutes: 480, bedtimeMinutes: 1380), state: .full, tier: .premium, premiumUntil: nil, autoRenews: true)
++        #expect(!snapshot.autoRenews, "renewing at no date says nothing")
++    }
++}
++
++struct PremiumEndCodingTests {
++    private let end = Expiry.now.addingTimeInterval(5 * hour)
++
++    @Test func theEndAndTheRenewalFlagRoundTrip() throws {
++        let snapshot = Expiry.snapshot(until: end, renews: true)
++        let decoded = try #require(WidgetSnapshot.decode(snapshot.encoded()))
++        #expect(decoded.premiumUntil.map { Int($0.timeIntervalSince1970) } == Int(end.timeIntervalSince1970), "whole seconds, like every other time in the file")
++        #expect(decoded.autoRenews)
++        #expect(decoded.effectiveTier(at: end.addingTimeInterval(1)) == .premium)
++    }
++
++    @Test func aSnapshotWrittenBeforeTheEndExistedStillReadsAndHasNone() throws {
++        var object = try #require(try JSONSerialization.jsonObject(with: Expiry.snapshot(until: end, renews: true).encoded()) as? [String: Any])
++        object.removeValue(forKey: "pu")
++        object.removeValue(forKey: "ar")
++        let decoded = try #require(WidgetSnapshot.decode(JSONSerialization.data(withJSONObject: object)))
++        #expect(decoded.version == WidgetSnapshot.currentVersion && decoded.tier == .premium)
++        #expect(decoded.premiumUntil == nil && !decoded.autoRenews, "additive to version 2, so an older file is never rejected")
++    }
++
++    @Test func anEndThatCannotBeReadIsNoEndAndNeverUnlocksAnything() throws {
++        for junk in [NSNull(), "tomorrow", [1], true] as [Any] {
++            var object = try #require(try JSONSerialization.jsonObject(with: Expiry.snapshot(until: end, renews: true).encoded()) as? [String: Any])
++            object["pu"] = junk
++            object["ar"] = junk
++            let decoded = try #require(WidgetSnapshot.decode(JSONSerialization.data(withJSONObject: object)), Comment(rawValue: "\(junk)"))
++            #expect(decoded.premiumUntil == nil && !decoded.autoRenews, Comment(rawValue: "\(junk)"))
++        }
++    }
++
++    @Test func theSnapshotStaysWellUnderItsCap() throws {
++        let data = try Expiry.snapshot(until: end, renews: true).encoded()
++        #expect(data.count < WidgetSnapshot.maximumBytes / 2, "\(data.count) bytes")
++        #expect(WidgetSnapshot.maximumBytes == 3072)
++        let directory = try WidgetFixture.directory()
++        defer { try? FileManager.default.removeItem(at: directory) }
++        #expect(WidgetSnapshotStore(directory: directory).save(Expiry.snapshot(until: end, renews: true)))
++    }
++
++    @Test func aFreeSnapshotAddsNoEndToTheFile() throws {
++        let text = String(decoding: try Expiry.snapshot(until: nil, renews: false, tier: .free).encoded(), as: UTF8.self)
++        #expect(!text.contains("\"pu\""), Comment(rawValue: text))
++    }
++}
++
++struct ExpiryTimelineTests {
++    private let now = Expiry.now
++
++    @Test func theWidgetLocksAtTheMomentThePlanRunsOutWithTheAppClosed() throws {
++        let end = now.addingTimeInterval(3 * hour)
++        let plan = WidgetTimelineBuilder.build(snapshot: Expiry.snapshot(until: end, renews: false), now: now, calendar: Expiry.calendar)
++        let lockEntry = try #require(plan.entries.first { $0.date == end }, "an entry is placed at the end")
++        let before = try #require(plan.entries.last { $0.date < end })
++        #expect(!WidgetGate.isLocked(before, in: .medium), "until then Premium widgets show their numbers")
++        #expect(WidgetGate.isLocked(lockEntry, in: .medium), "from then on the family is the calm locked view")
++        #expect(!WidgetGate.isLocked(lockEntry, in: .small), "the free families are still drawn")
++    }
++
++    @Test func aRenewingPlanLocksAfterTheSlackNotAtTheEnd() throws {
++        let end = now.addingTimeInterval(-hour)
++        let lock = end.addingTimeInterval(WidgetSnapshot.renewalSlack)
++        let plan = WidgetTimelineBuilder.build(snapshot: Expiry.snapshot(until: end, renews: true), now: now, calendar: Expiry.calendar)
++        #expect(plan.entries.allSatisfy { $0.date < lock || WidgetGate.isLocked($0, in: .medium) })
++        #expect(!WidgetGate.isLocked(plan.entries[0], in: .medium), "an hour past the end of a renewing plan is still Premium")
++        #expect(!plan.entries.contains { $0.date == lock }, "the slack ends past this timeline, which asks again at its horizon")
++    }
++
++    @Test func aPlanAlreadyPastItsLockIsLockedFromTheFirstEntry() throws {
++        let plan = WidgetTimelineBuilder.build(
++            snapshot: Expiry.snapshot(until: now.addingTimeInterval(-hour), renews: false), now: now, calendar: Expiry.calendar)
++        #expect(WidgetGate.isLocked(plan.entries[0], in: .medium))
++    }
++
++    @Test func noEndAddsNoEntryAndAFarEndAddsNone() {
++        let plain = WidgetTimelineBuilder.build(snapshot: Expiry.snapshot(until: nil, renews: false), now: now, calendar: Expiry.calendar)
++        let far = WidgetTimelineBuilder.build(
++            snapshot: Expiry.snapshot(until: now.addingTimeInterval(30 * 86_400), renews: false), now: now, calendar: Expiry.calendar)
++        let free = WidgetTimelineBuilder.build(snapshot: Expiry.snapshot(until: nil, renews: false, tier: .free), now: now, calendar: Expiry.calendar)
++        #expect(plain.entries.map(\.date) == far.entries.map(\.date) && plain.entries.map(\.date) == free.entries.map(\.date), "the same moments as before")
++        #expect(plain.reloadAfter <= now.addingTimeInterval(WidgetTimelineBuilder.horizon))
++    }
++
++    @Test func theWatchComplicationsUseTheSameMoments() throws {
++        let end = now.addingTimeInterval(2 * hour)
++        let dates = WatchComplicationSchedule.dates(snapshot: Expiry.snapshot(until: end, renews: false), now: now, calendar: Expiry.calendar)
++        #expect(dates.entries.contains { $0.date == end })
++        let snapshot = Expiry.snapshot(until: end, renews: false)
++        #expect(WatchComplicationSchedule.window(.sleep, snapshot: snapshot, from: end, calendar: Expiry.calendar) == nil, "a locked kind promotes nothing")
++        #expect(WatchComplicationSchedule.window(.sleep, snapshot: snapshot, from: end.addingTimeInterval(-hour), calendar: Expiry.calendar) != nil)
++    }
++}
++
++struct ExpirySurfaceTests {
++    private let now = Expiry.now
++    private var end: Date { now.addingTimeInterval(2 * hour) }
++
++    @Test func siriAndShortcutsSeeTheLapse() {
++        let snapshot = Expiry.snapshot(until: end, renews: false)
++        func tier(at date: Date) -> Tier { IntentEnvironment(snapshot: { snapshot }, now: { date }).tier() }
++        #expect(tier(at: now) == .premium)
++        #expect(tier(at: end) == .free, "a Shortcut run after the end gets the free plan, with the app closed")
++    }
++
++    @Test func theSpokenBedtimeFollowsTheClock() {
++        let snapshot = Expiry.snapshot(until: end, renews: false)
++        let format = WidgetFormat(calendar: Expiry.calendar, locale: Locale(identifier: "en_US"))
++        let window = WidgetSpoken.bedtime(snapshot, now: now, format: format)
++        let single = WidgetSpoken.bedtime(snapshot, now: end, format: format)
++        #expect(window.contains("window") && !single.contains("window"), "\(window) / \(single)")
++    }
++
++    @Test func theWatchLocksItsPremiumPagesWithoutThePhone() {
++        let snapshot = Expiry.snapshot(until: end, renews: false)
++        let format = WidgetFormat(calendar: Expiry.calendar, locale: Locale(identifier: "en_US"))
++        let before = WatchPages.heart(WatchPageInput(snapshot: snapshot, now: now, format: format))
++        let after = WatchPages.heart(WatchPageInput(snapshot: snapshot, now: end, format: format))
++        #expect(before.locked == nil && after.locked != nil, "the Heart page locks at the end, from the snapshot alone")
++        let tonight = WatchPages.tonight(WatchPageInput(snapshot: snapshot, now: end, format: format))
++        #expect(tonight.locked != nil)
++    }
++
++    @Test func aRenewalSlackKeepsTheWatchUnlockedForAPayingPerson() {
++        let snapshot = Expiry.snapshot(until: end, renews: true)
++        let format = WidgetFormat(calendar: Expiry.calendar, locale: Locale(identifier: "en_US"))
++        #expect(WatchPages.heart(WatchPageInput(snapshot: snapshot, now: end.addingTimeInterval(hour), format: format)).locked == nil)
++    }
++}
++
++struct SnapshotTierReadersTests {
++    /// Nothing outside the snapshot reads its `tier` flag directly: every reader asks `effectiveTier(at:)`, so no surface can keep Premium past its end by
++    /// forgetting the clock.
++    @Test func everyReaderAsksTheOneFunction() {
++        let files = RawDefaultsTests.swiftFiles(under: [
++            "Widgets/Home", "Watch/App", "Watch/Widgets", "Packages/NoctisKit/Sources/NoctisWidgetKit", "Packages/NoctisKit/Sources/NoctisWatchKit",
++            "Packages/NoctisKit/Sources/NoctisIntentKit", "Packages/NoctisKit/Sources/AppRoot",
++        ])
++        #expect(!files.isEmpty)
++        let pattern = #/\bsnapshot\??\.tier\b/#
++        for file in files where !file.path.hasSuffix("WidgetSnapshot.swift") {
++            let code = RawDefaultsTests.code(file.text)
++            #expect(code.firstMatch(of: pattern) == nil, Comment(rawValue: "\(file.path) reads the snapshot's tier flag; ask effectiveTier(at:)"))
++        }
++    }
++}
++
++private actor WindowBox {
++    var value = PremiumWindow()
++    func set(_ window: PremiumWindow) { value = window }
++}
++
++struct PremiumWindowPublishingTests {
++    private let now = WidgetFixture.now
++
++    private func bench(window: WindowBox) throws -> (WidgetPublisher, WidgetSnapshotStore, URL) {
++        let directory = try WidgetFixture.directory()
++        let store = WidgetSnapshotStore(directory: directory)
++        let inputs = WidgetInputSource(profile: { UserProfileSnapshot() })
++        inputs.setTier { .premium }
++        inputs.setPremiumWindow { await window.value }
++        let clock = now
++        return (WidgetPublisher(store: store, inputs: inputs, clock: { clock }, calendar: WidgetFixture.calendar), store, directory)
++    }
++
++    private func repository(_ publisher: WidgetPublisher) -> HomeRepository {
++        let provider = MockHealthKitProvider(scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true)
++        let clock = now
++        return HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }, widgets: publisher)
++    }
++
++    @Test func theEndIsWrittenAndARenewalWritesItAgain() async throws {
++        let box = WindowBox()
++        let first = now.addingTimeInterval(5 * hour)
++        await box.set(PremiumWindow(until: first, autoRenews: true))
++        let (publisher, store, directory) = try bench(window: box)
++        defer { try? FileManager.default.removeItem(at: directory) }
++        _ = await repository(publisher).refresh(profile: UserProfileSnapshot())
++        #expect(store.load()?.premiumUntil.map { Int($0.timeIntervalSince1970) } == Int(first.timeIntervalSince1970) && store.load()?.autoRenews == true)
++
++        let renewed = first.addingTimeInterval(30 * 86_400)
++        await box.set(PremiumWindow(until: renewed, autoRenews: true))
++        await publisher.republish()
++        #expect(store.load()?.premiumUntil.map { Int($0.timeIntervalSince1970) } == Int(renewed.timeIntervalSince1970), "a renewal with the same tier still reaches the file")
++
++        await box.set(PremiumWindow(until: renewed, autoRenews: false))
++        await publisher.republish()
++        #expect(store.load()?.autoRenews == false, "a cancellation stops the slack")
++    }
++
++    @Test func aWriteBeforeTheStoreHasAnsweredKeepsTheEndAlreadyWritten() async throws {
++        let box = WindowBox()
++        let end = now.addingTimeInterval(5 * hour)
++        await box.set(PremiumWindow(until: end, autoRenews: false))
++        let (publisher, store, directory) = try bench(window: box)
++        defer { try? FileManager.default.removeItem(at: directory) }
++        let repository = repository(publisher)
++        _ = await repository.refresh(profile: UserProfileSnapshot())
++        await box.set(PremiumWindow())
++        _ = await repository.refresh(profile: UserProfileSnapshot())
++        await publisher.republish()
++        #expect(store.load()?.premiumUntil != nil, "an unknown end after a launch does not erase a known one")
++    }
++
++    @Test func aFreePersonHasNoEndWhateverTheStoreSaid() async throws {
++        let directory = try WidgetFixture.directory()
++        defer { try? FileManager.default.removeItem(at: directory) }
++        let store = WidgetSnapshotStore(directory: directory)
++        let inputs = WidgetInputSource(profile: { UserProfileSnapshot() })
++        inputs.setPremiumWindow { PremiumWindow(until: Date(timeIntervalSince1970: 4_000_000_000), autoRenews: true) }
++        let clock = now
++        let publisher = WidgetPublisher(store: store, inputs: inputs, clock: { clock }, calendar: WidgetFixture.calendar)
++        _ = await repository(publisher).refresh(profile: UserProfileSnapshot())
++        #expect(store.load()?.tier == .free && store.load()?.premiumUntil == nil)
++    }
++}
++
++@MainActor
++struct PremiumWindowFromTheStoreTests {
++    private let now = Expiry.now
++
++    private func manager(_ client: FakeEntitlementClient) -> EntitlementManager {
++        let defaults = UserDefaults(suiteName: "noctis.expiry.\(UUID().uuidString)") ?? .standard
++        let clock = now
++        return EntitlementManager(client: client, cache: EntitlementCache(defaults: defaults), clock: { clock })
++    }
++
++    private func record(expires: Date) -> EntitlementRecord { EntitlementRecord(productID: StoreProductID.yearly, expirationDate: expires) }
++
++    @Test func thePlansEndAndWhetherItRenewsComeFromTheStore() async {
++        let client = FakeEntitlementClient()
++        let end = now.addingTimeInterval(10 * 86_400)
++        let manager = manager(client)
++        #expect(manager.premiumUntil == nil && !manager.premiumAutoRenews, "free: nothing to run out")
++        client.set([record(expires: end)], renewal: RenewalRecord(state: .subscribed, willAutoRenew: true))
++        await manager.refresh()
++        #expect(manager.premiumUntil == end && manager.premiumAutoRenews)
++        client.set([record(expires: end)], renewal: RenewalRecord(state: .subscribed, willAutoRenew: false))
++        await manager.refresh()
++        #expect(manager.premiumUntil == end && !manager.premiumAutoRenews, "cancelled: it ends at its end, with no slack")
++    }
++
++    @Test func aGracePeriodEndsAtItsOwnEndAndDoesNotRenewUntilThePaymentIsFixed() async {
++        let client = FakeEntitlementClient()
++        let graceEnd = now.addingTimeInterval(3 * 86_400)
++        let manager = manager(client)
++        client.set(
++            [record(expires: now.addingTimeInterval(-60))],
++            renewal: RenewalRecord(state: .inGracePeriod, isInBillingRetry: true, gracePeriodExpirationDate: graceEnd))
++        await manager.refresh()
++        #expect(manager.isInGracePeriod && manager.premiumUntil == graceEnd && !manager.premiumAutoRenews)
++    }
++
++    @Test func aRenewalThatKeepsTheTierStillTellsTheSnapshotWriter() async {
++        let client = FakeEntitlementClient()
++        let manager = manager(client)
++        var windowChanges = 0
++        var tierChanges = 0
++        manager.onPremiumWindowChange = { windowChanges += 1 }
++        manager.onTierChange = { _, _ in tierChanges += 1 }
++        client.set([record(expires: now.addingTimeInterval(86_400))], renewal: RenewalRecord(state: .subscribed))
++        await manager.refresh()
++        #expect(tierChanges == 1 && windowChanges == 0, "a new plan is the tier change's news, not a second one")
++        await manager.refresh()
++        #expect(windowChanges == 0, "nothing moved")
++        client.set([record(expires: now.addingTimeInterval(31 * 86_400))], renewal: RenewalRecord(state: .subscribed))
++        await manager.refresh()
++        #expect(tierChanges == 1 && windowChanges == 1, "a renewal moves the end")
++        client.set([record(expires: now.addingTimeInterval(31 * 86_400))], renewal: RenewalRecord(state: .subscribed, willAutoRenew: false))
++        await manager.refresh()
++        #expect(windowChanges == 2, "a cancellation stops the slack")
++    }
++
++    @Test func aPaymentThatCannotBeTakenIsSaidPlainly() async {
++        let client = FakeEntitlementClient()
++        let manager = manager(client)
++        client.set(
++            [record(expires: now.addingTimeInterval(-3600))],
++            renewal: RenewalRecord(state: .inBillingRetryPeriod, isInBillingRetry: true, gracePeriodExpirationDate: nil))
++        await manager.refresh()
++        #expect(manager.tier == .free && manager.hasPaymentProblem && manager.summary.hasPaymentProblem)
++        let detail = manager.summary.detail()
++        #expect(detail.contains("payment") && detail.contains("Manage subscription") && detail.contains("still here"), Comment(rawValue: detail))
++        client.set([record(expires: now.addingTimeInterval(30 * 86_400))], renewal: RenewalRecord(state: .subscribed))
++        await manager.refresh()
++        #expect(!manager.hasPaymentProblem && manager.tier == .premium, "paid: back, and no problem is shown")
++    }
++
++    @Test func aPausedPlanIsNotCalledTheFreePlanAnywhereOnThePage() {
++        let paused = SubscriptionSummary(hasPaymentProblem: true)
++        #expect(paused.headline == "Premium paused" && paused.pageSummary == "Your payment needs attention.")
++        let free = SubscriptionSummary.free
++        #expect(free.headline == "Free" && free.pageSummary == "You're on the free plan.", "the ordinary free plan reads exactly as before")
++        let premium = SubscriptionSummary(isPremium: true, plan: .yearly)
++        #expect(premium.headline == "Premium · Yearly" && premium.pageSummary == "You have Premium.")
++        #expect(SubscriptionSummary(isPremium: true, plan: .yearly, isInGracePeriod: true).pageSummary == "You have Premium.")
++    }
++
++    @Test func aFreePersonWithNoBillingTroubleSeesNoProblem() async {
++        let client = FakeEntitlementClient()
++        let manager = manager(client)
++        client.set([], renewal: RenewalRecord(state: .expired))
++        await manager.refresh()
++        #expect(!manager.hasPaymentProblem)
++        #expect(!SubscriptionSummary(isPremium: true, hasPaymentProblem: true).hasPaymentProblem, "a person with Premium has no paused Premium")
++    }
++}
++
++struct PremiumWiringTests {
++    private func container() throws -> String {
++        try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
++    }
++
++    @Test func theSnapshotIsGivenTheEndAndRewrittenWhenARenewalMovesIt() throws {
++        let text = try container()
++        #expect(text.contains("widgetInputs.setPremiumWindow {"), "the publisher asks the store's answer for the end")
++        #expect(text.contains("store.entitlementManager.premiumUntil") && text.contains("store.entitlementManager.premiumAutoRenews"))
++        let hook = try #require(text.range(of: "store.entitlementManager.onPremiumWindowChange = {"))
++        #expect(text[hook.upperBound...].prefix(120).contains("widgetPublisher.republish()"))
++    }
++
++    @Test func aBackgroundWakeRefreshesHomeBeforeItAsksTheStore() throws {
++        let text = try container()
++        let refresher = try #require(text.range(of: "let backgroundRefresher = BackgroundRefresher("))
++        let body = String(text[refresher.upperBound...].prefix(1800))
++        let helper = try #require(body.range(of: "BackgroundRefresher.healthThenPlan("))
++        let home = try #require(body.range(of: "health: { _ = await homeRepository.refresh("))
++        let store = try #require(body.range(of: "plan: { await store.entitlementManager.refresh() }"))
++        #expect(helper.lowerBound < home.lowerBound && home.lowerBound < store.lowerBound, "Home is the health work, the store is the plan")
++    }
++
++    @Test func aPlanFoundChangedAfterTheHomeRefreshRewritesTheSnapshotItself() async throws {
++        // The store is asked after Home has published, so its answer must reach the snapshot without another Home refresh.
++        let defaults = UserDefaults(suiteName: "noctis.wake.\(UUID().uuidString)") ?? .standard
++        let client = FakeEntitlementClient()
++        let clock = Expiry.now
++        let manager = await EntitlementManager(client: client, cache: EntitlementCache(defaults: defaults), clock: { clock })
++        let directory = try WidgetFixture.directory()
++        defer { try? FileManager.default.removeItem(at: directory) }
++        let store = WidgetSnapshotStore(directory: directory)
++        let inputs = WidgetInputSource(profile: { UserProfileSnapshot() })
++        inputs.setTier { await manager.tier }
++        inputs.setPremiumWindow { await PremiumWindow(until: manager.premiumUntil, autoRenews: manager.premiumAutoRenews) }
++        let publisher = WidgetPublisher(store: store, inputs: inputs, clock: { clock }, calendar: WidgetFixture.calendar)
++        await MainActor.run { manager.onTierChange = { _, _ in Task { await publisher.republish() } } }
++        let provider = MockHealthKitProvider(scenario: .full, referenceDate: clock, calendar: Fixture.calendar(), startAuthorized: true)
++        let home = HomeRepository(provider: provider, timeZone: Fixture.newYork, clock: { clock }, widgets: publisher)
++
++        _ = await home.refresh(profile: UserProfileSnapshot())
++        #expect(store.load()?.tier == .free, "Health first: the numbers are written before the store is asked")
++
++        let end = clock.addingTimeInterval(10 * 86_400)
++        client.set([EntitlementRecord(productID: StoreProductID.yearly, expirationDate: end)], renewal: RenewalRecord(state: .subscribed))
++        await manager.refresh()
++        _ = await waitFor { store.load()?.tier == .premium }
++        let written = try #require(store.load())
++        #expect(written.tier == .premium && written.premiumUntil.map { Int($0.timeIntervalSince1970) } == Int(end.timeIntervalSince1970))
++    }
++}
++
++// R-01 under a slow or failing store: the wake's budget ends, and the Health numbers are already written.
++struct WakeBudgetTests {
++    private nonisolated final class Log: @unchecked Sendable {
++        private let lock = NSLock()
++        private var items: [String] = []
++        func add(_ item: String) { lock.withLock { items.append(item) } }
++        var all: [String] { lock.withLock { items } }
++    }
++
++    /// Work that waits until the test lets it go (no guessed durations).
++    private nonisolated final class Gate: @unchecked Sendable {
++        let stream: AsyncStream<Void>
++        private let continuation: AsyncStream<Void>.Continuation
++        init() { (stream, continuation) = AsyncStream<Void>.makeStream() }
++        func wait() async { for await _ in stream {} }
++        func release() { continuation.finish() }
++    }
++
++    @Test func aStoreThatNeverAnswersDoesNotCostTheHealthRefresh() async {
++        let log = Log()
++        let hang = Gate()
++        let planStarted = Gate()
++        let work = BackgroundRefresher.healthThenPlan(
++            health: { log.add("health") },
++            plan: {
++                log.add("plan started")
++                planStarted.release()
++                await hang.wait()
++                log.add("plan finished")
++            })
++        // The budget runs out exactly when the store has been asked and has not answered: no guessed duration, so a busy machine cannot change the order.
++        let refresher = BackgroundRefresher(
++            isOnboarded: { true }, isAuthorized: { true }, refresh: work, minimumInterval: 0, timeBudget: 20, sleep: { _ in await planStarted.wait() })
++        let outcome = await refresher.handleWake()
++        #expect(outcome == .timedOut, "the wake ends at its budget so HealthKit is let go")
++        #expect(log.all == ["health", "plan started"], "Health was written before the store was asked: \(log.all)")
++        hang.release()
++    }
++
++    @Test func aSlowHealthReadIsNeverHeldUpByTheStore() async {
++        let log = Log()
++        let slow = Gate()
++        let work = BackgroundRefresher.healthThenPlan(
++            health: {
++                log.add("health started")
++                await slow.wait()
++                log.add("health")
++            },
++            plan: { log.add("plan") })
++        let refresher = BackgroundRefresher(isOnboarded: { true }, isAuthorized: { true }, refresh: work, minimumInterval: 0, timeBudget: 30)
++        let wake = Task { await refresher.handleWake() }
++        _ = await waitFor { log.all == ["health started"] }
++        #expect(log.all == ["health started"], "the store is not asked while Health is still being read: \(log.all)")
++        slow.release()
++        #expect(await wake.value == .refreshed)
++        #expect(log.all == ["health started", "health", "plan"])
++    }
++
++    @Test func aStoreThatFailsLeavesTheWakeFinishedAndHealthWritten() async {
++        let log = Log()
++        let work = BackgroundRefresher.healthThenPlan(health: { log.add("health") }, plan: { log.add("plan answered nothing") })
++        let refresher = BackgroundRefresher(isOnboarded: { true }, isAuthorized: { true }, refresh: work, minimumInterval: 0, timeBudget: 5)
++        #expect(await refresher.handleWake() == .refreshed)
++        #expect(log.all == ["health", "plan answered nothing"])
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/SchemaFingerprintTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/SchemaFingerprintTests.swift
+new file mode 100644
+index 0000000..4b623dc
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/SchemaFingerprintTests.swift
+@@ -0,0 +1,49 @@
++import Foundation
++import SwiftData
++import Testing
++
++@testable import CoachKit
++@testable import JournalKit
++@testable import NoctisCore
++
++// A change to a stored model without a new schema version is the one way an update can damage or lose someone's data (X-16, S1B-B01). The shape of each shipped version
++// is written down here; a model that no longer matches fails this test until a version and a migration stage are added (Docs/MIGRATION_PROCEDURE.md) and the line
++// below is updated with them. There is no second version and none is made up to exercise the machinery: the migration harness has its own tests with a synthetic one.
++
++private func fingerprint(_ schema: any VersionedSchema.Type) -> String {
++    Schema(versionedSchema: schema).entities
++        .sorted { $0.name < $1.name }
++        .map { entity in
++            let attributes = entity.attributes.sorted { $0.name < $1.name }.map { "\($0.name):\($0.valueType)" }.joined(separator: ",")
++            let relationships = entity.relationships.sorted { $0.name < $1.name }.map { "\($0.name)->\($0.destination)" }.joined(separator: ",")
++            return "\(entity.name){\(attributes)|\(relationships)}"
++        }
++        .joined(separator: ";")
++}
++
++struct SchemaFingerprintTests {
++    private static let message =
++        "A stored model changed. Do not edit this line to make the test pass: add a VersionedSchema, a migration stage and an upgrade test first (Docs/MIGRATION_PROCEDURE.md)."
++
++    @Test func theAppDatabaseIsVersion1AsShipped() {
++        #expect(fingerprint(NoctisSchemaV1.self) == "AlarmConfiguration{alarmKitID:Optional<UUID>,lastStateRaw:String,minutesSinceMidnight:Int,repeatDaysRaw:Array<Int>,snoozeEnabled:Bool,snoozeMinutes:Int,updatedAt:Date|};UserProfileRecord{createdAt:Date,healthAuthorizationRequested:Bool,name:String,onboardingComplete:Bool,primaryGoalRaw:String,secondaryGoalRaw:Optional<String>,sleepGoalHours:Double,typicalWakeMinutes:Int|};WindDownSession{completed:Bool,id:UUID,plannedMinutes:Int,start:Date|}", Comment(rawValue: Self.message + " Now: " + fingerprint(NoctisSchemaV1.self)))
++    }
++
++    @Test func coachHistoryIsVersion1AsShipped() {
++        #expect(fingerprint(CoachHistorySchemaV1.self) == "AIConversation{createdAt:Date,id:UUID,updatedAt:Date|messages->AIMessage};AIMessage{answerData:Data,answerSummary:String,createdAt:Date,feedbackRaw:Optional<String>,id:UUID,question:String|conversation->AIConversation}", Comment(rawValue: Self.message + " Now: " + fingerprint(CoachHistorySchemaV1.self)))
++    }
++
++    @Test func theJournalIsVersion1AsShipped() {
++        #expect(fingerprint(JournalSchemaV1.self) == "JournalEntry{date:Date,energy:Optional<Int>,focus:Optional<Int>,id:UUID,mood:Optional<Int>,text:String|}", Comment(rawValue: Self.message + " Now: " + fingerprint(JournalSchemaV1.self)))
++    }
++
++    @Test func everyStoredModelBelongsToAVersionedSchemaThisTestKnows() throws {
++        // A fourth SwiftData store would need a fingerprint here: any `@Model` outside the three is a failure of this list, not of the model.
++        let files = RawDefaultsTests.swiftFiles(under: ["Packages/NoctisKit/Sources"])
++        let models = files.filter { RawDefaultsTests.code($0.text).contains("@Model") }.map(\.path)
++        let known = ["NoctisSchema", "CoachHistory", "JournalStore", "AppModels", "WindDownSession", "UserProfile", "AlarmConfiguration", "AIConversation", "JournalEntry"]
++        for path in models {
++            #expect(known.contains { path.contains($0) }, Comment(rawValue: "\(path) declares a @Model that no fingerprint above covers"))
++        }
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/StoreCompactionRealStoreTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/StoreCompactionRealStoreTests.swift
+new file mode 100644
+index 0000000..f19fc15
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/StoreCompactionRealStoreTests.swift
+@@ -0,0 +1,248 @@
++import Foundation
++import SQLite3
++import SwiftData
++import Testing
++
++@testable import CoachKit
++@testable import JournalKit
++@testable import NoctisCore
++
++// Compaction against the stores NOCTIS really writes (S1B-R-05, R-04): insert, delete, compact, reopen through the real container, read every kept row, and check
++// that nothing about the file's protection or backup exclusion changed. The temporary-file evidence for `temp_store = MEMORY` is measured here too.
++
++private nonisolated func folder() throws -> URL {
++    let url = URL.temporaryDirectory.appending(path: "noctis-realcompact-\(UUID().uuidString)", directoryHint: .isDirectory)
++    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
++    return url
++}
++
++private nonisolated func size(_ url: URL) -> Int { (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0 }
++
++/// What the file and its folder say about protection and backup.
++private nonisolated struct FileFacts: Equatable {
++    var protection: String
++    var folderProtection: String
++    var excluded: Bool
++    var folderExcluded: Bool
++
++    init(_ file: URL) {
++        func protection(_ url: URL) -> String {
++            ((try? FileManager.default.attributesOfItem(atPath: url.path)[.protectionKey]) as? FileProtectionType)?.rawValue ?? "none"
++        }
++        func excluded(_ url: URL) -> Bool { (try? url.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup) ?? false }
++        self.protection = protection(file)
++        self.folderProtection = protection(file.deletingLastPathComponent())
++        self.excluded = excluded(file)
++        self.folderExcluded = excluded(file.deletingLastPathComponent())
++    }
++}
++
++private nonisolated final class Outcomes: @unchecked Sendable {
++    private let lock = NSLock()
++    private var values: [StoreOpenOutcome] = []
++    func add(_ value: StoreOpenOutcome) { lock.withLock { values.append(value) } }
++    var all: [StoreOpenOutcome] { lock.withLock { values } }
++}
++
++private nonisolated func recovery(_ folder: URL, _ outcomes: Outcomes) -> StoreRecovery {
++    StoreRecovery(quarantineRoot: folder.appending(path: "Quarantine"), report: { _, outcome in outcomes.add(outcome) })
++}
++
++private nonisolated func millis(_ work: () -> Void) -> Double {
++    let start = ContinuousClock.now
++    work()
++    let elapsed = ContinuousClock.now - start
++    return Double(elapsed.components.seconds) * 1000 + Double(elapsed.components.attoseconds) / 1e15
++}
++
++struct StoreCompactionRealStoreTests {
++    @Test func theJournalIsCompactedAndEveryKeptEntryIsStillThere() throws {
++        let dir = try folder()
++        defer { try? FileManager.default.removeItem(at: dir) }
++        let url = dir.appending(path: "journal.store")
++        let outcomes = Outcomes()
++        var kept: [String] = []
++        do {
++            let container = try JournalContainer.make(directory: dir, recovery: recovery(dir, outcomes))
++            let context = ModelContext(container)
++            for index in 0..<3000 {
++                let entry = JournalEntry()
++                entry.text = "\(index) " + String(repeating: "note ", count: 400)
++                entry.mood = index % 5 + 1
++                context.insert(entry)
++            }
++            try context.save()
++            for entry in try context.fetch(FetchDescriptor<JournalEntry>()) {
++                if (Int(entry.text.prefix(while: { $0 != " " })) ?? 1) % 10 == 0 {
++                    kept.append(entry.text)
++                } else {
++                    context.delete(entry)
++                }
++            }
++            try context.save()
++        }
++        let before = FileFacts(url)
++        let bytesBefore = size(url) + size(dir.appending(path: "journal.store-wal"))
++        var outcome = StoreCompaction.Outcome.failed
++        let took = millis { outcome = StoreCompaction(defaults: UserDefaults(suiteName: "noctis.rc.\(UUID().uuidString)") ?? .standard).compact(url) }
++        #expect(outcome == .compacted)
++        print("COMPACTION-TIMING journal \(bytesBefore / 1024) KB -> \(size(url) / 1024) KB in \(Int(took)) ms")
++        #expect(size(url) < bytesBefore / 2, "\(bytesBefore) -> \(size(url))")
++
++        let reopened = try JournalContainer.make(directory: dir, recovery: recovery(dir, outcomes))
++        let rows = try ModelContext(reopened).fetch(FetchDescriptor<JournalEntry>())
++        #expect(rows.count == kept.count && Set(rows.map(\.text)) == Set(kept), "every kept entry, and only those")
++        #expect(outcomes.all.allSatisfy { $0 == .opened }, "no damaged store was set aside: \(outcomes.all)")
++        #expect(FileFacts(url) == before, "protection and backup exclusion are as they were: \(before) -> \(FileFacts(url))")
++    }
++
++    @Test func coachConversationsAreCompactedAndReadBack() throws {
++        let dir = try folder()
++        defer { try? FileManager.default.removeItem(at: dir) }
++        let url = dir.appending(path: "coach-history.store")
++        let outcomes = Outcomes()
++        var keptIDs: Set<UUID> = []
++        do {
++            let container = try CoachHistoryContainer.make(directory: dir, recovery: recovery(dir, outcomes))
++            let context = ModelContext(container)
++            for _ in 0..<30000 { context.insert(AIConversation()) }
++            try context.save()
++            for (index, conversation) in try context.fetch(FetchDescriptor<AIConversation>()).enumerated() {
++                if index % 10 == 0 { keptIDs.insert(conversation.id) } else { context.delete(conversation) }
++            }
++            try context.save()
++        }
++        let before = FileFacts(url)
++        let bytesBefore = size(url) + size(dir.appending(path: "coach-history.store-wal"))
++        var outcome = StoreCompaction.Outcome.failed
++        let took = millis { outcome = StoreCompaction(defaults: UserDefaults(suiteName: "noctis.rc.\(UUID().uuidString)") ?? .standard).compact(url) }
++        #expect(outcome == .compacted)
++        print("COMPACTION-TIMING coach \(bytesBefore / 1024) KB -> \(size(url) / 1024) KB in \(Int(took)) ms")
++        #expect(size(url) < bytesBefore)
++
++        let reopened = try CoachHistoryContainer.make(directory: dir, recovery: recovery(dir, outcomes))
++        let rows = try ModelContext(reopened).fetch(FetchDescriptor<AIConversation>())
++        #expect(Set(rows.map(\.id)) == keptIDs)
++        #expect(outcomes.all.allSatisfy { $0 == .opened }, "\(outcomes.all)")
++        #expect(FileFacts(url) == before, "\(before) -> \(FileFacts(url))")
++    }
++
++    @Test func theAppDatabaseIsCompactedAndReadBack() throws {
++        let dir = try folder()
++        defer { try? FileManager.default.removeItem(at: dir) }
++        let url = dir.appending(path: "default.store")
++        var keptCount = 0
++        do {
++            let container = try NoctisStore.container(at: url)
++            let context = ModelContext(container)
++            let profile = UserProfileRecord()
++            profile.name = "Kept"
++            context.insert(profile)
++            for index in 0..<40000 {
++                let session = WindDownSession()
++                session.plannedMinutes = index
++                context.insert(session)
++            }
++            try context.save()
++            for session in try context.fetch(FetchDescriptor<WindDownSession>()) {
++                if session.plannedMinutes % 10 == 0 { keptCount += 1 } else { context.delete(session) }
++            }
++            try context.save()
++        }
++        let before = FileFacts(url)
++        let bytesBefore = size(url) + size(dir.appending(path: "default.store-wal"))
++        var outcome = StoreCompaction.Outcome.failed
++        let took = millis { outcome = StoreCompaction(defaults: UserDefaults(suiteName: "noctis.rc.\(UUID().uuidString)") ?? .standard).compact(url) }
++        #expect(outcome == .compacted)
++        print("COMPACTION-TIMING app \(bytesBefore / 1024) KB -> \(size(url) / 1024) KB in \(Int(took)) ms")
++
++        let reopened = try NoctisStore.container(at: url)
++        let context = ModelContext(reopened)
++        #expect(try context.fetchCount(FetchDescriptor<WindDownSession>()) == keptCount)
++        #expect(try context.fetch(FetchDescriptor<UserProfileRecord>()).first?.name == "Kept", "the profile is untouched")
++        #expect(FileFacts(url) == before)
++        // And it still saves.
++        context.insert(WindDownSession())
++        try context.save()
++    }
++
++    @MainActor
++    @Test func notBeingAskedCostsNothingAtLaunch() {
++        let defaults = UserDefaults(suiteName: "noctis.rc.\(UUID().uuidString)") ?? .standard
++        var found: [URL] = []
++        let took = millis { found = DataManager.databaseFiles() }
++        let idle = millis { StoreCompaction(defaults: defaults).runIfRequested(found) }
++        print("COMPACTION-TIMING launch-with-no-request: list \(Int(took * 1000)) us, check \(Int(idle * 1000)) us")
++        #expect(idle < 50, "a launch with no request does one flag read: \(idle) ms")
++    }
++
++    /// The measured evidence for R-04: by default SQLite writes the copy `VACUUM` makes into a temporary file in the app's temporary folder; with
++    /// `temp_store = MEMORY`, which is what `compact` sets, it writes nothing there.
++    @Test func compactionWritesNoTemporaryFileWhereTheDefaultDoes() throws {
++        let dir = try folder()
++        defer { try? FileManager.default.removeItem(at: dir) }
++        func big(_ name: String) throws -> URL {
++            let url = dir.appending(path: name)
++            let container = try ModelContainer(
++                for: JournalEntry.self, configurations: ModelConfiguration(name, url: url, allowsSave: true, cloudKitDatabase: .none))
++            let context = ModelContext(container)
++            for index in 0..<30000 {
++                let entry = JournalEntry()
++                entry.text = "\(index) " + String(repeating: "word ", count: 160)
++                context.insert(entry)
++            }
++            try context.save()
++            return url
++        }
++        let temporary = URL(fileURLWithPath: NSTemporaryDirectory())
++        func sawTemporaryFile(during work: () -> Void) -> Bool {
++            let seen = Seen()
++            let stop = Seen()
++            let poller = Thread {
++                while !stop.flag {
++                    if let names = try? FileManager.default.contentsOfDirectory(atPath: temporary.path), names.contains(where: { $0.hasPrefix("etilqs_") }) { seen.flag = true }
++                }
++            }
++            poller.start()
++            work()
++            stop.flag = true
++            return seen.flag
++        }
++        // Positive control: SQLite's default really does put a file there. The polling can miss it on a busy machine, so the control is tried a few times; if it
++        // is never seen the result for `compact` is inconclusive and is not asserted (the source check below holds the pragma in place either way).
++        var defaultSaw = false
++        for attempt in 0..<5 where !defaultSaw {
++            let control = try big("control\(attempt).store")
++            defaultSaw = sawTemporaryFile(during: { Self.vacuum(control, memory: false) })
++        }
++        let ours = try big("ours.store")
++        let oursSaw = sawTemporaryFile(during: {
++            _ = StoreCompaction(defaults: UserDefaults(suiteName: "noctis.rc.\(UUID().uuidString)") ?? .standard, maximumBytes: 512 * 1_048_576).compact(ours)
++        })
++        print("COMPACTION-TIMING temp-file evidence: default saw=\(defaultSaw) ours saw=\(oursSaw)")
++        if defaultSaw { #expect(!oursSaw, "compact must not write the copy outside the store") }
++        let source = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/StoreCompaction.swift"), encoding: .utf8)
++        let pragma = try #require(source.range(of: "PRAGMA temp_store = MEMORY;"))
++        let vacuum = try #require(source.range(of: "VACUUM;"))
++        #expect(pragma.lowerBound < vacuum.lowerBound, "the copy is kept in memory before the VACUUM runs")
++    }
++
++    private nonisolated final class Seen: @unchecked Sendable {
++        private let lock = NSLock()
++        private var value = false
++        var flag: Bool {
++            get { lock.withLock { value } }
++            set { lock.withLock { value = newValue } }
++        }
++    }
++
++    private static func vacuum(_ url: URL, memory: Bool) {
++        var database: OpaquePointer?
++        guard sqlite3_open_v2(url.path, &database, SQLITE_OPEN_READWRITE, nil) == SQLITE_OK else { return }
++        defer { sqlite3_close(database) }
++        if memory { sqlite3_exec(database, "PRAGMA temp_store = MEMORY;", nil, nil, nil) }
++        sqlite3_exec(database, "PRAGMA wal_checkpoint(TRUNCATE);", nil, nil, nil)
++        sqlite3_exec(database, "VACUUM;", nil, nil, nil)
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/StoreCompactionTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/StoreCompactionTests.swift
+new file mode 100644
+index 0000000..2c3b66d
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/StoreCompactionTests.swift
+@@ -0,0 +1,164 @@
++import Foundation
++import SQLite3
++import Testing
++
++@testable import NoctisCore
++
++// Rows deleted from a database leave free pages until the file is compacted (S1B-B03). The next launch compacts, once, carefully, before anything opens it.
++
++private func makeDatabase(rows: Int = 400, deleting: Bool = true) throws -> URL {
++    let url = URL.temporaryDirectory.appending(path: "noctis-compact-\(UUID().uuidString).store", directoryHint: .notDirectory)
++    var db: OpaquePointer?
++    #expect(sqlite3_open(url.path, &db) == SQLITE_OK)
++    defer { sqlite3_close(db) }
++    sqlite3_exec(db, "PRAGMA journal_mode=WAL;", nil, nil, nil)
++    sqlite3_exec(db, "CREATE TABLE entry (id INTEGER PRIMARY KEY, body TEXT);", nil, nil, nil)
++    sqlite3_exec(db, "BEGIN;", nil, nil, nil)
++    for index in 0..<rows { sqlite3_exec(db, "INSERT INTO entry (body) VALUES ('\(String(repeating: "x", count: 900))-\(index)');", nil, nil, nil) }
++    sqlite3_exec(db, "COMMIT;", nil, nil, nil)
++    if deleting { sqlite3_exec(db, "DELETE FROM entry WHERE id % 10 <> 0;", nil, nil, nil) }
++    sqlite3_exec(db, "PRAGMA wal_checkpoint(TRUNCATE);", nil, nil, nil)
++    return url
++}
++
++private func rowCount(_ url: URL) -> Int {
++    var db: OpaquePointer?
++    guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else { return -1 }
++    defer { sqlite3_close(db) }
++    var statement: OpaquePointer?
++    sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM entry;", -1, &statement, nil)
++    defer { sqlite3_finalize(statement) }
++    return sqlite3_step(statement) == SQLITE_ROW ? Int(sqlite3_column_int(statement, 0)) : -1
++}
++
++private func size(_ url: URL) -> Int { (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0 }
++
++private func defaults() -> UserDefaults { UserDefaults(suiteName: "noctis.compact.\(UUID().uuidString)") ?? .standard }
++
++struct StoreCompactionTests {
++    @Test func compactingGivesTheFreedPagesBackAndKeepsEveryRemainingRow() throws {
++        let url = try makeDatabase()
++        defer { try? FileManager.default.removeItem(at: url) }
++        let before = size(url)
++        #expect(rowCount(url) == 40)
++        #expect(StoreCompaction(defaults: defaults()).compact(url) == .compacted)
++        #expect(size(url) < before / 2, "\(before) -> \(size(url))")
++        #expect(rowCount(url) == 40, "what was kept is kept")
++    }
++
++    @Test func aMissingFileIsNothingToDo() {
++        let url = URL.temporaryDirectory.appending(path: "noctis-none-\(UUID().uuidString).store")
++        #expect(StoreCompaction(defaults: defaults()).compact(url) == .missing)
++    }
++
++    @Test func aDamagedFileIsLeftExactlyAsItIsForTheRecoveryToSetAside() throws {
++        let url = URL.temporaryDirectory.appending(path: "noctis-bad-\(UUID().uuidString).store")
++        try Data(repeating: 0x41, count: 8192).write(to: url)
++        defer { try? FileManager.default.removeItem(at: url) }
++        let bytes = try Data(contentsOf: url)
++        #expect(StoreCompaction(defaults: defaults()).compact(url) == .notIntact)
++        #expect(try Data(contentsOf: url) == bytes, "not a byte changed")
++    }
++
++    @Test func aLargeFileIsLeftAlone() throws {
++        let url = try makeDatabase()
++        defer { try? FileManager.default.removeItem(at: url) }
++        let before = size(url)
++        #expect(StoreCompaction(defaults: defaults(), maximumBytes: 1_000).compact(url) == .tooLarge)
++        #expect(size(url) == before && rowCount(url) == 40)
++        #expect(StoreCompaction.maximumBytes == 16 * 1_048_576)
++    }
++
++    @Test func aFileThatCannotBeOpenedForWritingWaitsForTheNextLaunch() throws {
++        let url = try makeDatabase()
++        defer { try? FileManager.default.removeItem(at: url) }
++        let busy = StoreCompaction(defaults: defaults())
++        // A connection that holds the write lock, as a running app's would.
++        var holder: OpaquePointer?
++        #expect(sqlite3_open(url.path, &holder) == SQLITE_OK)
++        defer { sqlite3_close(holder) }
++        sqlite3_exec(holder, "BEGIN EXCLUSIVE;", nil, nil, nil)
++        let outcome = busy.compact(url)
++        sqlite3_exec(holder, "ROLLBACK;", nil, nil, nil)
++        #expect(outcome == .unavailable || outcome == .failed, "\(outcome)")
++        #expect(rowCount(url) == 40)
++    }
++}
++
++struct StoreCompactionRequestTests {
++    @Test func nothingRunsUnlessADeletionAsked() throws {
++        let url = try makeDatabase()
++        defer { try? FileManager.default.removeItem(at: url) }
++        let before = size(url)
++        let compaction = StoreCompaction(defaults: defaults())
++        #expect(!compaction.isPending && compaction.runIfRequested([url]).isEmpty)
++        #expect(size(url) == before, "no request, no work")
++    }
++
++    @Test func aRequestRunsOnceAndIsClearedWhenEveryDatabaseWasDealtWith() throws {
++        let url = try makeDatabase()
++        defer { try? FileManager.default.removeItem(at: url) }
++        let compaction = StoreCompaction(defaults: defaults())
++        compaction.request()
++        let missing = URL.temporaryDirectory.appending(path: "noctis-none-\(UUID().uuidString).store")
++        let outcomes = compaction.runIfRequested([url, missing])
++        #expect(outcomes.map(\.1) == [.compacted, .missing])
++        #expect(!compaction.isPending, "once per request")
++        #expect(compaction.runIfRequested([url]).isEmpty)
++    }
++
++    @Test func aRequestThatCouldNotRunWaitsForTheNextLaunch() throws {
++        let url = try makeDatabase()
++        defer { try? FileManager.default.removeItem(at: url) }
++        let defaults = defaults()
++        StoreCompaction(defaults: defaults).request()
++        // A connection that holds the write lock, as a running app's would.
++        var holder: OpaquePointer?
++        #expect(sqlite3_open(url.path, &holder) == SQLITE_OK)
++        sqlite3_exec(holder, "BEGIN EXCLUSIVE;", nil, nil, nil)
++        let blocked = StoreCompaction(defaults: defaults).runIfRequested([url]).map(\.1)
++        sqlite3_exec(holder, "ROLLBACK;", nil, nil, nil)
++        sqlite3_close(holder)
++        #expect(blocked == [.unavailable] || blocked == [.failed], "\(blocked)")
++        #expect(StoreCompaction(defaults: defaults).isPending, "still asked for")
++        #expect(StoreCompaction(defaults: defaults).runIfRequested([url]).map(\.1) == [.compacted])
++        #expect(!StoreCompaction(defaults: defaults).isPending)
++    }
++
++    @Test func theCompactionNeverAsksTheSystemHowMuchSpaceIsFree() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/StoreCompaction.swift"), encoding: .utf8)
++        let code = RawDefaultsTests.code(text)
++        for word in ["volumeAvailableCapacity", "systemFreeSize", "NSFileSystemFreeSize", "statfs"] { #expect(!code.contains(word), Comment(rawValue: word)) }
++    }
++
++    @MainActor
++    @Test func deletingOneKindOfDataAsksForTheNextLaunchToCompact() async throws {
++        let defaults = defaults()
++        let manager = DataManager(erasers: [.journal: {}], providers: [:], deleteAllSteps: [], defaults: defaults)
++        let group = try #require(DataInventory.shared.groups.first { $0.id == "journal" })
++        let report = await manager.delete(group)
++        #expect(report.succeeded && StoreCompaction(defaults: defaults).isPending)
++    }
++
++    @MainActor
++    @Test func aDeletionOfAFileStoreAsksForNothing() async throws {
++        let defaults = defaults()
++        let manager = DataManager(erasers: [.insightHistory: {}], providers: [:], deleteAllSteps: [], defaults: defaults)
++        let group = try #require(DataInventory.shared.groups.first { $0.id == "insights" })
++        _ = await manager.delete(group)
++        #expect(!StoreCompaction(defaults: defaults).isPending, "the insights are a file, not a database")
++    }
++
++    @MainActor
++    @Test func theDatabasesAreTheInventorysAndTheLaunchCompactsBeforeAnythingOpens() throws {
++        let files = DataManager.databaseFiles()
++        let names = files.map(\.lastPathComponent)
++        #expect(names.contains("default.store") && names.contains("journal.store") && names.contains("coach-history.store"), "\(names)")
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/AppContainer.swift"), encoding: .utf8)
++        let compact = try #require(text.range(of: "if compaction.isPending { compaction.runIfRequested("))
++        let open = try #require(text.range(of: "NoctisStore.open()"))
++        #expect(compact.lowerBound < open.lowerBound)
++    }
++}

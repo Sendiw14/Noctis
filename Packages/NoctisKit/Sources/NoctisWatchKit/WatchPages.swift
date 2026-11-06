@@ -279,7 +279,7 @@ public nonisolated enum WatchPages {
     // MARK: Heart
 
     public static func heart(_ input: WatchPageInput) -> WatchHeartPage {
-        if WatchGate.isLocked(.heart, tier: input.snapshot?.tier) {
+        if WatchGate.isLocked(.heart, tier: input.snapshot?.effectiveTier(at: input.now)) {
             let locked = WatchLockedContent(.heart)
             return WatchHeartPage(message: nil, tiles: [], staleLine: nil, sensitivity: .plan, accessibilityLabel: locked.accessibilityLabel, locked: locked)
         }
@@ -312,7 +312,7 @@ public nonisolated enum WatchPages {
     // MARK: Tonight
 
     public static func tonight(_ input: WatchPageInput) -> WatchTonightPage {
-        if WatchGate.isLocked(.tonight, tier: input.snapshot?.tier) {
+        if WatchGate.isLocked(.tonight, tier: input.snapshot?.effectiveTier(at: input.now)) {
             let locked = WatchLockedContent(.tonight)
             return WatchTonightPage(
                 message: nil, bedtime: nil, windowText: nil, wakeLine: nil, countdown: .none, alarmLine: nil, sensitivity: .plan,

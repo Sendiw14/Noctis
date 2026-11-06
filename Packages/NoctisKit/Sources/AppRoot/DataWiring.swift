@@ -113,14 +113,19 @@ private final class WatchLineBox {
 
 /// Wires Data management to the app's stores (APP_RULES.md R41, R42). An eraser and an exporter for each inventory category, and the
 /// steps of "Delete all NOCTIS data" in the order that keeps it from putting back what it removes.
+/// The database-files step could not remove some files (said in the delete-all sheet, and tried again at the next launch).
+struct FilesNotRemoved: Error, CustomStringConvertible {
+    let count: Int
+    var description: String { "Some database files could not be removed" }
+}
+
 @MainActor
 public enum DataWiring {
     public static func manager(_ i: DataWiringInputs, inventory: DataInventory = .shared) -> DataManager {
         let erasers = erasers(i, inventory: inventory)
         return DataManager(
             inventory: inventory, roots: i.roots, erasers: erasers, providers: providers(i),
-            deleteAllSteps: deleteAllSteps(i, erasers: erasers, inventory: inventory),
-            appVersion: i.appVersion
+            deleteAllSteps: deleteAllSteps(i, erasers: erasers, inventory: inventory), appVersion: i.appVersion, defaults: i.defaults
         )
     }
 
@@ -224,6 +229,7 @@ public enum DataWiring {
         // The database files themselves, so what the rows held is not left behind in a file's free pages.
         steps.append(
             DeleteStep(id: "databases", title: "Removing database files") {
+                var unremoved = 0
                 for category in inventory.categories {
                     for case .database(let directory, let path) in category.locations {
                         let store = i.roots.url(directory).appending(path: path, directoryHint: .notDirectory)
@@ -232,11 +238,19 @@ public enum DataWiring {
                         for entry in (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? [] {
                             let relative = relativeFolder.isEmpty ? entry : relativeFolder + "/" + entry
                             if inventory.category(forFile: relative, in: directory) == category.id {
-                                try? FileManager.default.removeItem(at: folder.appending(path: entry))
+                                do {
+                                    try FileManager.default.removeItem(at: folder.appending(path: entry))
+                                } catch let error as CocoaError where error.code == .fileNoSuchFile {
+                                    // Already gone.
+                                } catch {
+                                    unremoved += 1
+                                }
                             }
                         }
                     }
                 }
+                // A file that stays is a failed step, not a deletion that worked: the sheet says so, and the next launch tries again (S1B-R-03).
+                if unremoved > 0 { throw FilesNotRemoved(count: unremoved) }
             })
         // The widgets redraw without their summary, and no Live Activity is left running.
         steps.append(

@@ -49,6 +49,10 @@ struct NoctisApp: App {
             RootView(initiallyOnboarded: container.model.isOnboarded)
                 // A new container after "Delete all NOCTIS data": every screen is made again, and the app starts over at onboarding.
                 .id(container.generation)
+                // A "Delete all NOCTIS data" the last run did not finish (the app was killed, the iPhone restarted) was started when the container was made (so a background launch finishes it too, S1B-R-02); the app starts over when it is done (S1B-B02).
+                .task(id: container.generation) {
+                    if await container.finishInterruptedDeletion() { container = AppContainer(restarted: true) }
+                }
                 .environment(\.restartApp, RestartAction { container = AppContainer(restarted: true) })
                 .environment(container.model)
                 .environment(container.accountStore)

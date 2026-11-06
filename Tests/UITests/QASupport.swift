@@ -194,7 +194,8 @@ extension QA {
         for s in all where interactive.contains(s.elementType) && s.isEnabled && onScreen(s.frame) {
             // A container the whole width of the window that holds buttons is not a target of its own.
             if s.frame.width >= window.width - 1, s.frame.height > 200 { continue }
-            if s.frame.width < 44 || s.frame.height < 44 { found.append("\(position): target under 44 pt: \(describe(s))") }
+            // A 44 pt button can measure 43.999999999999986 (the audit's "Pause 43 x 44" at AX5): rounding, not a short target.
+            if s.frame.width < 43.99 || s.frame.height < 43.99 { found.append("\(position): target under 44 pt: \(describe(s))") }
             // A text field is named by its placeholder.
             let named = !s.label.isEmpty || !(s.placeholderValue ?? "").isEmpty || !s.title.isEmpty
             if !named { found.append("\(position): control with no label: \(describe(s))") }

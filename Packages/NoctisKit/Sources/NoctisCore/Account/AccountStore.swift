@@ -38,6 +38,20 @@ public nonisolated protocol AccountKeychain: Sendable {
     func read() -> String?
     func write(_ userID: String) -> Bool
     func delete()
+    /// Whether the item is there, is not, or cannot be asked about now (the iPhone has not been unlocked since it started): "nothing found" and "cannot look" must not
+    /// be taken for each other (S1B-R-16).
+    func lookup() -> KeychainLookup
+}
+
+public nonisolated enum KeychainLookup: Sendable, Equatable {
+    case found
+    case notFound
+    case unavailable
+}
+
+nonisolated extension AccountKeychain {
+    /// For a keychain that is always answerable (memory, tests).
+    public func lookup() -> KeychainLookup { read() == nil ? .notFound : .found }
 }
 
 /// Asks Apple whether the identifier is still good: Apple's provider in the app, a fake in tests.
@@ -115,16 +129,40 @@ public final class AccountStore {
 
 // MARK: - The system's
 
+/// The Keychain calls that change the item, so a test can make them fail.
+nonisolated struct KeychainCalls: Sendable {
+    var update: @Sendable (_ query: [String: Any], _ attributes: [String: Any]) -> OSStatus
+    var add: @Sendable (_ attributes: [String: Any]) -> OSStatus
+    var delete: @Sendable (_ query: [String: Any]) -> OSStatus
+
+    static let system = KeychainCalls(
+        update: { SecItemUpdate($0 as CFDictionary, $1 as CFDictionary) },
+        add: { SecItemAdd($0 as CFDictionary, nil) },
+        delete: { SecItemDelete($0 as CFDictionary) }
+    )
+}
+
 /// The Keychain item: a generic password under NOCTIS's service, readable after the first unlock, never leaving this iPhone (no iCloud sync, not in
 /// a backup restored to another device).
 public nonisolated struct SystemAccountKeychain: AccountKeychain {
     public static let service = "com.noctis.app.account"
     public static let account = "appleUserID"
 
-    public init() {}
+    private let service: String
+    private let account: String
+    private let calls: KeychainCalls
+
+    public init() { self.init(service: Self.service, account: Self.account, calls: .system) }
+
+    /// Other Keychain calls, for tests that make them fail (the real Keychain answers no one outside the app).
+    init(service: String, account: String, calls: KeychainCalls) {
+        self.service = service
+        self.account = account
+        self.calls = calls
+    }
 
     private var query: [String: Any] {
-        [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service, kSecAttrAccount as String: Self.account]
+        [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
     }
 
     public func read() -> String? {
@@ -135,17 +173,28 @@ public nonisolated struct SystemAccountKeychain: AccountKeychain {
         return String(data: data, encoding: .utf8)
     }
 
+    /// Replaces the item in place, and adds it when there is none. It never deletes first: a write that fails (the iPhone locked before its first unlock, say) leaves
+    /// the identifier that was there, where delete-then-add lost it.
     public func write(_ userID: String) -> Bool {
-        delete()
-        let attributes: [String: Any] = [
-            kSecValueData as String: Data(userID.utf8),
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-            kSecAttrSynchronizable as String: false,
-        ]
-        return SecItemAdd(query.merging(attributes) { $1 } as CFDictionary, nil) == errSecSuccess
+        let value = Data(userID.utf8)
+        let accessible = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        let updated = calls.update(query, [kSecValueData as String: value, kSecAttrAccessible as String: accessible])
+        if updated == errSecSuccess { return true }
+        guard updated == errSecItemNotFound else { return false }
+        let attributes: [String: Any] = [kSecValueData as String: value, kSecAttrAccessible as String: accessible, kSecAttrSynchronizable as String: false]
+        return calls.add(query.merging(attributes) { $1 }) == errSecSuccess
     }
 
-    public func delete() { SecItemDelete(query as CFDictionary) }
+    public func delete() { _ = calls.delete(query) }
+
+    public func lookup() -> KeychainLookup {
+        let status = SecItemCopyMatching(query.merging([kSecMatchLimit as String: kSecMatchLimitOne]) { $1 } as CFDictionary, nil)
+        switch status {
+        case errSecSuccess: return .found
+        case errSecItemNotFound: return .notFound
+        default: return .unavailable  // for example errSecInteractionNotAllowed, before the first unlock
+        }
+    }
 
     /// How many bytes the item holds (for the Privacy Center), 0 when there is none.
     public var byteCount: Int { read()?.utf8.count ?? 0 }

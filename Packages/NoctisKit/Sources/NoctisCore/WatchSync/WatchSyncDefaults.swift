@@ -33,7 +33,7 @@ public nonisolated final class WatchSyncDefaults: @unchecked Sendable {
         }
     }
 
-    /// The day (and whether it had a recovery) the complication was last woken for: "2026-09-24:1".
+    /// The day, whether it had a recovery and the plan the complication was last woken for: "2026-09-24:1:premium@1790000000" (a mark from before the plan was added has two parts).
     public var complicationMark: String? {
         get { lock.withLock { defaults.string(forKey: Self.complicationMarkKey) } }
         set {

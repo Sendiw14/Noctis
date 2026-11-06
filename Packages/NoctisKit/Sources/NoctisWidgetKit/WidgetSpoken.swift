@@ -39,9 +39,9 @@ public enum WidgetSpoken {
 
     /// "Your bedtime tonight is 11:00 PM." The bedtime only: it is the plan, not a Health value. The free plan hears the one bedtime; Premium hears the window around it,
     /// "Your bedtime window tonight is 10:45 to 11:15 PM." (R62: the plan is the snapshot's flag, and the table says what it includes).
-    public static func bedtime(_ snapshot: WidgetSnapshot?, format: WidgetFormat = WidgetFormat()) -> String {
+    public static func bedtime(_ snapshot: WidgetSnapshot?, now: Date = Date(), format: WidgetFormat = WidgetFormat()) -> String {
         guard let snapshot else { return WidgetCopy.getStarted + "." }
-        if FeatureTable.isIncluded(.tonightPersonalizedWindow, in: snapshot.tier), let start = snapshot.plan.windowStartMinutes,
+        if FeatureTable.isIncluded(.tonightPersonalizedWindow, in: snapshot.effectiveTier(at: now)), let start = snapshot.plan.windowStartMinutes,
             let end = snapshot.plan.windowEndMinutes
         {
             let window = format.windowText(startMinutes: start, endMinutes: end).replacingOccurrences(of: "\u{2009}–\u{2009}", with: " to ")

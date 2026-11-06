@@ -237,7 +237,7 @@ struct NightStageTotalsView: View {
                 onTap(total.lane)
             } label: {
                 content(total)
-                    .frame(minHeight: 44, alignment: .leading)
+                    .frame(minWidth: 44, minHeight: 44, alignment: .leading)
                     .contentShape(Rectangle())
                     .opacity(focus == nil || focus == total.lane ? 1 : 0.5)
             }

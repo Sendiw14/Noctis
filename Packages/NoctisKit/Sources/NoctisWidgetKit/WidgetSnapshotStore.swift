@@ -31,7 +31,10 @@ public nonisolated final class WidgetSnapshotStore: Sendable {
 
     /// The saved snapshot; nil when there is none, it cannot be read, or it was written by another version.
     public func load() -> WidgetSnapshot? {
-        guard let data = try? Data(contentsOf: fileURL) else { return nil }
+        // The size first: a file over the limit is not read into a widget's small memory at all.
+        guard let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize, size <= WidgetSnapshot.maximumBytes,
+            let data = try? Data(contentsOf: fileURL)
+        else { return nil }
         return WidgetSnapshot.decode(data)
     }
 

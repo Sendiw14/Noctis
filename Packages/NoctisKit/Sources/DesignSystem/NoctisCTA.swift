@@ -124,6 +124,7 @@ public struct NoctisTextButton: View {
                 .noctisFont(15, .medium, relativeTo: .subheadline)
                 .foregroundStyle(adaptive ? NoctisAppColor.ink2 : NoctisPaper.ink2)
                 .multilineTextAlignment(.center)
+                .noctisButtonShape()
                 // 44pt tall at the default size from the padding (a 15pt line is about 18pt), and taller with the text: a `minHeight` frame
                 // left a two-line "Health data settings" at AX5 in a 44pt slot, where it overprinted "Open Health" above it and hung out of
                 // its card (seen in B-AX5 on an SE, home.evening.empty).

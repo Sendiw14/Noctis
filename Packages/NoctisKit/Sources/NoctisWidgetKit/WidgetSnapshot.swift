@@ -321,14 +321,23 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     public var nightsOfHistory: Int
     /// Unix seconds of the last "Delete all NOCTIS data", 0 if never (v2). A Watch that sees a greater one than it holds wipes its copy.
     public var dataEpoch: Int64
-    /// The person's plan when the app wrote this (APP_RULES.md R62): a free or premium flag, and nothing else about a purchase. Extensions and the Watch never
+    /// The person's plan when the app wrote this (APP_RULES.md R62): a free or premium flag and, for premium, when the period ends (`premiumUntil`) and whether it renews: nothing else about a purchase. Extensions and the Watch never
     /// call StoreKit; they ask the feature table what this tier includes. A snapshot with no flag (written before it existed) is free.
     public var tier: Tier
+    /// When Premium access ends (the plan's end, or the end of a billing grace period), if the app knew when it wrote this (S1B-C01). With it a widget, a complication,
+    /// a Siri answer or the Watch can tell that access has run out while the app was closed: they read `effectiveTier(at:)`, never `tier` alone.
+    public var premiumUntil: Date?
+    /// Whether the plan renews on its own at `premiumUntil` (false in a grace period and after a cancellation). A renewing plan keeps `renewalSlack` more, since the app,
+    /// which writes the renewal, may not have run yet.
+    public var autoRenews: Bool
+    /// How long an auto-renewing plan stays Premium past `premiumUntil` on a surface the app has not refreshed (the owner's choice; the plan proposes 48 hours).
+    public static let renewalSlack: TimeInterval = 48 * 3600
 
     public init(
         version: Int = WidgetSnapshot.currentVersion, forDay: WidgetDay, generatedAt: Date, plan: WidgetPlan, state: WidgetDataState,
         recovery: WidgetRecovery? = nil, lastNight: WidgetNight? = nil, factors: WidgetFactors? = nil, alarm: WidgetAlarm? = nil,
-        recoveryFactors: [WidgetRecoveryFactor] = [], nightsOfHistory: Int = 0, dataEpoch: Int64 = 0, tier: Tier = .free
+        recoveryFactors: [WidgetRecoveryFactor] = [], nightsOfHistory: Int = 0, dataEpoch: Int64 = 0, tier: Tier = .free,
+        premiumUntil: Date? = nil, autoRenews: Bool = false
     ) {
         self.version = version
         self.forDay = forDay
@@ -343,11 +352,14 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
         self.nightsOfHistory = min(max(nightsOfHistory, 0), 14)
         self.dataEpoch = max(dataEpoch, 0)
         self.tier = tier
+        // Only a Premium snapshot has an end: free has nothing to run out.
+        self.premiumUntil = tier == .premium ? premiumUntil : nil
+        self.autoRenews = tier == .premium && premiumUntil != nil && autoRenews
     }
 
     enum CodingKeys: String, CodingKey {
         case version = "v", forDay = "day", generatedAt = "at", plan = "p", state = "st", recovery = "rec", lastNight = "n", factors = "f", alarm = "al"
-        case recoveryFactors = "rf", nightsOfHistory = "nh", dataEpoch = "de", tier = "t"
+        case recoveryFactors = "rf", nightsOfHistory = "nh", dataEpoch = "de", tier = "t", premiumUntil = "pu", autoRenews = "ar"
     }
 
     public init(from decoder: any Decoder) throws {
@@ -363,15 +375,32 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
             nightsOfHistory: try values.decodeIfPresent(Int.self, forKey: .nightsOfHistory) ?? 0,
             dataEpoch: try values.decodeIfPresent(Int64.self, forKey: .dataEpoch) ?? 0,
             // An unknown word is free too: a flag that cannot be read never unlocks anything.
-            tier: (try? values.decodeIfPresent(Tier.self, forKey: .tier)).flatMap { $0 } ?? .free
+            tier: (try? values.decodeIfPresent(Tier.self, forKey: .tier)).flatMap { $0 } ?? .free,
+            premiumUntil: try? values.decodeIfPresent(Date.self, forKey: .premiumUntil), autoRenews: (try? values.decodeIfPresent(Bool.self, forKey: .autoRenews)) ?? false
         )
     }
 
-    /// The same snapshot for another plan (a purchase, or a lapse).
+    /// The same snapshot for another plan (a purchase, or a lapse). The end date belongs to the old plan, so it goes.
     public func with(tier: Tier) -> WidgetSnapshot {
         var copy = self
         copy.tier = tier
+        copy.premiumUntil = nil
+        copy.autoRenews = false
         return copy
+    }
+
+    /// The moment Premium stops counting on a surface the app has not refreshed: the end date, plus the renewal slack when the plan renews itself. Nil when
+    /// the snapshot is free or carries no end.
+    public var premiumLockDate: Date? {
+        guard tier == .premium, let premiumUntil else { return nil }
+        return premiumUntil.addingTimeInterval(autoRenews ? Self.renewalSlack : 0)
+    }
+
+    /// The plan this snapshot grants at `now`. The one place a reader gets the tier from (a source scan holds them to it): Premium becomes free by itself once
+    /// `premiumLockDate` has passed, so a lapsed plan does not keep its widgets until the app next runs (S1B-C01, P-03).
+    public func effectiveTier(at now: Date) -> Tier {
+        guard let lock = premiumLockDate else { return tier }
+        return now >= lock ? .free : tier
     }
 
     /// The same snapshot for the next epoch (delete-all), with everything else as it was: used only to stamp a snapshot.
@@ -394,8 +423,9 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
         return try encoder.encode(self)
     }
 
-    /// The snapshot in `data`; nil when it is not one, or is another version.
+    /// The snapshot in `data`; nil when it is not one, is another version, or is over `maximumBytes` (a snapshot is never written larger, and a widget's memory is small).
     public static func decode(_ data: Data) -> WidgetSnapshot? {
+        guard data.count <= maximumBytes else { return nil }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             Date(timeIntervalSince1970: TimeInterval(try decoder.singleValueContainer().decode(Int.self)))

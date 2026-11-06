@@ -426,6 +426,7 @@ struct PaywallScreen: View {
                 .noctisFont(16, .bold, relativeTo: .body, maxScale: 1.3)
                 .foregroundStyle(ink.opacity(0.8))
                 .multilineTextAlignment(.center)
+                .noctisButtonShape()
                 .frame(maxWidth: .infinity)
                 .atLeastTall(44, alignment: .center)
                 .contentShape(Rectangle())
@@ -437,6 +438,7 @@ struct PaywallScreen: View {
     /// A 12.5pt footer link whose frame is a full 44pt tall, so the tap target and the accessibility frame (Switch Control, the audit) agree. The row keeps its
     /// compact height because the container takes the padding back (`links`), not each label.
     private func linkLabel(_ title: String) -> some View {
+        // Not underlined here: these are system `Button` and `Link` views, which the system already draws with a shape when Button Shapes is on.
         Text(title)
             .padding(.vertical, Self.linkPadding.height)
             .padding(.horizontal, Self.linkPadding.width)
@@ -650,6 +652,7 @@ private struct PaywallBand: View {
                     Text("Restore")
                         .noctisFont(15, .semibold, relativeTo: .subheadline, maxScale: 1.3)
                         .foregroundStyle(NoctisPaper.ivory.opacity(0.7))
+                        .noctisButtonShape()
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
                 }

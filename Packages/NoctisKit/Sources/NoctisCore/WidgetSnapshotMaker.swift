@@ -12,7 +12,7 @@ public nonisolated enum WidgetSnapshotMaker {
     /// The snapshot for `home`, or nil when there is nothing true to say (a failed read leaves the last snapshot as it was).
     public static func make(
         home: HomeSnapshot, profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, now: Date, calendar: Calendar,
-        dataEpoch: Int64 = 0, tier: Tier = .free
+        dataEpoch: Int64 = 0, tier: Tier = .free, premiumUntil: Date? = nil, autoRenews: Bool = false
     ) -> WidgetSnapshot? {
         guard let state = state(of: home, now: now) else { return nil }
 
@@ -61,7 +61,8 @@ public nonisolated enum WidgetSnapshotMaker {
 
         return WidgetSnapshot(
             forDay: forDay, generatedAt: now, plan: plan, state: state, recovery: recovery, lastNight: night, factors: factors, alarm: alarm,
-            recoveryFactors: recoveryFactors, nightsOfHistory: nightsOfHistory, dataEpoch: dataEpoch, tier: tier
+            recoveryFactors: recoveryFactors, nightsOfHistory: nightsOfHistory, dataEpoch: dataEpoch, tier: tier, premiumUntil: premiumUntil,
+            autoRenews: autoRenews
         )
     }
 

@@ -69,6 +69,8 @@ struct ReviewSharePreviewSheet: View {
                 .frame(maxWidth: 360)
                 .clipShape(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: NoctisRadius.md, style: .continuous).strokeBorder(NoctisAppColor.hairline, lineWidth: 1))
+                // A picture of a card is a picture: Smart Invert leaves it as it was drawn (S1B-A03).
+                .accessibilityIgnoresInvertColors()
                 .accessibilityLabel("Share card preview")
                 .accessibilityIdentifier("review.share.preview")
         } else {

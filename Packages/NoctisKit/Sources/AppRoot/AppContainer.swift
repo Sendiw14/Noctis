@@ -44,6 +44,9 @@ public struct AppContainer {
     public let settingsViewModel: SettingsViewModel
     /// Data management: what NOCTIS keeps, one kind at a time or all of it, and a copy to take away.
     public let dataManager: DataManager
+    /// A "Delete all NOCTIS data" that the last run did not finish, being finished: started when the container is made (a background launch has no screen), once
+    /// per process. Its answer says whether the app must start over (S1B-R-02).
+    public let interruptedDeletion: Task<Bool, Never>?
     /// A new one each time the app starts over (after "Delete all NOCTIS data"), so the screens are made again.
     public let generation = UUID()
     /// The sleep sounds: the one player that holds the audio engine, and what the Sounds screen reads.
@@ -76,8 +79,13 @@ public struct AppContainer {
         // The launch budgets start counting here.
         NoctisSignpost.begin(.launchToFirstFrame)
         NoctisSignpost.begin(.launchToPopulated)
+        // A deletion of one kind of data left free pages in a database: compact it now, before anything opens it (S1B-B03). It only runs when one asked (and the list of files is not even built otherwise: a launch with no request is one flag read).
+        let compaction = StoreCompaction()
+        if compaction.isPending { compaction.runIfRequested(DataManager.databaseFiles()) }
         let store = StoreManager()
         self.storeManager = store
+        // Before the account is read: a sign-in an earlier install left in the Keychain is not picked up by a fresh one (S1B-B04).
+        FreshInstallGuard().run()
         #if DEBUG
         // `-mockAppleAccount signedIn`: the signed-in screens on a simulator with no Apple ID (an in-memory identifier, never the Keychain).
         let launch = ProcessInfo.processInfo.arguments
@@ -401,6 +409,8 @@ public struct AppContainer {
             coordinator.reschedule()
             Task { await widgetPublisher.republish() }
         }
+        // A renewal or a cancellation moves the end of Premium without changing the tier: the snapshot carries the end, so it is written again (S1B-C01).
+        store.entitlementManager.onPremiumWindowChange = { Task { await widgetPublisher.republish() } }
         model.onProfileChange = {
             coordinator.reschedule()
             Task { await widgetPublisher.republish() }
@@ -408,13 +418,23 @@ public struct AppContainer {
         // Background updates (R46): Apple Health wakes the app when new sleep data arrives; the refresh writes the widgets' summary
         // and reloads their timelines. Best-effort: iOS decides when. Nothing runs before setup is finished or without access.
         let backgroundRefresher = BackgroundRefresher(
-            isOnboarded: { await MainActor.run { model.profile.onboardingComplete } },
+            // Not while a "Delete all NOCTIS data" is unfinished: a refresh would write the widgets' summary and send the Watch numbers again (S1B-R-02).
+            isOnboarded: { await MainActor.run { model.profile.onboardingComplete && !DataManager.hasPendingDeleteAll() } },
             isAuthorized: { await provider.authorizationStatus() == .authorized },
-            refresh: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) }
+            // The Health refresh first: it is what the wake is for, and the whole wake has a 20-second budget, so it must not wait on the store. A fresh background
+            // process has no cached subscription group, and the store may need the network to answer. Then the plan: the store announces a renewal or a refund only
+            // while the app runs, so a wake that finds the plan changed rewrites the snapshot through `onTierChange` or `onPremiumWindowChange` (S1B-C02).
+            refresh: BackgroundRefresher.healthThenPlan(
+                health: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) },
+                plan: { await store.entitlementManager.refresh() }
+            )
         )
         // Activates the Watch link at launch; the Watch's "Ask iPhone to update" makes the same refresh a Health wake does.
         Task {
-            await watchSync.activate(onUpdateRequested: { _ = await homeRepository.refresh(profile: await MainActor.run { model.profile }) })
+            await watchSync.activate(onUpdateRequested: {
+                guard !DataManager.hasPendingDeleteAll() else { return }
+                _ = await homeRepository.refresh(profile: await MainActor.run { model.profile })
+            })
         }
         // Through the existential: in Release the provider is the concrete HealthKit one, and a cast from it would always succeed.
         let background = (provider as any HealthDataProviding) as? any HealthBackgroundDelivering
@@ -443,6 +463,9 @@ public struct AppContainer {
         // update, which redraws the widgets, which asks again (QA_LEDGER.md: 40 million writes of one row).
         widgetInputs.setAlarm { WidgetSnapshotMaker.alarm(await alarmService.peek().settings) }
         widgetInputs.setTier { await MainActor.run { gate.tier } }
+        widgetInputs.setPremiumWindow {
+            await MainActor.run { PremiumWindow(until: store.entitlementManager.premiumUntil, autoRenews: store.entitlementManager.premiumAutoRenews) }
+        }
         Task {
             for await _ in await alarmService.updates() { await widgetPublisher.republish() }
         }
@@ -599,6 +622,7 @@ public struct AppContainer {
                 }
             ))
         self.dataManager = dataManager
+        interruptedDeletion = DataManager.hasPendingDeleteAll() && Self.resumeOnce.claim() ? Task { await dataManager.resumeInterruptedDeletion() } : nil
         // Settings (R36): the preferences, the system's answers and the store, each row wired to something that works.
         #if DEBUG
         if let summary = debug.subscriptionSummary() { storeManager.entitlementManager.debugSet(summary) }
@@ -623,6 +647,18 @@ public struct AppContainer {
 }
 
 extension AppContainer {
+    /// Lets one container per process finish an interrupted deletion, so a restart after it cannot start another.
+    fileprivate final class ResumeOnce: @unchecked Sendable {
+        private let lock = NSLock()
+        private var claimed = false
+        func claim() -> Bool { lock.withLock { defer { claimed = true }; return !claimed } }
+    }
+
+    fileprivate static let resumeOnce = ResumeOnce()
+
+    /// True when an interrupted "Delete all NOCTIS data" has been finished and the app should start over; waits for it if it is still running.
+    public func finishInterruptedDeletion() async -> Bool { await interruptedDeletion?.value ?? false }
+
     /// The on-device model (Apple Intelligence), where this OS has it.
     static func systemModel() -> (any AIProvider)? {
         #if canImport(FoundationModels)
@@ -683,7 +719,7 @@ struct DebugLaunchOptions {
     /// `-mockNotifications granted|denied|notDetermined|willDeny`: the notification centre plays a script
     /// (a mock Health scenario with no flag gets one that is already allowed), so the system's question never opens.
     let mockNotifications: String?
-    /// `-mockSubscription free|monthly|yearly|trial|ending|grace`: a fixed subscription state (the simulator has no purchase).
+    /// `-mockSubscription free|monthly|yearly|trial|ending|grace|payment`: a fixed subscription state (the simulator has no purchase).
     let mockSubscription: String?
     /// `-mockJournal empty|filled|unavailable[:journal][:draft]`: an in-memory journal, with or without entries; `:journal` opens on the list, `:draft` fills in the form.
     let mockJournal: String?
@@ -756,6 +792,7 @@ struct DebugLaunchOptions {
                 isPremium: true, plan: .yearly, isTrial: true, willRenew: true, endDate: Calendar.current.date(byAdding: .day, value: 5, to: Date()))
         case "ending": return SubscriptionSummary(isPremium: true, plan: .yearly, willRenew: false, endDate: ends)
         case "grace": return SubscriptionSummary(isPremium: true, plan: .monthly, willRenew: true, endDate: ends, isInGracePeriod: true)
+        case "payment": return SubscriptionSummary(hasPaymentProblem: true)
         default: return .free
         }
     }

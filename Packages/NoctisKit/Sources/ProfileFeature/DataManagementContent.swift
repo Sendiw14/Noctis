@@ -44,6 +44,12 @@ public nonisolated enum DataManagementCopy {
 
     public static let deleteAllDone = "Everything NOCTIS kept was deleted from this iPhone."
     public static let deleteAllPartial = "Most of it was deleted, but these steps didn't finish:"
+    /// The notice on Data management when the last "Delete all" could not be finished: what is left, and the way to try again.
+    public static func unfinishedNotice(_ titles: [String]) -> String {
+        "The last \"Delete all NOCTIS data\" did not finish. These steps still need to run: \(titles.joined(separator: ", ")). Choose \"\(deleteAllButton)\" below to try again."
+    }
+
+    public static let unfinishedHeader = "NEEDS ATTENTION"
     public static let done = "Done"
     public static let cancel = "Cancel"
 

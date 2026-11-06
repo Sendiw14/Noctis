@@ -76,6 +76,10 @@ public enum DeletionRunner {
 public final class DataManager {
     public typealias Eraser = @MainActor () async throws -> Void
 
+    /// Set before the first step of "Delete all NOCTIS data" and cleared when every step has worked (S1B-B02): a launch that finds it set means the deletion was cut
+    /// short (the app was killed, the iPhone restarted, a step failed) and finishes it. It lives under the `noctis.` prefix, so the preferences step clears it too.
+    public nonisolated static let pendingDeleteAllKey = "noctis.deleteAll.pending"
+
     /// One row of the delete-all's progress.
     public enum StepState: Equatable, Sendable { case waiting, running, done, failed(String) }
 
@@ -96,12 +100,17 @@ public final class DataManager {
     @ObservationIgnored private let deleteAllSteps: [DeleteStep]
     @ObservationIgnored private let appVersion: () -> String
     @ObservationIgnored private let clock: () -> Date
+    @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let compaction: StoreCompaction
 
     public init(
         inventory: DataInventory = .shared, roots: DataRoots = DataRoots(), erasers: [DataCategoryID: Eraser],
         providers: [DataCategoryID: DataExport.Provider], deleteAllSteps: [DeleteStep], appVersion: @escaping () -> String = { "NOCTIS" },
-        clock: @escaping () -> Date = { Date() }
+        clock: @escaping () -> Date = { Date() }, defaults: UserDefaults = NoctisUserDefaults.standard
     ) {
+        self.defaults = defaults
+        unfinishedSteps = (defaults.string(forKey: Self.unfinishedDeleteAllKey) ?? "").split(separator: ",").map(String.init)
+        self.compaction = StoreCompaction(defaults: defaults)
         self.inventory = inventory
         self.roots = roots
         self.erasers = erasers
@@ -149,15 +158,68 @@ public final class DataManager {
             : await DeletionRunner.run(steps)
         lastReport = report
         lastDeleted = group
+        // The rows are gone but their pages stay in the file until it is compacted: the next launch does it, before anything opens the database (S1B-B03).
+        if report.entries.contains(where: { $0.failure == nil }), group.categories.contains(where: { holdsDatabase($0) }) { compaction.request() }
         return report
     }
 
+    /// Whether a category keeps its rows in a SQLite database.
+    private func holdsDatabase(_ id: DataCategoryID) -> Bool {
+        inventory[id].locations.contains { if case .database = $0 { true } else { false } }
+    }
+
+    /// The database files the inventory lists, for compaction at launch.
+    public static func databaseFiles(inventory: DataInventory = .shared, roots: DataRoots = DataRoots()) -> [URL] {
+        inventory.categories.flatMap { category in
+            category.locations.compactMap { location -> URL? in
+                guard case .database(let directory, let path) = location else { return nil }
+                return roots.url(directory).appending(path: path, directoryHint: .notDirectory)
+            }
+        }
+    }
+
     // MARK: Everything
+
+    /// How many launches finish an interrupted deletion before giving up (the first is the one right after it was cut short).
+    public nonisolated static let maximumResumeAttempts = 3
+
+    /// Whether a "Delete all NOCTIS data" was started and not finished. Read by the background refresher too, so a half-deleted app does not write its summary
+    /// again from a Health wake (S1B-R-02).
+    public nonisolated static func hasPendingDeleteAll(defaults: UserDefaults = NoctisUserDefaults.standard) -> Bool {
+        defaults.integer(forKey: pendingDeleteAllKey) > 0
+    }
+
+    /// Set when the last resume gave up with steps still failing: their ids, comma-separated. It stays until a "Delete all NOCTIS data" works, and Data management
+    /// says so (S1B-R-03): a deletion that did not finish is never forgotten.
+    public nonisolated static let unfinishedDeleteAllKey = "noctis.deleteAll.unfinished"
+
+    /// The steps the last resume could not finish, by step id (nothing personal); empty when nothing is outstanding. Survives a relaunch.
+    public private(set) var unfinishedSteps: [String] = []
+
+    /// The same steps by the name the delete-all sheet gave them ("Removing database files").
+    public var unfinishedStepTitles: [String] {
+        unfinishedSteps.map { id in deleteAllSteps.first { $0.id == id }?.title ?? id }
+    }
 
     /// Deletes everything NOCTIS stores on this iPhone, in order. The caller then starts the app again (`restart`).
     public func deleteEverything() async -> DeletionReport {
         isWorking = true
         defer { isWorking = false }
+        // Written first: if the app is cut off from here on, the next launch finishes the job (every step is safe to run again). A count already there stays.
+        defaults.set(max(defaults.integer(forKey: Self.pendingDeleteAllKey), 1), forKey: Self.pendingDeleteAllKey)
+        let report = await runDeleteAll()
+        // The preferences step removes the marker with every other `noctis.` key; a deletion with a failed step puts it back so the next launch tries again.
+        if report.succeeded {
+            defaults.removeObject(forKey: Self.pendingDeleteAllKey)
+            defaults.removeObject(forKey: Self.unfinishedDeleteAllKey)
+            unfinishedSteps = []
+        } else {
+            defaults.set(1, forKey: Self.pendingDeleteAllKey)
+        }
+        return report
+    }
+
+    private func runDeleteAll() async -> DeletionReport {
         steps = deleteAllSteps.map { ($0.id, $0.title, .waiting) }
         stepNotes = [:]
         deleteAllReport = nil
@@ -168,6 +230,36 @@ public final class DataManager {
         }
         deleteAllReport = report
         return report
+    }
+
+    /// Whether a "Delete all NOCTIS data" was started and not finished.
+    public var hasInterruptedDeletion: Bool { Self.hasPendingDeleteAll(defaults: defaults) }
+
+    /// At launch: finishes a deletion that was cut short, and says whether it ran (the caller then starts the app over, as the sheet's Done does). It runs the
+    /// steps once per call. A step that still fails keeps the marker for the next launch, up to `maximumResumeAttempts` launches in all; then the marker is
+    /// replaced by the persistent record in `unfinishedSteps`, so a step that cannot work never makes every launch start over and is never forgotten either.
+    public func resumeInterruptedDeletion() async -> Bool {
+        let attempts = defaults.integer(forKey: Self.pendingDeleteAllKey)
+        guard attempts > 0 else { return false }
+        isWorking = true
+        defer { isWorking = false }
+        let report = await runDeleteAll()
+        if report.succeeded {
+            defaults.removeObject(forKey: Self.pendingDeleteAllKey)
+            defaults.removeObject(forKey: Self.unfinishedDeleteAllKey)
+            unfinishedSteps = []
+        } else if attempts >= Self.maximumResumeAttempts {
+            // Out of tries: the marker goes, and what is left is written down where Data management shows it (the preferences step has already run, so it is
+            // written after the run).
+            defaults.removeObject(forKey: Self.pendingDeleteAllKey)
+            unfinishedSteps = report.failures.map(\.id)
+            defaults.set(unfinishedSteps.joined(separator: ","), forKey: Self.unfinishedDeleteAllKey)
+        } else {
+            defaults.set(attempts + 1, forKey: Self.pendingDeleteAllKey)
+            unfinishedSteps = report.failures.map(\.id)
+        }
+        resetDeleteAll()
+        return true
     }
 
     /// Forgets the delete-all's progress (the sheet was closed before it ran).

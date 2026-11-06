@@ -17,6 +17,10 @@ public final class EntitlementManager {
     public private(set) var expirationDate: Date?
     public private(set) var willAutoRenew = true
     public private(set) var activeProductID: String?
+    /// The end of the grace period while the plan is in one (the plan's own end has passed by then).
+    public private(set) var gracePeriodEnd: Date?
+    /// Billing failed and is being retried with no grace period: Premium is paused until the payment goes through.
+    public private(set) var hasPaymentProblem = false
     #if DEBUG
     /// `-mockSubscription`: a fixed answer for a screenshot, since the simulator's StoreKit has no purchase.
     public private(set) var debugSummary: SubscriptionSummary?
@@ -35,6 +39,8 @@ public final class EntitlementManager {
     private var refreshCount = 0
     /// Told when the tier changes: the new tier and the old.
     @ObservationIgnored public var onTierChange: (@MainActor (_ new: Tier, _ old: Tier) -> Void)?
+    /// Told when what the surfaces outside the app are given changes without the tier changing: a renewal moves the end, a cancellation stops it renewing (S1B-C01).
+    @ObservationIgnored public var onPremiumWindowChange: (@MainActor () -> Void)?
 
     public init(
         client: any EntitlementClient = StoreKitEntitlementClient(), cache: EntitlementCache = EntitlementCache(),
@@ -47,6 +53,16 @@ public final class EntitlementManager {
     }
 
     public var tier: Tier { state.tier }
+
+    /// When Premium access ends, as the snapshot carries it for widgets, complications, Siri and the Watch: the end of the grace period while in one, else the plan's
+    /// end. Nil when free or not yet known (the store has not answered since launch).
+    public var premiumUntil: Date? {
+        guard tier == .premium else { return nil }
+        return isInGracePeriod ? (gracePeriodEnd ?? expirationDate) : expirationDate
+    }
+
+    /// Whether the plan renews itself at `premiumUntil`: not in a grace period (a renewal waits for the payment to be fixed) and not after a cancellation.
+    public var premiumAutoRenews: Bool { tier == .premium && !isInGracePeriod && willAutoRenew }
     public var hasActivePremium: Bool { tier == .premium }
     /// Premium content is served through a billing grace period (Apple's guidance), so this is the same as `hasActivePremium`.
     public var hasAccess: Bool { hasActivePremium }
@@ -61,7 +77,8 @@ public final class EntitlementManager {
         #endif
         return SubscriptionSummary(
             isPremium: hasActivePremium, plan: activeProductID.flatMap(SubscriptionSummary.Plan.init(productID:)), isTrial: isInTrial, willRenew: willAutoRenew,
-            endDate: expirationDate, isInGracePeriod: isInGracePeriod, isFamilyShared: isFamilyShared, hasLapsed: state == .previouslyPremiumNowFree
+            endDate: expirationDate, isInGracePeriod: isInGracePeriod, isFamilyShared: isFamilyShared, hasLapsed: state == .previouslyPremiumNowFree,
+            hasPaymentProblem: hasPaymentProblem
         )
     }
 
@@ -100,6 +117,8 @@ public final class EntitlementManager {
         let renewal = await client.renewal()
         // A refresh that started after this one asked for a newer answer: this one is out of date, and applying it last would undo a refund or a purchase.
         guard ticket == refreshCount else { return }
+        let tierBefore = state.tier
+        let windowBefore = (premiumUntil, premiumAutoRenews)
         let resolved = EntitlementResolver.resolve(
             records: records, renewal: renewal, previous: cache.read(), productIDs: Set(StoreProductID.all), now: clock()
         )
@@ -109,8 +128,11 @@ public final class EntitlementManager {
         expirationDate = resolved.tier == .premium ? newest?.expirationDate : nil
         activeProductID = resolved.tier == .premium ? newest?.productID : nil
         willAutoRenew = renewal?.willAutoRenew ?? true
+        gracePeriodEnd = resolved == .premium(.grace) ? renewal?.gracePeriodExpirationDate : nil
+        hasPaymentProblem = resolved.tier == .free && renewal.map { $0.state == .inBillingRetryPeriod || $0.isInBillingRetry } == true
         isResolved = true
         set(resolved)
+        if (premiumUntil, premiumAutoRenews) != windowBefore, resolved.tier == tierBefore { onPremiumWindowChange?() }
         scheduleDueRefresh(resolved: resolved, expiration: expirationDate, graceEnd: renewal?.gracePeriodExpirationDate)
     }
 

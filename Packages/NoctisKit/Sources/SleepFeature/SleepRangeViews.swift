@@ -439,10 +439,7 @@ struct SleepQualityStripCard: View {
     @ViewBuilder
     private func dot(_ band: QualityDotRender.Band?, size: CGFloat) -> some View {
         if let band {
-            Circle()
-                .fill(band.tint)
-                .overlay(Circle().strokeBorder(NoctisAppColor.ink.opacity(0.22), lineWidth: 0.5))
-                .frame(width: size, height: size)
+            QualityDotMark(band: band, size: size)
         } else {
             Circle()
                 .strokeBorder(NoctisAppColor.track, lineWidth: 1.5)

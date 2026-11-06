@@ -1,0 +1,120 @@
+Simulator evidence, 2026-11-02, iPhone 18 Pro simulator, Debug build with temporary NSLog lines in a COPY of the tree (not in the repository).
+Marker passed as the launch argument -noctis.deleteAll.pending 1 (the argument domain); a preference file edited from outside is not seen by the app.
+
+A: launch with -intentRunner (no root view) then B: normal foreground launch
+16:22:14.137 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG container init pending=1
+16:22:14.636 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG resume called attempts=1
+16:22:14.636 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step silence finished=0 failure=none
+16:22:14.637 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step silence finished=1 failure=none
+16:22:14.637 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step audio finished=0 failure=none
+16:22:14.637 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step audio finished=1 failure=none
+16:22:14.637 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step windDown finished=0 failure=none
+16:22:14.637 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step windDown finished=1 failure=none
+16:22:14.638 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step cancelAlarm finished=0 failure=none
+16:22:14.825 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step cancelAlarm finished=1 failure=none
+16:22:14.825 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step reminders finished=0 failure=none
+16:22:14.825 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step reminders finished=1 failure=none
+16:22:14.825 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step cachedSummaries finished=0 failure=none
+16:22:14.825 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step cachedSummaries finished=1 failure=none
+16:22:14.825 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step widgetSnapshot finished=0 failure=none
+16:22:14.829 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step widgetSnapshot finished=1 failure=none
+16:22:14.829 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step watchSync finished=0 failure=none
+16:22:14.829 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step watchSync finished=1 failure=none
+16:22:14.829 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step sleepSoundsState finished=0 failure=none
+16:22:14.830 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step sleepSoundsState finished=1 failure=none
+16:22:14.830 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step insightHistory finished=0 failure=none
+16:22:14.830 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step insightHistory finished=1 failure=none
+16:22:14.830 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step reviews finished=0 failure=none
+16:22:14.832 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step reviews finished=1 failure=none
+16:22:14.832 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step memorySummaries finished=0 failure=none
+16:22:14.832 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step memorySummaries finished=1 failure=none
+16:22:14.832 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step profile finished=0 failure=none
+16:22:14.836 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step profile finished=1 failure=none
+16:22:14.836 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step alarm finished=0 failure=none
+16:22:14.837 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step alarm finished=1 failure=none
+16:22:14.837 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step windDownHistory finished=0 failure=none
+16:22:14.837 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step windDownHistory finished=1 failure=none
+16:22:14.837 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step appleAccount finished=0 failure=none
+16:22:14.840 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step appleAccount finished=1 failure=none
+16:22:14.840 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step journal finished=0 failure=none
+16:22:14.840 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step journal finished=1 failure=none
+16:22:14.840 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step coachHistory finished=0 failure=none
+16:22:14.845 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step coachHistory finished=1 failure=none
+16:22:14.845 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step systemFiles finished=0 failure=none
+16:22:14.845 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step systemFiles finished=1 failure=none
+16:22:14.845 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step setAsideFiles finished=0 failure=none
+16:22:14.845 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step setAsideFiles finished=1 failure=none
+16:22:14.845 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step exportFile finished=0 failure=none
+16:22:14.845 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step exportFile finished=1 failure=none
+16:22:14.846 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step watch finished=0 failure=none
+16:22:14.846 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step watch finished=1 failure=none
+16:22:14.846 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step databases finished=0 failure=none
+16:22:14.847 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step databases finished=1 failure=none
+16:22:14.847 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step widgets finished=0 failure=none
+16:22:14.847 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step widgets finished=1 failure=none
+16:22:14.847 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step backgroundUpdates finished=0 failure=none
+16:22:14.847 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step backgroundUpdates finished=1 failure=none
+16:22:14.847 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step preferences finished=0 failure=none
+16:22:14.849 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step preferences finished=1 failure=none
+16:22:14.849 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step setup finished=0 failure=none
+16:22:14.849 Df NOCTIS[43404:d3a960] (Foundation) RESUME-DBG step setup finished=1 failure=none
+16:22:24.311 Df log[43445:0] [com.apple.log:] log run noninteractively, parent: 41090 (launchd_sim), args: 'log' 'show' '--last' '1m' '--predicate' 'eventMessage CONTAINS
+16:22:35.904 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG container init pending=1
+16:22:36.700 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG resume called attempts=1
+16:22:36.700 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step silence finished=0 failure=none
+16:22:36.700 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step silence finished=1 failure=none
+16:22:36.700 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step audio finished=0 failure=none
+16:22:36.700 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step audio finished=1 failure=none
+16:22:36.700 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step windDown finished=0 failure=none
+16:22:36.700 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step windDown finished=1 failure=none
+16:22:36.700 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step cancelAlarm finished=0 failure=none
+16:22:36.732 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step cancelAlarm finished=1 failure=none
+16:22:36.732 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step reminders finished=0 failure=none
+16:22:36.732 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step reminders finished=1 failure=none
+16:22:36.732 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step cachedSummaries finished=0 failure=none
+16:22:36.732 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step cachedSummaries finished=1 failure=none
+16:22:36.732 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step widgetSnapshot finished=0 failure=none
+16:22:36.736 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step widgetSnapshot finished=1 failure=none
+16:22:36.736 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step watchSync finished=0 failure=none
+16:22:36.736 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step watchSync finished=1 failure=none
+16:22:36.736 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step sleepSoundsState finished=0 failure=none
+16:22:36.736 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step sleepSoundsState finished=1 failure=none
+16:22:36.736 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step insightHistory finished=0 failure=none
+16:22:36.736 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step insightHistory finished=1 failure=none
+16:22:36.736 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step reviews finished=0 failure=none
+16:22:36.738 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step reviews finished=1 failure=none
+16:22:36.738 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step memorySummaries finished=0 failure=none
+16:22:36.738 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step memorySummaries finished=1 failure=none
+16:22:36.738 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step profile finished=0 failure=none
+16:22:36.739 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step profile finished=1 failure=none
+16:22:36.739 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step alarm finished=0 failure=none
+16:22:36.740 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step alarm finished=1 failure=none
+16:22:36.740 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step windDownHistory finished=0 failure=none
+16:22:36.740 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step windDownHistory finished=1 failure=none
+16:22:36.740 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step appleAccount finished=0 failure=none
+16:22:36.740 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step appleAccount finished=1 failure=none
+16:22:36.740 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step journal finished=0 failure=none
+16:22:36.741 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step journal finished=1 failure=none
+16:22:36.741 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step coachHistory finished=0 failure=none
+16:22:36.742 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step coachHistory finished=1 failure=none
+16:22:36.742 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step systemFiles finished=0 failure=none
+16:22:36.743 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step systemFiles finished=1 failure=none
+16:22:36.743 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step setAsideFiles finished=0 failure=none
+16:22:36.743 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step setAsideFiles finished=1 failure=none
+16:22:36.743 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step exportFile finished=0 failure=none
+16:22:36.743 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step exportFile finished=1 failure=none
+16:22:36.743 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step watch finished=0 failure=none
+16:22:36.744 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step watch finished=1 failure=none
+16:22:36.744 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step databases finished=0 failure=none
+16:22:36.745 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step databases finished=1 failure=none
+16:22:36.745 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step widgets finished=0 failure=none
+16:22:36.745 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step widgets finished=1 failure=none
+16:22:36.745 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step backgroundUpdates finished=0 failure=none
+16:22:36.745 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step backgroundUpdates finished=1 failure=none
+16:22:36.745 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step preferences finished=0 failure=none
+16:22:36.746 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step preferences finished=1 failure=none
+16:22:36.746 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step setup finished=0 failure=none
+16:22:36.746 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG step setup finished=1 failure=none
+16:22:36.776 Df NOCTIS[43494:d3ae24] (Foundation) RESUME-DBG container init pending=1
+16:22:46.742 Df log[43516:0] [com.apple.log:] log run noninteractively, parent: 41090 (launchd_sim), args: 'log' 'show' '--last' '40s' '--predicate' 'eventMessage CONTAIN
+16:22:57.769 Df log[43549:0] [com.apple.log:] log run noninteractively, parent: 41090 (launchd_sim), args: 'log' 'show' '--last' '10m' '--predicate' 'eventMessage CONTAIN

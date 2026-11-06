@@ -51,8 +51,13 @@ private final class Rig {
     var tier: Tier { entitlements.tier }
 
     func product(_ id: String) async throws -> Product {
-        await store.loadProducts()
-        return try #require(store.products.first { $0.id == id }, "product \(id) did not load from Noctis.storekit")
+        // A cold StoreKit test session can answer an empty list the first time (seen once in Stage 1B, never reproduced, R-08): ask a few times before failing.
+        for attempt in 0..<5 {
+            await store.loadProducts()
+            if let found = store.products.first(where: { $0.id == id }) { return found }
+            if attempt < 4 { try? await Task.sleep(for: .milliseconds(400)) }
+        }
+        return try #require(store.products.first { $0.id == id }, "product \(id) did not load from Noctis.storekit after 5 tries")
     }
 
     func buy(_ id: String) async throws {

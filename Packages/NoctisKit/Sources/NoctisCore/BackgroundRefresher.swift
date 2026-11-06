@@ -60,6 +60,17 @@ public actor BackgroundRefresher {
         self.sleep = sleep
     }
 
+    /// The work of a wake: the Health refresh first, then the plan. The whole wake has `defaultTimeBudget`, and the plan may need the network, so it never goes
+    /// first: if it is slow, the budget ends and the Health numbers are already written (S1B-R-01).
+    public static func healthThenPlan(
+        health: @escaping @Sendable () async -> Void, plan: @escaping @Sendable () async -> Void
+    ) -> @Sendable () async -> Void {
+        {
+            await health()
+            await plan()
+        }
+    }
+
     /// One wake from Health. Returns when it is finished with, however it ended.
     public func handleWake() async -> Outcome {
         if let inFlight {

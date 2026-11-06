@@ -327,6 +327,7 @@ private struct WindDownControls: View {
                     Text(WindDownCopy.end)
                         .noctisFont(15, .medium, relativeTo: .subheadline)
                         .foregroundStyle(NoctisNight.ivory2)
+                        .noctisButtonShape()
                         .frame(minWidth: 44, minHeight: 44)
                         .padding(.horizontal, NoctisSpacing.xs)
                         .contentShape(Rectangle())

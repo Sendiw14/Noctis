@@ -3,6 +3,18 @@ import NightKit
 import NoctisWidgetKit
 import PremiumKit
 
+/// The end of the person's Premium as the store last said it, and whether the plan renews itself there. `until` is nil when it is not known (before the store has
+/// answered after a launch, or for a free person).
+public nonisolated struct PremiumWindow: Equatable, Sendable {
+    public var until: Date?
+    public var autoRenews: Bool
+
+    public init(until: Date? = nil, autoRenews: Bool = false) {
+        self.until = until
+        self.autoRenews = autoRenews
+    }
+}
+
 /// What the publisher asks the app for each time it writes: the profile, the bedtime recommendation if one is known, and the
 /// alarm. Set after the repositories that answer exist, so the publisher can be made first.
 public nonisolated final class WidgetInputSource: @unchecked Sendable {
@@ -11,6 +23,7 @@ public nonisolated final class WidgetInputSource: @unchecked Sendable {
     private var bedtimeProvider: @Sendable (UserProfileSnapshot) async -> BedtimeRecommendation? = { _ in nil }
     private var alarmProvider: @Sendable () async -> WidgetAlarm? = { nil }
     private var tierProvider: @Sendable () async -> Tier = { .free }
+    private var windowProvider: @Sendable () async -> PremiumWindow = { PremiumWindow() }
 
     public init(profile: @escaping @Sendable () async -> UserProfileSnapshot) {
         profileProvider = profile
@@ -29,10 +42,18 @@ public nonisolated final class WidgetInputSource: @unchecked Sendable {
         lock.withLock { tierProvider = provider }
     }
 
-    func current() async -> (profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, tier: Tier) {
-        let (profileFor, bedtimeFor, alarmFor, tierFor) = lock.withLock { (profileProvider, bedtimeProvider, alarmProvider, tierProvider) }
+    /// When the person's Premium ends and whether it renews, written into the snapshot beside the tier so a surface can tell that access has run out while the app
+    /// was closed (S1B-C01). Empty until the app says otherwise.
+    public func setPremiumWindow(_ provider: @escaping @Sendable () async -> PremiumWindow) {
+        lock.withLock { windowProvider = provider }
+    }
+
+    func current() async -> (profile: UserProfileSnapshot, bedtime: BedtimeRecommendation?, alarm: WidgetAlarm?, tier: Tier, window: PremiumWindow) {
+        let (profileFor, bedtimeFor, alarmFor, tierFor, windowFor) = lock.withLock {
+            (profileProvider, bedtimeProvider, alarmProvider, tierProvider, windowProvider)
+        }
         let profile = await profileFor()
-        return await (profile, bedtimeFor(profile), alarmFor(), tierFor())
+        return await (profile, bedtimeFor(profile), alarmFor(), tierFor(), windowFor())
     }
 }
 
@@ -104,10 +125,16 @@ public actor WidgetPublisher {
         guard !suspended, let store, let home = latest else { return }
         let now = clock()
         let current = await inputs.current()
+        // Before the store has answered after a launch the end is unknown: keep the one already written for the same plan, so a Home refresh that runs first does
+        // not drop it (the end then only changes when the store says so).
+        var window = current.window
+        if window.until == nil, current.tier == .premium, let written, written.tier == .premium {
+            window = PremiumWindow(until: written.premiumUntil, autoRenews: written.autoRenews)
+        }
         guard
             let snapshot = WidgetSnapshotMaker.make(
                 home: home, profile: current.profile, bedtime: current.bedtime, alarm: current.alarm, now: now, calendar: calendar, dataEpoch: epoch(),
-                tier: current.tier
+                tier: current.tier, premiumUntil: window.until, autoRenews: window.autoRenews
             )
         else { return }
         // Nothing the widgets draw has changed: leave the file, and the system's budget, alone.

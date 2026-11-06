@@ -226,6 +226,8 @@ public enum WidgetTimelineBuilder {
             if case .stale = snapshot.state {
                 dates += (1...11).map { now.addingTimeInterval(Double($0) * 3600) }
             }
+            // A plan that runs out inside the horizon locks the widget at that moment, with the app closed (S1B-C01). Beyond it the next reload looks again.
+            if let lock = snapshot.premiumLockDate, lock > now, lock < limit { dates.append(lock) }
             let last = dates.filter { $0 < limit }.max() ?? now
             nextBoundary = WidgetClock.boundaries(after: last, until: last.addingTimeInterval(36 * 3600), plan: snapshot.plan, calendar: calendar).first
         }

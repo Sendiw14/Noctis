@@ -65,7 +65,7 @@ public struct ShowRecommendedBedtimeIntent: AppIntent {
     @MainActor
     public static func answer(_ runtime: IntentRuntime) -> String {
         let environment = runtime.environment
-        return WidgetSpoken.bedtime(environment.snapshot(), format: environment.format())
+        return WidgetSpoken.bedtime(environment.snapshot(), now: environment.now(), format: environment.format())
     }
 
     @MainActor

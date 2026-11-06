@@ -186,7 +186,7 @@ public nonisolated enum WatchComplications {
                 kind, glyph: "iphone", lines: ["Open NOCTIS", "on your iPhone"], inline: "Open NOCTIS on iPhone", spoken: WatchCopy.getStarted, link: link)
         }
         // The kinds the person's plan does not include: a plain "Premium" state, whatever the numbers are (R62).
-        if WatchGate.isLocked(kind, tier: snapshot.tier) { return premium(kind, link: link) }
+        if WatchGate.isLocked(kind, tier: snapshot.effectiveTier(at: input.now)) { return premium(kind, link: link) }
         if kind == .bedtime { return bedtime(snapshot: snapshot, input: input, link: link) }
 
         guard state.showsNumbers else {
@@ -384,7 +384,7 @@ public nonisolated enum WatchComplicationSchedule {
     /// How much the Smart Stack should want `kind` at `date`: Recovery, Sleep and Sleep quality in the morning window (the wake time's half hour before to
     /// three hours after), Bedtime in the evening hour (the hour before bedtime and half an hour after); idle otherwise, and always idle with no summary.
     public static func relevance(_ kind: WatchComplicationKind, at date: Date, snapshot: WidgetSnapshot?, calendar: Calendar) -> WidgetRelevanceScore {
-        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.tier) else { return .idle }
+        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.effectiveTier(at: date)) else { return .idle }
         switch kind {
         case .recovery, .sleep, .quality: return WidgetClock.morningRelevance(at: date, plan: snapshot.plan, calendar: calendar)
         case .bedtime: return WidgetClock.eveningRelevance(at: date, plan: snapshot.plan, calendar: calendar)
@@ -393,7 +393,7 @@ public nonisolated enum WatchComplicationSchedule {
 
     /// The window the Smart Stack is told about for `kind` (its `RelevantContext`): the morning window or the evening hour, as dates.
     public static func window(_ kind: WatchComplicationKind, snapshot: WidgetSnapshot?, from date: Date, calendar: Calendar) -> DateInterval? {
-        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.tier) else { return nil }
+        guard let snapshot, !WatchGate.isLocked(kind, tier: snapshot.effectiveTier(at: date)) else { return nil }
         switch kind {
         case .recovery, .sleep, .quality: return WidgetClock.morningWindow(snapshot.plan, from: date, calendar: calendar)
         case .bedtime: return WidgetClock.eveningWindow(snapshot.plan, from: date, calendar: calendar)

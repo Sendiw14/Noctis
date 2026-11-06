@@ -15,6 +15,19 @@ public protocol EntitlementClient: Sendable {
 /// one is passed on marked, and ignored by the rules); `Product.SubscriptionInfo.Status` and its renewal info give the billing state and the grace period's
 /// end. Local only: StoreKit keeps the signed transactions on the device, so this works with no connection.
 public struct StoreKitEntitlementClient: EntitlementClient {
+    /// The subscription group, remembered in memory after the first product answer of the launch (S1B-C04): the status of a group is read without asking the
+    /// store for the products again on every refresh, so a refresh that finds no connection after that still learns the billing state.
+    private final class Group: @unchecked Sendable {
+        private let lock = NSLock()
+        private var id: String?
+        var value: String? {
+            get { lock.withLock { id } }
+            set { lock.withLock { id = newValue } }
+        }
+    }
+
+    private let group = Group()
+
     public init() {}
 
     public func records() async -> [EntitlementRecord] {
@@ -38,9 +51,15 @@ public struct StoreKitEntitlementClient: EntitlementClient {
     }
 
     public func renewal() async -> RenewalRecord? {
-        guard let products = try? await Product.products(for: StoreProductID.all), let subscription = products.first?.subscription,
-            let statuses = try? await subscription.status, !statuses.isEmpty
-        else { return nil }
+        let statuses: [Product.SubscriptionInfo.Status]
+        if let known = group.value, let answer = try? await Product.SubscriptionInfo.status(for: known), !answer.isEmpty {
+            statuses = answer
+        } else {
+            guard let products = try? await Product.products(for: StoreProductID.all), let subscription = products.first?.subscription else { return nil }
+            group.value = subscription.subscriptionGroupID
+            guard let answer = try? await subscription.status, !answer.isEmpty else { return nil }
+            statuses = answer
+        }
         // The status that says the most: one in grace or billing retry first, then a subscribed one.
         let status =
             statuses.first { $0.state == .inGracePeriod || $0.state == .inBillingRetryPeriod } ?? statuses.first { $0.state == .subscribed } ?? statuses[0]

@@ -427,7 +427,7 @@ struct SubscriptionSettingsView: View {
 
     var body: some View {
         let summary = viewModel.subscription
-        SettingsPageScaffold(.subscription, summary: summary.isPremium ? "You have Premium." : "You're on the free plan.") {
+        SettingsPageScaffold(.subscription, summary: summary.pageSummary) {
             NoctisAppCard {
                 VStack(alignment: .leading, spacing: NoctisSpacing.xs) {
                     NoctisCaption("YOUR PLAN", style: .noctisInk3)
@@ -444,7 +444,7 @@ struct SubscriptionSettingsView: View {
             }
             .noctisRise(index: 0)
             VStack(spacing: NoctisSpacing.xs) {
-                if summary.isPremium {
+                if summary.isPremium || summary.hasPaymentProblem {
                     NoctisCTA("Manage subscription", icon: "arrow.up.forward", adaptive: true) { viewModel.showsManageSubscription = true }
                         .accessibilityIdentifier("settings.subscription.manage")
                         .accessibilityHint("Opens your subscription in the App Store.")

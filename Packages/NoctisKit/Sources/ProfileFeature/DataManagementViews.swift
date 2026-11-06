@@ -34,6 +34,17 @@ struct DataManagementView: View {
 
     var body: some View {
         SettingsPageScaffold(.dataManagement, summary: "Delete what NOCTIS keeps, or take a copy.") {
+            if !manager.unfinishedSteps.isEmpty {
+                SettingsGroup(DataManagementCopy.unfinishedHeader) {
+                    NoctisAppCard {
+                        Text(DataManagementCopy.unfinishedNotice(manager.unfinishedStepTitles))
+                            .noctisFont(15, relativeTo: .subheadline)
+                            .foregroundStyle(.noctisInk2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("data.unfinished")
+                    }
+                }
+            }
             SettingsGroup("DELETE ONE KIND AT A TIME") {
                 NoctisRowCard {
                     ForEach(Array(viewModel.inventory.groups.enumerated()), id: \.element.id) { index, group in

@@ -165,20 +165,23 @@ public actor WatchSyncService {
         return .sent(context.sentAt)
     }
 
-    /// Wakes the complication when the day changed or recovery first appeared for the day, within the day's budget.
+    /// Wakes the complication when the day changed, recovery first appeared for the day, or the plan changed (its tier or the end of Premium), within the day's budget.
     private func wakeComplicationIfNeeded(for snapshot: WidgetSnapshot) {
         let day = snapshot.forDay.description
         let hasRecovery = snapshot.recovery != nil
-        // What the last wake was for: "2026-09-24:1" (that day, with a recovery).
+        // The plan as the complication needs it: Premium with its end ("premium@1790000000"), or free (S1B-D02).
+        let plan = snapshot.premiumUntil.map { "\(snapshot.tier.rawValue)@\(Int($0.timeIntervalSince1970))" } ?? snapshot.tier.rawValue
+        // What the last wake was for: "2026-09-24:1:premium@1790000000" (that day, with a recovery, on that plan). A mark from before the plan was added has no third part.
         let marked = defaults.complicationMark?.split(separator: ":").map(String.init)
         let dayChanged = marked?.first != day
-        let recoveryAppeared = hasRecovery && marked?.last != "1"
-        guard dayChanged || recoveryAppeared else { return }
+        let recoveryAppeared = hasRecovery && (marked?.dropFirst().first) != "1"
+        let planChanged = marked.map { $0.count > 2 && $0[2] != plan } ?? false
+        guard dayChanged || recoveryAppeared || planChanged else { return }
         guard session.isComplicationEnabled else { return }
         let budget = session.remainingComplicationTransfers
         signpost(budget)
         guard budget > 0 else { return }
         guard let context = try? WatchContext(snapshot: snapshot, sentAt: clock()) else { return }
-        if session.transferCurrentComplicationUserInfo(context.dictionary) { defaults.complicationMark = "\(day):\(hasRecovery ? 1 : 0)" }
+        if session.transferCurrentComplicationUserInfo(context.dictionary) { defaults.complicationMark = "\(day):\(hasRecovery ? 1 : 0):\(plan)" }
     }
 }

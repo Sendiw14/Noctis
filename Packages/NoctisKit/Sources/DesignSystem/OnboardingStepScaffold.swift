@@ -216,6 +216,8 @@ public struct OnboardingStepScaffold<Content: View, Actions: View>: View {
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Step \(step + 1) of \(totalSteps)")
+                // Read-only: without a trait, Xcode's audit takes the 4 pt bar for a control with a hit area that is too small.
+                .accessibilityAddTraits(.isStaticText)
             }
         }
         .frame(height: 44)
@@ -287,6 +289,7 @@ public struct OnboardingSecondaryButton: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(colorScheme == .dark ? NoctisPaper.ivory.opacity(0.7) : NoctisPaper.cocoa.opacity(0.7))
+                .noctisButtonShape()
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
         }

@@ -76,8 +76,8 @@ public struct IntentEnvironment: Sendable {
         self.endWindDownActivities = endWindDownActivities
     }
 
-    /// The person's plan, from the snapshot: free with none (R62).
-    public func tier() -> Tier { snapshot()?.tier ?? .free }
+    /// The person's plan, from the snapshot: free with none (R62). A plan that ended while the app was closed is free here too (S1B-C01).
+    public func tier() -> Tier { snapshot()?.effectiveTier(at: now()) ?? .free }
 
     /// The App Group's snapshot and the real clock.
     public static let live = IntentEnvironment(snapshot: { WidgetSnapshotStore()?.load() })

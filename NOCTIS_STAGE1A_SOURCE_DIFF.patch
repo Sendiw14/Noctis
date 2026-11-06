@@ -1,0 +1,1021 @@
+diff --git a/App/NoctisApp.swift b/App/NoctisApp.swift
+index 3b57ce4..6378266 100644
+--- a/App/NoctisApp.swift
++++ b/App/NoctisApp.swift
+@@ -10,6 +10,8 @@ struct NoctisApp: App {
+         // Made when the process starts, not when the first screen is drawn: an intent that starts the app in the background (the Sleep sounds
+         // control, a Health wake) runs with no screen at all, and still needs the app's host, its sound player and its observers (R46, R47, R48).
+         _container = State(initialValue: AppContainer())
++        // The app switcher's picture of NOCTIS is a plain screen, never a recovery score or a Journal entry (SEC-05).
++        PrivacyShield.shared.start()
+     }
+ 
+     var body: some Scene {
+diff --git a/Docs/DEVICE_TEST_CHECKLIST.md b/Docs/DEVICE_TEST_CHECKLIST.md
+index 70a8009..aff5704 100644
+--- a/Docs/DEVICE_TEST_CHECKLIST.md
++++ b/Docs/DEVICE_TEST_CHECKLIST.md
+@@ -27,6 +27,15 @@ two weeks of sleep, heart rate and HRV (the Watch's own sleep tracking provides
+ - [ ] Wind-down Live Activity starts, shows on the Lock Screen, the Dynamic Island and the Watch Smart Stack, and ends on its own.
+ - [ ] A sleep sound plays with the screen locked, the timer stops it, and the Control Center control matches.
+ 
++## Coach (on-device model and fallback)
++
++- [ ] On an iPhone with Apple Intelligence turned on: ask a recognised question and an unrecognised one; answers appear, numbers match Home, nothing is sent (no network indicator, Airplane mode on still works).
++- [ ] On an iPhone without Apple Intelligence (or with it off, or not yet downloaded): Coach still answers from the template and the hub says why the model is not used.
++- [ ] A medical question and a crisis question give the fixed replies on both; the crisis exchange is not in history.
++- [ ] The Health permission flow: after onboarding, Home loads with no second "Connect Apple Health" sheet; Settings, Health data offers Connect for resting heart rate and respiratory rate only, and the sheet lists only those two (audit PRIV-01).
++- [ ] The app switcher shows a plain NOCTIS screen, not Home, Recovery or a Journal entry, with a sheet open and with the app in each tab (audit SEC-05).
++- [ ] "Export my data" then lock the iPhone before sharing: the file cannot be opened while locked; unlock and share works (audit SEC-03).
++
+ ## Apple Watch
+ 
+ - [ ] Pairing sends the summary within a minute; five pages match the iPhone.
+diff --git a/Docs/PRIVACY_REPORT.md b/Docs/PRIVACY_REPORT.md
+index 18600cf..43e4301 100644
+--- a/Docs/PRIVACY_REPORT.md
++++ b/Docs/PRIVACY_REPORT.md
+@@ -102,7 +102,7 @@ The Privacy Center, Data management, Coach's "How Coach uses your data", Help an
+ ## 6. Ambiguities and decisions for the owner
+ 
+ 1. **The support email (the one open flow).** Contact support opens the system mail composer (or a `mailto:` link) addressed to the support inbox, with the app version, build number and iOS version in the body. The person must press Send; nothing is sent by the app on its own, and NOCTIS has no server that receives it. Whether Apple's questionnaire counts an email the person chooses to send as data "collected" (Customer Support, and the sender's email address) is an interpretation. Option A (draft above): not collected, because the app transmits nothing and the person's mail app sends the message. Option B: declare Customer Support. This report does not decide it. **Owner.**
+-2. **Health: onboarding asks for three kinds, the app reads five.** Onboarding asks Apple Health for sleep, heart rate and HRV (`HealthScreen.requestedKinds`); "Connect Apple Health" elsewhere asks for all five (`HealthDataKind.allCases`). `HealthKitProvider.authorizationStatus()` asks HealthKit about all five kinds, and Home, Sleep, Recovery and Insights only load data when it says `.authorized`. From the code, after onboarding alone (resting heart rate and respiratory rate never asked) HealthKit's `statusForAuthorizationRequest` should report that a request is still needed, so those screens may show "Connect Apple Health" until the person connects again, and the person may see Apple's Health sheet twice. **Not run against real HealthKit** (the simulator uses the mock provider), so this is a code reading, not a confirmed bug. The usage string now names all five; the onboarding screen lists three. Not changed here. **Owner**: confirm on a real iPhone, then either ask for all five in onboarding or have the status check use only the kinds that were asked.
++2. **Health: onboarding asks for three kinds, the app reads five.** Onboarding asks Apple Health for sleep, heart rate and HRV (`HealthDataKind.core`, used by `HealthScreen.requestedKinds`); "Connect Apple Health" elsewhere asks for all five (`HealthDataKind.allCases`), and Settings, Health data offers it for the two kinds onboarding did not ask for (resting heart rate and respiratory rate). `HealthKitProvider.authorizationStatus()` asks HealthKit about the three core kinds only, so a person who has answered onboarding's sheet is not treated as "not asked yet", and Home, Sleep, Recovery and Insights load; the status means "the system's question was asked", never "read access was allowed", because HealthKit does not say which kinds were declined. HealthKit throws "authorization not determined" for a kind it was never asked about, so resting heart rate and respiratory rate are read through `restingHeartRateIfAsked` and `respiratorySamplesIfAsked`, which turn that into no data; the core reads are not softened. Checked against real HealthKit on the iOS 27 simulator (Stage 1A rework, `NOCTIS_STAGE1A_IMPLEMENTATION_REPORT.md` section 13): with the three core kinds allowed, or declined, Home shows the empty state; with Health skipped, Home shows "Connect Apple Health". Not checked on a physical iPhone or with real Health data. Without resting heart rate Recovery is worked out from the other factors and can differ by a few points from the score with it; the usage string names all five kinds while onboarding's sheet lists three. **Owner**: confirm on a real iPhone; decide whether Settings' note should say that granting the two optional kinds refines Recovery, or whether onboarding should ask for all five, and whether the usage string should name only the kinds a given sheet asks for.
+ 3. **Device backups.** The default SwiftData store (profile, wake alarm, wind-down history) and the preferences, sound choices and flags are in iCloud and computer backups, with iOS's standard file protection (readable after first unlock). The Journal, Coach conversations, insights and cached summaries are excluded from backups and use complete protection. The headline "Your data is stored on this iPhone." is true of where NOCTIS keeps it; a backup is Apple's copy of the iPhone, not NOCTIS syncing. The inventory says so in "What may leave", but the owner decides whether the headline should say "backups aside", whether the profile's optional name should be excluded from backups, and whether the default store should move to complete protection. **Owner.**
+ 4. **Subscription.** Purchases go through StoreKit and Apple's App Store. There is no receipt validation server, so the developer receives nothing from the app. If a server or an analytics event for purchases is ever added, Purchases must be declared and the manifest changed.
+ 5. **"Deleted" and free pages.** Deleting one kind of data (for example Coach history) removes its rows; the SQLite file is not vacuumed, so the bytes of deleted text can stay in the file's free pages until they are overwritten (the Coach store stayed near 111 KB after its rows were deleted in testing). "Delete all NOCTIS data" removes the store files themselves. The page says "deleted". **Owner**: accept, reword ("removed from NOCTIS"), or add a vacuum after a single-category delete.
+@@ -112,7 +112,8 @@ The Privacy Center, Data management, Coach's "How Coach uses your data", Help an
+ 9. **Placeholders the owner supplies.** Terms URL, Privacy Policy URL (`StoreLegalLinks`) and the support address are placeholders (`https://noctis.app/terms`, `https://noctis.app/privacy`, `support@noctis.app`; ROADMAP.md). App Store Connect requires a real Privacy Policy URL. The Privacy Center's wording ("What NOCTIS reads", "Why", "What you can delete") is generated from the inventory; the policy must not contradict it.
+ 10. **Alarm.** The wake alarm is scheduled with AlarmKit, which iOS holds, so it can ring when NOCTIS is closed. "Delete all NOCTIS data" cancels it first (`AlarmService.disable()`); on a real iPhone, confirm after a delete-all that the alarm is gone (it cannot be checked in the simulator).
+ 11. **Reading Health in the background (R46).** NOCTIS now asks Apple Health to wake it when new sleep, HRV or resting heart rate data arrives, and refreshes the widgets' summary then. The reading is still on the iPhone and nothing new is stored or sent; the Privacy Center, Help and the Health usage string say it ("...and in the background when Apple Health has new sleep data (iOS decides when)"). **Owner**: whether the Privacy Policy should say the same, and whether "keep your widgets up to date" is the wording you want in the system's Health permission sheet.
+-12. **Not covered here.** Export compliance (`ITSAppUsesNonExemptEncryption`), the age rating, accessibility labels and the medical-device wording ("NOCTIS isn't a medical device and doesn't diagnose or treat any condition.") are outside this report.
++12. **Coach and the on-device model (Stage 1A).** Coach uses Apple's on-device language model (Foundation Models) where the iPhone supports it and Apple Intelligence is on, and fixed templates elsewhere. A question the model reads, and the facts it is given, stay on the iPhone; NOCTIS has no remote model (`aiRemote` off). What it is given and what is checked before an answer is shown is in `store/APP_STORE_LISTING.md`, "Coach and generative AI". The data inventory's Coach column and the statement "Coach answers are made on your iPhone or built from your data" remain true. **Owner**: whether the Privacy Policy should name the on-device model (the draft policy does, in one sentence).
++13. **Not covered here.** Export compliance (`ITSAppUsesNonExemptEncryption`), the age rating, accessibility labels and the medical-device wording ("NOCTIS isn't a medical device and doesn't diagnose or treat any condition.") are outside this report.
+ 
+ ## 7. How this stays true
+ 
+diff --git a/Docs/site/privacy.html b/Docs/site/privacy.html
+index d8ae418..efb6f4d 100644
+--- a/Docs/site/privacy.html
++++ b/Docs/site/privacy.html
+@@ -20,6 +20,7 @@
+ <li>Your profile and settings: sleep need, wake time, goals, preferences, and the name you choose to enter. Your name is never shown to Coach.</li>
+ <li>Your wake alarm, wind-down history, sound and meditation choices.</li>
+ <li>Your journal and your Coach conversations. Nothing else in the app can read your journal.</li>
++<li>Coach writes its answers on your iPhone: with Apple&rsquo;s on-device model where your iPhone supports it and Apple Intelligence is on, and from fixed wording otherwise. Your questions and its answers are not sent to us or to any other service. Its answers are not medical advice.</li>
+ <li>If you use Sign in with Apple (optional): an identifier Apple gives NOCTIS, kept in your iPhone&rsquo;s Keychain. NOCTIS asks for your name only, never your email.</li>
+ </ul>
+ <p>The widgets and the Apple Watch app show a short summary of your recovery and sleep. The summary is shared between NOCTIS and its widgets on your iPhone, and sent to your own paired Apple Watch. It is never sent anywhere else.</p>
+diff --git a/Docs/store/APP_STORE_LISTING.md b/Docs/store/APP_STORE_LISTING.md
+index 4a159dc..4459722 100644
+--- a/Docs/store/APP_STORE_LISTING.md
++++ b/Docs/store/APP_STORE_LISTING.md
+@@ -48,7 +48,7 @@ INSIGHTS AND REVIEWS
+ Patterns in your own nights, in plain words, and a weekly and a monthly review.
+ 
+ COACH
+-Ask a question about your own sleep and get an answer from your numbers. Coach runs on your iPhone and keeps its conversations there.
++Ask a question about your own sleep and get an answer built from your numbers. On iPhones that support Apple Intelligence and have it turned on, Coach uses Apple's on-device model to word its answers; on other iPhones it uses fixed wording. Either way Coach runs on your iPhone and keeps its conversations there. It is not medical advice.
+ 
+ WIDGETS, APPLE WATCH AND SIRI
+ Home Screen and Lock Screen widgets, Control Center controls, a Watch app with complications and breathing, and Siri phrases for recovery, sleep and bedtime.
+@@ -98,13 +98,34 @@ Subscriptions: open Settings, then Subscription, or tap a locked item. The paywa
+ 
+ Permissions: Health (read), Notifications (reminders), and AlarmKit (the wake alarm). Sleep sounds use the audio background mode so a sound can play with the screen locked.
+ 
+-Coach answers are made on the iPhone from the person's own numbers and fixed wording. It does not give medical advice; a question about a medical condition gets a fixed reply that points to a doctor,
+-and a crisis question gets a fixed reply with a helpline resource.
++Coach (the fifth tab) answers questions about the person's own sleep and recovery. How it works:
++- On iPhones where Apple Intelligence is available and turned on, Coach asks Apple's on-device language model (the Foundation Models framework) to write the answer, and, for a question its patterns do not recognise, to say which topic the question is about. The model runs on the iPhone; NOCTIS has no server and no other model, and sends nothing off the device.
++- On every other iPhone (not eligible, Apple Intelligence off, model not ready, language not supported) Coach builds the answer from fixed sentence templates and the same numbers. The reviewer can see this path on any device without Apple Intelligence.
++- Every number in an answer is a value NOCTIS supplied, not one the model made up: a draft is shown only after NOCTIS checks it (digits, percent signs and number words are allowed only as values NOCTIS supplied, no wording from a list of medical and diagnostic phrases, patterns hedged, a caution when confidence is not high). A draft that fails, or takes longer than 15 seconds, is replaced by the template answer. The answers are not clinically validated.
++- Questions about a medical condition get a fixed reply that points to a doctor; a crisis question gets a fixed reply with helpline numbers. The reply itself is fixed text: no model-written words and no personal data. A question that NOCTIS's own patterns recognise as medical or crisis never reaches the model. A question no pattern recognises is first classified by the on-device model, which reads only the question text (never the person's numbers); if it classifies it as medical or crisis, the same fixed reply is shown. A crisis exchange is neither saved nor logged.
++- Coach conversations stay on the iPhone, can be exported and deleted in Settings, Data management, and are excluded from device backups.
++- Coach is English only.
+ 
+ NOCTIS isn't a medical device and says so on the welcome screen, the paywall, About and the Apple Watch.
+ 
+ **Contact:** the owner's name, phone number and email (required by App Store Connect).
+ 
++## Coach and generative AI (what to say, and what not to say)
++
++Written 2026-11-02 from the code (`CoachKit/AIService.swift`, `FoundationModelsProvider.swift`, `SystemLanguageModelBackend.swift`, `CoachSafetyValidator.swift`) after the pre-launch audit found the earlier review notes ("fixed wording") did not match it.
++
++| Question | Answer, from the code |
++| --- | --- |
++| Does Coach use a generative model? | **Yes, on supported iPhones**: Apple's on-device `SystemLanguageModel` (Foundation Models). `CoachFeatureFlags.aiAppleIntelligence` is on by default. |
++| On which devices? | Only where the system reports the model available. NOCTIS maps the system's reasons (`deviceNotEligible`, `notEnabled`, `modelNotReady`, `unsupportedLanguage`) and falls back; it does not assume support. |
++| What if it is not available? | Template answers: fixed sentence patterns filled from the person's numbers, checked by the same validator. |
++| Is any remote or third-party model used? | No. `aiRemote` is off; there is no transport, endpoint or key. |
++| What does the model see? | The question, the topic, facts worked out from the person's data (recovery today, last night, usual bedtime and wake, week's average, sleep need, wake time, goals) and short summaries of the last two turns. Never the name, the Journal or raw Health readings. |
++| What is checked before an answer is shown? | `CoachSafetyValidator`: required fields, length limits, no digit, percent or number word outside a fact token, every token a known fact, banned-language list, hedged patterns, caution when confidence is not high, destinations only real screens. |
++| Medical and crisis? | The reply is fixed text (no model-written words, no personal data). A pattern match never reaches the model; a question no pattern recognises is classified first by the on-device model, which reads only the question, and a medical or crisis classification gets the same fixed reply. Crisis exchanges are not kept or logged. The helpline list is built in and flagged for the owner to verify before release. |
++| Claims to avoid | "Works on every iPhone", "AI-powered insights" as a headline, "clinically validated" or "accurate", any diagnosis or treatment wording. Say "on-device", "where your iPhone supports it", "not medical advice". |
++| Not verified | The model path on a real Apple Intelligence device and the template path on a device without it (`DEVICE_TEST_CHECKLIST.md`). The simulator does not prove either. |
++
+ ## Age rating
+ 
+ Answer the questionnaire from the app: no user-generated content, no web access, no gambling, no violence, no mature themes, no contests. The one topic that applies is health and
+diff --git a/Docs/store/SUBMIT_CHECKLIST.md b/Docs/store/SUBMIT_CHECKLIST.md
+index e35e2d4..d150ede 100644
+--- a/Docs/store/SUBMIT_CHECKLIST.md
++++ b/Docs/store/SUBMIT_CHECKLIST.md
+@@ -48,7 +48,7 @@ The steps from this repository to "Submit for Review", in order. Everything that
+ 3. Create the subscription group **NOCTIS Premium** with the two products in `APP_STORE_LISTING.md` (same identifiers), the one-week free trial on the yearly one, localizations, prices and a review screenshot each.
+ 4. Add the Privacy Policy URL and the Support URL from step 1.
+ 5. App Privacy: enter the answers from `PRIVACY_REPORT.md` section 4 after you have approved it. Age rating: answer the questionnaire. Export compliance: confirm "no non-exempt encryption".
+-6. Fill in the description, keywords, promotional text, and the reviewer notes from `APP_STORE_LISTING.md`.
++6. Fill in the description, keywords, promotional text, and the reviewer notes from `APP_STORE_LISTING.md`. The Coach paragraph describes the on-device generative model and the template fallback; read it against the app on a device with Apple Intelligence and on one without, and correct it if either differs (section 5).
+ 7. Create sandbox testers (Users and Access, Sandbox).
+ 
+ ## 4. Sign, archive, validate (QA-027)
+diff --git a/Packages/NoctisKit/Sources/AppRoot/DataWiring.swift b/Packages/NoctisKit/Sources/AppRoot/DataWiring.swift
+index d84e6bb..e97e432 100644
+--- a/Packages/NoctisKit/Sources/AppRoot/DataWiring.swift
++++ b/Packages/NoctisKit/Sources/AppRoot/DataWiring.swift
+@@ -187,7 +187,7 @@ public enum DataWiring {
+                 }
+             },
+             .exportFile: {
+-                try? FileManager.default.removeItem(at: i.roots.url(.temporary).appending(path: DataExport.fileName, directoryHint: .notDirectory))
++                DataExport.remove(in: i.roots.url(.temporary))
+             },
+         ]
+     }
+diff --git a/Packages/NoctisKit/Sources/HealthProviding/HealthDataProviding.swift b/Packages/NoctisKit/Sources/HealthProviding/HealthDataProviding.swift
+index dbde86e..b545738 100644
+--- a/Packages/NoctisKit/Sources/HealthProviding/HealthDataProviding.swift
++++ b/Packages/NoctisKit/Sources/HealthProviding/HealthDataProviding.swift
+@@ -7,7 +7,11 @@ public protocol HealthDataProviding: Sendable {
+     var isHealthDataAvailable: Bool { get }
+     var sourceName: String { get }
+ 
++    /// Whether the system's question has been asked for `HealthDataKind.core`. `.authorized` means "asked", never "allowed": HealthKit does not tell an
++    /// app which read types were declined, so the screens treat a declined type as one with no data.
+     func authorizationStatus() async -> HealthAuthorizationStatus
++    /// The same question for any set of kinds: `.authorized` only when every one of them has been asked for.
++    func authorizationStatus(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus
+     func requestAuthorization(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus
+ 
+     func fetchSleepSamples(from start: Date, to end: Date) async throws -> [RawSleepSample]
+@@ -22,6 +26,35 @@ public protocol HealthDataProviding: Sendable {
+     func sampleChanges() -> AsyncStream<Void>
+ }
+ 
++extension HealthDataProviding {
++    /// A provider that cannot tell kinds apart answers the one question it has.
++    public func authorizationStatus(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus {
++        await authorizationStatus()
++    }
++}
++
++extension HealthDataProviding {
++    /// Resting heart rate is an optional extra: onboarding does not ask for it (`HealthDataKind.core`), and HealthKit **throws** "authorization not
++    /// determined" for a kind the system's question was never asked for, which the provider reports as `.unauthorized`. For a screen that would read as
++    /// "no permission" for everything. Here an unasked optional kind is simply no data; a kind that was asked for and declined already returns nothing.
++    public func restingHeartRateIfAsked(from start: Date, to end: Date) async throws -> [HeartRateSample] {
++        do {
++            return try await fetchRestingHeartRate(from: start, to: end)
++        } catch HealthProviderError.unauthorized {
++            return []
++        }
++    }
++
++    /// Respiratory rate, the same way as `restingHeartRateIfAsked`.
++    public func respiratorySamplesIfAsked(from start: Date, to end: Date) async throws -> [RespiratoryRateSample] {
++        do {
++            return try await fetchRespiratorySamples(from: start, to: end)
++        } catch HealthProviderError.unauthorized {
++            return []
++        }
++    }
++}
++
+ public nonisolated enum HealthProviderError: Error, Sendable {
+     case unauthorized
+     case unavailable
+diff --git a/Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift b/Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift
+index b0ed44a..a0421fa 100644
+--- a/Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift
++++ b/Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift
+@@ -21,10 +21,17 @@ public final class HealthKitProvider: HealthDataProviding {
+ 
+     public var isHealthDataAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
+ 
++    /// The core kinds only (`HealthDataKind.core`): the ones onboarding asks for. Asking about all five here made a person who had just answered
++    /// onboarding's sheet look "not asked yet", because HealthKit reports `.shouldRequest` while any type in the set has not been asked.
+     public func authorizationStatus() async -> HealthAuthorizationStatus {
++        await authorizationStatus(for: HealthDataKind.core)
++    }
++
++    /// `.authorized` when the system's question has been asked for every kind given: HealthKit's "no request needed", which says nothing about
++    /// whether reading was allowed.
++    public func authorizationStatus(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus {
+         guard isHealthDataAvailable else { return .unavailable }
+-        let types = Self.readTypes(for: HealthDataKind.allCases)
+-        let requestStatus = try? await store.statusForAuthorizationRequest(toShare: [], read: types)
++        let requestStatus = try? await store.statusForAuthorizationRequest(toShare: [], read: Self.readTypes(for: kinds))
+         return requestStatus == .unnecessary ? .authorized : .notDetermined
+     }
+ 
+diff --git a/Packages/NoctisKit/Sources/HealthProviding/HealthModels.swift b/Packages/NoctisKit/Sources/HealthProviding/HealthModels.swift
+index a281abf..6818084 100644
+--- a/Packages/NoctisKit/Sources/HealthProviding/HealthModels.swift
++++ b/Packages/NoctisKit/Sources/HealthProviding/HealthModels.swift
+@@ -129,6 +129,13 @@ public nonisolated enum HealthDataKind: String, Sendable, CaseIterable {
+     }
+ }
+ 
++extension HealthDataKind {
++    /// The kinds onboarding asks for, and the ones whose question decides whether Home, Sleep, Recovery and Insights load. Resting heart rate and
++    /// respiratory rate are extras: they are asked for only from "Connect Apple Health", never as a side effect of the onboarding step, and a
++    /// person who was never asked for them still sees every screen (those two readings are simply absent).
++    public static let core: [HealthDataKind] = [.sleepAnalysis, .heartRate, .hrv]
++}
++
+ public nonisolated enum HealthAuthorizationStatus: Sendable, Equatable {
+     case notDetermined
+     case authorized
+diff --git a/Packages/NoctisKit/Sources/HealthProviding/Mock/MockHealthKitProvider.swift b/Packages/NoctisKit/Sources/HealthProviding/Mock/MockHealthKitProvider.swift
+index 317201d..da6107f 100644
+--- a/Packages/NoctisKit/Sources/HealthProviding/Mock/MockHealthKitProvider.swift
++++ b/Packages/NoctisKit/Sources/HealthProviding/Mock/MockHealthKitProvider.swift
+@@ -68,6 +68,8 @@ public final class MockHealthKitProvider: HealthDataProviding {
+     public let scenario: MockScenario
+ 
+     private var status: HealthAuthorizationStatus
++    /// The kinds the system's question has been asked for (all of them when the mock starts authorized).
++    private var asked: Set<HealthDataKind>
+     private let sleep: [RawSleepSample]
+     private let heartRate: [HeartRateSample]
+     private let resting: [HeartRateSample]
+@@ -95,6 +97,7 @@ public final class MockHealthKitProvider: HealthDataProviding {
+         self.scenario = scenario
+         self.latency = latency
+         self.status = startAuthorized ? .authorized : .notDetermined
++        self.asked = startAuthorized ? Set(HealthDataKind.allCases) : []
+         self.isHealthDataAvailable = isHealthDataAvailable
+         self.failsQueries = failsQueries
+ 
+@@ -152,37 +155,54 @@ public final class MockHealthKitProvider: HealthDataProviding {
+         respiratory = hasHeartData ? nights.flatMap(\.respiratorySamples).filter { $0.date <= cutoff } : []
+     }
+ 
+-    public func authorizationStatus() async -> HealthAuthorizationStatus { status }
++    public func authorizationStatus() async -> HealthAuthorizationStatus { await authorizationStatus(for: HealthDataKind.core) }
++
++    /// Like HealthKit's "request status": `.authorized` only once every kind given has been asked for, whatever the answer was.
++    public func authorizationStatus(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus {
++        status == .authorized && kinds.allSatisfy(asked.contains) ? .authorized : .notDetermined
++    }
+ 
+     public func requestAuthorization(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus {
++        asked.formUnion(kinds)
+         status = .authorized
+         return status
+     }
+ 
++    /// Like HealthKit: a query for a kind the system's question was never asked for throws "authorization not determined" (the real provider reports it
++    /// as `.unauthorized`); it does not quietly return nothing. Checked against the real HealthKit on the simulator (Stage 1A review, R-01).
++    private func requireAsked(_ kind: HealthDataKind) throws {
++        guard asked.contains(kind) else { throw HealthProviderError.unauthorized }
++    }
++
+     public func fetchSleepSamples(from start: Date, to end: Date) async throws -> [RawSleepSample] {
+         try requireAuthorized()
+         if latency > .zero { try await Task.sleep(for: latency) }
+         if failsQueries { throw HealthProviderError.queryFailed }
++        try requireAsked(.sleepAnalysis)
+         return sleep.filter { $0.start < end && $0.end > start }
+     }
+ 
+     public func fetchHeartRateSamples(from start: Date, to end: Date) async throws -> [HeartRateSample] {
+         try requireAuthorized()
++        try requireAsked(.heartRate)
+         return heartRate.filter { $0.date >= start && $0.date <= end }
+     }
+ 
+     public func fetchRestingHeartRate(from start: Date, to end: Date) async throws -> [HeartRateSample] {
+         try requireAuthorized()
++        try requireAsked(.restingHeartRate)
+         return resting.filter { $0.date >= start && $0.date <= end }
+     }
+ 
+     public func fetchHRVSamples(from start: Date, to end: Date) async throws -> [HRVSample] {
+         try requireAuthorized()
++        try requireAsked(.hrv)
+         return hrv.filter { $0.date >= start && $0.date <= end }
+     }
+ 
+     public func fetchRespiratorySamples(from start: Date, to end: Date) async throws -> [RespiratoryRateSample] {
+         try requireAuthorized()
++        try requireAsked(.respiratoryRate)
+         return respiratory.filter { $0.date >= start && $0.date <= end }
+     }
+ 
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/DataExport.swift b/Packages/NoctisKit/Sources/NoctisCore/DataExport.swift
+index 4b79f46..ac96ade 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/DataExport.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/DataExport.swift
+@@ -11,6 +11,9 @@ public nonisolated enum DataExportError: Error, Equatable {
+ /// holds a raw Apple Health reading, because NOCTIS keeps none.
+ public nonisolated enum DataExport {
+     public static let fileName = "NOCTIS-export.json"
++    /// The name the file has while it is being written. It is renamed onto `fileName` only when whole, so a write that is cut short leaves this name
++    /// and no other, and every cleanup removes it.
++    public static let partialFileName = fileName + ".partial"
+     public static let about =
+         "A copy of what NOCTIS stores on this iPhone: your profile, preferences, goals, alarm settings, wind-down history, journal, Coach conversations and the numbers NOCTIS worked out from Apple Health. It never holds raw Apple Health readings, because NOCTIS does not keep them."
+ 
+@@ -31,6 +34,37 @@ public nonisolated enum DataExport {
+         return try JSONSerialization.data(withJSONObject: document, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+     }
+ 
++    // MARK: Writing and removing the file
++
++    /// Writes `data` as `fileName` in `directory`. Complete file protection (the class the Journal and Coach files have, because this file holds the same
++    /// text): unreadable while the iPhone is locked. Written under `partialFileName` and renamed onto the final name, so the final file is whole or absent,
++    /// and an export made before is replaced in one step. A failure removes the partial file and throws.
++    public static func write(_ data: Data, in directory: URL) throws -> URL {
++        let manager = FileManager.default
++        let url = directory.appending(path: fileName, directoryHint: .notDirectory)
++        let partial = directory.appending(path: partialFileName, directoryHint: .notDirectory)
++        do {
++            try? manager.removeItem(at: partial)
++            try data.write(to: partial, options: [.completeFileProtection])
++            if manager.fileExists(atPath: url.path) {
++                _ = try manager.replaceItemAt(url, withItemAt: partial)
++            } else {
++                try manager.moveItem(at: partial, to: url)
++            }
++            return url
++        } catch {
++            try? manager.removeItem(at: partial)
++            throw error
++        }
++    }
++
++    /// Removes the export and any partial file a cut-short write left in `directory`.
++    public static func remove(in directory: URL) {
++        for name in [fileName, partialFileName] {
++            try? FileManager.default.removeItem(at: directory.appending(path: name, directoryHint: .notDirectory))
++        }
++    }
++
+     // MARK: Helpers for providers
+ 
+     /// The values stored under `keys` in `defaults`, by key.
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/DataManager.swift b/Packages/NoctisKit/Sources/NoctisCore/DataManager.swift
+index 1d86fb3..cadfc24 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/DataManager.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/DataManager.swift
+@@ -182,14 +182,12 @@ public final class DataManager {
+     /// The export, written to the temporary folder; it is deleted after the share sheet is done.
+     public func exportFile() async throws -> URL {
+         let data = try await DataExport.build(inventory: inventory, providers: providers, now: clock(), app: appVersion())
+-        let url = roots.url(.temporary).appending(path: DataExport.fileName, directoryHint: .notDirectory)
+-        try data.write(to: url, options: [.atomic])
+-        return url
++        return try DataExport.write(data, in: roots.url(.temporary))
+     }
+ 
+-    /// Removes the export file.
++    /// Removes the export file, and a partial one if a write was cut short.
+     public func discardExport() {
+-        try? FileManager.default.removeItem(at: roots.url(.temporary).appending(path: DataExport.fileName, directoryHint: .notDirectory))
++        DataExport.remove(in: roots.url(.temporary))
+     }
+ }
+ 
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/HealthDataStatus.swift b/Packages/NoctisKit/Sources/NoctisCore/HealthDataStatus.swift
+index df9df80..41c9872 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/HealthDataStatus.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/HealthDataStatus.swift
+@@ -30,8 +30,9 @@ public nonisolated struct HealthDataStatus: Sendable, Equatable {
+     public let lastNightSource: String?
+     /// Health is not available on this device at all.
+     public let isUnavailable: Bool
+-    /// The system's question has not been asked yet, so "Connect Apple Health" would show it. Once it has been
+-    /// asked it never shows again, and the only way to change the answer is the Health app.
++    /// The system's question has not been asked yet for at least one of the five kinds, so "Connect Apple Health" would show it (for a person
++    /// who answered onboarding, that is resting heart rate and respiratory rate, which onboarding does not ask for). Once every kind has been
++    /// asked it never shows again, and the only way to change an answer is the Health app.
+     public let canRequestAccess: Bool
+ 
+     public init(kinds: [HealthKindStatus], lastNightSource: String?, isUnavailable: Bool = false, canRequestAccess: Bool = false) {
+@@ -90,7 +91,8 @@ public struct HealthDataStatusReader {
+                 statuses.append(HealthKindStatus(kind: kind, lastSample: nil, couldNotCheck: true))
+             }
+         }
+-        let canRequest = await provider.authorizationStatus() == .notDetermined
++        // Any of the five still to be asked (resting heart rate and respiratory rate are asked only from here, never by onboarding).
++        let canRequest = await provider.authorizationStatus(for: HealthDataKind.allCases) == .notDetermined
+         return HealthDataStatus(
+             kinds: statuses, lastNightSource: Self.lastNightSource(sleepSamples, resolver: resolver, now: now), isUnavailable: false,
+             canRequestAccess: canRequest
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/HomeRepository.swift b/Packages/NoctisKit/Sources/NoctisCore/HomeRepository.swift
+index 18d733e..b59a50c 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/HomeRepository.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/HomeRepository.swift
+@@ -246,7 +246,7 @@ public actor HomeRepository {
+         do {
+             async let sleep = provider.fetchSleepSamples(from: start, to: now)
+             async let hrv = provider.fetchHRVSamples(from: start, to: now)
+-            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
++            async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
+             async let heartRate = provider.fetchHeartRateSamples(from: now.addingTimeInterval(-2 * 86_400), to: now)
+             let (allSleep, allHRV, allResting) = try await (sleep, hrv, resting)
+             // The featured insight comes from the shared store, made at the same time as the snapshot.
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/InsightsRepository.swift b/Packages/NoctisKit/Sources/NoctisCore/InsightsRepository.swift
+index 9a54858..c4be3b2 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/InsightsRepository.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/InsightsRepository.swift
+@@ -129,7 +129,7 @@ public actor InsightsRepository {
+         do {
+             async let sleep = provider.fetchSleepSamples(from: start, to: now)
+             async let hrv = provider.fetchHRVSamples(from: start, to: now)
+-            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
++            async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
+             let (sleepSamples, hrvSamples, restingSamples) = try await (sleep, hrv, resting)
+             return await build(profile: profile, sleep: sleepSamples, hrv: hrvSamples, resting: restingSamples)
+         } catch HealthProviderError.unauthorized {
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/RecoveryRepository.swift b/Packages/NoctisKit/Sources/NoctisCore/RecoveryRepository.swift
+index da3739f..f1633c2 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/RecoveryRepository.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/RecoveryRepository.swift
+@@ -89,7 +89,7 @@ public actor RecoveryRepository {
+         do {
+             async let sleep = provider.fetchSleepSamples(from: start, to: now)
+             async let hrv = provider.fetchHRVSamples(from: start, to: now)
+-            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
++            async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
+             async let heartRate = provider.fetchHeartRateSamples(from: now.addingTimeInterval(-2 * 86_400), to: now)
+             let inputs = try await HomeHealthInputs(sleep: sleep, hrv: hrv, restingHeartRate: resting, heartRate: heartRate)
+             return RecoverySnapshotBuilder.build(inputs, profile: profile, now: now, timeZone: timeZone)
+diff --git a/Packages/NoctisKit/Sources/NoctisCore/ReviewRepository.swift b/Packages/NoctisKit/Sources/NoctisCore/ReviewRepository.swift
+index 5fb2336..7cf4e9a 100644
+--- a/Packages/NoctisKit/Sources/NoctisCore/ReviewRepository.swift
++++ b/Packages/NoctisKit/Sources/NoctisCore/ReviewRepository.swift
+@@ -65,7 +65,7 @@ public actor ReviewRepository {
+             do {
+                 async let sleep = provider.fetchSleepSamples(from: start, to: now)
+                 async let hrv = provider.fetchHRVSamples(from: start, to: now)
+-                async let resting = provider.fetchRestingHeartRate(from: start, to: now)
++                async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
+                 let samples = try await (sleep, hrv, resting)
+                 let nights = ReviewInputsBuilder.nights(
+                     sleep: samples.0, hrv: samples.1, restingHeartRate: samples.2, needMinutes: Double(profile.needMinutes), now: now, timeZone: zone
+@@ -92,7 +92,7 @@ public actor ReviewRepository {
+         do {
+             async let sleep = provider.fetchSleepSamples(from: start, to: now)
+             async let hrv = provider.fetchHRVSamples(from: start, to: now)
+-            async let resting = provider.fetchRestingHeartRate(from: start, to: now)
++            async let resting = provider.restingHeartRateIfAsked(from: start, to: now)
+             let samples = try await (sleep, hrv, resting)
+             let nights = ReviewInputsBuilder.nights(
+                 sleep: samples.0, hrv: samples.1, restingHeartRate: samples.2, needMinutes: Double(profile.needMinutes), now: now, timeZone: zone
+diff --git a/Packages/NoctisKit/Sources/OnboardingFeature/HealthScreen.swift b/Packages/NoctisKit/Sources/OnboardingFeature/HealthScreen.swift
+index a516bc1..c546e22 100644
+--- a/Packages/NoctisKit/Sources/OnboardingFeature/HealthScreen.swift
++++ b/Packages/NoctisKit/Sources/OnboardingFeature/HealthScreen.swift
+@@ -7,7 +7,7 @@ import SwiftUI
+ /// so the label and icon shown always match what is actually requested. Activity/steps is deliberately excluded: `RecoveryFactorKind` has no case that
+ /// reads activity data today, and Recovery itself is never listed here: it is computed from these signals, not a permission of its own.
+ enum HealthStepFacts {
+-    static let requestedKinds: [HealthDataKind] = [.sleepAnalysis, .heartRate, .hrv]
++    static let requestedKinds: [HealthDataKind] = HealthDataKind.core
+ 
+     /// The line on each card (the longer `HealthDataKind.benefit` is the Privacy Center's).
+     static func line(_ kind: HealthDataKind) -> String {
+diff --git a/Packages/NoctisKit/Sources/ProfileFeature/SettingsContent.swift b/Packages/NoctisKit/Sources/ProfileFeature/SettingsContent.swift
+index 9c938e1..d0c6583 100644
+--- a/Packages/NoctisKit/Sources/ProfileFeature/SettingsContent.swift
++++ b/Packages/NoctisKit/Sources/ProfileFeature/SettingsContent.swift
+@@ -135,6 +135,11 @@ public nonisolated enum HealthCopy {
+     public static let emptyExplanation =
+         "Nothing was recorded in the last \(HealthDataStatus.lookBackDays) days, or NOCTIS isn't allowed to read it. Apple Health doesn't tell apps which."
+ 
++    /// Data is coming in, yet Connect Apple Health can still ask: onboarding asks for sleep, heart rate and HRV only, so these two have not been asked
++    /// for. Said plainly so an empty row is not read as "denied" or "broken".
++    public static let notAskedYet =
++        "Resting heart rate and respiratory rate haven't been asked for yet, so they show no data. Connect Apple Health to choose whether NOCTIS may read them."
++
+     public static func sourceLine(_ source: String?) -> String? {
+         source.map { "Last night's sleep came from \($0)." }
+     }
+diff --git a/Packages/NoctisKit/Sources/ProfileFeature/SettingsPages.swift b/Packages/NoctisKit/Sources/ProfileFeature/SettingsPages.swift
+index 7c72f90..77c2717 100644
+--- a/Packages/NoctisKit/Sources/ProfileFeature/SettingsPages.swift
++++ b/Packages/NoctisKit/Sources/ProfileFeature/SettingsPages.swift
+@@ -271,6 +271,9 @@ struct HealthDataSettingsView: View {
+         if !health.missing.isEmpty && health.hasAnyData {
+             SettingsNote(HealthCopy.emptyExplanation).accessibilityIdentifier("settings.health.explanation")
+         }
++        if health.canRequestAccess && health.hasAnyData {
++            SettingsNote(HealthCopy.notAskedYet).accessibilityIdentifier("settings.health.notAskedYet")
++        }
+     }
+ 
+     private func buttons(_ health: HealthDataStatus) -> some View {
+diff --git a/Packages/NoctisKit/Sources/AppRoot/PrivacyShield.swift b/Packages/NoctisKit/Sources/AppRoot/PrivacyShield.swift
+new file mode 100644
+index 0000000..faaf4d3
+--- /dev/null
++++ b/Packages/NoctisKit/Sources/AppRoot/PrivacyShield.swift
+@@ -0,0 +1,116 @@
++import DesignSystem
++import SwiftUI
++import UIKit
++
++// What the app switcher may show (Stage 1A, audit SEC-05). iOS keeps a picture of the app's last screen for the app switcher, and it was a recovery score,
++// last night's sleep or a Journal entry. While the app is not the active scene a plain screen covers everything, sheets included, and it goes the moment
++// the scene is active again. Nothing underneath is touched: no view is rebuilt, no navigation resets, and alarms, audio, notifications, Live Activities
++// and the Watch link never see it.
++//
++// It is a second window above the app's own (the way the system puts its alerts above an app), not a blur and not a screenshot trick: a SwiftUI overlay on
++// the root view would leave a presented sheet visible, and a sheet is where the Journal opens. The window is not made key, so it takes no focus from the
++// app, and it is thrown away on every return, so it keeps nothing.
++
++/// Puts a cover over a scene, and takes it away.
++@MainActor
++public protocol PrivacyShieldPresenting: AnyObject {
++    /// Covers `scene`, or every connected window scene when it is nil.
++    func show(over scene: UIWindowScene?)
++    func hide(over scene: UIWindowScene?)
++}
++
++/// Watches the scene's activity and asks the presenter to cover or uncover.
++@MainActor
++public final class PrivacyShield {
++    /// The one the app uses.
++    public static let shared = PrivacyShield()
++
++    public private(set) var isCovering = false
++
++    private let presenter: any PrivacyShieldPresenting
++    private let center: NotificationCenter
++    private var observers: [any NSObjectProtocol] = []
++
++    public init(presenter: any PrivacyShieldPresenting = WindowShieldPresenter(), center: NotificationCenter = .default) {
++        self.presenter = presenter
++        self.center = center
++    }
++
++    /// Starts watching. A second call does nothing.
++    public func start() {
++        guard observers.isEmpty else { return }
++        // `willDeactivate` comes before the system takes the app switcher's picture; `didActivate` is the return to the front.
++        observers = [
++            center.addObserver(forName: UIScene.willDeactivateNotification, object: nil, queue: .main) { [weak self] note in
++                let scene = note.object as? UIWindowScene
++                MainActor.assumeIsolated { self?.cover(scene) }
++            },
++            center.addObserver(forName: UIScene.didActivateNotification, object: nil, queue: .main) { [weak self] note in
++                let scene = note.object as? UIWindowScene
++                MainActor.assumeIsolated { self?.uncover(scene) }
++            },
++        ]
++    }
++
++    func cover(_ scene: UIWindowScene?) {
++        isCovering = true
++        presenter.show(over: scene)
++    }
++
++    func uncover(_ scene: UIWindowScene?) {
++        isCovering = false
++        presenter.hide(over: scene)
++    }
++}
++
++/// The real cover: one hidden-by-default window per scene, above every other window.
++@MainActor
++public final class WindowShieldPresenter: PrivacyShieldPresenting {
++    private var windows: [ObjectIdentifier: UIWindow] = [:]
++
++    public init() {}
++
++    public func show(over scene: UIWindowScene?) {
++        for target in targets(scene) where windows[ObjectIdentifier(target)] == nil {
++            let window = UIWindow(windowScene: target)
++            // Above the app's windows, its sheets and the system's own alerts raised by the app.
++            window.windowLevel = .alert + 1
++            let host = UIHostingController(rootView: PrivacyShieldView())
++            host.view.backgroundColor = .clear
++            window.rootViewController = host
++            window.isHidden = false
++            windows[ObjectIdentifier(target)] = window
++        }
++    }
++
++    public func hide(over scene: UIWindowScene?) {
++        for target in targets(scene) {
++            guard let window = windows.removeValue(forKey: ObjectIdentifier(target)) else { continue }
++            window.isHidden = true
++            window.rootViewController = nil
++        }
++        // With no scene named, nothing may stay up: a window of a scene that has gone away is hidden too.
++        if scene == nil {
++            for window in windows.values { window.isHidden = true }
++            windows.removeAll()
++        }
++    }
++
++    private func targets(_ scene: UIWindowScene?) -> [UIWindowScene] {
++        if let scene { return [scene] }
++        return UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
++    }
++}
++
++/// What the cover shows: the app's own background and one quiet symbol. No number, no name, no text, and nothing read from the app's data.
++struct PrivacyShieldView: View {
++    var body: some View {
++        ZStack {
++            NoctisAppColor.bg.ignoresSafeArea()
++            Image(systemName: "moon.stars.fill")
++                .font(.system(size: 44, weight: .regular))
++                .foregroundStyle(NoctisAppColor.ink3)
++                .accessibilityHidden(true)
++        }
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/ExportProtectionTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/ExportProtectionTests.swift
+new file mode 100644
+index 0000000..77fe35b
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/ExportProtectionTests.swift
+@@ -0,0 +1,109 @@
++import Foundation
++import Testing
++
++@testable import NoctisCore
++
++// Stage 1A, audit SEC-03: "Export my data" wrote the file atomically but with the default protection class, while the Journal and Coach files that the
++// export copies are complete-while-locked. The export holds the same text, so it gets the same class, still written whole-or-not-at-all, and every
++// cleanup removes it and any partial file a cut-short write could leave.
++@MainActor
++struct ExportProtectionTests {
++    private func folder() throws -> URL {
++        let url = URL.temporaryDirectory.appending(path: "noctis-export-\(UUID().uuidString)", directoryHint: .isDirectory)
++        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
++        return url
++    }
++
++    private func names(in directory: URL) -> [String] {
++        ((try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []).sorted()
++    }
++
++    // MARK: Protection
++
++    @Test func theExportFileHasCompleteProtectionWhereThePlatformReportsOne() async throws {
++        let bench = try DataBench()
++        bench.wire()
++        let url = try await bench.manager.exportFile()
++        defer { bench.manager.discardExport() }
++        // The simulator reports no class for a file; a device does. Where one is reported it must be the strong one.
++        if let protection = try FileManager.default.attributesOfItem(atPath: url.path)[.protectionKey] as? FileProtectionType {
++            #expect(protection == .complete)
++        }
++    }
++
++    @Test func theCodeAsksForCompleteProtectionAndKeepsTheWholeOrNothingWrite() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/DataExport.swift"), encoding: .utf8)
++        let code = RawDefaultsTests.code(text)
++        #expect(code.contains("options: [.completeFileProtection]"), "the simulator reports no class, so the request itself is held to the code")
++        #expect(!code.contains("UntilFirstUserAuthentication"), "not the weaker class")
++        #expect(code.contains("replaceItemAt") && code.contains("moveItem(at: partial"), "the final file appears by rename: whole or absent")
++        let manager = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/NoctisCore/DataManager.swift"), encoding: .utf8)
++        #expect(RawDefaultsTests.code(manager).contains("DataExport.write(data, in:"), "the manager has no write of its own to forget the class")
++    }
++
++    // MARK: Whole or absent, and cleanup
++
++    @Test func aSecondExportReplacesTheFirstAndLeavesOnlyTheFinalFile() async throws {
++        let bench = try DataBench()
++        bench.wire()
++        let temporary = bench.roots.url(.temporary)
++        _ = try await bench.manager.exportFile()
++        let url = try await bench.manager.exportFile()
++        defer { bench.manager.discardExport() }
++        #expect(names(in: temporary) == [DataExport.fileName], "no partial file and no stray copy")
++        #expect(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) is [String: Any])
++    }
++
++    @Test func aWriteThatFailsThrowsAndLeavesNothingBehind() throws {
++        let directory = try folder()
++        defer {
++            try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
++            try? FileManager.default.removeItem(at: directory)
++        }
++        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: directory.path)
++        #expect(throws: (any Error).self) { try DataExport.write(Data("{}".utf8), in: directory) }
++        #expect(names(in: directory).isEmpty, "a failed export leaves no partial file")
++    }
++
++    @Test func aWriteThatWorksLeavesTheFileAndNoPartialOne() throws {
++        let directory = try folder()
++        defer { try? FileManager.default.removeItem(at: directory) }
++        let url = try DataExport.write(Data("{\"a\":1}".utf8), in: directory)
++        #expect(names(in: directory) == [DataExport.fileName])
++        #expect(try Data(contentsOf: url) == Data("{\"a\":1}".utf8))
++    }
++
++    @Test func aPartialFileLeftByACutShortWriteIsRemovedByDiscardAndWhenTheAppStarts() throws {
++        let bench = try DataBench()
++        let temporary = bench.roots.url(.temporary)
++        let partial = temporary.appending(path: DataExport.partialFileName, directoryHint: .notDirectory)
++        try Data("{".utf8).write(to: partial)
++        bench.wire()
++        #expect(!FileManager.default.fileExists(atPath: partial.path), "the manager clears it when it is made, as it does a finished export")
++
++        try Data("{".utf8).write(to: partial)
++        try Data("{}".utf8).write(to: temporary.appending(path: DataExport.fileName, directoryHint: .notDirectory))
++        bench.manager.discardExport()
++        #expect(names(in: temporary).isEmpty, "Share is done: both names are gone")
++    }
++
++    @Test func deletingEverythingAlsoRemovesAPartialExport() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/DataWiring.swift"), encoding: .utf8)
++        #expect(RawDefaultsTests.code(text).contains("DataExport.remove(in: i.roots.url(.temporary))"))
++    }
++
++    @Test func theExportCreatesNoCopyOfTheJournalOutsideTheOneFile() async throws {
++        let bench = try DataBench()
++        bench.wire()
++        try await bench.fill()
++        let before = names(in: bench.root)
++        _ = try await bench.manager.exportFile()
++        #expect(names(in: bench.roots.url(.temporary)) == [DataExport.fileName])
++        bench.manager.discardExport()
++        #expect(names(in: bench.roots.url(.temporary)).isEmpty)
++        #expect(names(in: bench.root) == before, "nothing else was written anywhere beside the temporary folder")
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/HealthAuthorizationFlowTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/HealthAuthorizationFlowTests.swift
+new file mode 100644
+index 0000000..00cd2db
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/HealthAuthorizationFlowTests.swift
+@@ -0,0 +1,162 @@
++import Foundation
++import Testing
++
++@testable import HealthProviding
++@testable import NoctisCore
++@testable import OnboardingFeature
++
++// Stage 1A, audit PRIV-01 / X-26: onboarding asks Apple Health for three kinds, and the screens used to wait for an "asked" answer about all five, so a
++// person who had just answered onboarding's sheet looked like someone who had not been asked. HealthKit never says whether a read type was allowed, so
++// `.authorized` here means "the system's question has been asked", and a declined or unasked type is only ever a type with no data.
++@MainActor
++struct HealthAuthorizationFlowTests {
++    private let now = Fixture.date(2026, 9, 24, 10)
++
++    private func provider(_ scenario: MockScenario = .full, startAuthorized: Bool = false) -> MockHealthKitProvider {
++        MockHealthKitProvider(scenario: scenario, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: startAuthorized)
++    }
++
++    // MARK: What onboarding asks for
++
++    @Test func onboardingAsksForTheCoreKindsAndNothingMore() {
++        #expect(HealthStepFacts.requestedKinds == HealthDataKind.core)
++        #expect(HealthDataKind.core == [.sleepAnalysis, .heartRate, .hrv])
++        #expect(!HealthDataKind.core.contains(.restingHeartRate) && !HealthDataKind.core.contains(.respiratoryRate))
++        #expect(Set(HealthDataKind.core).isSubset(of: Set(HealthDataKind.allCases)))
++    }
++
++    // MARK: After onboarding
++
++    @Test func afterOnboardingAnswersTheCoreQuestionTheScreensAreNotWaitingForAnotherOne() async {
++        let health = provider()
++        #expect(await health.authorizationStatus() == .notDetermined, "before anything is asked")
++        _ = await health.requestAuthorization(for: HealthStepFacts.requestedKinds)
++        #expect(await health.authorizationStatus() == .authorized, "the three kinds onboarding asked for are asked: the data screens load")
++        #expect(await health.authorizationStatus(for: HealthDataKind.allCases) == .notDetermined, "two kinds have still not been asked")
++    }
++
++    @Test func homeSleepRecoveryAndInsightsLoadAfterOnboardingAloneNotAConnectPrompt() async {
++        let health = provider()
++        _ = await health.requestAuthorization(for: HealthStepFacts.requestedKinds)
++        let profile = UserProfileSnapshot()
++        let home = await HomeRepository(provider: health, timeZone: Fixture.newYork, clock: { now }).refresh(profile: profile)
++        let sleep = await SleepRepository(provider: health, timeZone: Fixture.newYork, clock: { now }).refresh(profile: profile)
++        let recovery = await RecoveryRepository(provider: health, timeZone: Fixture.newYork, clock: { now }).refresh(profile: profile)
++        let insights = await InsightsRepository(provider: health, timeZone: Fixture.newYork, clock: { now }).refresh(profile: profile)
++        #expect(home.dataState != .permissionRequired, "Home would otherwise show Connect Apple Health right after the sheet was answered")
++        #expect(sleep.dataState != .permissionRequired)
++        #expect(recovery.dataState != .permissionRequired)
++        #expect(insights.dataState != .permissionRequired)
++    }
++
++    @Test func theReviewsAreNotBlockedByAnUnaskedOptionalKindEither() async {
++        let health = provider()
++        _ = await health.requestAuthorization(for: HealthStepFacts.requestedKinds)
++        let zone = Fixture.newYork
++        let moment = now
++        let repository = ReviewRepository(provider: health, store: ReviewStore(), insights: InsightStore(), timeZone: { zone }, clock: { moment })
++        let outcome = await repository.review(repository.latestWeekly(weekday: 1), profile: UserProfileSnapshot())
++        #expect(outcome != .noAccess && outcome != .unavailable, "asked for the core kinds: a review is made or says why not, never 'no access'")
++        let counts = await repository.nightCounts(for: [repository.latestWeekly(weekday: 1)], profile: UserProfileSnapshot())
++        #expect(counts != nil)
++    }
++
++    @Test func aKindThatWasNeverAskedForThrowsUnauthorizedLikeRealHealthKitAndTheOptionalReadersTurnThatIntoNoData() async throws {
++        let health = provider()
++        _ = await health.requestAuthorization(for: HealthDataKind.core)
++        let start = now.addingTimeInterval(-30 * 86_400)
++        #expect(try await health.fetchSleepSamples(from: start, to: now).isEmpty == false, "asked: its data is there")
++        // Real HealthKit (checked on the simulator) throws for a kind never asked for, as the mock now does.
++        await #expect(throws: HealthProviderError.unauthorized) { try await health.fetchRestingHeartRate(from: start, to: now) }
++        await #expect(throws: HealthProviderError.unauthorized) { try await health.fetchRespiratorySamples(from: start, to: now) }
++        // The optional readers the screens use turn that into "no data".
++        #expect(try await health.restingHeartRateIfAsked(from: start, to: now).isEmpty)
++        #expect(try await health.respiratorySamplesIfAsked(from: start, to: now).isEmpty)
++        // The core reads are not softened: a person who was never asked about sleep still has a missing permission (see the skipped-Health test).
++        let none = provider()
++        await #expect(throws: HealthProviderError.unauthorized) { try await none.fetchSleepSamples(from: start, to: now) }
++    }
++
++    @Test func theOptionalReadersReturnTheDataOnceTheKindIsAsked() async throws {
++        let health = provider(startAuthorized: true)
++        let start = now.addingTimeInterval(-30 * 86_400)
++        #expect(try await health.restingHeartRateIfAsked(from: start, to: now).isEmpty == false)
++        #expect(try await health.respiratorySamplesIfAsked(from: start, to: now).isEmpty == false)
++    }
++
++    @Test func theHealthPageStillOffersTheTwoKindsOnboardingDidNotAsk() async {
++        let health = provider()
++        _ = await health.requestAuthorization(for: HealthDataKind.core)
++        let status = await HealthDataStatusReader(provider: health).read(now: now, calendar: Fixture.calendar())
++        #expect(status.hasAnyData, "the screens load")
++        #expect(status.canRequestAccess, "Connect Apple Health is still there for resting heart rate and respiratory rate, which nothing has asked for")
++        #expect(status.kinds.first { $0.kind == .restingHeartRate }?.hasData == false)
++        #expect(status.kinds.first { $0.kind == .sleepAnalysis }?.hasData == true)
++    }
++
++    @Test func connectingFromTheHealthPageAsksOnlyForWhatIsLeftAndThenStopsOffering() async {
++        let health = provider()
++        _ = await health.requestAuthorization(for: HealthDataKind.core)
++        _ = await health.requestAuthorization(for: HealthDataKind.allCases)
++        #expect(await health.authorizationStatus(for: HealthDataKind.allCases) == .authorized)
++        let status = await HealthDataStatusReader(provider: health).read(now: now, calendar: Fixture.calendar())
++        #expect(!status.canRequestAccess, "asked for all five: the sheet is never offered again")
++        #expect(status.kinds.first { $0.kind == .restingHeartRate }?.hasData == true)
++    }
++
++    // MARK: Skipping Health, no data, and unavailable
++
++    @Test func aPersonWhoSkippedHealthStillSeesTheConnectFlowAndTheNoPermissionState() async {
++        let health = provider()
++        let home = await HomeRepository(provider: health, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot())
++        #expect(home.dataState == .permissionRequired)
++        let status = await HealthDataStatusReader(provider: health).read(now: now, calendar: Fixture.calendar())
++        #expect(status.canRequestAccess && !status.hasAnyData && status.kinds.allSatisfy { !$0.couldNotCheck })
++    }
++
++    @Test func anAnsweredQuestionWithNoDataIsEmptyNeverPermissionRequiredAndNeverDenied() async {
++        let health = provider(.empty)
++        _ = await health.requestAuthorization(for: HealthStepFacts.requestedKinds)
++        let home = await HomeRepository(provider: health, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot())
++        #expect(home.dataState == .empty, "asked, and nothing there: the empty state, not a prompt to connect")
++        #expect(await health.authorizationStatus() != .denied, "HealthKit cannot say denied, so neither can NOCTIS")
++    }
++
++    @Test func healthBeingUnavailableIsStillItsOwnStateAfterTheChange() async {
++        let health = MockHealthKitProvider(
++            scenario: .full, referenceDate: now, calendar: Fixture.calendar(), startAuthorized: true, isHealthDataAvailable: false)
++        let home = await HomeRepository(provider: health, timeZone: Fixture.newYork, clock: { now }).refresh(profile: UserProfileSnapshot())
++        #expect(home.dataState == .healthDataUnavailable)
++    }
++
++    // MARK: The seam
++
++    private struct OldStyleProvider: HealthDataProviding {
++        var isHealthDataAvailable: Bool { true }
++        var sourceName: String { "Old" }
++        func authorizationStatus() async -> HealthAuthorizationStatus { .authorized }
++        func requestAuthorization(for kinds: [HealthDataKind]) async -> HealthAuthorizationStatus { .authorized }
++        func fetchSleepSamples(from start: Date, to end: Date) async throws -> [RawSleepSample] { [] }
++        func fetchHeartRateSamples(from start: Date, to end: Date) async throws -> [HeartRateSample] { [] }
++        func fetchRestingHeartRate(from start: Date, to end: Date) async throws -> [HeartRateSample] { [] }
++        func fetchHRVSamples(from start: Date, to end: Date) async throws -> [HRVSample] { [] }
++        func fetchRespiratorySamples(from start: Date, to end: Date) async throws -> [RespiratoryRateSample] { [] }
++        func sampleChanges() -> AsyncStream<Void> { AsyncStream { $0.finish() } }
++    }
++
++    @Test func aProviderThatCannotTellKindsApartAnswersWithItsOneStatus() async {
++        #expect(await OldStyleProvider().authorizationStatus(for: HealthDataKind.allCases) == .authorized)
++    }
++
++    // MARK: The real provider (HealthKit's own answer is device-only, so the code is held to the rule)
++
++    @Test func theRealProviderAsksTheSystemAboutTheCoreKindsAndNeverWritesToHealth() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/HealthProviding/HealthKitProvider.swift"), encoding: .utf8)
++        let code = RawDefaultsTests.code(text)
++        #expect(code.contains("authorizationStatus(for: HealthDataKind.core)"), "the default status question is about the core kinds, not all five")
++        #expect(!code.contains("readTypes(for: HealthDataKind.allCases)"), "no status check may ask about every kind again")
++        let shares = code.components(separatedBy: "toShare:").count - 1
++        #expect(shares >= 2 && shares == code.components(separatedBy: "toShare: []").count - 1, "read-only: every request names an empty share set")
++    }
++}
+diff --git a/Packages/NoctisKit/Tests/NoctisKitTests/PrivacyShieldTests.swift b/Packages/NoctisKit/Tests/NoctisKitTests/PrivacyShieldTests.swift
+new file mode 100644
+index 0000000..7089f91
+--- /dev/null
++++ b/Packages/NoctisKit/Tests/NoctisKitTests/PrivacyShieldTests.swift
+@@ -0,0 +1,91 @@
++import Foundation
++import Testing
++import UIKit
++
++@testable import AppRoot
++
++// Stage 1A, audit SEC-05: the app switcher must not show a recovery score, last night's sleep or a Journal entry. Whether iOS takes its picture of the
++// cover and not of the app is a device fact (a unit test cannot open the app switcher), so these tests hold the part that is code: the cover goes up when
++// the scene is about to leave the front, comes down when it is back, is started once, shows nothing from the app, and is wired at launch.
++@MainActor
++final class RecordingPresenter: PrivacyShieldPresenting {
++    private(set) var shown: [UIWindowScene?] = []
++    private(set) var hidden: [UIWindowScene?] = []
++    func show(over scene: UIWindowScene?) { shown.append(scene) }
++    func hide(over scene: UIWindowScene?) { hidden.append(scene) }
++}
++
++@MainActor
++struct PrivacyShieldTests {
++    private func waitUntil(_ condition: @MainActor () -> Bool) async {
++        _ = await waitFor(timeout: .seconds(5)) { condition() }
++    }
++
++    @Test func theCoverGoesUpWhenTheSceneIsAboutToLeaveTheFrontAndComesDownWhenItIsBack() async {
++        let center = NotificationCenter()
++        let presenter = RecordingPresenter()
++        let shield = PrivacyShield(presenter: presenter, center: center)
++        shield.start()
++        #expect(!shield.isCovering && presenter.shown.isEmpty, "nothing is covered while the app is in front")
++
++        center.post(name: UIScene.willDeactivateNotification, object: nil)
++        await waitUntil { shield.isCovering }
++        #expect(shield.isCovering && presenter.shown.count == 1, "covered before the system takes the app switcher's picture")
++
++        center.post(name: UIScene.didActivateNotification, object: nil)
++        await waitUntil { !shield.isCovering }
++        #expect(!shield.isCovering && presenter.hidden.count == 1, "the app is back the moment the scene is active")
++    }
++
++    @Test func startingTwiceWatchesOnce() async {
++        let center = NotificationCenter()
++        let presenter = RecordingPresenter()
++        let shield = PrivacyShield(presenter: presenter, center: center)
++        shield.start()
++        shield.start()
++        center.post(name: UIScene.willDeactivateNotification, object: nil)
++        await waitUntil { shield.isCovering }
++        // Let anything else queued on the main queue run: a second observer would have covered again by now.
++        for _ in 0..<50 { await Task.yield() }
++        #expect(presenter.shown.count == 1, "a second start must not cover twice or leak an observer")
++    }
++
++    @Test func aCoverIsRaisedForEveryDeactivationAndLoweredForEveryActivation() async {
++        let center = NotificationCenter()
++        let presenter = RecordingPresenter()
++        let shield = PrivacyShield(presenter: presenter, center: center)
++        shield.start()
++        for round in 1...3 {
++            center.post(name: UIScene.willDeactivateNotification, object: nil)
++            await waitUntil { presenter.shown.count == round }
++            center.post(name: UIScene.didActivateNotification, object: nil)
++            await waitUntil { presenter.hidden.count == round }
++        }
++        #expect(presenter.shown.count == 3 && presenter.hidden.count == 3 && !shield.isCovering)
++    }
++
++    @Test func theCoverShowsNothingFromTheApp() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/PrivacyShield.swift"), encoding: .utf8)
++        let code = RawDefaultsTests.code(text)
++        // The cover is a colour and a symbol: no text, no model, no store, no screen of the app.
++        for forbidden in ["Text(", "AppModel", "@Environment", "Journal", "Recovery", "Sleep", "Coach", "Snapshot", "UserDefaults", "Logger", "NoctisAnalytics"] {
++            #expect(!code.contains(forbidden), Comment(rawValue: "the privacy cover must not use \(forbidden)"))
++        }
++        #expect(code.contains("accessibilityHidden(true)"))
++    }
++
++    @Test func theCoverIsAnOwnWindowAboveTheAppThatTakesNoFocusAndIsThrownAwayOnReturn() throws {
++        let text = try String(
++            contentsOf: RawDefaultsTests.root.appendingPathComponent("Packages/NoctisKit/Sources/AppRoot/PrivacyShield.swift"), encoding: .utf8)
++        let code = RawDefaultsTests.code(text)
++        #expect(code.contains("windowLevel = .alert + 1"), "above sheets: a Journal sheet would stay visible under a mere overlay on the root view")
++        #expect(!code.contains("makeKeyAndVisible") && !code.contains("makeKey"), "taking key status would steal focus from the app")
++        #expect(code.contains("windows.removeValue(forKey:") && code.contains("rootViewController = nil"), "kept for no longer than the inactive moment")
++    }
++
++    @Test func theAppStartsTheShieldAtLaunch() throws {
++        let text = try String(contentsOf: RawDefaultsTests.root.appendingPathComponent("App/NoctisApp.swift"), encoding: .utf8)
++        #expect(RawDefaultsTests.code(text).contains("PrivacyShield.shared.start()"), "without this call the app switcher shows the app")
++    }
++}

@@ -568,6 +568,58 @@ struct WatchSyncServiceTests {
         #expect(session.complicationInfos.count == 2, "and only once")
     }
 
+    @Test func theComplicationIsWokenWhenThePlanChangesAndNotWhenItDoesNot() async {
+        let (service, session, defaults, _) = make()
+        var free = snapshot(day: 24)
+        free.tier = .free
+        await service.publish(free)
+        #expect(session.complicationInfos.count == 1, "a new day")
+
+        var premium = snapshot(day: 24, generated: now.addingTimeInterval(60))
+        premium.tier = .premium
+        premium.premiumUntil = now.addingTimeInterval(30 * 86_400)
+        premium.autoRenews = true
+        await service.publish(premium)
+        #expect(session.complicationInfos.count == 2, "a purchase: the face learns it without waiting for the Watch app's background time")
+        #expect(defaults.complicationMark?.contains("premium@") == true)
+
+        var same = premium
+        same.generatedAt = now.addingTimeInterval(120)
+        await service.publish(same)
+        #expect(session.complicationInfos.count == 2, "the same plan and end: nothing new")
+
+        var renewed = premium
+        renewed.generatedAt = now.addingTimeInterval(180)
+        renewed.premiumUntil = now.addingTimeInterval(60 * 86_400)
+        await service.publish(renewed)
+        #expect(session.complicationInfos.count == 3, "a renewal moves the end the face locks at")
+
+        var lapsed = renewed
+        lapsed.generatedAt = now.addingTimeInterval(240)
+        lapsed.tier = .free
+        lapsed.premiumUntil = nil
+        await service.publish(lapsed)
+        #expect(session.complicationInfos.count == 4, "a lapse")
+    }
+
+    @Test func aMarkFromBeforeThePlanWasAddedDoesNotWakeTheFaceAgain() async {
+        let (service, session, defaults, _) = make()
+        defaults.complicationMark = "2026-09-24:1"
+        await service.publish(snapshot(day: 24))
+        #expect(session.complicationInfos.isEmpty, "two parts: same day, recovery already there")
+    }
+
+    @Test func aPlanChangeWithNoBudgetLeftIsNotMarkedSoTheNextOneTriesAgain() async {
+        let spent = FakeWatchSession()
+        spent.remainingComplicationTransfers = 0
+        let (service, session, defaults, _) = make(spent)
+        var premium = snapshot(day: 24)
+        premium.tier = .premium
+        premium.premiumUntil = now.addingTimeInterval(86_400)
+        await service.publish(premium)
+        #expect(session.complicationInfos.isEmpty && defaults.complicationMark == nil)
+    }
+
     @Test func theComplicationIsLeftAloneWithoutItOnTheFaceOrWithNoBudgetLeft() async {
         let off = FakeWatchSession()
         off.isComplicationEnabled = false

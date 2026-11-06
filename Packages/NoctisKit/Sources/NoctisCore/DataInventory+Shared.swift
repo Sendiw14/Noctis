@@ -38,14 +38,14 @@ nonisolated extension DataInventory {
             DataCategory(
                 .widgetSnapshot, name: "Widget summary",
                 summary:
-                    "A small file NOCTIS writes for its widgets and for your Apple Watch, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked. It also holds one word saying whether you are on the free plan or Premium, so a widget or your Apple Watch can show what your plan includes without asking the App Store; nothing about a purchase is kept in it. If you have an Apple Watch with NOCTIS on it, the same summary is sent to it, and only to it.",
+                    "A small file NOCTIS writes for its widgets and for your Apple Watch, so they can draw without opening the app: your recovery score and what it is built from, last night's sleep in brief, tonight's bedtime and your wake alarm. It holds worked-out numbers only: no Health reading, no time a reading was made, no name of a source, nothing from your Journal and nothing Coach said. Widgets on the Lock Screen hide the Health numbers while your iPhone is locked. It also holds one word saying whether you are on the free plan or Premium and, for Premium, the date the current period ends and whether it renews by itself, so a widget or your Apple Watch can show what your plan includes, and lock when it ends, without asking the App Store; nothing else about a purchase is kept in it. If you have an Apple Watch with NOCTIS on it, the same summary is sent to it, and only to it.",
                 contents: [
                     "Your recovery score, how it compares with your usual, and the four arcs of its ring",
                     "How each of the four recovery factors scored, its value last night and your usual for it",
                     "Last night's sleep: how long, its stages and when it began and ended", "Your resting heart rate and heart rate variability for last night",
                     "Tonight's bedtime and your usual wake time", "Your wake alarm's time, and whether it is on",
                     "How many nights your usual is built from, and the time of your last \"Delete all NOCTIS data\"",
-                    "A free or Premium flag (goes only to your own Apple Watch)",
+                    "A free or Premium flag and, for Premium, when the current period ends and whether it renews (goes only to your own Apple Watch)",
                 ],
                 locations: [.file(.appGroup, "WidgetSnapshot.json")],
                 destination: .pairedWatch(
@@ -58,7 +58,7 @@ nonisolated extension DataInventory {
                 summary:
                     "Small notes about your Apple Watch: when NOCTIS last sent it the summary, the day your Watch face's complication was last refreshed for, and, kept on the Watch itself, whether breathing on the Watch plays haptics. They hold no Health value.",
                 contents: [
-                    "When the summary was last sent to your Apple Watch", "Which day, and whether it had a recovery, the complication was last refreshed for",
+                    "When the summary was last sent to your Apple Watch", "Which day, whether it had a recovery, and which plan the complication was last refreshed for",
                     "Whether breathing on your Apple Watch plays haptics (kept on the Watch, and reset when you delete all NOCTIS data)",
                 ],
                 locations: [.defaults([WatchSyncDefaults.lastSentAtKey, WatchSyncDefaults.complicationMarkKey, WatchPreferenceKeys.breathHaptics])],
@@ -157,16 +157,17 @@ nonisolated extension DataInventory {
             DataCategory(
                 .appState, name: "Small app flags",
                 summary:
-                    "Small markers so the app does a thing once a day or once ever: the day Home last played its opening animation, whether you have seen Coach's introduction, where you were in setup, which plan tier the App Store last reported (free or premium, one word), and how many of the free Coach questions you have used today (a count and a date, never a question).",
+                    "Small markers so the app does a thing once a day or once ever: the day Home last played its opening animation, whether you have seen Coach's introduction, where you were in setup, which plan tier the App Store last reported (free or premium, one word), and how many of the free Coach questions you have used today (a count and a date, never a question), whether this copy of the app has started before (so a sign-in an earlier install left in the Keychain is not picked up again), and, only while it matters, that a \"Delete all NOCTIS data\" was started and not finished (so the next launch finishes it) or left a database to be compacted.",
                 contents: [
                     "The last day each tab played its opening animation", "Whether Coach's first-run card was seen", "Setup answers not yet saved",
                     "The plan tier the App Store last reported: free, premium or lapsed", "The date, and how many free Coach questions were used that day",
+                    "Whether this copy of the app has started before", "Whether \"Delete all NOCTIS data\" was started and not finished, so the next launch can finish it", "Which steps of that deletion could not be finished, so Data management can say so", "Whether a deletion left a database to be compacted at the next launch",
                 ],
                 locations: [
                     .defaults([
                         "noctis.home.lastWashDay", "noctis.home.lastIntroDay", "noctis.sleep.lastWashDay", "noctis.sleep.lastIntroDay",
                         "noctis.recovery.lastWashDay", "noctis.recovery.lastIntroDay", "noctis.insights.lastWashDay", "noctis.insights.lastIntroDay",
-                        "noctis.coach.lastWashDay", "noctis.coach.firstRunSeen", "noctis.onboarding.step", "noctis.onboarding.selectedGoals",
+                        "noctis.coach.lastWashDay", "noctis.coach.firstRunSeen", FreshInstallGuard.markerKey, DataManager.pendingDeleteAllKey, DataManager.unfinishedDeleteAllKey, StoreCompaction.pendingKey, "noctis.onboarding.step", "noctis.onboarding.selectedGoals",
                         "noctis.onboarding.wakeMinutes", "noctis.onboarding.needMinutes", "noctis.onboarding.sleepGoalHours",
                         PremiumKeys.cachedTier, PremiumKeys.coachQuota,
                     ])

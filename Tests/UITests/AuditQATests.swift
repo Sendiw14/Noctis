@@ -93,6 +93,56 @@ final class AuditQATests: XCTestCase {
         return app
     }
 
+    /// S1B accessibility audit, P-2: the audit measured "REM" on Home at 2.83:1, but that node (the night chart's lane label, 37 x 44 pt at the bottom of the screen)
+    /// sat under the floating tab bar's Home pill, and the pixels Xcode measured were the pill's. With the label scrolled clear of the bar, its own contrast is
+    /// measured from the rendered pixels and must meet 4.5:1.
+    func testTheRemLaneLabelOnHomeIsReadableOnceClearOfTheTabBar() throws {
+        let screen = try XCTUnwrap(ScreenCatalog.all.first { $0.id == "home.day.full" })
+        let app = QA.launch(extra: screen.arguments)
+        QA.pause(4)
+        let labels = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "REM"))
+        var target: XCUIElement?
+        for _ in 0..<6 {
+            target = (0..<labels.count).map { labels.element(boundBy: $0) }.first { $0.frame.width < 80 && $0.frame.height >= 40 }
+            if let frame = target?.frame, frame.minY > 140, frame.maxY < 760 { break }
+            app.swipeUp(velocity: .slow)
+            QA.pause(1)
+        }
+        let element = try XCTUnwrap(target, "the REM lane label is in the chart")
+        let frame = element.frame
+        XCTAssertTrue(frame.minY > 140 && frame.maxY < 760, "scrolled clear of the tab bar: \(frame)")
+        let image = try XCTUnwrap(element.screenshot().image.cgImage)
+        let measured = try XCTUnwrap(contrastRatio(of: image), "the crop has text over a background")
+        QA.write("REM lane label \(frame): \(measured.ratio):1 \(measured.foreground) on \(measured.background)", to: "home-rem-contrast.txt")
+        QA.shot("home-rem-clear")
+        XCTAssertGreaterThanOrEqual(measured.ratio, 4.5, "REM lane label: \(measured.foreground) on \(measured.background)")
+        app.terminate()
+    }
+
+    /// S1B accessibility audit, P-2 (the part that stayed unconfirmed): the Tonight line "Moved 30 min earlier to catch up." measured 1.24:1 (#E4E4E4 on #FCFCFC), a
+    /// colour that looked like a fade but was the floating "Bedtime 10:30 PM" pill laid over the line (the line sits at y 731, the pill spans about 735 to 780). Scrolled
+    /// clear of the pill and the tab bar, and measured twice, it must meet 4.5:1.
+    func testTheTonightCatchUpLineIsReadableClearOfTheFloatingPill() throws {
+        let screen = try XCTUnwrap(ScreenCatalog.all.first { $0.id == "night.tonight" })
+        let app = QA.launch(extra: screen.arguments)
+        QA.pause(8)
+        let line = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Moved")).firstMatch
+        XCTAssertTrue(line.waitForExistence(timeout: 10), "the catch-up line is on Tonight")
+        var lines: [String] = []
+        for round in 1...2 {
+            for _ in 0..<4 where line.frame.maxY > 680 { app.swipeUp(velocity: .slow); QA.pause(1) }
+            XCTAssertLessThanOrEqual(line.frame.maxY, 680, "scrolled clear of the floating pill and the tab bar")
+            QA.pause(2)
+            let image = try XCTUnwrap(line.screenshot().image.cgImage)
+            let measured = try XCTUnwrap(contrastRatio(of: image), "the crop has text over a background")
+            lines.append("round \(round) \(line.frame): \(measured.ratio):1 \(measured.foreground) on \(measured.background)")
+            XCTAssertGreaterThanOrEqual(measured.ratio, 4.5, "Tonight catch-up line, round \(round): \(measured.foreground) on \(measured.background)")
+        }
+        QA.write(lines.joined(separator: "\n"), to: "tonight-catch-up-contrast.txt")
+        QA.shot("tonight-catch-up")
+        app.terminate()
+    }
+
     // MARK: Contrast, measured from the rendered pixels
 
     /// The WCAG contrast ratio of `image`'s dominant color against the color that differs most from it (the text over its background), or nil

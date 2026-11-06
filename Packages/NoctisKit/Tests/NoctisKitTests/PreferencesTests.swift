@@ -500,22 +500,28 @@ struct NotificationCoordinatorTests {
         #expect(windDown?.hour == 22 && windDown?.minute == 40, "6:00 less 7 hours is 11:00 PM")
     }
 
+    /// Rebuilds run one at a time, in the order they were asked for, so the last one's answer is what is left even when an earlier one is slow. (An earlier version of
+    /// this test had the first answer wait for the second, which a chain never starts before the first ends: it waited out its ten minute backstop every run, and
+    /// made up nearly the whole of the suite's time.)
     @Test func theLastRebuildWinsEvenIfAnEarlierOneIsSlow() async {
         var calls = 0
-        var secondAnswered = false
+        var release = false
         let bench = Self.make(center: { _, _ in
             calls += 1
-            // The first answer comes after the second, whatever the machine is doing.
             if calls == 1 {
-                _ = await waitFor { secondAnswered }
+                _ = await waitFor { release }
                 return 23 * 60
             }
-            secondAnswered = true
             return 22 * 60
         })
         defer { bench.defaults.removePersistentDomain(forName: bench.name) }
         bench.coordinator.reschedule()
         bench.coordinator.reschedule()
+        _ = await waitFor { calls >= 1 }
+        // The first is slow; a second that did not wait for it would be asking by now.
+        for _ in 0..<200 { await Task.yield() }
+        #expect(calls == 1, "the second rebuild waits for the first")
+        release = true
         await bench.coordinator.settled()
         let windDown = bench.center.pendingNotifications.first { $0.identifier == NoctisNotification.windDown }?.components
         #expect(windDown?.hour == 21 && windDown?.minute == 40, "the second centre (10:00 PM), not the slow first one")
