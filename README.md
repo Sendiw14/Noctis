@@ -112,4 +112,4 @@ NOCTIS is available under the [MIT License](LICENSE).
 
 ## Contributors
 
-- [@Sendiw14](https://github.com/Sendiw14)
+- **[@Sendiw14](https://github.com/Sendiw14)** — project owner and maintainer
