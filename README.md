@@ -1,102 +1,111 @@
-# NOCTIS
+<div align="center">
+  <img src="App/Assets.xcassets/AppIcon.appiconset/AppIcon-Dark.png" width="104" alt="NOCTIS app icon">
+  <h1>NOCTIS</h1>
+  <p><strong>Sleep, recovery, and a softer start to tomorrow.</strong></p>
+  <p>A sleep companion for iPhone and Apple Watch, built around your nights and designed with privacy in mind.</p>
+  <p>
+    <img src="https://img.shields.io/badge/iOS-26.1%2B-493329?logo=apple&logoColor=white" alt="iOS 26.1 and later">
+    <img src="https://img.shields.io/badge/watchOS-26%2B-493329?logo=apple&logoColor=white" alt="watchOS 26 and later">
+    <img src="https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white" alt="Swift 6">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-D9B95B.svg" alt="MIT License"></a>
+  </p>
+</div>
 
-A sleep and recovery app for iPhone and Apple Watch. It reads sleep, heart rate, resting heart rate, heart rate variability and respiratory rate from Apple Health (read only), works out last night, a recovery score and a bedtime for tonight, and keeps everything on the device. No account is required. Sign in with Apple is optional and local. There are no third-party SDKs and no advertising, and no analytics service: the few product events (paywall viewed, plan selected) go only to the system log on the device.
+<p align="center">
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#what-it-does">What it does</a> ·
+  <a href="#build-and-run">Build and run</a> ·
+  <a href="#project-map">Project map</a>
+</p>
 
-| | |
+## Screenshots
+
+Sample simulator screens from the app:
+
+<table>
+  <tr>
+    <td align="center"><img src="Docs/evidence/stage1b/screenshots/winddown-minimal_base_shapes0.png" width="210" alt="Tonight screen with a bedtime recommendation"><br><sub>Tonight · bedtime plan</sub></td>
+    <td align="center"><img src="Docs/evidence/stage1b/screenshots/paywall_base_light_shapes0.png" width="210" alt="NOCTIS Premium screen"><br><sub>Premium · sleep and recovery tools</sub></td>
+    <td align="center"><img src="Docs/evidence/stage1b/screenshots/subscription-free_base_light_shapes0.png" width="210" alt="Subscription settings showing the free plan"><br><sub>Settings · plan details</sub></td>
+  </tr>
+</table>
+
+## What it does
+
+NOCTIS reads sleep, heart rate, resting heart rate, heart rate variability, and respiratory rate from Apple Health. It turns those signals into a view of last night, recovery trends, and a suggested bedtime for tonight.
+
+| **Understand your sleep** | **Plan for tonight** |
 |---|---|
-| Platforms | iOS 26.1+ (iPhone, portrait), watchOS 26.0+ |
-| Toolchain | Xcode 27, Swift 6 language mode with complete strict concurrency |
-| Version | 1.0 (1) |
-| Targets | iPhone app, Watch app, Home Screen and Lock Screen widgets with controls and a Live Activity, alarm widget extension, Watch complications |
-| Dependencies | none (Apple frameworks only) |
+| Sleep summaries, recovery, and trends built from your Health data. | A bedtime window, wind-down routines, breathing, meditations, and six sleep sounds. |
+| **Keep your tools close** | **Bring your own pace** |
+| iPhone and Apple Watch apps, widgets, complications, Live Activities, and shortcuts. | An in-app Coach for sleep and recovery questions, plus settings to manage your data. |
+
+> **Privacy by default.** Health access is read-only. No account is required, and the app has no third-party SDKs, advertising, or analytics service. Product events are written to the on-device system log.
 
 ## Build and run
 
-`project.yml` is the source of truth for the Xcode project. The generated `Noctis.xcodeproj` is committed so the project opens by double-click; regenerate it after changing `project.yml`:
+**Requirements:** Xcode 27, iOS 26.1 or later, and watchOS 26.0 or later. The app uses Apple frameworks and has no external package dependencies.
+
+The generated Xcode project is committed, so you can open it directly:
+
+```bash
+git clone git@github.com:Sendiw14/Noctis.git
+cd Noctis
+open Noctis.xcodeproj
+```
+
+Choose the **Noctis** scheme and an iPhone simulator, then build and run. To regenerate the project after changing `project.yml`:
 
 ```bash
 brew install xcodegen
 xcodegen generate
 ```
 
-Then open `Noctis.xcodeproj`, pick the **Noctis** scheme and an iPhone simulator, and run. After regenerating, check `git diff Noctis.xcodeproj/xcshareddata`: Xcode rewrites `BuildableName` in the shared schemes, so keep the committed schemes and only patch paths in them.
+Device builds and archives need a signing team, registered bundle IDs, and the App Group configured for each target in Xcode. The identifiers and capabilities are in `project.yml` and `Config/`.
 
-No signing team is set in the repository. To run on a device or archive, set your team on every target in Xcode (Signing & Capabilities) and register the bundle IDs and the App Group below.
+## Under the hood
 
-| Target | Bundle ID |
-|---|---|
-| NOCTIS (iPhone) | `com.noctis.app` |
-| Widgets, controls, Live Activity | `com.noctis.app.widgets` |
-| Alarm widget extension | `com.noctis.app.alarm` |
-| Watch app | `com.noctis.app.watchkitapp` |
-| Watch complications | `com.noctis.app.watchkitapp.widgets` |
-| App Group | `group.com.noctis.app` |
+The source of truth for the Xcode project is `project.yml`. App code lives in `Packages/NoctisKit` and is divided into small Swift modules:
 
-Capabilities in use: HealthKit (read only, with background delivery), Sign in with Apple, App Groups, AlarmKit (usage description only), Live Activities. Subscriptions are `com.noctis.app.premium.yearly` and `com.noctis.app.premium.monthly`.
+- **Engines:** sleep analysis, recovery, bedtime recommendations, insights, breathing, sounds, coaching, and subscription rules.
+- **App features:** onboarding, Home, Sleep, Recovery, Insights, Coach, Night, and Profile, built with SwiftUI.
+- **Apple extensions:** widgets, Watch screens and complications, Siri intents, alarms, and Live Activities.
 
-## Folder layout
-
-```
-project.yml            Xcode project definition (source of truth)
-Config/                entitlements, StoreKit test configuration, unit test plan
-App/                   iPhone app target: entry point, shortcuts, assets, Info.plist
-Watch/App/             Apple Watch app
-Watch/Widgets/         Watch complications
-Widgets/Home/          widgets, controls, wind-down Live Activity
-Widgets/Alarm/         alarm countdown widget extension
-Packages/NoctisKit/    all feature and engine code, split into Swift modules (below)
-Tests/UITests/         UI tests, screen matrix and accessibility audits
-Tests/StoreTests/      purchase tests against StoreKit's test server
-Docs/                  rules, QA ledger and reports, privacy report, roadmap
-scripts/               QA matrix runner, coverage and release checks (see Docs/QA_REPORT.md)
-```
-
-## Architecture
-
-All app code lives in `Packages/NoctisKit` as small modules, so a widget or the Watch can link only what it needs.
-
-- **Engines** (nonisolated, pure, unit-tested): `SleepKit`, `SleepAnalysisKit`, `RecoveryKit`, `InsightsKit`, `NightKit` (bedtime recommendation, alarm state machine), `ReviewKit`, `PremiumKit` (the one feature table), `BreathingKit`, `SoundKit`, `CoachKit`.
-- **Data**: `NoctisCore` (models, SwiftData stores, repositories, the data inventory), `HealthProviding` (the HealthKit provider and a seeded mock for tests).
-- **Features** (SwiftUI): `OnboardingFeature`, `HomeFeature`, `SleepFeature`, `RecoveryFeature`, `InsightsFeature`, `CoachFeature`, `NightFeature`, `ProfileFeature`; `DesignSystem` holds the tokens and shared components; `AppRoot` wires everything together.
-- **Shared with extensions**: `NoctisWidgetKit`, `NoctisWatchKit`, `NoctisIntentKit`, `AlarmShared`. They depend on nothing that reads Health, SwiftData or Coach.
-
-Rules that hold across the code (details in `Docs/APP_RULES.md`):
-
-- Views only read a view model's snapshot. No HealthKit calls, date math or scoring in views (R20).
-- Every number on screen comes from an engine with a unit test, and missing data shows a stated empty state, never a placeholder (R18).
-- Engines return values, never sentences with numbers in them. Words are written in the screen builders.
-- Debug launch flags, mock data and QA scaffolding exist only inside `#if DEBUG`. `scripts/release_symbol_check.py` proves a Release build contains none of it.
+The engines are designed to keep calculations outside views. Views consume view-model snapshots, and missing data gets an explicit empty state. See [the app rules](Docs/APP_RULES.md) for the full set of conventions.
 
 ## Tests
 
+Run the package suite from `Packages/NoctisKit`:
+
 ```bash
-# Engines, view models, privacy and source-hygiene tests (run from Packages/NoctisKit)
 cd Packages/NoctisKit
-xcodebuild test -scheme NoctisKit-Package -destination 'platform=iOS Simulator,name=<an iPhone>' SWIFT_EMIT_LOC_STRINGS=NO
-
-# The same unit suite under four time zone / region / clock configurations
-xcodebuild test -project Noctis.xcodeproj -scheme NOCTIS-Unit -testPlan NOCTIS -destination '...'
-
-# Purchases against StoreKit's test server (app-hosted)
-xcodebuild test -project Noctis.xcodeproj -scheme NOCTIS-Store -destination '...'
-
-# Release build contains no Debug scaffolding
-xcodebuild build -project Noctis.xcodeproj -scheme Noctis -configuration Release -destination '...' -derivedDataPath /tmp/dd
-python3 scripts/release_symbol_check.py /tmp/dd/Build/Products/Release-iphonesimulator
+xcodebuild test -scheme NoctisKit-Package \
+  -destination 'platform=iOS Simulator,name=<an iPhone>' \
+  SWIFT_EMIT_LOC_STRINGS=NO
 ```
 
-The screen matrix (every screen under light/dark, text sizes and accessibility settings) is driven by `scripts/qa_matrix.py` and `scripts/qa_configs.py`; see `Docs/QA_COVERAGE.md`. Build for testing first (`xcodebuild build-for-testing ...`), because the runner uses `test-without-building`.
+The project also includes app-hosted StoreKit tests, a multi-region unit test plan, UI accessibility checks, and a release-symbol check. See [QA coverage](Docs/QA_COVERAGE.md) for the test matrix and the [release readiness report](Docs/RELEASE_READINESS.md) for current release status.
 
-## Documents
+## Project map
 
-| Document | What it is |
+| Path | Contents |
 |---|---|
-| `Docs/RELEASE_READINESS.md` | The release audit, item by item, with the verdict and the blockers |
-| `Docs/store/SUBMIT_CHECKLIST.md`, `Docs/store/APP_STORE_LISTING.md` | The steps to App Store submission, and the listing, review notes and subscription details to enter |
-| `Docs/site/` | Draft privacy, terms and support pages to publish (placeholders marked `[[...]]` until filled in) |
-| `Docs/DEVICE_TEST_CHECKLIST.md` | What only a real iPhone and Apple Watch can show, as a checklist (nothing ticked yet) |
-| `Docs/CLEANUP_REPORT.md` | What the final cleanup removed and moved, with before and after numbers |
-| `Docs/APP_RULES.md`, `Docs/ONBOARDING_RULES.md` | The design and engineering rules every screen is checked against |
-| `Docs/QA_LEDGER.md`, `Docs/QA_REPORT.md`, `Docs/QA_COVERAGE.md` | Findings, decisions and what was photographed |
-| `Docs/PRIVACY_REPORT.md` | What data the app handles, where it lives and what leaves the device |
-| `Docs/ROADMAP.md`, `Docs/POST_LAUNCH.md` | Unbuilt reachable features (none) and what is deferred |
+| `App/` | iPhone app entry point, assets, shortcuts, and privacy manifest |
+| `Watch/`, `Widgets/` | Watch app, complications, widgets, controls, and alarm extension |
+| `Packages/NoctisKit/` | Features, data layer, design system, and shared engines |
+| `Tests/`, `Config/` | UI and StoreKit tests, test plan, and app capabilities |
+| `Docs/` | Product rules, QA evidence, privacy notes, and release guides |
+| `scripts/` | QA matrix, coverage, and release checks |
+
+### Project notes
+
+- [Privacy report](Docs/PRIVACY_REPORT.md)
+- [Release readiness](Docs/RELEASE_READINESS.md)
+- [Device test checklist](Docs/DEVICE_TEST_CHECKLIST.md)
+- [Store submission checklist](Docs/store/SUBMIT_CHECKLIST.md)
+- [App rules](Docs/APP_RULES.md)
+- [QA coverage](Docs/QA_COVERAGE.md)
+
+## License
+
+NOCTIS is available under the [MIT License](LICENSE).
