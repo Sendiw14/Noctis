@@ -20,13 +20,13 @@
 
 ## Screenshots
 
-Sample simulator screens from the app:
+Captured on an iPhone 18 Pro simulator with seeded sample data:
 
 <table>
   <tr>
-    <td align="center"><img src="Docs/evidence/stage1b/screenshots/winddown-minimal_base_shapes0.png" width="210" alt="Tonight screen with a bedtime recommendation"><br><sub>Tonight · bedtime plan</sub></td>
-    <td align="center"><img src="Docs/evidence/stage1b/screenshots/paywall_base_light_shapes0.png" width="210" alt="NOCTIS Premium screen"><br><sub>Premium · sleep and recovery tools</sub></td>
-    <td align="center"><img src="Docs/evidence/stage1b/screenshots/subscription-free_base_light_shapes0.png" width="210" alt="Subscription settings showing the free plan"><br><sub>Settings · plan details</sub></td>
+    <td align="center"><img src="Docs/readme/onboarding-welcome.jpg" width="210" alt="NOCTIS welcome onboarding screen"><br><sub>Onboarding · welcome</sub></td>
+    <td align="center"><img src="Docs/readme/home-morning.jpg" width="210" alt="Home screen with the morning recovery summary"><br><sub>Home · daily recovery</sub></td>
+    <td align="center"><img src="Docs/readme/sleep-detail.jpg" width="210" alt="Sleep screen with last night's duration and sleep stages"><br><sub>Sleep · last night</sub></td>
   </tr>
 </table>
 
@@ -109,3 +109,7 @@ The project also includes app-hosted StoreKit tests, a multi-region unit test pl
 ## License
 
 NOCTIS is available under the [MIT License](LICENSE).
+
+## Contributors
+
+- [@Sendiw14](https://github.com/Sendiw14)
